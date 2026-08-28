@@ -7312,3 +7312,176 @@ main.listing-detail-page,
 .lac-admin-body .empty-state h2 {
     color: #ffffff !important;
 }
+
+
+
+.public-website-link {
+    margin: 32px auto 24px;
+    padding: 24px 20px;
+    max-width: 700px;
+
+    text-align: center;
+
+    background: #fffdf8;
+    border: 1px solid #ddd8ce;
+    border-radius: 14px;
+}
+
+.public-website-link p {
+    margin: 0 0 14px;
+
+    color: #333333;
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.public-website-button {
+    display: inline-block;
+
+    padding: 12px 20px;
+
+    background: #111111;
+    color: #ffffff !important;
+
+    border-radius: 9px;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.public-website-button:hover {
+    background: #2b2b2b;
+    color: #ffffff !important;
+}
+
+/* =========================================================
+   PUBLIC NOTIFICATION SIGNUP
+========================================================= */
+
+.public-notification-link {
+    margin: 20px auto 32px;
+    padding: 26px 20px;
+    max-width: 700px;
+
+    text-align: center;
+
+    background: #fffdf8;
+    border: 1px solid #ddd8ce;
+    border-radius: 14px;
+}
+
+.public-notification-link .notification-eyebrow {
+    margin-bottom: 8px;
+
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+
+    color: #666666;
+}
+
+.public-notification-link h3 {
+    margin: 0 0 10px;
+
+    color: #111111;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.public-notification-link p {
+    margin: 5px 0;
+
+    color: #444444;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+.public-notification-button {
+    display: inline-block;
+
+    margin-top: 16px;
+    padding: 12px 22px;
+
+    background: #111111;
+    color: #ffffff !important;
+
+    border-radius: 9px;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.public-notification-button:hover {
+    background: #2b2b2b;
+    color: #ffffff !important;
+}
+
+/* =========================================================
+   PUBLIC WEBSITE + NOTIFICATION BUTTONS
+   Cream / light theme
+========================================================= */
+
+.lac-public-body .public-website-button,
+.lac-public-body .public-notification-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 14px;
+    padding: 13px 22px;
+
+    background: #fffdf8 !important;
+    background-color: #fffdf8 !important;
+
+    color: #111111 !important;
+
+    border: 1px solid #d6d0c5 !important;
+    border-radius: 10px;
+
+    text-decoration: none !important;
+
+    font-size: 14px;
+    font-weight: 500 !important;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.06);
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+/* Hover */
+
+.lac-public-body .public-website-button:hover,
+.lac-public-body .public-notification-button:hover {
+    background: #f2eee5 !important;
+    background-color: #f2eee5 !important;
+
+    color: #000000 !important;
+
+    border-color: #c7c0b4 !important;
+}
+
+
+/* Click */
+
+.lac-public-body .public-website-button:active,
+.lac-public-body .public-notification-button:active {
+    transform: scale(0.98);
+}
+
+
+/* Visited links must stay dark */
+
+.lac-public-body .public-website-button:visited,
+.lac-public-body .public-notification-button:visited {
+    color: #111111 !important;
+}
+
+
