@@ -6726,3 +6726,329 @@ button:not(:first-child) img {
 .section-label {
     font-weight: 100 !important;
 }
+
+
+/* =====================================================
+   LaC PUBLIC LIGHT GREY THEME
+===================================================== */
+
+/* Main customer-facing background */
+body:not(.admin-body) {
+    background: #eeeeec !important;
+    color: #252525 !important;
+}
+
+
+/* QR entry page */
+.qr-entry-body {
+    background: #eeeeec !important;
+    color: #252525 !important;
+}
+
+
+/* Main public containers */
+.access-shell,
+.access-container,
+.category-container,
+.listing-container,
+.listing-detail-container {
+    background: #eeeeec !important;
+    color: #252525 !important;
+}
+
+
+/* Cards */
+.category-card,
+.content-card,
+.listing-card,
+.listing-detail-card,
+.qr-entry-card,
+.public-card {
+    background: #f8f8f7 !important;
+
+    color: #252525 !important;
+
+    border: 1px solid #ddddda !important;
+
+    box-shadow:
+        0 3px 12px
+        rgba(0, 0, 0, 0.04) !important;
+}
+
+
+/* Main text */
+body:not(.admin-body) h1,
+body:not(.admin-body) h2,
+body:not(.admin-body) h3,
+body:not(.admin-body) h4 {
+    color: #252525 !important;
+    font-weight: 400 !important;
+}
+
+
+/* Normal text */
+body:not(.admin-body) p {
+    color: #626262 !important;
+    font-weight: 400 !important;
+}
+
+
+/* Remove heavy bold appearance */
+body:not(.admin-body) strong,
+body:not(.admin-body) b {
+    font-weight: 400 !important;
+}
+
+
+/* Small labels */
+.access-eyebrow,
+.section-label,
+.category-label,
+.listing-label {
+    color: #777777 !important;
+    font-weight: 400 !important;
+}
+
+
+/* Category cards */
+.category-card:hover {
+    background: #ffffff !important;
+    border-color: #ccccca !important;
+}
+
+
+/* Form fields */
+body:not(.admin-body) input,
+body:not(.admin-body) select,
+body:not(.admin-body) textarea {
+    background: #f9f9f8 !important;
+    color: #252525 !important;
+
+    border:
+        1px solid
+        #d6d6d3 !important;
+}
+
+
+/* Placeholder text */
+body:not(.admin-body) input::placeholder,
+body:not(.admin-body) textarea::placeholder {
+    color: #999999;
+}
+
+
+/* QR entry flow boxes */
+.qr-entry-flow > div:not(.qr-entry-arrow) {
+    background: #e5e5e2 !important;
+    color: #252525 !important;
+}
+
+
+.qr-entry-arrow {
+    color: #999999 !important;
+}
+
+/* =====================================================
+   FIX LISTING DETAIL TEXT ON LIGHT BACKGROUND
+===================================================== */
+
+/* Detail / information boxes */
+.listing-meta,
+.listing-info,
+.detail-item,
+.meta-item,
+.info-item {
+    color: #252525 !important;
+}
+
+
+/* Labels: Starts, Available Until, Location, Price / Deal */
+.listing-meta span,
+.listing-info span,
+.detail-item span,
+.meta-item span,
+.info-item span,
+.listing-meta small,
+.listing-info small {
+    color: #777777 !important;
+    font-weight: 400 !important;
+}
+
+
+/* Actual values: dates, location, price */
+.listing-meta strong,
+.listing-info strong,
+.detail-item strong,
+.meta-item strong,
+.info-item strong {
+    color: #252525 !important;
+    font-weight: 400 !important;
+}
+
+
+/* Make sure links inside information cards are visible */
+.listing-meta a,
+.listing-info a,
+.detail-item a,
+.meta-item a,
+.info-item a {
+    color: #252525 !important;
+}
+
+/* =========================================================
+   ALL PUBLIC TEXT
+   EXCLUDE HEADER + FOOTER
+========================================================= */
+
+body:not(.admin-body) main h1,
+body:not(.admin-body) main h2,
+body:not(.admin-body) main h3,
+body:not(.admin-body) main h4,
+body:not(.admin-body) main h5,
+body:not(.admin-body) main h6,
+body:not(.admin-body) main p,
+body:not(.admin-body) main span,
+body:not(.admin-body) main strong,
+body:not(.admin-body) main b,
+body:not(.admin-body) main small,
+body:not(.admin-body) main label,
+body:not(.admin-body) main div,
+body:not(.admin-body) main li,
+body:not(.admin-body) main a {
+    color: var(--lac-text) !important;
+}
+
+
+/* =========================================================
+   REMOVE HEAVY BOLD TEXT
+   MAIN CONTENT ONLY
+========================================================= */
+
+body:not(.admin-body) main strong,
+body:not(.admin-body) main b,
+body:not(.admin-body) main h1,
+body:not(.admin-body) main h2,
+body:not(.admin-body) main h3,
+body:not(.admin-body) main h4 {
+    font-weight: 400 !important;
+}
+
+/* =========================================================
+   FULL LISTING CARD - CREAMY WHITE
+========================================================= */
+
+.listing-detail-card,
+.listing-detail,
+.listing-card-full,
+.detail-card {
+    background: #fffdf8 !important;
+    color: #111111 !important;
+
+    border: 1px solid #ddd8ce !important;
+
+    box-shadow:
+        0 4px 18px
+        rgba(0, 0, 0, 0.06) !important;
+}
+
+
+/* Everything inside the listing card */
+.listing-detail-card *,
+.listing-detail *,
+.listing-card-full *,
+.detail-card * {
+    color: #111111 !important;
+}
+
+
+/* Remove heavy bold appearance */
+.listing-detail-card strong,
+.listing-detail-card b,
+.listing-detail-card h1,
+.listing-detail-card h2,
+.listing-detail-card h3 {
+    font-weight: 400 !important;
+}
+
+
+/* Description */
+.listing-detail-card p {
+    color: #444444 !important;
+}
+
+
+/* Listing information boxes */
+.listing-detail-card .listing-meta,
+.listing-detail-card .listing-info,
+.listing-detail-card .detail-item,
+.listing-detail-card .meta-item,
+.listing-detail-card .info-item {
+    background: #f5f1e8 !important;
+    color: #111111 !important;
+
+    border-color: #ddd8ce !important;
+}
+
+
+/* Contact section */
+.listing-detail-card .contact-section,
+.listing-detail-card .contact-card {
+    background: #f5f1e8 !important;
+    color: #111111 !important;
+}
+
+
+/* WhatsApp / Call / Share buttons */
+.listing-detail-card .contact-actions a,
+.listing-detail-card .share-button,
+.listing-detail-card button {
+    color: #111111 !important;
+}
+
+/* =========================================================
+   EMPTY CATEGORY CARD - CREAMY WHITE
+========================================================= */
+
+.empty-state,
+.empty-card,
+.no-results,
+.no-listings {
+    background: #fffdf8 !important;
+    color: #111111 !important;
+
+    border: 1px solid #ddd8ce !important;
+
+    box-shadow:
+        0 4px 16px
+        rgba(0, 0, 0, 0.05) !important;
+}
+
+
+/* Everything inside empty state */
+.empty-state *,
+.empty-card *,
+.no-results *,
+.no-listings * {
+    color: #111111 !important;
+}
+
+
+/* Heading */
+.empty-state h2,
+.empty-state h3,
+.empty-card h2,
+.no-results h2,
+.no-listings h2 {
+    color: #111111 !important;
+    font-weight: 400 !important;
+}
+
+
+/* Description */
+.empty-state p,
+.empty-card p,
+.no-results p,
+.no-listings p {
+    color: #555555 !important;
+    font-weight: 400 !important;
+}
