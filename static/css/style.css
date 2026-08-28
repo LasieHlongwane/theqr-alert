@@ -6531,184 +6531,6 @@ button:not(:first-child) img {
 }
 
 /* =====================================================
-   QR ENTRY PAGE
-===================================================== */
-
-.qr-entry-body {
-    margin: 0;
-
-    background:
-        radial-gradient(
-            circle at top,
-            #252525 0%,
-            #111111 45%,
-            #080808 100%
-        );
-
-    color: #ffffff;
-
-    font-family:
-        Arial,
-        sans-serif;
-}
-
-
-.qr-entry-page {
-    min-height: 100vh;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 24px;
-
-    box-sizing: border-box;
-}
-
-
-.qr-entry-card {
-    width: min(
-        100%,
-        520px
-    );
-
-    text-align: center;
-
-    padding:
-        55px 30px;
-
-    border-radius: 28px;
-
-    border:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.08
-        );
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.035
-        );
-}
-
-
-.qr-entry-logo {
-    margin-bottom: 18px;
-
-    font-size: 70px;
-
-    font-weight: 900;
-
-    letter-spacing: -5px;
-}
-
-
-.qr-entry-card h1 {
-    margin:
-        0 0
-        18px;
-
-    font-size:
-        clamp(
-            30px,
-            7vw,
-            48px
-        );
-
-    line-height: 1;
-
-    letter-spacing: -1.5px;
-}
-
-
-.qr-entry-card > p {
-    max-width: 360px;
-
-    margin:
-        0 auto
-        35px;
-
-    color: #9c9c9c;
-
-    font-size: 15px;
-
-    line-height: 1.7;
-}
-
-
-.qr-entry-flow {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 10px;
-
-    margin:
-        20px 0
-        35px;
-}
-
-
-.qr-entry-flow > div:not(
-    .qr-entry-arrow
-) {
-    padding: 15px;
-
-    border-radius: 14px;
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.045
-        );
-}
-
-
-.qr-entry-flow span {
-    display: block;
-
-    margin-bottom: 4px;
-
-    color: #f1c40f;
-
-    font-size: 10px;
-
-    font-weight: 800;
-}
-
-
-.qr-entry-flow strong {
-    font-size: 16px;
-}
-
-
-.qr-entry-arrow {
-    color: #555555;
-
-    font-size: 20px;
-}
-
-
-.qr-entry-card small {
-    color: #626262;
-
-    font-size: 9px;
-
-    font-weight: 800;
-
-    letter-spacing: 1.2px;
-}
-
-/* =====================================================
    LIGHTER PUBLIC TYPOGRAPHY
 ===================================================== */
 
@@ -6727,13 +6549,12 @@ button:not(:first-child) img {
     font-weight: 100 !important;
 }
 
-
 /* =====================================================
    LaC PUBLIC LIGHT GREY THEME
 ===================================================== */
 
 /* Main customer-facing background */
-body:not(.admin-body) {
+body:not(.lac-admin-body) {
     background: #eeeeec !important;
     color: #252525 !important;
 }
@@ -6777,25 +6598,25 @@ body:not(.admin-body) {
 
 
 /* Main text */
-body:not(.admin-body) h1,
-body:not(.admin-body) h2,
-body:not(.admin-body) h3,
-body:not(.admin-body) h4 {
+body:not(.lac-admin-body) h1,
+body:not(.lac-admin-body) h2,
+body:not(.lac-admin-body) h3,
+body:not(.lac-admin-body) h4 {
     color: #252525 !important;
     font-weight: 400 !important;
 }
 
 
 /* Normal text */
-body:not(.admin-body) p {
+body:not(.lac-admin-body) p {
     color: #626262 !important;
     font-weight: 400 !important;
 }
 
 
 /* Remove heavy bold appearance */
-body:not(.admin-body) strong,
-body:not(.admin-body) b {
+body:not(.lac-admin-body) strong,
+body:not(.lac-admin-body) b {
     font-weight: 400 !important;
 }
 
@@ -6818,9 +6639,9 @@ body:not(.admin-body) b {
 
 
 /* Form fields */
-body:not(.admin-body) input,
-body:not(.admin-body) select,
-body:not(.admin-body) textarea {
+body:not(.lac-admin-body) input,
+body:not(.lac-admin-body) select,
+body:not(.lac-admin-body) textarea {
     background: #f9f9f8 !important;
     color: #252525 !important;
 
@@ -6831,8 +6652,8 @@ body:not(.admin-body) textarea {
 
 
 /* Placeholder text */
-body:not(.admin-body) input::placeholder,
-body:not(.admin-body) textarea::placeholder {
+body:not(.lac-admin-body) input::placeholder,
+body:not(.lac-admin-body) textarea::placeholder {
     color: #999999;
 }
 
@@ -6900,21 +6721,21 @@ body:not(.admin-body) textarea::placeholder {
    EXCLUDE HEADER + FOOTER
 ========================================================= */
 
-body:not(.admin-body) main h1,
-body:not(.admin-body) main h2,
-body:not(.admin-body) main h3,
-body:not(.admin-body) main h4,
-body:not(.admin-body) main h5,
-body:not(.admin-body) main h6,
-body:not(.admin-body) main p,
-body:not(.admin-body) main span,
-body:not(.admin-body) main strong,
-body:not(.admin-body) main b,
-body:not(.admin-body) main small,
-body:not(.admin-body) main label,
-body:not(.admin-body) main div,
-body:not(.admin-body) main li,
-body:not(.admin-body) main a {
+body:not(.lac-admin-body) main h1,
+body:not(.lac-admin-body) main h2,
+body:not(.lac-admin-body) main h3,
+body:not(.lac-admin-body) main h4,
+body:not(.lac-admin-body) main h5,
+body:not(.lac-admin-body) main h6,
+body:not(.lac-admin-body) main p,
+body:not(.lac-admin-body) main span,
+body:not(.lac-admin-body) main strong,
+body:not(.lac-admin-body) main b,
+body:not(.lac-admin-body) main small,
+body:not(.lac-admin-body) main label,
+body:not(.lac-admin-body) main div,
+body:not(.lac-admin-body) main li,
+body:not(.lac-admin-body) main a {
     color: var(--lac-text) !important;
 }
 
@@ -6924,12 +6745,12 @@ body:not(.admin-body) main a {
    MAIN CONTENT ONLY
 ========================================================= */
 
-body:not(.admin-body) main strong,
-body:not(.admin-body) main b,
-body:not(.admin-body) main h1,
-body:not(.admin-body) main h2,
-body:not(.admin-body) main h3,
-body:not(.admin-body) main h4 {
+body:not(.lac-admin-body) main strong,
+body:not(.lac-admin-body) main b,
+body:not(.lac-admin-body) main h1,
+body:not(.lac-admin-body) main h2,
+body:not(.lac-admin-body) main h3,
+body:not(.lac-admin-body) main h4 {
     font-weight: 400 !important;
 }
 
@@ -7052,6 +6873,7 @@ body:not(.admin-body) main h4 {
     color: #555555 !important;
     font-weight: 400 !important;
 }
+
 
 /* =========================================================
    VIEW LISTING PAGE - CREAMY WHITE
@@ -7290,4 +7112,203 @@ main.listing-detail-page,
 /* Press effect */
 .listing-share-button:active {
     transform: scale(0.98);
+}
+
+/* =========================================================
+   LaC ADMIN THEME
+   Keep admin isolated from public theme
+========================================================= */
+
+.lac-admin-body {
+    background: #101214 !important;
+    color: #f5f5f5 !important;
+}
+
+
+/* Admin shell */
+.lac-admin-body .admin-shell {
+    background: #101214 !important;
+    color: #f5f5f5 !important;
+}
+
+
+/* =========================================================
+   ADMIN NAV
+========================================================= */
+
+.lac-admin-body .admin-nav {
+    background: #17191c !important;
+    color: #ffffff !important;
+
+    border-bottom: 1px solid #2a2d31 !important;
+}
+
+
+.lac-admin-body .admin-nav strong {
+    color: #ffffff !important;
+}
+
+
+.lac-admin-body .admin-nav a {
+    color: #d8d8d8 !important;
+    text-decoration: none;
+}
+
+
+.lac-admin-body .admin-nav a:hover {
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   ADMIN HEADING
+========================================================= */
+
+.lac-admin-body .admin-heading {
+    color: #ffffff !important;
+}
+
+
+.lac-admin-body .admin-heading h1 {
+    color: #ffffff !important;
+}
+
+
+.lac-admin-body .admin-heading p {
+    color: #a9a9a9 !important;
+}
+
+
+.lac-admin-body .admin-eyebrow {
+    color: #8f949a !important;
+}
+
+
+/* =========================================================
+   ADMIN PANELS
+========================================================= */
+
+.lac-admin-body .admin-panel {
+    background: #17191c !important;
+    color: #f5f5f5 !important;
+
+    border: 1px solid #292c30 !important;
+}
+
+
+/* Access point rows */
+.lac-admin-body .access-point-row {
+    background: #1c1f22 !important;
+    color: #f5f5f5 !important;
+
+    border: 1px solid #2c3035 !important;
+}
+
+
+.lac-admin-body .access-point-row strong {
+    color: #ffffff !important;
+}
+
+
+.lac-admin-body .access-point-row span {
+    color: #b9bcc0 !important;
+}
+
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+.lac-admin-body .content-filters {
+    background: #17191c !important;
+}
+
+
+.lac-admin-body select,
+.lac-admin-body input,
+.lac-admin-body textarea {
+    background: #222529 !important;
+    color: #ffffff !important;
+
+    border: 1px solid #3a3e44 !important;
+}
+
+
+.lac-admin-body select option {
+    background: #222529 !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   ADMIN BUTTONS
+========================================================= */
+
+.lac-admin-body .admin-button,
+.lac-admin-body .admin-primary-button,
+.lac-admin-body .content-actions a,
+.lac-admin-body button {
+    background: #2b2f34 !important;
+    color: #ffffff !important;
+
+    border: 1px solid #42474e !important;
+
+    text-decoration: none !important;
+}
+
+
+.lac-admin-body .admin-primary-button {
+    background: #ffffff !important;
+    color: #111111 !important;
+
+    border-color: #ffffff !important;
+}
+
+
+.lac-admin-body .admin-button:hover,
+.lac-admin-body .content-actions a:hover,
+.lac-admin-body button:hover {
+    background: #383d43 !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.lac-admin-body .status-active {
+    color: #8dd79a !important;
+}
+
+
+.lac-admin-body .status-inactive {
+    color: #d98d8d !important;
+}
+
+
+/* =========================================================
+   ALERTS
+========================================================= */
+
+.lac-admin-body .admin-alert {
+    background: #24272b !important;
+    color: #ffffff !important;
+
+    border: 1px solid #35393e !important;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.lac-admin-body .empty-state {
+    background: #1c1f22 !important;
+    color: #ffffff !important;
+}
+
+
+.lac-admin-body .empty-state h2 {
+    color: #ffffff !important;
 }
