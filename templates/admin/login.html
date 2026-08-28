@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>LAC Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-login">
+
+    <div class="lac-brand">
+        LAC
+    </div>
+
+    <p class="lac-tagline">
+        NETWORK CONTROL CENTRE
+    </p>
+
+    <h1>
+        Admin Login
+    </h1>
+
+    {% with messages = get_flashed_messages() %}
+
+        {% for message in messages %}
+
+            <div class="admin-alert">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+    <form method="POST">
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Admin password"
+            required
+        >
+
+        <button type="submit">
+            Enter Control Centre
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

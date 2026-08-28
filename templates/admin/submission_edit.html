@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Edit Submission | LAC
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+
+    <nav class="admin-nav">
+
+        <div>
+            <strong>LAC</strong>
+            <span>NETWORK</span>
+        </div>
+
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for(
+                'admin.analytics'
+            ) }}">
+                Analytics
+            </a>
+
+            <a href="{{ url_for(
+                'admin.submissions'
+            ) }}">
+                Submissions
+            </a>
+
+            <a href="{{ url_for(
+                'admin.content_list'
+            ) }}">
+                Content
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-form-container">
+
+        <p class="admin-eyebrow">
+            SUBMISSION REVIEW
+        </p>
+
+
+        <h1>
+            Edit Before Approval
+        </h1>
+
+
+        <p>
+            Correct submission details before
+            publishing this listing.
+        </p>
+
+
+        <p>
+            Reference:
+            <strong>
+                {{ submission.tracking_code }}
+            </strong>
+        </p>
+
+
+        {% with messages =
+            get_flashed_messages()
+        %}
+
+            {% for message in messages %}
+
+            <div class="admin-alert">
+                {{ message }}
+            </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <!-- =====================================
+             EXISTING IMAGES
+        ====================================== -->
+
+        {% if submission.images %}
+
+        <div class="submission-images">
+
+            {% for image in submission.images[:3] %}
+
+            <img
+                src="{{ image.image_url }}"
+                alt="{{ submission.title }}"
+                loading="lazy"
+            >
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+
+        <form
+            method="POST"
+            class="admin-form"
+        >
+
+
+            <!-- =================================
+                 ZONE
+            ================================== -->
+
+            <label>
+
+                Zone
+
+                <select
+                    name="zone_id"
+                    required
+                >
+
+                    {% for zone in zones %}
+
+                    <option
+                        value="{{ zone.id }}"
+
+                        {% if
+                            submission.zone_id
+                            == zone.id
+                        %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {{ zone.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <!-- =================================
+                 CATEGORY
+            ================================== -->
+
+            <label>
+
+                Category
+
+                <select
+                    name="category"
+                    id="category-select"
+                    required
+                >
+
+                    {% for category in categories %}
+
+                    <option
+                        value="{{ category.slug }}"
+
+                        {% if
+                            submission.category
+                            == category.slug
+                        %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {% if category.icon %}
+                            {{ category.icon }}
+                        {% endif %}
+
+                        {{ category.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <!-- =================================
+                 TITLE
+            ================================== -->
+
+            <label>
+
+                Title
+
+                <input
+                    type="text"
+                    name="title"
+                    required
+                    value="{{ submission.title }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Business / Organisation
+
+                <input
+                    type="text"
+                    name="business_name"
+                    value="{{
+                        submission.business_name
+                        or ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Description
+
+                <textarea
+                    name="description"
+                    rows="5"
+                >{{ submission.description or '' }}</textarea>
+
+            </label>
+
+
+            <label>
+
+                Venue / Location
+
+                <input
+                    type="text"
+                    name="venue"
+                    value="{{
+                        submission.venue
+                        or ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Price
+
+                <input
+                    type="text"
+                    name="price"
+                    value="{{
+                        submission.price
+                        or ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Public Contact
+
+                <input
+                    type="text"
+                    name="contact"
+                    value="{{
+                        submission.contact
+                        or ''
+                    }}"
+                >
+
+            </label>
+
+
+            <!-- =================================
+                 EVENT DATES
+            ================================== -->
+
+            <div id="event-date-fields">
+
+                <h3>
+                    Event Dates
+                </h3>
+
+
+                <label>
+
+                    Publish From
+
+                    <input
+                        type="date"
+                        name="publish_from"
+                        value="{{
+                            submission.publish_from.strftime('%Y-%m-%d')
+                            if submission.publish_from
+                            else ''
+                        }}"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Event Date
+
+                    <input
+                        type="date"
+                        name="event_date"
+                        value="{{
+                            submission.event_date.strftime('%Y-%m-%d')
+                            if submission.event_date
+                            else ''
+                        }}"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Event End Date
+
+                    <input
+                        type="date"
+                        name="event_end_date"
+                        value="{{
+                            submission.event_end_date.strftime('%Y-%m-%d')
+                            if submission.event_end_date
+                            else ''
+                        }}"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <!-- =================================
+                 GENERAL DATES
+            ================================== -->
+
+            <div id="general-date-fields">
+
+                <h3>
+                    Listing Dates
+                </h3>
+
+
+                <label>
+
+                    Start Date
+
+                    <input
+                        type="date"
+                        name="start_date"
+                        value="{{
+                            submission.start_date.strftime('%Y-%m-%d')
+                            if submission.start_date
+                            else ''
+                        }}"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    End Date
+
+                    <input
+                        type="date"
+                        name="end_date"
+                        value="{{
+                            submission.end_date.strftime('%Y-%m-%d')
+                            if submission.end_date
+                            else ''
+                        }}"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <hr>
+
+
+            <h3>
+                Submitter Details
+            </h3>
+
+
+            <label>
+
+                Submitter Name
+
+                <input
+                    type="text"
+                    name="submitter_name"
+                    required
+                    value="{{
+                        submission.submitter_name
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Submitter Phone
+
+                <input
+                    type="text"
+                    name="submitter_phone"
+                    required
+                    value="{{
+                        submission.submitter_phone
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Submitter Email
+
+                <input
+                    type="email"
+                    name="submitter_email"
+                    value="{{
+                        submission.submitter_email
+                        or ''
+                    }}"
+                >
+
+            </label>
+
+
+            <div class="submission-edit-actions">
+
+                <a
+                    href="{{ url_for(
+                        'admin.submissions',
+                        status='pending'
+                    ) }}"
+                    class="back-link"
+                >
+                    ← Cancel
+                </a>
+
+
+                <button type="submit">
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+<script>
+
+    const categorySelect =
+        document.getElementById(
+            "category-select"
+        );
+
+    const eventFields =
+        document.getElementById(
+            "event-date-fields"
+        );
+
+    const generalFields =
+        document.getElementById(
+            "general-date-fields"
+        );
+
+
+    function updateDateFields() {
+
+        if (
+            categorySelect.value
+            === "events"
+        ) {
+
+            eventFields.style.display =
+                "block";
+
+            generalFields.style.display =
+                "none";
+
+        } else {
+
+            eventFields.style.display =
+                "none";
+
+            generalFields.style.display =
+                "block";
+
+        }
+
+    }
+
+
+    categorySelect.addEventListener(
+        "change",
+        updateDateFields
+    );
+
+
+    updateDateFields();
+
+</script>
+
+</body>
+
+</html>

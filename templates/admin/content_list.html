@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LAC Content Intelligence
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+
+    <!-- ===============================================
+         NAVIGATION
+    ================================================ -->
+
+    <nav class="admin-nav">
+
+        <div>
+            <strong>LAC</strong>
+            <span>NETWORK</span>
+        </div>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for('admin.analytics') }}">
+                Analytics
+            </a>
+
+            <a href="{{ url_for('admin.zones') }}">
+                Zones
+            </a>
+
+            <a href="{{ url_for('admin.access_points') }}">
+                Access Points
+            </a>
+
+            <a href="{{ url_for('admin.content_list') }}">
+                Content
+            </a>
+
+            <a href="{{ url_for('admin.content_archive') }}">
+                📦 Archive
+            </a>
+
+            <a href="{{ url_for('admin.create_content') }}">
+                + Add Content
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ===============================================
+         HEADER
+    ================================================ -->
+
+    <section class="admin-heading">
+
+        <p class="admin-eyebrow">
+            CONTENT INTELLIGENCE
+        </p>
+
+        <h1>
+            Local Content
+        </h1>
+
+        <p>
+            Monitor what is live, upcoming,
+            expiring, expired and inactive
+            across the LAC network.
+        </p>
+
+    </section>
+
+
+    <!-- ===============================================
+         FLASH MESSAGES
+    ================================================ -->
+
+    {% with messages = get_flashed_messages() %}
+
+        {% for message in messages %}
+
+        <div class="admin-alert">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <!-- ===============================================
+         STATUS METRICS
+    ================================================ -->
+
+    <section class="content-status-grid">
+
+
+        <!-- LIVE -->
+
+        <a
+            class="content-status-card"
+            href="{{ url_for(
+                'admin.content_list',
+                status='live'
+            ) }}"
+        >
+
+            <span class="status-icon">
+                🟢
+            </span>
+
+            <strong>
+                {{ status_counts.live }}
+            </strong>
+
+            <span>
+                Live
+            </span>
+
+        </a>
+
+
+        <!-- UPCOMING -->
+
+        <a
+            class="content-status-card"
+            href="{{ url_for(
+                'admin.content_list',
+                status='upcoming'
+            ) }}"
+        >
+
+            <span class="status-icon">
+                🟡
+            </span>
+
+            <strong>
+                {{ status_counts.upcoming }}
+            </strong>
+
+            <span>
+                Upcoming
+            </span>
+
+        </a>
+
+
+        <!-- EXPIRING SOON -->
+
+        <div class="content-status-card">
+
+            <span class="status-icon">
+                ⏳
+            </span>
+
+            <strong>
+                {{ expiring_soon_count }}
+            </strong>
+
+            <span>
+                Expiring Soon
+            </span>
+
+        </div>
+
+
+        <!-- EXPIRED -->
+
+        <a
+            class="content-status-card"
+            href="{{ url_for(
+                'admin.content_list',
+                status='expired'
+            ) }}"
+        >
+
+            <span class="status-icon">
+                🔴
+            </span>
+
+            <strong>
+                {{ status_counts.expired }}
+            </strong>
+
+            <span>
+                Expired
+            </span>
+
+        </a>
+
+
+        <!-- INACTIVE -->
+
+        <a
+            class="content-status-card"
+            href="{{ url_for(
+                'admin.content_list',
+                status='inactive'
+            ) }}"
+        >
+
+            <span class="status-icon">
+                ⚪
+            </span>
+
+            <strong>
+                {{ status_counts.inactive }}
+            </strong>
+
+            <span>
+                Inactive
+            </span>
+
+        </a>
+
+    </section>
+
+
+    <!-- ===============================================
+         FILTERS
+    ================================================ -->
+
+    <form
+        method="GET"
+        class="content-filters"
+    >
+
+        <select name="zone">
+
+            <option value="">
+                All Zones
+            </option>
+
+            {% for zone in zones %}
+
+            <option
+                value="{{ zone.id }}"
+                {% if selected_zone == zone.id %}
+                    selected
+                {% endif %}
+            >
+                {{ zone.name }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <select name="category">
+
+            <option value="">
+                All Categories
+            </option>
+
+            {% for category in categories %}
+
+            <option
+              value="{{ category.slug }}"
+              {% if selected_category == category.slug %}
+                selected
+              {% endif %}
+            >
+              {% if category.icon %}
+                {{ category.icon }}
+              {% endif %}
+
+              {{ category.name }}
+            </option>
+
+            {% endfor %}
+        </select>
+
+
+        <select name="status">
+
+            <option value="">
+                All Statuses
+            </option>
+
+            <option
+                value="live"
+                {% if selected_status == "live" %}
+                    selected
+                {% endif %}
+            >
+                Live
+            </option>
+
+            <option
+                value="upcoming"
+                {% if selected_status == "upcoming" %}
+                    selected
+                {% endif %}
+            >
+                Upcoming
+            </option>
+
+            <option
+                value="expired"
+                {% if selected_status == "expired" %}
+                    selected
+                {% endif %}
+            >
+                Expired
+            </option>
+
+            <option
+                value="inactive"
+                {% if selected_status == "inactive" %}
+                    selected
+                {% endif %}
+            >
+                Inactive
+            </option>
+
+        </select>
+
+
+        <button type="submit">
+            Filter
+        </button>
+
+
+        <a
+            class="filter-reset"
+            href="{{ url_for(
+                'admin.content_list'
+            ) }}"
+        >
+            Reset
+        </a>
+
+    </form>
+
+
+    <!-- ===============================================
+         CONTENT CARDS
+    ================================================ -->
+
+    <section class="content-admin-grid">
+
+        {% if content_rows %}
+
+            {% for row in content_rows %}
+
+                {% set item = row.item %}
+                {% set status = row.status %}
+                {% set expiry_info = row.expiry_info %}
+                {% set archive_info = row.archive_info %}
+
+
+                <article class="admin-content-card">
+
+
+                    <!-- STATUS HEADER -->
+
+                    <div class="content-card-top">
+
+                        <span class="content-category">
+                            {{ item.category|title }}
+                        </span>
+
+
+                        <span
+                            class="
+                                content-intelligence-status
+                                status-{{ status.key }}
+                            "
+                        >
+                            {{ status.icon }}
+                            {{ status.label }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- FEATURED -->
+
+                    {% if item.featured %}
+
+                    <span class="featured">
+                        FEATURED
+                    </span>
+
+                    {% endif %}
+
+
+                    <!-- TITLE -->
+
+                    <h2>
+                        {{ item.title }}
+                    </h2>
+
+
+                    <!-- ZONE -->
+
+                    <p class="content-zone">
+                        📍 {{ item.zone.name }}
+                    </p>
+
+
+                    <!-- BUSINESS -->
+
+                    {% if item.business_name %}
+
+                    <p>
+                        <strong>
+                            {{ item.business_name }}
+                        </strong>
+                    </p>
+
+                    {% endif %}
+
+
+                    <!-- DESCRIPTION -->
+
+                    {% if item.description %}
+
+                    <p class="muted">
+                        {{ item.description }}
+                    </p>
+
+                    {% endif %}
+
+
+                    <!-- ===================================
+                         EXPIRING SOON WARNING
+                    ==================================== -->
+
+                    {% if expiry_info %}
+
+                    <div class="expiring-warning">
+
+                        ⏳
+
+                        {% if expiry_info.days_remaining == 0 %}
+
+                            Expires today
+
+                        {% elif expiry_info.days_remaining == 1 %}
+
+                            Expires tomorrow
+
+                        {% else %}
+
+                            Expires in
+                            {{ expiry_info.days_remaining }}
+                            days
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- ===================================
+                         EXPIRED / ARCHIVE INTELLIGENCE
+                    ==================================== -->
+
+                    {% if archive_info %}
+
+                    <div class="archive-warning">
+
+                        <div>
+
+                            🔴
+
+                            {% if archive_info.expired_days == 1 %}
+
+                                Expired for 1 day
+
+                            {% else %}
+
+                                Expired for
+                                {{ archive_info.expired_days }}
+                                days
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="archive-countdown">
+
+                            📦
+
+                            {% if archive_info.days_until_archive == 0 %}
+
+                                Scheduled for automatic archive
+
+                            {% elif archive_info.days_until_archive == 1 %}
+
+                                Auto-archive tomorrow
+
+                            {% else %}
+
+                                Auto-archive in
+                                {{ archive_info.days_until_archive }}
+                                days
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- ===================================
+                         EVENT INTELLIGENCE
+                    ==================================== -->
+
+                    {% if item.category == "events" %}
+
+                    <div class="content-date-intelligence">
+
+
+                        {% if item.publish_from %}
+
+                        <div>
+
+                            <span>
+                                👁 Publishes
+                            </span>
+
+                            <strong>
+                                {{ item.publish_from.strftime("%d %b %Y") }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        {% if item.event_date %}
+
+                        <div>
+
+                            <span>
+                                📅 Event
+                            </span>
+
+                            <strong>
+                                {{ item.event_date.strftime("%d %b %Y") }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        {% if item.event_end_date %}
+
+                        <div>
+
+                            <span>
+                                🏁 Ends
+                            </span>
+
+                            <strong>
+                                {{ item.event_end_date.strftime("%d %b %Y") }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    <!-- ===================================
+                         OTHER CONTENT
+                    ==================================== -->
+
+                    {% else %}
+
+                    <div class="content-date-intelligence">
+
+
+                        {% if item.start_date %}
+
+                        <div>
+
+                            <span>
+                                ▶ Starts
+                            </span>
+
+                            <strong>
+                                {{ item.start_date.strftime("%d %b %Y") }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        {% if item.end_date %}
+
+                        <div>
+
+                            <span>
+                                ⏳ Expires
+                            </span>
+
+                            <strong>
+                                {{ item.end_date.strftime("%d %b %Y") }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- ===================================
+                         ACTIONS
+                    ==================================== -->
+
+                    <div class="content-actions">
+
+
+                        <!-- EDIT -->
+
+                        <a
+                            href="{{ url_for(
+                                'admin.edit_content',
+                                item_id=item.id
+                            ) }}"
+                        >
+                            Edit
+                        </a>
+
+
+                        <!-- ARCHIVE NOW -->
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.archive_content_now',
+                                item_id=item.id
+                            ) }}"
+                            onsubmit="
+                                return confirm(
+                                    'Archive this content now?'
+                                );
+                            "
+                        >
+
+                            <button type="submit">
+                                📦 Archive now
+                            </button>
+
+                        </form>
+
+
+                        <!-- ACTIVATE / DEACTIVATE -->
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.toggle_content',
+                                item_id=item.id
+                            ) }}"
+                        >
+
+                            <button type="submit">
+
+                                {% if item.active %}
+                                    Deactivate
+                                {% else %}
+                                    Activate
+                                {% endif %}
+
+                            </button>
+
+                        </form>
+
+
+                        <!-- DELETE -->
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.delete_content',
+                                item_id=item.id
+                            ) }}"
+                            onsubmit="
+                                return confirm(
+                                    'Delete this content permanently?'
+                                );
+                            "
+                        >
+
+                            <button
+                                type="submit"
+                                class="danger-button"
+                            >
+                                Delete
+                            </button>
+
+                        </form>
+
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <h2>
+                    No content found.
+                </h2>
+
+                <p>
+                    No listings match the selected filters.
+                </p>
+
+                <a
+                    class="admin-button"
+                    href="{{ url_for(
+                        'admin.create_content'
+                    ) }}"
+                >
+                    Add Content
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

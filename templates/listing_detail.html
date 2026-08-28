@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        {{ item.title }} | LaC
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="lac-public-body">
+
+<div class="lac-page">
+
+
+    <header class="access-header">
+
+        <div class="public-brand-wrap">
+
+            <div class="lac-brand">
+                LaC
+            </div>
+
+            <div class="lac-tagline">
+                LOCAL ACCESS. DELIVERED.
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main class="listing-detail-container">
+
+
+        <div class="location-label">
+            📍 {{ zone.name }}
+        </div>
+
+
+        <!-- =====================================
+             GALLERY
+        ====================================== -->
+
+        {% if item.images %}
+
+        <div
+            class="
+                listing-detail-gallery
+                {% if item.images|length == 1 %}
+                    single
+                {% endif %}
+            "
+        >
+
+            {% for image in item.images[:3] %}
+
+            <button
+                type="button"
+                data-image-url="{{ image.image_url }}"
+                data-image-alt="{{ item.title }}"
+                onclick="openImageModalFromButton(this)"
+            >
+
+                <img
+                    src="{{ image.image_url }}"
+                    alt="{{ item.title }}"
+                >
+
+            </button>
+
+            {% endfor %}
+
+        </div>
+
+
+        {% elif item.image_url %}
+
+        <div class="listing-detail-gallery single">
+
+            <button
+                type="button"
+                data-image-url="{{ item.image_url }}"
+                data-image-alt="{{ item.title }}"
+                onclick="openImageModalFromButton(this)"
+            >
+
+                <img
+                    src="{{ item.image_url }}"
+                    alt="{{ item.title }}"
+                >
+
+            </button>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- =====================================
+             LISTING
+        ====================================== -->
+
+        <article class="listing-detail-main">
+
+
+            <div class="listing-badge-row">
+
+                {% if item.featured %}
+
+                <span class="featured">
+                    ⭐ FEATURED
+                </span>
+
+                {% endif %}
+
+
+                <span class="listing-detail-category-badge">
+
+                    {% if category.icon %}
+                        {{ category.icon }}
+                    {% endif %}
+
+                    {{ category.name }}
+
+                </span>
+
+            </div>
+
+
+            <h1>
+                {{ item.title }}
+            </h1>
+
+
+            {% if item.business_name %}
+
+            <div class="listing-detail-business">
+                {{ item.business_name }}
+            </div>
+
+            {% endif %}
+
+
+            {% if item.description %}
+
+            <p class="listing-detail-description">
+                {{ item.description }}
+            </p>
+
+            {% endif %}
+
+
+            <!-- =================================
+                 DETAILS
+            ================================== -->
+
+            <div class="listing-detail-info-grid">
+
+
+                {% if item.venue %}
+
+                <div>
+
+                    <span>
+                        📍 Location
+                    </span>
+
+                    <strong>
+                        {{ item.venue }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if item.price %}
+
+                <div>
+
+                    <span>
+
+                        {% if category.slug == "property" %}
+                            🏠 Rent
+                        {% elif category.slug == "events" %}
+                            🎟️ Entry
+                        {% else %}
+                            💰 Price / Deal
+                        {% endif %}
+
+                    </span>
+
+                    <strong>
+                        {{ item.price }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if category.slug == "events" %}
+
+                    {% if item.event_date %}
+
+                    <div>
+
+                        <span>
+                            📅 Event Date
+                        </span>
+
+                        <strong>
+                            {{ item.event_date.strftime("%d %b %Y") }}
+                        </strong>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if item.event_end_date %}
+
+                    <div>
+
+                        <span>
+                            🕒 Ends
+                        </span>
+
+                        <strong>
+                            {{ item.event_end_date.strftime("%d %b %Y") }}
+                        </strong>
+
+                    </div>
+
+                    {% endif %}
+
+
+                {% else %}
+
+
+                    {% if item.start_date %}
+
+                    <div>
+
+                        <span>
+                            📅 Starts
+                        </span>
+
+                        <strong>
+                            {{ item.start_date.strftime("%d %b %Y") }}
+                        </strong>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if item.end_date %}
+
+                    <div>
+
+                        <span>
+                            ⏳ Available Until
+                        </span>
+
+                        <strong>
+                            {{ item.end_date.strftime("%d %b %Y") }}
+                        </strong>
+
+                    </div>
+
+                    {% endif %}
+
+                {% endif %}
+
+
+            </div>
+
+
+            <!-- =================================
+                 CONTACT
+            ================================== -->
+
+            {% if item.contact %}
+
+            <section class="listing-detail-contact">
+
+                <p class="listing-contact-eyebrow">
+                    INTERESTED?
+                </p>
+
+                <h2>
+                    Contact the listing owner
+                </h2>
+
+                <p>
+                    {{ item.contact }}
+                </p>
+
+
+                <div class="listing-actions">
+
+                    <a
+                        href="{{ item.contact|whatsapp_link }}"
+                        class="listing-action-button whatsapp-button"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        💬 WhatsApp
+                    </a>
+
+
+                    <a
+                        href="{{ item.contact|phone_link }}"
+                        class="listing-action-button call-button"
+                    >
+                        📞 Call
+                    </a>
+
+                </div>
+
+            </section>
+
+            {% endif %}
+
+
+            <!-- =================================
+                 SHARE
+            ================================== -->
+
+            <button
+                type="button"
+                class="listing-share-button"
+                onclick="shareListing()"
+            >
+                ↗ Share Listing
+            </button>
+
+
+            <div
+                id="share-feedback"
+                class="listing-share-feedback"
+            ></div>
+
+
+        </article>
+
+    </main>
+
+
+    <footer class="public-footer">
+
+        <div class="footer-brand">
+            LaC
+        </div>
+
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+        <div class="footer-zone">
+            📍 {{ zone.name }}
+        </div>
+
+    </footer>
+
+</div>
+
+
+<!-- IMAGE MODAL -->
+
+<div
+    id="image-modal"
+    class="image-modal"
+    onclick="closeImageModal()"
+>
+
+    <button
+        type="button"
+        class="image-modal-close"
+        onclick="closeImageModal()"
+    >
+        ×
+    </button>
+
+    <img
+        id="image-modal-content"
+        src=""
+        alt=""
+        onclick="event.stopPropagation()"
+    >
+
+</div>
+
+
+<script>
+
+    // =========================================
+    // IMAGE MODAL
+    // =========================================
+
+    function openImageModalFromButton(button) {
+
+        const modal =
+            document.getElementById(
+                "image-modal"
+            );
+
+        const image =
+            document.getElementById(
+                "image-modal-content"
+            );
+
+        image.src =
+            button.dataset.imageUrl;
+
+        image.alt =
+            button.dataset.imageAlt || "";
+
+        modal.classList.add(
+            "show"
+        );
+
+        document.body.style.overflow =
+            "hidden";
+    }
+
+
+    function closeImageModal() {
+
+        const modal =
+            document.getElementById(
+                "image-modal"
+            );
+
+        const image =
+            document.getElementById(
+                "image-modal-content"
+            );
+
+        modal.classList.remove(
+            "show"
+        );
+
+        image.src =
+            "";
+
+        document.body.style.overflow =
+            "";
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                closeImageModal();
+
+            }
+
+        }
+    );
+
+
+    // =========================================
+    // SHARE LISTING
+    // =========================================
+
+    async function shareListing() {
+
+        const feedback =
+            document.getElementById(
+                "share-feedback"
+            );
+
+
+        const shareData = {
+
+            title:
+                document.title,
+
+            text:
+                "View this listing on LaC.",
+
+            url:
+                window.location.href
+
+        };
+
+
+        try {
+
+            if (
+                navigator.share
+            ) {
+
+                await navigator.share(
+                    shareData
+                );
+
+            } else if (
+                navigator.clipboard
+            ) {
+
+                await navigator.clipboard.writeText(
+                    window.location.href
+                );
+
+                feedback.textContent =
+                    "Listing link copied ✓";
+
+                setTimeout(
+                    function() {
+
+                        feedback.textContent =
+                            "";
+
+                    },
+                    2500
+                );
+
+            } else {
+
+                feedback.textContent =
+                    window.location.href;
+
+            }
+
+        } catch (error) {
+
+            if (
+                error.name !== "AbortError"
+            ) {
+
+                feedback.textContent =
+                    "Unable to share this listing.";
+
+            }
+
+        }
+
+    }
+
+</script>
+
+</body>
+
+</html>

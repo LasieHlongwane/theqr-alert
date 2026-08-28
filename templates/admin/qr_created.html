@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        QR Created
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="qr-created">
+
+    <p class="admin-eyebrow">
+        LAC ACCESS POINT CREATED
+    </p>
+
+    <h1>
+        {{ access_point.name }}
+    </h1>
+
+    <p>
+        {{ access_point.code }}
+    </p>
+
+
+    <div class="qr-preview">
+
+        <img
+            src="{{ url_for(
+                'static',
+                filename='qr/' + qr_filename
+            ) }}"
+            alt="LAC QR Code"
+        >
+
+    </div>
+
+
+    <p class="qr-target">
+        {{ qr_url }}
+    </p>
+
+
+    <a
+        class="admin-button"
+        href="{{ url_for(
+            'static',
+            filename='qr/' + qr_filename
+        ) }}"
+        download
+    >
+        Save QR PNG
+    </a>
+
+
+    <a
+        class="admin-secondary-button"
+        href="{{ url_for(
+            'admin.create_access_point'
+        ) }}"
+    >
+        Create Another
+    </a>
+
+</div>
+
+</body>
+
+</html>

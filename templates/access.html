@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        LaC | {{ zone.name }}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-public-body">
+
+
+<div class="lac-page">
+
+
+    <!-- =========================================
+         PUBLIC HEADER
+    ========================================== -->
+
+    <header class="access-header">
+
+        <div class="public-brand-wrap">
+
+            <div class="lac-brand">
+                LaC
+            </div>
+
+            <div class="lac-tagline">
+                LOCAL ACCESS. DELIVERED.
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN EXPERIENCE
+    ========================================== -->
+
+    <main class="access-container">
+
+
+        <!-- LOCATION -->
+
+        <div class="location-label">
+
+            <span class="location-icon">
+                📍
+            </span>
+
+            <span>
+                {{ zone.name }}
+            </span>
+
+        </div>
+
+
+        <!-- HERO -->
+
+        <section class="access-hero">
+
+            <p class="access-eyebrow">
+                Ejo 
+            </p>
+
+            <h1>
+                Local Buzz
+            </h1>
+
+            <p class="intro">
+                Deals, events, services,
+                opportunities and useful information
+                — all in one place.
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             CATEGORY SECTION
+        ========================================== -->
+
+        <section class="category-section">
+
+            <div class="category-section-heading">
+
+                <div>
+
+                    <p class="category-section-eyebrow">
+                        EXPLORE LOCAL
+                    </p>
+
+                    <h2>
+                        Looking for..?
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="category-grid">
+
+
+                {% for category in categories %}
+
+
+                <a
+                    class="category-card"
+                    href="{{ url_for(
+                        'qr_category',
+                        code=access_point.code,
+                        category=category.slug
+                    ) }}"
+                >
+
+
+                    <div class="category-card-top">
+
+
+                        <div class="category-icon-wrap">
+
+                            <span class="category-icon">
+
+                                {% if category.icon %}
+
+                                    {{ category.icon }}
+
+                                {% else %}
+
+                                    📌
+
+                                {% endif %}
+
+                            </span>
+
+                        </div>
+
+
+                        <span class="category-arrow">
+                            →
+                        </span>
+
+                    </div>
+
+
+                    <div class="category-card-bottom">
+
+                        <span class="category-name">
+                            {{ category.name }}
+                        </span>
+
+                        <span class="category-discover">
+                            Discover
+                        </span>
+
+                    </div>
+
+
+                </a>
+
+
+                {% endfor %}
+
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             TRUST / CONTEXT
+        ========================================== -->
+
+        <section class="public-network-note">
+
+            <div class="network-note-icon">
+                ✦
+            </div>
+
+            <div>
+
+                <strong>
+                    Local info.
+                    Easy access.
+                </strong>
+
+                <p>
+                    LaC connects physical places
+                    in {{ zone.name }} with useful
+                    local digital information.
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="public-footer">
+
+        <div class="footer-brand">
+            LaC
+        </div>
+
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+        <div class="footer-zone">
+            📍 {{ zone.name }}
+        </div>
+
+    </footer>
+
+
+</div>
+
+
+</body>
+
+</html>

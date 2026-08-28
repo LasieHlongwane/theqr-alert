@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LAC Content Archive
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LAC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for(
+                'admin.content_list'
+            ) }}">
+                Content
+            </a>
+
+            <a href="{{ url_for(
+                'admin.analytics'
+            ) }}">
+                Analytics
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-heading">
+
+        <p class="admin-eyebrow">
+            CONTENT HISTORY
+        </p>
+
+        <h1>
+            Archive
+        </h1>
+
+        <p>
+            Historical LAC listings that
+            are no longer publicly active.
+        </p>
+
+    </section>
+
+
+    {% with messages =
+        get_flashed_messages() %}
+
+        {% for message in messages %}
+
+        <div class="admin-alert">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <section class="content-admin-grid">
+
+        {% if items %}
+
+            {% for item in items %}
+
+            <article class="admin-content-card">
+
+                <div class="content-card-top">
+
+                    <span class="content-category">
+                        {{ item.category|title }}
+                    </span>
+
+                    <span class="content-intelligence-status">
+                        📦 ARCHIVED
+                    </span>
+
+                </div>
+
+
+                <h2>
+                    {{ item.title }}
+                </h2>
+
+
+                <p>
+                    📍 {{ item.zone.name }}
+                </p>
+
+
+                {% if item.archived_at %}
+
+                <p class="muted">
+
+                    Archived:
+
+                    {{
+                        item.archived_at.strftime(
+                            "%d %b %Y %H:%M"
+                        )
+                    }}
+
+                </p>
+
+                {% endif %}
+
+
+                <div class="content-actions">
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin.restore_content',
+                            item_id=item.id
+                        ) }}"
+                    >
+
+                        <button type="submit">
+                            Restore
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <h2>
+                    Archive is empty.
+                </h2>
+
+                <p>
+                    Expired content will appear here
+                    automatically.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0c0e">
+
+    <title>Listing Dashboard | LaC</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body class="lac-public-body">
+<div class="lac-page">
+
+    <header class="access-header">
+        <div class="public-brand-wrap">
+            <div class="lac-brand">LaC</div>
+            <div class="lac-tagline">LOCAL DIGITAL INFRASTRUCTURE.</div>
+        </div>
+    </header>
+
+    <main class="organiser-dashboard-container">
+
+        <section class="organiser-dashboard-hero">
+            <p class="access-eyebrow">LISTING DASHBOARD</p>
+
+            <h1>{{ submission.title }}</h1>
+
+            {% if submission.business_name %}
+                <p class="organiser-business-name">
+                    {{ submission.business_name }}
+                </p>
+            {% endif %}
+
+            <div class="organiser-reference">
+                <span>Reference</span>
+                <strong>{{ submission.tracking_code }}</strong>
+            </div>
+        </section>
+
+        <section class="organiser-dashboard-panel">
+            <span class="dashboard-panel-label">
+                SUBMISSION STATUS
+            </span>
+
+            {% if submission.status == "pending" %}
+                <div class="dashboard-status-row pending">
+                    <span>🟡</span>
+
+                    <div>
+                        <strong>Pending Review</strong>
+                        <p>Your listing is waiting for LaC review.</p>
+                    </div>
+                </div>
+
+            {% elif submission.status == "approved" %}
+                <div class="dashboard-status-row approved">
+                    <span>✓</span>
+
+                    <div>
+                        <strong>Approved &amp; Published</strong>
+                        <p>Your listing is available on the LaC network.</p>
+                    </div>
+                </div>
+
+            {% elif submission.status == "rejected" %}
+                <div class="dashboard-status-row rejected">
+                    <span>×</span>
+
+                    <div>
+                        <strong>Not Approved</strong>
+                        <p>
+                            This submission was not approved for publication.
+                        </p>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if submission.status == "rejected" and submission.admin_notes %}
+                <div class="dashboard-review-note">
+                    <span>REVIEW NOTE</span>
+
+                    <p>{{ submission.admin_notes }}</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="organiser-dashboard-panel">
+            <span class="dashboard-panel-label">
+                LISTING INFORMATION
+            </span>
+
+            <div class="organiser-info-grid">
+
+                <div>
+                    <span>Zone</span>
+
+                    <strong>
+                        📍 {{ submission.zone.name }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Category</span>
+
+                    <strong>
+                        {% if category_record and category_record.icon %}
+                            {{ category_record.icon }}
+                        {% endif %}
+
+                        {{
+                            category_record.name
+                            if category_record
+                            else submission.category
+                        }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Submitted</span>
+
+                    <strong>
+                        {{ submission.created_at.strftime("%d %b %Y") }}
+                    </strong>
+                </div>
+
+                {% if submission.reviewed_at %}
+                    <div>
+                        <span>Reviewed</span>
+
+                        <strong>
+                            {{ submission.reviewed_at.strftime("%d %b %Y") }}
+                        </strong>
+                    </div>
+                {% endif %}
+
+            </div>
+        </section>
+
+        {% if submission.status == "approved" and published_content %}
+            <section class="organiser-dashboard-panel">
+                <span class="dashboard-panel-label">
+                    LISTING PERFORMANCE
+                </span>
+
+                <div class="organiser-performance-heading">
+                    <div>
+                        <h2>How people are viewing your listing</h2>
+
+                        <p>
+                            These numbers show engagement with your
+                            published LaC listing.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="organiser-metric-grid">
+
+                    <div class="organiser-metric organiser-main-metric">
+                        <span>👁 Full Listing Views</span>
+
+                        <strong>
+                            {{ published_content.view_count or 0 }}
+                        </strong>
+
+                        <small>
+                            People who opened your full listing.
+                        </small>
+                    </div>
+
+                    <div class="organiser-metric">
+                        <span>📡 Listing Status</span>
+
+                        <strong class="organiser-status-value">
+                            {% if published_content.archived %}
+                                Archived
+                            {% elif listing_expired %}
+                                Expired
+                            {% elif published_content.active %}
+                                Live
+                            {% else %}
+                                Inactive
+                            {% endif %} 
+                        </strong>
+
+                        <small>
+                            Current publication state.
+                        </small>
+                    </div>
+
+                </div>
+
+                {% if expiry_date %}
+                    <div class="organiser-expiry">
+                        <div>
+                            <span>LISTING EXPIRY</span>
+
+                            <strong>
+                                {{ expiry_date.strftime("%d %b %Y") }}
+                            </strong>
+                        </div>
+
+                        <div>
+                            {% if days_remaining is not none %}
+                                {% if days_remaining > 1 %}
+                                    {{ days_remaining }} days remaining
+                                {% elif days_remaining == 1 %}
+                                    1 day remaining
+                                {% elif days_remaining == 0 %}
+                                    Expires today
+                                {% else %}
+                                    Expired
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <a
+                    href="{{ url_for(
+                        'listing_detail',
+                        item_id=published_content.id
+                    ) }}"
+                    class="organiser-live-listing-button"
+                >
+                    View My Live Listing →
+                </a>
+            </section>
+        {% endif %}
+
+        {% if live_access_point and published_content %}
+            <a
+                href="{{ url_for(
+                    'listing_detail',
+                    item_id=published_content.id
+                ) }}"
+                class="organiser-live-listing-button"
+            >
+                View Live Listing →
+            </a>
+        {% endif %}
+
+        <a
+            href="{{ url_for(
+                'submission_status',
+                code=submission.tracking_code
+            ) }}"
+            class="organiser-secondary-link"
+        >
+            View Submission Status
+        </a>
+
+    </main>
+
+    <footer class="public-footer">
+        <div class="footer-brand">LaC</div>
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+    </footer>
+
+</div>
+</body>
+</html>

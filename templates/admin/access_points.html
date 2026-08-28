@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LAC Access Points
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LaC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for('admin.analytics') }}">
+                Analytics
+            </a>
+
+            <a href="{{ url_for('admin.zones') }}">
+                Zones
+            </a>
+
+            <a href="{{ url_for('admin.content_list') }}">
+                Content
+            </a>
+
+            <a href="{{ url_for('admin.create_access_point') }}">
+                 + Add Access Point
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-heading">
+
+      <p class="admin-eyebrow">
+        PHYSICAL NETWORK
+      </p>
+
+      <h1>
+        Access Points
+      </h1>
+
+      <p>
+        Manage physical QR entry points
+        into the LaC network.
+      </p>
+
+      <a
+        href="{{ url_for(
+            'admin.create_access_point'
+        ) }}"
+        class="admin-primary-button"
+      >
+        + Add Access Point
+      </a>
+
+    </section>
+
+
+    {% with messages = get_flashed_messages() %}
+
+        {% for message in messages %}
+
+        <div class="admin-alert">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <form
+        method="GET"
+        class="content-filters"
+    >
+
+        <select name="zone">
+
+            <option value="">
+                All Zones
+            </option>
+
+            {% for zone in zones %}
+
+            <option
+                value="{{ zone.id }}"
+                {% if selected_zone == zone.id %}
+                    selected
+                {% endif %}
+            >
+                {{ zone.name }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <select name="status">
+
+            <option value="">
+                All Statuses
+            </option>
+
+            <option
+                value="active"
+                {% if selected_status == "active" %}
+                    selected
+                {% endif %}
+            >
+                Active
+            </option>
+
+            <option
+                value="inactive"
+                {% if selected_status == "inactive" %}
+                    selected
+                {% endif %}
+            >
+                Inactive
+            </option>
+
+        </select>
+
+
+        <button type="submit">
+            Filter
+        </button>
+
+    </form>
+
+
+    <section class="admin-panel">
+
+        {% if points %}
+
+            {% for point in points %}
+
+            <div class="access-point-row">
+
+                <div>
+
+                    <strong>
+                        {{ point.name }}
+                    </strong>
+
+                    <span>
+                        📍 {{ point.zone.name }}
+                    </span>
+
+                    <span>
+                        {{ point.code }}
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        {{ point.location_type|replace("_", " ")|title }}
+                    </span>
+
+                    <span>
+                        QR:
+                        {{ point.qr_type|title }}
+                    </span>
+
+                    {% if point.default_category %}
+
+                    <span>
+                        Category:
+                        {{ point.default_category|title }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div>
+
+                    {% if point.active %}
+
+                    <span class="status-active">
+                        ACTIVE
+                    </span>
+
+                    {% else %}
+
+                    <span class="status-inactive">
+                        INACTIVE
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        {{
+                            point.scans
+                            |selectattr(
+                                "event_type",
+                                "equalto",
+                                "scan"
+                            )
+                            |list
+                            |length
+                        }}
+                    </strong>
+
+                    <span>
+                        scans
+                    </span>
+
+                </div>
+
+
+                <div class="content-actions">
+
+                    <a
+                        href="{{ url_for(
+                            'admin.edit_access_point',
+                            point_id=point.id
+                        ) }}"
+                    >
+                        Edit
+                    </a>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin.toggle_access_point',
+                            point_id=point.id
+                        ) }}"
+                    >
+
+                        <button type="submit">
+
+                            {% if point.active %}
+                                Deactivate
+                            {% else %}
+                                Activate
+                            {% endif %}
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <h2>
+                    No access points found.
+                </h2>
+
+                <a
+                    class="admin-button"
+                    href="{{ url_for(
+                        'admin.create_access_point'
+                    ) }}"
+                >
+                    Create QR Access Point
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

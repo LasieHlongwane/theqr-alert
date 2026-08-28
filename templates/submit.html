@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Submit Content | LaC
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-public-body">
+
+<div class="lac-page">
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="access-header">
+
+        <div class="public-brand-wrap">
+
+            <div class="lac-brand">
+                LaC
+            </div>
+
+            <div class="lac-tagline">
+                LOCAL DIGITAL INFRASTRUCTURE.
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
+    <main class="public-submit-container">
+
+
+        <!-- =====================================
+             INTRO
+        ====================================== -->
+
+        <section class="public-submit-hero">
+
+            <p class="access-eyebrow">
+                SHARE INFO
+            </p>
+
+            <h1>
+                Submit Content
+            </h1>
+
+            <p>
+                Add an event, deal, property listing,
+                service, job or other useful local
+                information for review.
+            </p>
+
+
+            <div class="submit-review-note">
+
+                <span class="submit-review-note-icon">
+                    ✓
+                </span>
+
+                <div>
+
+                    <strong>
+                        Reviewed before publishing
+                    </strong>
+
+                    <p>
+                        Your listing will only appear
+                        publicly after LaC has reviewed
+                        and approved it.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             FLASH MESSAGES
+        ====================================== -->
+
+        {% with messages = get_flashed_messages() %}
+
+            {% for message in messages %}
+
+            <div class="public-submit-alert">
+                {{ message }}
+            </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <!-- =====================================
+             FORM
+        ====================================== -->
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="public-submit-form-new"
+        >
+
+
+            <!-- =================================
+                 YOUR DETAILS
+            ================================== -->
+
+            <section class="public-form-section">
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        01
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Details
+                        </h2>
+
+                        <p>
+                            who is submitting
+                            this listing.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-form-grid">
+
+                    <label class="public-field">
+
+                        <span>
+                            Name *
+                        </span>
+
+                        <input
+                            type="text"
+                            name="submitter_name"
+                            required
+                            placeholder="Your full name"
+                        >
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        <span>
+                            Phone Number *
+                        </span>
+
+                        <input
+                            type="tel"
+                            name="submitter_phone"
+                            required
+                            placeholder="079 000 0000"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <label class="public-field">
+
+                    <span>
+                        Email
+                    </span>
+
+                    <input
+                        type="email"
+                        name="submitter_email"
+                        placeholder="you@example.com"
+                    >
+
+                </label>
+
+            </section>
+
+
+            <!-- =================================
+                 LOCATION + CATEGORY
+            ================================== -->
+
+            <section class="public-form-section">
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        02
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Target Area
+                        </h2>
+
+                        <p>
+                            Choose the local zone and
+                            category where customers
+                            should discover it.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-form-grid">
+
+                    <label class="public-field">
+
+                        <span>
+                            Zone *
+                        </span>
+
+                        <select
+                            name="zone_id"
+                            required
+                        >
+
+                            <option value="">
+                                Select zone
+                            </option>
+
+                            {% for zone in zones %}
+
+                            <option
+                                value="{{ zone.id }}"
+                            >
+                                {{ zone.name }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        <span>
+                            Category *
+                        </span>
+
+                        <select
+                            name="category"
+                            id="category-select"
+                            required
+                        >
+
+                            <option value="">
+                                Select category
+                            </option>
+
+                            {% for category in categories %}
+
+                            <option
+                                value="{{ category.slug }}"
+                            >
+
+                                {% if category.icon %}
+                                    {{ category.icon }}
+                                {% endif %}
+
+                                {{ category.name }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================
+                 LISTING DETAILS
+            ================================== -->
+
+            <section class="public-form-section">
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        03
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Listing Details
+                        </h2>
+
+                        <p>
+                            Add the information customers
+                            will see when your listing is approved.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <label class="public-field">
+
+                    <span>
+                        Title *
+                    </span>
+
+                    <input
+                        type="text"
+                        name="title"
+                        required
+                        placeholder="Example: Rooms to Rent"
+                    >
+
+                </label>
+
+
+                <label class="public-field">
+
+                    <span>
+                        Business / Organisation
+                    </span>
+
+                    <input
+                        type="text"
+                        name="business_name"
+                        placeholder="Business or organisation name"
+                    >
+
+                </label>
+
+
+                <label class="public-field">
+
+                    <span>
+                        Description
+                    </span>
+
+                    <textarea
+                        name="description"
+                        rows="5"
+                        placeholder="Tell customers what they need to know."
+                    ></textarea>
+
+                </label>
+
+
+                <div class="public-form-grid">
+
+                    <label class="public-field">
+
+                        <span>
+                            Venue / Location
+                        </span>
+
+                        <input
+                            type="text"
+                            name="venue"
+                            placeholder="Example: Zakheni"
+                        >
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        <span>
+                            Price
+                        </span>
+
+                        <input
+                            type="text"
+                            name="price"
+                            placeholder="R750 / Free / Negotiable"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <label class="public-field">
+
+                    <span>
+                        Public Contact Number
+                    </span>
+
+                    <input
+                        type="tel"
+                        name="contact"
+                        placeholder="Number customers should contact"
+                    >
+
+                    <small>
+                        This number may appear on the public
+                        listing for WhatsApp and calls.
+                    </small>
+
+                </label>
+
+            </section>
+
+
+            <!-- =================================
+                 PHOTOS
+            ================================== -->
+
+            <section class="public-form-section">
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        04
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Add Photos
+                        </h2>
+
+                        <p>
+                            Upload up to 3 photos or posters
+                            that represent the listing.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <label class="public-upload-box">
+
+                    <div class="public-upload-icon">
+                        📷
+                    </div>
+
+                    <strong>
+                        Choose Images
+                    </strong>
+
+                    <span>
+                        PNG, JPG, JPEG or WEBP
+                    </span>
+
+                    <small>
+                        Maximum 3 images
+                    </small>
+
+
+                    <input
+                        type="file"
+                        id="content-images"
+                        name="images"
+                        accept=".png,.jpg,.jpeg,.webp,image/*"
+                        multiple
+                    >
+
+                </label>
+
+
+                <div
+                    id="selected-images-preview"
+                    class="selected-images-preview public-image-preview"
+                ></div>
+
+            </section>
+
+
+            <!-- =================================
+                 EVENT DATES
+            ================================== -->
+
+            <section
+                id="event-date-fields"
+                class="public-form-section"
+            >
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        05
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Event Dates
+                        </h2>
+
+                        <p>
+                            Set when the event becomes
+                            visible and when it takes place.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-form-grid">
+
+                    <label class="public-field">
+
+                        <span>
+                            Publish From
+                        </span>
+
+                        <input
+                            type="date"
+                            name="publish_from"
+                        >
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        <span>
+                            Event Date
+                        </span>
+
+                        <input
+                            type="date"
+                            name="event_date"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <label class="public-field">
+
+                    <span>
+                        Event End Date
+                    </span>
+
+                    <input
+                        type="date"
+                        name="event_end_date"
+                    >
+
+                </label>
+
+            </section>
+
+
+            <!-- =================================
+                 GENERAL DATES
+            ================================== -->
+
+            <section
+                id="general-date-fields"
+                class="public-form-section"
+            >
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        05
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Listing Dates
+                        </h2>
+
+                        <p>
+                            Tell us when the listing
+                            becomes relevant and when
+                            it should expire.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-form-grid">
+
+                    <label class="public-field">
+
+                        <span>
+                            Start Date
+                        </span>
+
+                        <input
+                            type="date"
+                            name="start_date"
+                        >
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        <span>
+                            End Date
+                        </span>
+
+                        <input
+                            type="date"
+                            name="end_date"
+                        >
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================
+                 SUBMIT
+            ================================== -->
+
+            <section class="public-submit-final">
+
+                <div class="public-submit-final-info">
+
+                    <span>
+                        READY TO SUBMIT?
+                    </span>
+
+                    <h2>
+                        Send your listing for review.
+                    </h2>
+
+                    <p>
+                        After submission, you'll receive
+                        a tracking reference you can use
+                        to check whether the listing has
+                        been approved.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="public-submit-primary-button"
+                >
+                    Submit for Review →
+                </button>
+
+            </section>
+
+        </form>
+
+    </main>
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="public-footer">
+
+        <div class="footer-brand">
+            LaC
+        </div>
+
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+    </footer>
+
+</div>
+
+
+<script>
+
+    // =========================================
+    // DATE FIELD SWITCHING
+    // =========================================
+
+    const categorySelect =
+        document.getElementById(
+            "category-select"
+        );
+
+    const eventDateFields =
+        document.getElementById(
+            "event-date-fields"
+        );
+
+    const generalDateFields =
+        document.getElementById(
+            "general-date-fields"
+        );
+
+
+    function updateDateFields() {
+
+        if (!categorySelect) {
+            return;
+        }
+
+
+        if (
+            categorySelect.value
+            === "events"
+        ) {
+
+            eventDateFields.style.display =
+                "block";
+
+            generalDateFields.style.display =
+                "none";
+
+        } else {
+
+            eventDateFields.style.display =
+                "none";
+
+            generalDateFields.style.display =
+                "block";
+
+        }
+
+    }
+
+
+    if (categorySelect) {
+
+        categorySelect.addEventListener(
+            "change",
+            updateDateFields
+        );
+
+        updateDateFields();
+
+    }
+
+
+    // =========================================
+    // MULTI-IMAGE SELECTION
+    // =========================================
+
+    const imageInput =
+        document.getElementById(
+            "content-images"
+        );
+
+    const imagePreview =
+        document.getElementById(
+            "selected-images-preview"
+        );
+
+    let selectedImages = [];
+
+
+    function rebuildImageInput() {
+
+        const dataTransfer =
+            new DataTransfer();
+
+
+        selectedImages.forEach(
+            function(file) {
+
+                dataTransfer.items.add(
+                    file
+                );
+
+            }
+        );
+
+
+        imageInput.files =
+            dataTransfer.files;
+
+    }
+
+
+    function renderImagePreviews() {
+
+        imagePreview.innerHTML =
+            "";
+
+
+        selectedImages.forEach(
+            function(file, index) {
+
+                const wrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+                wrapper.className =
+                    "selected-image-item";
+
+
+                const image =
+                    document.createElement(
+                        "img"
+                    );
+
+
+                image.src =
+                    URL.createObjectURL(
+                        file
+                    );
+
+
+                image.alt =
+                    file.name;
+
+
+                const removeButton =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                removeButton.type =
+                    "button";
+
+                removeButton.textContent =
+                    "×";
+
+                removeButton.className =
+                    "remove-selected-image";
+
+
+                removeButton.addEventListener(
+                    "click",
+                    function() {
+
+                        selectedImages.splice(
+                            index,
+                            1
+                        );
+
+                        rebuildImageInput();
+
+                        renderImagePreviews();
+
+                    }
+                );
+
+
+                wrapper.appendChild(
+                    image
+                );
+
+                wrapper.appendChild(
+                    removeButton
+                );
+
+                imagePreview.appendChild(
+                    wrapper
+                );
+
+            }
+        );
+
+    }
+
+
+    if (imageInput) {
+
+        imageInput.addEventListener(
+            "change",
+            function(event) {
+
+                const newFiles =
+                    Array.from(
+                        event.target.files
+                    );
+
+
+                for (
+                    const file of newFiles
+                ) {
+
+                    const duplicate =
+                        selectedImages.some(
+                            function(existing) {
+
+                                return (
+                                    existing.name
+                                        === file.name
+                                    &&
+                                    existing.size
+                                        === file.size
+                                );
+
+                            }
+                        );
+
+
+                    if (
+                        !duplicate
+                        &&
+                        selectedImages.length < 3
+                    ) {
+
+                        selectedImages.push(
+                            file
+                        );
+
+                    }
+
+                }
+
+
+                selectedImages =
+                    selectedImages.slice(
+                        0,
+                        3
+                    );
+
+
+                rebuildImageInput();
+
+                renderImagePreviews();
+
+            }
+        );
+
+    }
+
+</script>
+
+</body>
+
+</html>

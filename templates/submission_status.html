@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Submission Status | LaC
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-public-body">
+
+<div class="lac-page">
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="access-header">
+
+        <div class="public-brand-wrap">
+
+            <div class="lac-brand">
+                LaC
+            </div>
+
+            <div class="lac-tagline">
+                LOCAL ACCESS. DELIVERED.
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
+    <main class="submission-status-container">
+
+
+        <section class="submission-status-card">
+
+
+            <!-- =====================================
+                 TOP
+            ====================================== -->
+
+            <p class="access-eyebrow">
+                SUBMISSION STATUS
+            </p>
+
+
+            <h1>
+                {{ submission.title }}
+            </h1>
+
+
+            {% if submission.business_name %}
+
+            <p class="submission-status-business">
+                {{ submission.business_name }}
+            </p>
+
+            {% endif %}
+
+
+            <!-- =====================================
+                 REFERENCE
+            ====================================== -->
+
+            <div class="submission-status-reference">
+
+                <span>
+                    Reference
+                </span>
+
+                <strong>
+                    {{ submission.tracking_code }}
+                </strong>
+
+            </div>
+
+
+            <!-- =====================================
+                 PENDING
+            ====================================== -->
+
+            {% if submission.status == "pending" %}
+
+            <div class="submission-state pending-state">
+
+                <div class="submission-state-icon">
+                    🟡
+                </div>
+
+                <div>
+
+                    <span class="submission-state-label">
+                        CURRENT STATUS
+                    </span>
+
+                    <h2>
+                        Pending Review
+                    </h2>
+
+                    <p>
+                        Your submission has been received
+                        and is waiting for review.
+                    </p>
+
+                    <p class="muted">
+                        Check this page again later
+                        using your reference number.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="submission-status-info">
+
+                <h3>
+                    What happens next?
+                </h3>
+
+                <p>
+                    LaC will review the listing details,
+                    category, dates and content before
+                    deciding whether to publish it.
+                </p>
+
+            </div>
+
+
+            <!-- =====================================
+                 APPROVED
+            ====================================== -->
+
+            {% elif submission.status == "approved" %}
+
+            <div class="submission-state approved-state">
+
+                <div class="submission-state-icon">
+                    ✓
+                </div>
+
+                <div>
+
+                    <span class="submission-state-label">
+                        CURRENT STATUS
+                    </span>
+
+                    <h2>
+                        Approved
+                    </h2>
+
+                    <p>
+                        Your listing has been approved
+                        and published on LaC.
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% if published_content and live_access_point %}
+
+            <div class="submission-live-box">
+
+             <div>
+
+               <span class="submission-state-label">
+                 YOUR LISTING IS LIVE
+               </span>
+
+               <strong>
+                 View it on the LaC network.
+               </strong>
+
+               <small class="submission-live-location">
+                 📍 {{ published_content.zone.name }}
+               </small>
+
+             </div>
+
+
+             <a
+               href="{{ url_for(
+                 'qr_category',
+                 code=live_access_point.code,
+                 category=published_content.category
+               ) }}"
+               class="submission-live-button"
+             >
+               View Live Listing →
+             </a>
+
+            </div>
+
+
+            {% else %}
+
+            <div class="submission-status-info">
+
+             <h3>
+               Listing approved
+             </h3>
+
+             <p>
+               Your listing has been approved,
+               but there is currently no active
+               LaC Access Point available for
+               this zone.
+             </p>
+
+            </div>
+
+            {% endif %}
+
+            <!-- =====================================
+                 REJECTED
+            ====================================== -->
+
+            {% elif submission.status == "rejected" %}
+
+            <div class="submission-state rejected-state">
+
+                <div class="submission-state-icon">
+                    ×
+                </div>
+
+                <div>
+
+                    <span class="submission-state-label">
+                        CURRENT STATUS
+                    </span>
+
+                    <h2>
+                        Not Approved
+                    </h2>
+
+                    <p>
+                        This submission was not approved
+                        for publication.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {% if submission.admin_notes %}
+
+            <div class="submission-review-note">
+
+                <span class="submission-state-label">
+                    REVIEW NOTE
+                </span>
+
+                <p>
+                    {{ submission.admin_notes }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =====================================
+                 UNKNOWN STATUS
+            ====================================== -->
+
+            {% else %}
+
+            <div class="submission-state unknown-state">
+
+                <div class="submission-state-icon">
+                    ?
+                </div>
+
+                <div>
+
+                    <h2>
+                        Status unavailable
+                    </h2>
+
+                    <p>
+                        We could not determine the current
+                        state of this submission.
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =====================================
+                 FOOTER REFERENCE
+            ====================================== -->
+
+            <div class="submission-status-footer">
+
+                <span>
+                    Keep this reference:
+                </span>
+
+                <strong>
+                    {{ submission.tracking_code }}
+                </strong>
+
+            </div>
+
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="public-footer">
+
+        <div class="footer-brand">
+            LaC
+        </div>
+
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+    </footer>
+
+
+</div>
+
+<a
+    href="{{ url_for(
+        'submission_dashboard',
+        code=submission.tracking_code
+    ) }}"
+    class="organiser-dashboard-link"
+>
+    Open Listing Dashboard →
+</a>
+
+</body>
+
+</html>

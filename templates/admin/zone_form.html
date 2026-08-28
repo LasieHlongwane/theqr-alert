@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% if zone %}
+            Edit Zone
+        {% else %}
+            Add Zone
+        {% endif %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LAC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for('admin.zones') }}">
+                Zones
+            </a>
+
+            <a href="{{ url_for('admin.analytics') }}">
+                Analytics
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-form-container">
+
+        <p class="admin-eyebrow">
+            ZONE MANAGEMENT
+        </p>
+
+        <h1>
+
+            {% if zone %}
+                Edit Zone
+            {% else %}
+                Add Zone
+            {% endif %}
+
+        </h1>
+
+
+        {% with messages = get_flashed_messages() %}
+
+            {% for message in messages %}
+
+            <div class="admin-alert">
+                {{ message }}
+            </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <form
+            method="POST"
+            class="admin-form"
+        >
+
+            <label>
+
+                Zone Name
+
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="KwaMhlanga"
+                    value="{{ zone.name if zone else '' }}"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Slug
+
+                <input
+                    type="text"
+                    name="slug"
+                    placeholder="kwamhlanga"
+                    value="{{ zone.slug if zone else '' }}"
+                    required
+                >
+
+            </label>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="active"
+                    {% if not zone or zone.active %}
+                        checked
+                    {% endif %}
+                >
+
+                Zone is active
+
+            </label>
+
+
+            <button type="submit">
+
+                {% if zone %}
+                    Save Zone
+                {% else %}
+                    Create Zone
+                {% endif %}
+
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

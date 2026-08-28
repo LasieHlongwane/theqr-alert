@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        {{ category.icon }} {{ category.name }} | LaC
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="lac-public-body">
+
+<div class="lac-page">
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="access-header">
+
+        <div class="public-brand-wrap">
+
+            <div class="lac-brand">
+                LaC
+            </div>
+
+            <div class="lac-tagline">
+                LOCAL ACCESS. DELIVERED.
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
+    <main class="access-container">
+
+
+        <div class="location-label">
+
+            <span>
+                📍
+            </span>
+
+            <span>
+                {{ zone.name }}
+            </span>
+
+        </div>
+
+
+        <!-- =====================================
+             CATEGORY HERO
+        ====================================== -->
+
+        <section class="category-page-hero">
+
+            <a
+                class="back-link category-back-link"
+                href="{{ url_for(
+                    'qr_access',
+                    code=access_point.code
+                ) }}"
+            >
+                ← Explore all categories
+            </a>
+
+
+            <div class="category-page-title-row">
+
+                <div class="category-page-icon">
+
+                    {% if category.icon %}
+                        {{ category.icon }}
+                    {% else %}
+                        📌
+                    {% endif %}
+
+                </div>
+
+
+                <div>
+
+                    <p class="access-eyebrow">
+                        LOCAL DISCOVERY
+                    </p>
+
+                    <h1>
+                        {{ category.name }}
+                    </h1>
+
+                </div>
+
+            </div>
+
+
+            <p class="category-page-intro">
+
+                Discover local
+                {{ category.name|lower }}
+                available around
+                {{ zone.name }}.
+
+            </p>
+
+        </section>
+
+
+        <!-- =====================================
+             CATEGORY SEARCH
+        ====================================== -->
+
+        {% if items %}
+
+        <div class="category-search">
+
+            <div class="category-search-icon">
+                🔎
+            </div>
+
+            <input
+                type="search"
+                id="category-search-input"
+                placeholder="Search business or organisation..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                id="category-search-clear"
+                class="category-search-clear"
+                aria-label="Clear search"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="category-search-result-count"
+            class="category-search-result-count"
+        ></div>
+
+        {% endif %}
+
+
+        <!-- =====================================
+             LISTINGS
+        ====================================== -->
+
+        <section class="content-list">
+
+
+            {% if items %}
+
+
+                {% for item in items %}
+
+
+                <article
+                    class="content-card public-listing-card"
+                    data-title="{{ item.title|lower }}"
+                    data-business="{{ (item.business_name or '')|lower }}"
+                    data-venue="{{ (item.venue or '')|lower }}"
+                >
+
+
+                    <!-- =================================
+                         IMAGE GALLERY
+                    ================================== -->
+
+                    {% if item.images %}
+
+                    <div
+                        class="
+                            content-gallery
+                            {% if item.images|length == 1 %}
+                                single-gallery
+                            {% elif item.images|length == 2 %}
+                                two-gallery
+                            {% endif %}
+                        "
+                    >
+
+                        {% for image in item.images[:3] %}
+
+                        <button
+                            type="button"
+                            class="gallery-image-button"
+                            data-image-url="{{ image.image_url }}"
+                            data-image-alt="{{ item.title }}"
+                            onclick="openImageModalFromButton(this)"
+                            aria-label="View {{ item.title }} image"
+                        >
+
+                            <img
+                                src="{{ image.image_url }}"
+                                alt="{{ item.title }}"
+                                loading="lazy"
+                            >
+
+                            {% if
+                                loop.first
+                                and item.images|length > 1
+                            %}
+
+                            <span class="gallery-count-badge">
+                                📷 {{ item.images|length }}
+                            </span>
+
+                            {% endif %}
+
+                        </button>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    {% elif item.image_url %}
+
+                    <div class="content-gallery single-gallery">
+
+                        <button
+                            type="button"
+                            class="gallery-image-button"
+                            data-image-url="{{ item.image_url }}"
+                            data-image-alt="{{ item.title }}"
+                            onclick="openImageModalFromButton(this)"
+                            aria-label="View {{ item.title }} image"
+                        >
+
+                            <img
+                                src="{{ item.image_url }}"
+                                alt="{{ item.title }}"
+                                loading="lazy"
+                            >
+
+                        </button>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================
+                         BADGES
+                    ================================== -->
+
+                    <div class="listing-badge-row">
+
+                        {% if item.featured %}
+
+                        <span class="featured">
+                            ⭐ FEATURED
+                        </span>
+
+                        {% endif %}
+
+
+                        {% if
+                            category.slug != "events"
+                            and item.start_date
+                            and item.start_date > today
+                        %}
+
+                        <span class="public-status-badge upcoming">
+                            🟡 UPCOMING
+                        </span>
+
+                        {% endif %}
+
+
+                        {% if
+                            category.slug == "events"
+                            and item.event_date
+                            and item.event_date > today
+                        %}
+
+                        <span class="public-status-badge upcoming">
+                            🟡 UPCOMING EVENT
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================
+                         TITLE / BUSINESS
+                    ================================== -->
+
+                    <div class="listing-main-info">
+
+                        <h2>
+                            {{ item.title }}
+                        </h2>
+
+
+                        {% if item.business_name %}
+
+                        <div class="business-name">
+                            {{ item.business_name }}
+                        </div>
+
+                        {% endif %}
+
+
+                        {% if item.description %}
+
+                        <p class="listing-description">
+                            {{ item.description }}
+                        </p>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================
+                         KEY DETAILS
+                    ================================== -->
+
+                    <div class="listing-detail-grid">
+
+
+                        {% if category.slug == "events" %}
+
+                            {% if item.event_date %}
+
+                            <div class="listing-detail-card">
+
+                                <span class="listing-detail-icon">
+                                    📅
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Event Date
+                                    </span>
+
+                                    <strong>
+                                        {{ item.event_date.strftime("%d %b %Y") }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                            {% endif %}
+
+
+                            {% if
+                                item.event_end_date
+                                and item.event_end_date != item.event_date
+                            %}
+
+                            <div class="listing-detail-card">
+
+                                <span class="listing-detail-icon">
+                                    🕒
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Ends
+                                    </span>
+
+                                    <strong>
+                                        {{ item.event_end_date.strftime("%d %b %Y") }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                            {% endif %}
+
+
+                        {% else %}
+
+
+                            {% if item.start_date %}
+
+                            <div class="listing-detail-card">
+
+                                <span class="listing-detail-icon">
+                                    📅
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Starts
+                                    </span>
+
+                                    <strong>
+                                        {{ item.start_date.strftime("%d %b %Y") }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                            {% endif %}
+
+
+                            {% if item.end_date %}
+
+                            <div class="listing-detail-card">
+
+                                <span class="listing-detail-icon">
+                                    ⏳
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Available Until
+                                    </span>
+
+                                    <strong>
+                                        {{ item.end_date.strftime("%d %b %Y") }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                            {% endif %}
+
+
+                        {% endif %}
+
+
+                        {% if item.venue %}
+
+                        <div class="listing-detail-card">
+
+                            <span class="listing-detail-icon">
+                                📍
+                            </span>
+
+                            <div>
+
+                                <span class="listing-detail-label">
+                                    Location
+                                </span>
+
+                                <strong>
+                                    {{ item.venue }}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        {% if item.price %}
+
+                        <div class="listing-detail-card listing-price-card">
+
+                            {% if category.slug == "property" %}
+
+                                <span class="listing-detail-icon">
+                                    🏠
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Rent
+                                    </span>
+
+                                    <strong>
+                                        {{ item.price }}
+                                    </strong>
+
+                                </div>
+
+
+                            {% elif category.slug == "events" %}
+
+                                <span class="listing-detail-icon">
+                                    🎟️
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Entry
+                                    </span>
+
+                                    <strong>
+                                        {{ item.price }}
+                                    </strong>
+
+                                </div>
+
+
+                            {% else %}
+
+                                <span class="listing-detail-icon">
+                                    💰
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Price / Deal
+                                    </span>
+
+                                    <strong>
+                                        {{ item.price }}
+                                    </strong>
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================
+                         VIEW DETAILS
+                    ================================== -->
+
+                    <div class="listing-card-primary-action">
+
+                        <a
+                            href="{{ url_for(
+                                'listing_detail',
+                                item_id=item.id
+                            ) }}"
+                            class="listing-details-button"
+                        >
+                            View Full Listing →
+                        </a>
+
+                    </div>
+
+
+                    <!-- =================================
+                         QUICK CONTACT
+                    ================================== -->
+
+                    {% if item.contact %}
+
+                    <div class="listing-contact">
+
+                        <div class="listing-contact-heading">
+
+                            <div>
+
+                                <span class="listing-contact-eyebrow">
+                                    QUICK CONTACT
+                                </span>
+
+                                <strong>
+                                    Contact the listing owner
+                                </strong>
+
+                            </div>
+
+                            <span class="listing-contact-number">
+                                {{ item.contact }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="listing-actions">
+
+                            <a
+                                href="{{ item.contact|whatsapp_link }}"
+                                class="listing-action-button whatsapp-button"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                💬 WhatsApp
+                            </a>
+
+
+                            <a
+                                href="{{ item.contact|phone_link }}"
+                                class="listing-action-button call-button"
+                            >
+                                📞 Call
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                </article>
+
+
+                {% endfor %}
+
+
+            {% else %}
+
+
+                <div class="empty-state public-empty-state">
+
+                    <div class="empty-state-icon">
+
+                        {% if category.icon %}
+                            {{ category.icon }}
+                        {% else %}
+                            📌
+                        {% endif %}
+
+                    </div>
+
+
+                    <h2>
+                        Nothing listed yet.
+                    </h2>
+
+
+                    <p>
+
+                        There are currently no
+                        {{ category.name|lower }}
+                        listings available in
+                        {{ zone.name }}.
+
+                    </p>
+
+
+                    <a
+                        href="{{ url_for(
+                            'qr_access',
+                            code=access_point.code
+                        ) }}"
+                        class="empty-state-button"
+                    >
+                        Explore Other Categories
+                    </a>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </section>
+
+    </main>
+
+
+    <footer class="public-footer">
+
+        <div class="footer-brand">
+            LaC
+        </div>
+
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+        <div class="footer-zone">
+            📍 {{ zone.name }}
+        </div>
+
+    </footer>
+
+
+</div>
+
+
+<!-- =====================================================
+     IMAGE MODAL
+===================================================== -->
+
+<div
+    id="image-modal"
+    class="image-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
+    onclick="closeImageModal()"
+>
+
+    <button
+        type="button"
+        class="image-modal-close"
+        onclick="closeImageModal()"
+        aria-label="Close image"
+    >
+        ×
+    </button>
+
+    <img
+        id="image-modal-content"
+        src=""
+        alt=""
+        onclick="event.stopPropagation()"
+    >
+
+</div>
+
+
+<script>
+
+    // =========================================
+    // IMAGE MODAL
+    // =========================================
+
+    function openImageModalFromButton(button) {
+
+        const imageUrl =
+            button.dataset.imageUrl;
+
+        const altText =
+            button.dataset.imageAlt || "";
+
+        openImageModal(
+            imageUrl,
+            altText
+        );
+    }
+
+
+    function openImageModal(
+        imageUrl,
+        altText
+    ) {
+
+        const modal =
+            document.getElementById(
+                "image-modal"
+            );
+
+        const image =
+            document.getElementById(
+                "image-modal-content"
+            );
+
+
+        if (!modal || !image) {
+            return;
+        }
+
+
+        image.src =
+            imageUrl;
+
+        image.alt =
+            altText;
+
+
+        modal.classList.add(
+            "show"
+        );
+
+        modal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+        document.body.style.overflow =
+            "hidden";
+    }
+
+
+    function closeImageModal() {
+
+        const modal =
+            document.getElementById(
+                "image-modal"
+            );
+
+        const image =
+            document.getElementById(
+                "image-modal-content"
+            );
+
+
+        if (!modal) {
+            return;
+        }
+
+
+        modal.classList.remove(
+            "show"
+        );
+
+        modal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        if (image) {
+            image.src = "";
+            image.alt = "";
+        }
+
+
+        document.body.style.overflow =
+            "";
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Escape"
+            ) {
+                closeImageModal();
+            }
+
+        }
+    );
+
+
+    // =========================================
+    // CATEGORY SEARCH
+    // =========================================
+
+    const categorySearchInput =
+        document.getElementById(
+            "category-search-input"
+        );
+
+    const categorySearchClear =
+        document.getElementById(
+            "category-search-clear"
+        );
+
+    const categorySearchResultCount =
+        document.getElementById(
+            "category-search-result-count"
+        );
+
+    const listingCards =
+        Array.from(
+            document.querySelectorAll(
+                ".public-listing-card"
+            )
+        );
+
+
+    function filterCategoryListings() {
+
+        if (!categorySearchInput) {
+            return;
+        }
+
+
+        const query =
+            categorySearchInput.value
+            .trim()
+            .toLowerCase();
+
+
+        let visibleCount = 0;
+
+
+        listingCards.forEach(
+            function(card) {
+
+                const title =
+                    card.dataset.title || "";
+
+                const business =
+                    card.dataset.business || "";
+
+                const venue =
+                    card.dataset.venue || "";
+
+
+                const matches =
+                    !query
+                    ||
+                    title.includes(query)
+                    ||
+                    business.includes(query)
+                    ||
+                    venue.includes(query);
+
+
+                card.style.display =
+                    matches
+                    ? ""
+                    : "none";
+
+
+                if (matches) {
+                    visibleCount += 1;
+                }
+
+            }
+        );
+
+
+        if (
+            categorySearchResultCount
+        ) {
+
+            if (!query) {
+
+                categorySearchResultCount.textContent =
+                    "";
+
+            } else if (
+                visibleCount === 0
+            ) {
+
+                categorySearchResultCount.textContent =
+                    "No matching listings found.";
+
+            } else if (
+                visibleCount === 1
+            ) {
+
+                categorySearchResultCount.textContent =
+                    "1 matching listing";
+
+            } else {
+
+                categorySearchResultCount.textContent =
+                    visibleCount
+                    + " matching listings";
+
+            }
+
+        }
+
+
+        if (categorySearchClear) {
+
+            categorySearchClear.style.display =
+                query
+                ? "flex"
+                : "none";
+
+        }
+
+    }
+
+
+    if (categorySearchInput) {
+
+        categorySearchInput.addEventListener(
+            "input",
+            filterCategoryListings
+        );
+
+    }
+
+
+    if (categorySearchClear) {
+
+        categorySearchClear.addEventListener(
+            "click",
+            function() {
+
+                categorySearchInput.value =
+                    "";
+
+                filterCategoryListings();
+
+                categorySearchInput.focus();
+
+            }
+        );
+
+    }
+
+
+    filterCategoryListings();
+
+</script>
+
+</body>
+
+</html>

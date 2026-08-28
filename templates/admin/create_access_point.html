@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Create LAC QR
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LAC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a
+                href="{{ url_for('admin.analytics') }}"
+            >
+                Analytics
+            </a>
+
+            <a
+                href="{{ url_for('admin.access_points') }}"
+            >
+                Access Points
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-form-container">
+
+        <p class="admin-eyebrow">
+            QR NETWORK
+        </p>
+
+        <h1>
+            Create Access Point
+        </h1>
+
+        <p>
+            Create a unique physical entry
+            point into the LAC network.
+        </p>
+
+
+        <form
+            method="POST"
+            class="admin-form"
+        >
+
+            <label>
+                QR Code ID
+
+                <input
+                    name="code"
+                    placeholder="KWM-TAXI-002"
+                    required
+                >
+            </label>
+
+
+            <label>
+                Location name
+
+                <input
+                    name="name"
+                    placeholder="KwaMhlanga Taxi Rank"
+                    required
+                >
+            </label>
+
+
+            <label>
+                Zone
+
+                <select
+                    name="zone_id"
+                    required
+                >
+
+                    {% for zone in zones %}
+
+                    <option value="{{ zone.id }}">
+                        {{ zone.name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <label>
+                Location type
+
+                <select name="location_type">
+
+                    <option value="taxi_rank">
+                        Taxi Rank
+                    </option>
+
+                    <option value="supermarket">
+                        Supermarket
+                    </option>
+
+                    <option value="shopping_centre">
+                        Shopping Centre
+                    </option>
+
+                    <option value="restaurant">
+                        Restaurant
+                    </option>
+
+                    <option value="entertainment">
+                        Entertainment Venue
+                    </option>
+
+                    <option value="community">
+                        Community Centre
+                    </option>
+
+                    <option value="other">
+                        Other
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+                QR Behaviour
+
+                <select
+                    name="qr_type"
+                    id="qr-type"
+                >
+
+                    <option value="general">
+                        General — show categories
+                    </option>
+
+                    <option value="category">
+                        Category-specific
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+                Default category
+
+                <select
+                    name="default_category"
+                >
+
+                    <option value="">
+                        None
+                    </option>
+
+                    <option value="events">
+                        Events
+                    </option>
+
+                    <option value="specials">
+                        Specials
+                    </option>
+
+                    <option value="jobs">
+                        Jobs
+                    </option>
+
+                    <option value="food">
+                        Food
+                    </option>
+
+                    <option value="services">
+                        Services
+                    </option>
+
+                    <option value="transport">
+                        Transport
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+                Partner name
+
+                <input
+                    name="partner_name"
+                    placeholder="Optional"
+                >
+
+            </label>
+
+
+            <button type="submit">
+                Generate LAC QR
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

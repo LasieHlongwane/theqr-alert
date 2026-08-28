@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Edit Access Point
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LAC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for('admin.access_points') }}">
+                Access Points
+            </a>
+
+            <a href="{{ url_for('admin.analytics') }}">
+                Analytics
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-form-container">
+
+        <p class="admin-eyebrow">
+            ACCESS POINT MANAGEMENT
+        </p>
+
+        <h1>
+            Edit Access Point
+        </h1>
+
+
+        <p>
+            QR ID:
+            <strong>
+                {{ point.code }}
+            </strong>
+        </p>
+
+
+        <form
+            method="POST"
+            class="admin-form"
+        >
+
+            <label>
+
+                Location Name
+
+                <input
+                    type="text"
+                    name="name"
+                    value="{{ point.name }}"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Zone
+
+                <select
+                    name="zone_id"
+                    required
+                >
+
+                    {% for zone in zones %}
+
+                    <option
+                        value="{{ zone.id }}"
+                        {% if point.zone_id == zone.id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ zone.name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                Location Type
+
+                <select name="location_type">
+
+                    {% set types = [
+                        ("taxi_rank", "Taxi Rank"),
+                        ("supermarket", "Supermarket"),
+                        ("shopping_centre", "Shopping Centre"),
+                        ("restaurant", "Restaurant"),
+                        ("entertainment", "Entertainment Venue"),
+                        ("community", "Community Centre"),
+                        ("other", "Other")
+                    ] %}
+
+                    {% for value, label in types %}
+
+                    <option
+                        value="{{ value }}"
+                        {% if point.location_type == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                QR Behaviour
+
+                <select
+                    name="qr_type"
+                    id="qr-type"
+                >
+
+                    <option
+                        value="general"
+                        {% if point.qr_type == "general" %}
+                            selected
+                        {% endif %}
+                    >
+                        General — show categories
+                    </option>
+
+                    <option
+                        value="category"
+                        {% if point.qr_type == "category" %}
+                            selected
+                        {% endif %}
+                    >
+                        Category-specific
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label
+                id="default-category-wrapper"
+            >
+
+                Default Category
+
+                <select name="default_category">
+
+                    <option value="">
+                        None
+                    </option>
+
+                    {% for value, label in categories %}
+
+                    <option
+                        value="{{ value }}"
+                        {% if point.default_category == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                Partner Name
+
+                <input
+                    type="text"
+                    name="partner_name"
+                    value="{{
+                        point.partner_name
+                        if point.partner_name
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="active"
+                    {% if point.active %}
+                        checked
+                    {% endif %}
+                >
+
+                Access point is active
+
+            </label>
+
+
+            <button type="submit">
+                Save Changes
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+<script>
+
+    const qrType =
+        document.getElementById(
+            "qr-type"
+        );
+
+    const categoryWrapper =
+        document.getElementById(
+            "default-category-wrapper"
+        );
+
+
+    function updateCategoryVisibility() {
+
+        if (
+            qrType.value === "category"
+        ) {
+
+            categoryWrapper.style.display =
+                "flex";
+
+        } else {
+
+            categoryWrapper.style.display =
+                "none";
+
+        }
+
+    }
+
+
+    qrType.addEventListener(
+        "change",
+        updateCategoryVisibility
+    );
+
+
+    updateCategoryVisibility();
+
+</script>
+
+</body>
+
+</html>

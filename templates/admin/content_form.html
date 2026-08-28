@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% if item %}
+            Edit Content
+        {% else %}
+            Add Content
+        {% endif %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LaC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a
+                href="{{ url_for(
+                    'admin.analytics'
+                ) }}"
+            >
+                Analytics
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.categories'
+                ) }}"
+            >
+                Categories
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.content_list'
+                ) }}"
+            >
+                Content
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-form-container">
+
+        <p class="admin-eyebrow">
+            CONTENT MANAGEMENT
+        </p>
+
+        <h1>
+            {% if item %}
+                Edit Content
+            {% else %}
+                Add Local Content
+            {% endif %}
+        </h1>
+
+        <p>
+            This content will appear to users
+            accessing the selected zone and category.
+        </p>
+
+
+        {% with messages = get_flashed_messages() %}
+
+            {% for message in messages %}
+
+            <div class="admin-alert">
+                {{ message }}
+            </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="admin-form"
+        >
+
+
+            <label>
+
+                Zone
+
+                <select
+                    name="zone_id"
+                    required
+                >
+
+                    {% for zone in zones %}
+
+                    <option
+                        value="{{ zone.id }}"
+                        {% if item
+                              and item.zone_id == zone.id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ zone.name }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                Category
+
+                <select
+                    name="category"
+                    id="category-select"
+                    required
+                >
+
+                    {% for category in categories %}
+
+                    <option
+                        value="{{ category.slug }}"
+                        {% if item
+                              and item.category == category.slug %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {% if category.icon %}
+                            {{ category.icon }}
+                        {% endif %}
+
+                        {{ category.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                Title
+
+                <input
+                    type="text"
+                    name="title"
+                    required
+                    placeholder="Saturday Groove Session"
+                    value="{{
+                        item.title
+                        if item
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Description
+
+                <textarea
+                    name="description"
+                    rows="6"
+                    placeholder="Tell people what they need to know."
+                >{{ item.description if item and item.description else '' }}</textarea>
+
+            </label>
+
+
+            <label>
+
+                Business / Organisation
+
+                <input
+                    type="text"
+                    name="business_name"
+                    placeholder="KwaMhlanga Supermarket"
+                    value="{{
+                        item.business_name
+                        if item and item.business_name
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Venue / Location
+
+                <input
+                    type="text"
+                    name="venue"
+                    placeholder="KwaMhlanga Community Hall"
+                    value="{{
+                        item.venue
+                        if item and item.venue
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Price
+
+                <input
+                    type="text"
+                    name="price"
+                    placeholder="R50 / Free / R19.99"
+                    value="{{
+                        item.price
+                        if item and item.price
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Contact
+
+                <input
+                    type="text"
+                    name="contact"
+                    placeholder="079 000 0000"
+                    value="{{
+                        item.contact
+                        if item and item.contact
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <!-- =====================================
+                 MULTI IMAGE UPLOAD
+            ====================================== -->
+
+            <div class="content-upload-section">
+
+                <label>
+
+                    Upload Images / Posters
+
+                    <input
+                        type="file"
+                        id="content-images"
+                        name="images"
+                        accept=".png,.jpg,.jpeg,.webp,image/*"
+                        multiple
+                    >
+
+                </label>
+
+                <p class="muted">
+                    You can upload up to 3 images.
+                    You may choose them together or add them one at a time.
+                    
+                </p>
+
+                <!-- EXISTING DATABASE IMAGES -->
+
+                
+                {% if item and item.images %}
+
+                <div class="content-image-preview">
+
+                    <p>
+                        Current images
+                    </p>
+
+                    <div class="content-gallery">
+
+                        {% for image in item.images[:3] %}
+
+                        <img
+                            src="{{ image.image_url }}"
+                            alt="{{ item.title }}"
+                            loading="lazy"
+                            style="
+                                max-width: 160px;
+                                width: 100%;
+                                height: 120px;
+                                object-fit: cover;
+                                border-radius: 10px;
+                                display: inline-block;
+                                margin-right: 8px;
+                                margin-bottom: 8px;
+                            "
+                        >
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                {% elif item and item.image_url %}
+
+                <div class="content-image-preview">
+
+                    <p>
+                        Current image
+                    </p>
+
+                    <img
+                        src="{{ item.image_url }}"
+                        alt="{{ item.title }}"
+                        loading="lazy"
+                        style="
+                            width: 160px;
+                            height: 120px;
+                            object-fit: cover;
+                            border-radius: 12px;
+                            display: block;
+                        "
+                    >
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <div
+                id="event-date-fields"
+                class="event-date-fields"
+            >
+
+                <h3>
+                    Event Dates
+                </h3>
+
+                <p class="muted">
+                    These fields are used when
+                    the category is Events.
+                </p>
+
+
+                <div class="form-two-column">
+
+                    <label>
+
+                        Publish From
+
+                        <input
+                            type="date"
+                            name="publish_from"
+                            value="{{
+                                item.publish_from.strftime('%Y-%m-%d')
+                                if item and item.publish_from
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Event Date
+
+                        <input
+                            type="date"
+                            name="event_date"
+                            value="{{
+                                item.event_date.strftime('%Y-%m-%d')
+                                if item and item.event_date
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <label>
+
+                    Event End Date
+
+                    <input
+                        type="date"
+                        name="event_end_date"
+                        value="{{
+                            item.event_end_date.strftime('%Y-%m-%d')
+                            if item and item.event_end_date
+                            else ''
+                        }}"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <div
+                id="general-date-fields"
+                class="general-date-fields"
+            >
+
+                <h3>
+                    Validity Dates
+                </h3>
+
+                <p class="muted">
+                    These dates are used for
+                    non-event listings such as
+                    specials, jobs, property,
+                    food, services and transport.
+                </p>
+
+
+                <div class="form-two-column">
+
+                    <label>
+
+                        Start Date
+
+                        <input
+                            type="date"
+                            name="start_date"
+                            value="{{
+                                item.start_date.strftime('%Y-%m-%d')
+                                if item and item.start_date
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        End Date
+
+                        <input
+                            type="date"
+                            name="end_date"
+                            value="{{
+                                item.end_date.strftime('%Y-%m-%d')
+                                if item and item.end_date
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="featured"
+                    {% if item and item.featured %}
+                        checked
+                    {% endif %}
+                >
+
+                Feature this listing
+
+            </label>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="active"
+                    {% if not item or item.active %}
+                        checked
+                    {% endif %}
+                >
+
+                Publish immediately
+
+            </label>
+
+
+            <button type="submit">
+
+                {% if item %}
+                    Save Changes
+                {% else %}
+                    Publish Content
+                {% endif %}
+
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+<script>
+
+    const categorySelect =
+        document.getElementById(
+            "category-select"
+        );
+
+    const eventDateFields =
+        document.getElementById(
+            "event-date-fields"
+        );
+
+    const generalDateFields =
+        document.getElementById(
+            "general-date-fields"
+        );
+
+
+    function updateDateFields() {
+
+        if (!categorySelect) {
+            return;
+        }
+
+        const category =
+            categorySelect.value;
+
+
+        if (category === "events") {
+
+            eventDateFields.style.display =
+                "block";
+
+            generalDateFields.style.display =
+                "none";
+
+        } else {
+
+            eventDateFields.style.display =
+                "none";
+
+            generalDateFields.style.display =
+                "block";
+
+        }
+
+    }
+
+
+    if (categorySelect) {
+
+        categorySelect.addEventListener(
+            "change",
+            updateDateFields
+        );
+
+        updateDateFields();
+
+    }
+
+</script>
+
+<script>
+
+    const imageInput =
+        document.getElementById(
+            "content-images"
+        );
+
+    const imagePreview =
+        document.getElementById(
+            "selected-images-preview"
+        );
+
+
+    // Stores the files the user has selected.
+    let selectedImages = [];
+
+
+    function rebuildImageInput() {
+
+        const dataTransfer =
+            new DataTransfer();
+
+
+        selectedImages.forEach(
+            function(file) {
+
+                dataTransfer.items.add(
+                    file
+                );
+
+            }
+        );
+
+
+        imageInput.files =
+            dataTransfer.files;
+
+    }
+
+
+    function renderImagePreviews() {
+
+        imagePreview.innerHTML = "";
+
+
+        selectedImages.forEach(
+            function(file, index) {
+
+                const wrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                wrapper.className =
+                    "selected-image-item";
+
+
+                const image =
+                    document.createElement(
+                        "img"
+                    );
+
+
+                image.src =
+                    URL.createObjectURL(
+                        file
+                    );
+
+
+                image.alt =
+                    file.name;
+
+
+                const removeButton =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                removeButton.type =
+                    "button";
+
+
+                removeButton.textContent =
+                    "×";
+
+
+                removeButton.className =
+                    "remove-selected-image";
+
+
+                removeButton.addEventListener(
+                    "click",
+                    function() {
+
+                        selectedImages.splice(
+                            index,
+                            1
+                        );
+
+
+                        rebuildImageInput();
+
+                        renderImagePreviews();
+
+                    }
+                );
+
+
+                wrapper.appendChild(
+                    image
+                );
+
+
+                wrapper.appendChild(
+                    removeButton
+                );
+
+
+                imagePreview.appendChild(
+                    wrapper
+                );
+
+            }
+        );
+
+    }
+
+
+    imageInput.addEventListener(
+        "change",
+        function(event) {
+
+            const newFiles =
+                Array.from(
+                    event.target.files
+                );
+
+
+            for (
+                const file of newFiles
+            ) {
+
+                // Avoid adding same file twice.
+
+                const alreadyExists =
+                    selectedImages.some(
+                        function(existingFile) {
+
+                            return (
+                                existingFile.name
+                                === file.name
+                                &&
+                                existingFile.size
+                                === file.size
+                            );
+
+                        }
+                    );
+
+
+                if (
+                    !alreadyExists
+                    &&
+                    selectedImages.length < 3
+                ) {
+
+                    selectedImages.push(
+                        file
+                    );
+
+                }
+
+            }
+
+
+            if (
+                newFiles.length
+                + selectedImages.length
+                > 3
+            ) {
+
+                alert(
+                    "You can upload a maximum of 3 images."
+                );
+
+            }
+
+
+            rebuildImageInput();
+
+            renderImagePreviews();
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Submission Received | LaC
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-public-body">
+
+<div class="lac-page">
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="access-header">
+
+        <div class="public-brand-wrap">
+
+            <div class="lac-brand">
+                LaC
+            </div>
+
+            <div class="lac-tagline">
+                LOCAL DIGITAL INFRASTRUCTURE
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
+    <main class="submission-success-container">
+
+
+        <section class="submission-success-card">
+
+
+            <!-- SUCCESS ICON -->
+
+            <div class="submission-success-icon">
+                ✓
+            </div>
+
+
+            <!-- HEADING -->
+
+            <p class="access-eyebrow">
+                SUBMISSION RECEIVED
+            </p>
+
+            <h1>
+                Your listing is now under review.
+            </h1>
+
+
+            <p class="submission-success-intro">
+
+                Thanks for submitting local content
+                to LaC. Your listing has been received
+                and will not appear publicly until it
+                has been reviewed and approved.
+
+            </p>
+
+
+            <!-- =====================================
+                 STATUS
+            ====================================== -->
+
+            <div class="submission-success-status">
+
+                <div>
+
+                    <span class="submission-success-label">
+                        Current Status
+                    </span>
+
+                    <strong>
+                        🟡 Pending Review
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================
+                 REFERENCE
+            ====================================== -->
+
+            <div class="submission-reference-card">
+
+                <span class="submission-success-label">
+                    Your Reference Number
+                </span>
+
+                <strong class="submission-reference-code">
+                    {{ submission.tracking_code }}
+                </strong>
+
+                <p>
+                    Keep this reference safe.
+                    You can use it to check whether
+                    your submission has been approved
+                    or rejected.
+                </p>
+
+            </div>
+
+
+            <!-- =====================================
+                 WHAT HAPPENS NEXT
+            ====================================== -->
+
+            <div class="submission-next-steps">
+
+                <h2>
+                    What happens next?
+                </h2>
+
+
+                <div class="submission-step">
+
+                    <span class="submission-step-number">
+                        1
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            LaC reviews your submission
+                        </strong>
+
+                        <p>
+                            We check the listing details,
+                            category, dates and content.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="submission-step">
+
+                    <span class="submission-step-number">
+                        2
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Your status is updated
+                        </strong>
+
+                        <p>
+                            Your submission will change
+                            from Pending Review to Approved
+                            or Not Approved.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="submission-step">
+
+                    <span class="submission-step-number">
+                        3
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Approved listings go live
+                        </strong>
+
+                        <p>
+                            Once approved, your listing
+                            will appear in the category
+                            and zone you selected.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================
+                 ACTION
+            ====================================== -->
+
+            <a
+                href="{{ url_for(
+                    'submission_status',
+                    code=submission.tracking_code
+                ) }}"
+                class="submission-success-button"
+            >
+                Check Submission Status →
+            </a>
+
+
+            <p class="submission-success-help">
+                Reference:
+                <strong>
+                    {{ submission.tracking_code }}
+                </strong>
+            </p>
+
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="public-footer">
+
+        <div class="footer-brand">
+            LaC
+        </div>
+
+        <div class="footer-tagline">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+    </footer>
+
+
+</div>
+
+</body>
+
+</html>

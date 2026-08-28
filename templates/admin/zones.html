@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LaC Zones
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <div>
+            <strong>LAC</strong>
+            <span>NETWORK</span>
+        </div>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for('admin.analytics') }}">
+                Analytics
+            </a>
+
+            <a href="{{ url_for('admin.zones') }}">
+                Zones
+            </a>
+
+            <a href="{{ url_for('admin.access_points') }}">
+                Access Points
+            </a>
+
+            <a href="{{ url_for('admin.content_list') }}">
+                Content
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-heading">
+
+        <p class="admin-eyebrow">
+            LOCAL NETWORK STRUCTURE
+        </p>
+
+        <h1>
+            Zones
+        </h1>
+
+        <p>
+            Manage the towns and communities
+            served by the LaC network.
+        </p>
+
+        <a
+            class="admin-button"
+            href="{{ url_for('admin.create_zone') }}"
+        >
+            + Add Zone
+        </a>
+
+    </section>
+
+
+    {% with messages = get_flashed_messages() %}
+
+        {% for message in messages %}
+
+        <div class="admin-alert">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <section class="admin-panel">
+
+        {% if zones %}
+
+            {% for zone in zones %}
+
+            <div class="zone-admin-row">
+
+                <div>
+
+                    <strong>
+                        📍 {{ zone.name }}
+                    </strong>
+
+                    <span>
+                        {{ zone.slug }}
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        {{ zone.access_points|length }}
+                        access points
+                    </span>
+
+                    <span>
+                        {{ zone.content_items|length }}
+                        content items
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    {% if zone.active %}
+
+                    <span class="status-active">
+                        ACTIVE
+                    </span>
+
+                    {% else %}
+
+                    <span class="status-inactive">
+                        INACTIVE
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="content-actions">
+
+                    <a
+                        href="{{ url_for(
+                            'admin.edit_zone',
+                            zone_id=zone.id
+                        ) }}"
+                    >
+                        Edit
+                    </a>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin.toggle_zone',
+                            zone_id=zone.id
+                        ) }}"
+                    >
+
+                        <button type="submit">
+
+                            {% if zone.active %}
+                                Deactivate
+                            {% else %}
+                                Activate
+                            {% endif %}
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <h2>
+                    No zones yet.
+                </h2>
+
+                <a
+                    class="admin-button"
+                    href="{{ url_for('admin.create_zone') }}"
+                >
+                    Create First Zone
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

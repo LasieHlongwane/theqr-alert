@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% if category %}
+            Edit Category
+        {% else %}
+            Add Category
+        {% endif %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <strong>
+            LAC NETWORK
+        </strong>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for(
+                'admin.categories'
+            ) }}">
+                ← Categories
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-form-container">
+
+        <p class="admin-eyebrow">
+            CATEGORY MANAGEMENT
+        </p>
+
+        <h1>
+
+            {% if category %}
+                Edit Category
+            {% else %}
+                Add Category
+            {% endif %}
+
+        </h1>
+
+
+        <form
+            method="POST"
+            class="admin-form"
+        >
+
+            <label>
+
+                Category Name
+
+                <input
+                    type="text"
+                    name="name"
+                    required
+                    placeholder="Property"
+                    value="{{
+                        category.name
+                        if category
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Slug
+
+                <input
+                    type="text"
+                    name="slug"
+                    required
+                    placeholder="property"
+                    value="{{
+                        category.slug
+                        if category
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Icon
+
+                <input
+                    type="text"
+                    name="icon"
+                    placeholder="🏠"
+                    value="{{
+                        category.icon
+                        if category and category.icon
+                        else ''
+                    }}"
+                >
+
+            </label>
+
+
+            <label>
+
+                Display Order
+
+                <input
+                    type="number"
+                    name="display_order"
+                    value="{{
+                        category.display_order
+                        if category
+                        else 0
+                    }}"
+                >
+
+            </label>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="active"
+                    {% if not category
+                        or category.active %}
+                        checked
+                    {% endif %}
+                >
+
+                Active
+
+            </label>
+
+
+            <button type="submit">
+
+                {% if category %}
+                    Save Changes
+                {% else %}
+                    Create Category
+                {% endif %}
+
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

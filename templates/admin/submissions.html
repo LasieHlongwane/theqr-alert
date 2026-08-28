@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LAC Submissions
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+
+    <!-- =========================================
+         NAVIGATION
+    ========================================== -->
+
+    <nav class="admin-nav">
+
+        <div>
+
+            <strong>
+                LAC
+            </strong>
+
+            <span>
+                NETWORK
+            </span>
+
+        </div>
+
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for(
+                'admin.analytics'
+            ) }}">
+                Analytics
+            </a>
+
+
+            <a href="{{ url_for(
+                'admin.content_list'
+            ) }}">
+                Content
+            </a>
+
+
+            <a href="{{ url_for(
+                'admin.submissions'
+            ) }}">
+                Submissions
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================================
+         HEADING
+    ========================================== -->
+
+    <section class="admin-heading">
+
+        <p class="admin-eyebrow">
+            CONTENT REVIEW
+        </p>
+
+
+        <h1>
+            Submissions
+        </h1>
+
+
+        <p>
+            Review and manage content
+            submitted by businesses,
+            organisers and local users.
+        </p>
+
+    </section>
+
+
+    <!-- =========================================
+         STATUS COUNTERS / FILTERS
+    ========================================== -->
+
+    <div class="submission-status-tabs">
+
+
+        <a
+            href="{{ url_for(
+                'admin.submissions',
+                status='pending'
+            ) }}"
+            class="
+                submission-status-tab
+                {% if selected_status == 'pending' %}
+                    active
+                {% endif %}
+            "
+        >
+
+            <span>
+                Pending
+            </span>
+
+            <strong>
+                {{ pending_count }}
+            </strong>
+
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'admin.submissions',
+                status='approved'
+            ) }}"
+            class="
+                submission-status-tab
+                {% if selected_status == 'approved' %}
+                    active
+                {% endif %}
+            "
+        >
+
+            <span>
+                Approved
+            </span>
+
+            <strong>
+                {{ approved_count }}
+            </strong>
+
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'admin.submissions',
+                status='rejected'
+            ) }}"
+            class="
+                submission-status-tab
+                {% if selected_status == 'rejected' %}
+                    active
+                {% endif %}
+            "
+        >
+
+            <span>
+                Rejected
+            </span>
+
+            <strong>
+                {{ rejected_count }}
+            </strong>
+
+        </a>
+
+    </div>
+
+
+    <!-- =========================================
+         FLASH MESSAGES
+    ========================================== -->
+
+    {% with messages =
+        get_flashed_messages()
+    %}
+
+        {% for message in messages %}
+
+        <div class="admin-alert">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <!-- =========================================
+         SUBMISSION CARDS
+    ========================================== -->
+
+    <section class="content-admin-grid">
+
+
+        {% if submissions %}
+
+
+            {% for item in submissions %}
+
+
+            <article class="admin-content-card">
+
+
+                <!-- =================================
+                     TOP STATUS
+                ================================== -->
+
+                <div class="content-card-top">
+
+
+                    <span class="content-category">
+
+                        {% if item.category %}
+                            {{ item.category|title }}
+                        {% endif %}
+
+                    </span>
+
+
+                    {% if item.status == "pending" %}
+
+                    <span class="status-upcoming">
+                        PENDING
+                    </span>
+
+
+                    <a
+                      href="{{ url_for(
+                        'admin.edit_submission',
+                        submission_id=item.id
+                      ) }}"
+                      class="submission-edit-button"
+                    >
+                      ✏ Edit Before Approval
+                    </a>
+
+
+                    {% elif item.status == "approved" %}
+
+                    <span class="status-active">
+                        APPROVED
+                    </span>
+
+
+                    {% elif item.status == "rejected" %}
+
+                    <span class="status-inactive">
+                        REJECTED
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================
+                     TITLE
+                ================================== -->
+
+                <h2>
+                    {{ item.title }}
+                </h2>
+
+
+                {% if item.zone %}
+
+                <p>
+                    📍 {{ item.zone.name }}
+                </p>
+
+                {% endif %}
+
+
+                {% if item.business_name %}
+
+                <p>
+
+                    <strong>
+                        {{ item.business_name }}
+                    </strong>
+
+                </p>
+
+                {% endif %}
+
+
+                {% if item.description %}
+
+                <p class="muted">
+                    {{ item.description }}
+                </p>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     IMAGES
+                ================================== -->
+
+                {% if item.images %}
+
+                <div class="submission-images">
+
+                    {% for image in item.images[:3] %}
+
+                    <img
+                        src="{{ image.image_url }}"
+                        alt="{{ item.title }}"
+                        loading="lazy"
+                    >
+
+                    {% endfor %}
+
+                </div>
+
+                {% elif item.image_url %}
+
+                <div class="submission-images">
+
+                    <img
+                        src="{{ item.image_url }}"
+                        alt="{{ item.title }}"
+                        loading="lazy"
+                    >
+
+                </div>
+
+                {% endif %}
+
+
+                <hr>
+
+
+                <!-- =================================
+                     SUBMITTER
+                ================================== -->
+
+                <p>
+
+                    Submitted by:
+
+                    <strong>
+                        {{ item.submitter_name }}
+                    </strong>
+
+                </p>
+
+
+                <p>
+                    📞 {{ item.submitter_phone }}
+                </p>
+
+
+                {% if item.submitter_email %}
+
+                <p>
+                    ✉ {{ item.submitter_email }}
+                </p>
+
+                {% endif %}
+
+
+                {% if item.tracking_code %}
+
+                <p>
+
+                    Reference:
+
+                    <strong>
+                        {{ item.tracking_code }}
+                    </strong>
+
+                </p>
+
+                {% endif %}
+
+
+                {% if item.created_at %}
+
+                <p class="muted">
+
+                    Submitted:
+
+                    {{
+                        item.created_at.strftime(
+                            "%d %b %Y %H:%M"
+                        )
+                    }}
+
+                </p>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     LISTING DETAILS
+                ================================== -->
+
+                {% if item.venue %}
+
+                <p>
+                    📍 Venue:
+                    {{ item.venue }}
+                </p>
+
+                {% endif %}
+
+
+                {% if item.price %}
+
+                <p>
+                    💰 {{ item.price }}
+                </p>
+
+                {% endif %}
+
+
+                {% if item.contact %}
+
+                <p>
+                    📞 Listing contact:
+                    {{ item.contact }}
+                </p>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     EVENT DATES
+                ================================== -->
+
+                {% if item.event_date %}
+
+                <p>
+
+                    📅 Event:
+
+                    {{
+                        item.event_date.strftime(
+                            "%d %b %Y"
+                        )
+                    }}
+
+                </p>
+
+                {% endif %}
+
+
+                {% if item.event_end_date %}
+
+                <p>
+
+                    🕒 Ends:
+
+                    {{
+                        item.event_end_date.strftime(
+                            "%d %b %Y"
+                        )
+                    }}
+
+                </p>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     GENERAL DATES
+                ================================== -->
+
+                {% if item.start_date %}
+
+                <p>
+
+                    📅 Starts:
+
+                    {{
+                        item.start_date.strftime(
+                            "%d %b %Y"
+                        )
+                    }}
+
+                </p>
+
+                {% endif %}
+
+
+                {% if item.end_date %}
+
+                <p>
+
+                    📅 Ends:
+
+                    {{
+                        item.end_date.strftime(
+                            "%d %b %Y"
+                        )
+                    }}
+
+                </p>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     PENDING ACTIONS
+                ================================== -->
+
+                {% if item.status == "pending" %}
+
+                <div class="content-actions">
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin.approve_submission',
+                            submission_id=item.id
+                        ) }}"
+                    >
+
+                        <button type="submit">
+                            ✓ Approve
+                        </button>
+
+                    </form>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin.reject_submission',
+                            submission_id=item.id
+                        ) }}"
+                    >
+
+                        <input
+                            type="text"
+                            name="admin_notes"
+                            placeholder="Reason for rejection"
+                        >
+
+                        <button
+                            type="submit"
+                            class="danger-button"
+                        >
+                            Reject
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     APPROVED DETAILS
+                ================================== -->
+
+                {% if item.status == "approved" %}
+
+                <div class="submission-review-result approved">
+
+                    ✓ Approved
+
+                    {% if item.reviewed_at %}
+
+                    <span>
+
+                        {{
+                            item.reviewed_at.strftime(
+                                "%d %b %Y %H:%M"
+                            )
+                        }}
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                {% if item.published_content_id %}
+
+                <a
+                    href="{{ url_for(
+                        'submission_status',
+                        code=item.tracking_code
+                    ) }}"
+                    class="submission-status-link"
+                >
+                    View published status →
+                </a>
+
+                {% endif %}
+
+                {% endif %}
+
+
+                <!-- =================================
+                     REJECTED DETAILS
+                ================================== -->
+
+                {% if item.status == "rejected" %}
+
+                <div class="submission-review-result rejected">
+
+                    ✕ Rejected
+
+                    {% if item.reviewed_at %}
+
+                    <span>
+
+                        {{
+                            item.reviewed_at.strftime(
+                                "%d %b %Y %H:%M"
+                            )
+                        }}
+
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                {% if item.admin_notes %}
+
+                <div class="admin-alert">
+
+                    <strong>
+                        Reason:
+                    </strong>
+
+                    {{ item.admin_notes }}
+
+                </div>
+
+                {% endif %}
+
+                {% endif %}
+
+
+            </article>
+
+
+            {% endfor %}
+
+
+        {% else %}
+
+
+        <div class="empty-state">
+
+            {% if selected_status == "pending" %}
+
+            <h2>
+                No pending submissions.
+            </h2>
+
+            <p>
+                There is currently nothing
+                waiting for review.
+            </p>
+
+
+            {% elif selected_status == "approved" %}
+
+            <h2>
+                No approved submissions yet.
+            </h2>
+
+
+            {% elif selected_status == "rejected" %}
+
+            <h2>
+                No rejected submissions yet.
+            </h2>
+
+            {% endif %}
+
+        </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

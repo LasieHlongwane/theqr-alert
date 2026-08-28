@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LAC Categories
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+    <nav class="admin-nav">
+
+        <div>
+            <strong>LAC</strong>
+            <span>NETWORK</span>
+        </div>
+
+        <a
+          href="{{ url_for('admin.create_category') }}"
+          class="admin-primary-button"
+        >
+          + Add Category
+        </a>
+
+        <div class="admin-nav-links">
+
+            <a href="{{ url_for(
+                'admin.analytics'
+            ) }}">
+                Analytics
+            </a>
+
+            <a href="{{ url_for(
+                'admin.zones'
+            ) }}">
+                Zones
+            </a>
+
+            <a href="{{ url_for(
+                'admin.categories'
+            ) }}">
+                Categories
+            </a>
+
+            <a href="{{ url_for(
+                'admin.access_points'
+            ) }}">
+                Access Points
+            </a>
+
+            <a href="{{ url_for(
+                'admin.content_list'
+            ) }}">
+                Content
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="admin-heading">
+
+        <p class="admin-eyebrow">
+            NETWORK STRUCTURE
+        </p>
+
+        <h1>
+            Categories
+        </h1>
+
+        <p>
+            Control what people can discover
+            through LAC access points.
+        </p>
+
+        <a
+            class="admin-button"
+            href="{{ url_for(
+                'admin.create_category'
+            ) }}"
+        >
+            + Add Category
+        </a>
+
+    </section>
+
+
+    {% with messages =
+        get_flashed_messages()
+    %}
+
+        {% for message in messages %}
+
+        <div class="admin-alert">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <section class="content-admin-grid">
+
+        {% for category in categories %}
+
+        <article class="admin-content-card">
+
+            <div class="content-card-top">
+
+                <span class="content-category">
+
+                    {% if category.icon %}
+                        {{ category.icon }}
+                    {% endif %}
+
+                    {{ category.name }}
+
+                </span>
+
+
+                {% if category.active %}
+
+                <span class="status-active">
+                    ACTIVE
+                </span>
+
+                {% else %}
+
+                <span class="status-inactive">
+                    INACTIVE
+                </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <h2>
+                {{ category.name }}
+            </h2>
+
+
+            <p class="muted">
+
+                Slug:
+
+                <strong>
+                    {{ category.slug }}
+                </strong>
+
+            </p>
+
+
+            <p class="muted">
+
+                Display order:
+
+                <strong>
+                    {{ category.display_order }}
+                </strong>
+
+            </p>
+
+
+            <div class="content-actions">
+
+                <a
+                    href="{{ url_for(
+                        'admin.edit_category',
+                        category_id=category.id
+                    ) }}"
+                >
+                    Edit
+                </a>
+
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'admin.toggle_category',
+                        category_id=category.id
+                    ) }}"
+                >
+
+                    <button type="submit">
+
+                        {% if category.active %}
+                            Deactivate
+                        {% else %}
+                            Activate
+                        {% endif %}
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </section>
+
+</div>
+
+</body>
+
+</html>
