@@ -6529,3 +6529,181 @@ button:not(:first-child) img {
 .organiser-status-value {
     font-size: 22px !important;
 }
+
+/* =====================================================
+   QR ENTRY PAGE
+===================================================== */
+
+.qr-entry-body {
+    margin: 0;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #252525 0%,
+            #111111 45%,
+            #080808 100%
+        );
+
+    color: #ffffff;
+
+    font-family:
+        Arial,
+        sans-serif;
+}
+
+
+.qr-entry-page {
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    box-sizing: border-box;
+}
+
+
+.qr-entry-card {
+    width: min(
+        100%,
+        520px
+    );
+
+    text-align: center;
+
+    padding:
+        55px 30px;
+
+    border-radius: 28px;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.035
+        );
+}
+
+
+.qr-entry-logo {
+    margin-bottom: 18px;
+
+    font-size: 70px;
+
+    font-weight: 900;
+
+    letter-spacing: -5px;
+}
+
+
+.qr-entry-card h1 {
+    margin:
+        0 0
+        18px;
+
+    font-size:
+        clamp(
+            30px,
+            7vw,
+            48px
+        );
+
+    line-height: 1;
+
+    letter-spacing: -1.5px;
+}
+
+
+.qr-entry-card > p {
+    max-width: 360px;
+
+    margin:
+        0 auto
+        35px;
+
+    color: #9c9c9c;
+
+    font-size: 15px;
+
+    line-height: 1.7;
+}
+
+
+.qr-entry-flow {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    margin:
+        20px 0
+        35px;
+}
+
+
+.qr-entry-flow > div:not(
+    .qr-entry-arrow
+) {
+    padding: 15px;
+
+    border-radius: 14px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.045
+        );
+}
+
+
+.qr-entry-flow span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #f1c40f;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.qr-entry-flow strong {
+    font-size: 16px;
+}
+
+
+.qr-entry-arrow {
+    color: #555555;
+
+    font-size: 20px;
+}
+
+
+.qr-entry-card small {
+    color: #626262;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.2px;
+}
