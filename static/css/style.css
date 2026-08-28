@@ -6707,3 +6707,22 @@ button:not(:first-child) img {
 
     letter-spacing: 1.2px;
 }
+
+/* =====================================================
+   LIGHTER PUBLIC TYPOGRAPHY
+===================================================== */
+
+.access-page h1,
+.access-page h2,
+.access-page h3,
+.access-page h4,
+.access-page strong,
+.access-page b,
+.category-card h3,
+.category-card strong,
+.category-card-title,
+.access-title,
+.access-eyebrow,
+.section-label {
+    font-weight: 100 !important;
+}
