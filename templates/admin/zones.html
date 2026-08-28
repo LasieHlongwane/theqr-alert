@@ -180,6 +180,26 @@
 
                     </form>
 
+                    <form
+                      method="POST"
+                      action="{{ url_for(
+                       'admin.delete_zone',
+                       zone_id=zone.id
+                      ) }}"
+                      onsubmit="
+                       return confirm(
+                        'Permanently delete this zone and everything linked to it? This cannot be undone.'
+                       );
+                      "
+                    >
+                      <button
+                        type="submit"
+                        class="delete-button"
+                      >
+                        Delete
+                      </button>
+                    </form>
+
                 </div>
 
             </div>
