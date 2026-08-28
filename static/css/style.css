@@ -7052,3 +7052,242 @@ body:not(.admin-body) main h4 {
     color: #555555 !important;
     font-weight: 400 !important;
 }
+
+/* =========================================================
+   VIEW LISTING PAGE - CREAMY WHITE
+   Header + footer remain unchanged
+========================================================= */
+
+/* Entire main listing area */
+main.listing-detail-page,
+.listing-detail-page,
+.listing-detail-container,
+.listing-detail-wrapper,
+.listing-detail-content {
+    background: #f5f1e8 !important;
+    color: #111111 !important;
+}
+
+
+/* Main View Listing card */
+.listing-detail-card,
+.listing-full-card,
+.full-listing,
+.listing-detail-page article,
+.listing-detail-page .card {
+    background: #fffdf8 !important;
+    background-color: #fffdf8 !important;
+
+    color: #111111 !important;
+
+    border: 1px solid #ddd8ce !important;
+
+    box-shadow:
+        0 4px 18px
+        rgba(0, 0, 0, 0.05) !important;
+}
+
+
+/* Force content inside card to dark text */
+.listing-detail-card *,
+.listing-full-card *,
+.full-listing *,
+.listing-detail-page article * {
+    color: #111111 !important;
+}
+
+
+/* FEATURED badge can keep its special appearance */
+.listing-detail-card .featured-badge,
+.listing-detail-page .featured-badge {
+    background: #f2e6b5 !important;
+    color: #5c4b00 !important;
+}
+
+
+/* Listing information boxes */
+.listing-detail-card .listing-meta,
+.listing-detail-card .listing-info,
+.listing-detail-card .meta-grid,
+.listing-detail-card .meta-item,
+.listing-detail-card .detail-item,
+.listing-detail-card .info-item {
+    background: #f5f1e8 !important;
+    background-color: #f5f1e8 !important;
+
+    color: #111111 !important;
+
+    border-color: #ddd8ce !important;
+}
+
+
+/* Dates / location / rent */
+.listing-detail-card .listing-meta *,
+.listing-detail-card .listing-info *,
+.listing-detail-card .meta-grid *,
+.listing-detail-card .meta-item *,
+.listing-detail-card .detail-item *,
+.listing-detail-card .info-item * {
+    color: #111111 !important;
+}
+
+
+/* Contact area */
+.listing-detail-card .contact-section,
+.listing-detail-card .contact-card,
+.listing-detail-card .listing-contact {
+    background: #f5f1e8 !important;
+    background-color: #f5f1e8 !important;
+
+    color: #111111 !important;
+
+    border-color: #ddd8ce !important;
+}
+
+
+/* Description */
+.listing-detail-card p,
+.listing-detail-page article p {
+    color: #444444 !important;
+}
+
+
+/* Remove heavy text */
+.listing-detail-card h1,
+.listing-detail-card h2,
+.listing-detail-card h3,
+.listing-detail-card strong,
+.listing-detail-card b {
+    color: #111111 !important;
+    font-weight: 400 !important;
+}
+
+/* =========================================================
+   EXACT FIX: FULL LISTING CARD
+========================================================= */
+
+.listing-detail-main {
+    background: #fffdf8 !important;
+    background-color: #fffdf8 !important;
+    color: #111111 !important;
+
+    border: 1px solid #ddd8ce !important;
+
+    box-shadow:
+        0 4px 18px
+        rgba(0, 0, 0, 0.05) !important;
+}
+
+
+/* All text inside listing card */
+.listing-detail-main h1,
+.listing-detail-main h2,
+.listing-detail-main h3,
+.listing-detail-main p,
+.listing-detail-main span,
+.listing-detail-main strong,
+.listing-detail-main div {
+    color: #111111 !important;
+}
+
+
+/* Description */
+.listing-detail-description {
+    color: #444444 !important;
+}
+
+
+/* Business name */
+.listing-detail-business {
+    color: #333333 !important;
+}
+
+
+/* Details grid */
+.listing-detail-info-grid {
+    background: #f5f1e8 !important;
+    color: #111111 !important;
+}
+
+
+.listing-detail-info-grid > div {
+    background: #fffdf8 !important;
+    color: #111111 !important;
+
+    border-color: #ddd8ce !important;
+}
+
+
+.listing-detail-info-grid span,
+.listing-detail-info-grid strong {
+    color: #111111 !important;
+}
+
+
+/* Contact section */
+.listing-detail-contact {
+    background: #f5f1e8 !important;
+    color: #111111 !important;
+
+    border-color: #ddd8ce !important;
+}
+
+
+.listing-detail-contact h2,
+.listing-detail-contact p {
+    color: #111111 !important;
+}
+
+
+/* Main content area */
+.listing-detail-container {
+    background: #f5f1e8 !important;
+    color: #111111 !important;
+}
+
+/* =========================================================
+   SHARE LISTING BUTTON - LIGHT THEME
+========================================================= */
+
+.listing-share-button {
+    display: block;
+    width: 100%;
+
+    margin-top: 20px;
+    padding: 15px 20px;
+
+    background: #e2ddd2 !important;
+    color: #111111 !important;
+
+    border: 1px solid #c8c1b5 !important;
+    border-radius: 12px;
+
+    font-size: 15px;
+    font-weight: 500 !important;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+/* Make sure text stays black */
+.listing-detail-main .listing-share-button {
+    background: #e2ddd2 !important;
+    color: #111111 !important;
+}
+
+
+/* Hover */
+.listing-share-button:hover {
+    background: #d6d0c4 !important;
+    color: #000000 !important;
+}
+
+
+/* Press effect */
+.listing-share-button:active {
+    transform: scale(0.98);
+}
