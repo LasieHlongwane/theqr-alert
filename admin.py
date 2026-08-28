@@ -114,6 +114,112 @@ def get_archive_intelligence(item, today=None):
         "ready_to_archive": today >= archive_date,
     }
 
+@admin_bp.route(
+    "/categories/<int:category_id>/delete",
+    methods=["POST"]
+)
+def delete_category(category_id):
+
+    auth = require_admin()
+    if auth:
+        return auth
+
+    category = Category.query.get_or_404(
+        category_id
+    )
+
+    category_name = category.name
+    category_slug = category.slug
+
+    try:
+
+        # -----------------------------------------
+        # Find content using this category
+        # -----------------------------------------
+
+        items = ContentItem.query.filter_by(
+            category=category_slug
+        ).all()
+
+        for item in items:
+
+            # Disconnect approved submissions
+            submissions = PendingSubmission.query.filter_by(
+                published_content_id=item.id
+            ).all()
+
+            for submission in submissions:
+                submission.published_content_id = None
+
+            # Delete images
+            ContentImage.query.filter_by(
+                content_item_id=item.id
+            ).delete(
+                synchronize_session=False
+            )
+
+            db.session.delete(item)
+
+        # -----------------------------------------
+        # Delete pending submissions in category
+        # -----------------------------------------
+
+        pending_submissions = (
+            PendingSubmission.query.filter_by(
+                category=category_slug
+            ).all()
+        )
+
+        for submission in pending_submissions:
+
+            PendingSubmissionImage.query.filter_by(
+                submission_id=submission.id
+            ).delete(
+                synchronize_session=False
+            )
+
+            db.session.delete(
+                submission
+            )
+
+        # -----------------------------------------
+        # Handle category-specific QR access points
+        # -----------------------------------------
+
+        access_points = AccessPoint.query.filter_by(
+            default_category=category_slug
+        ).all()
+
+        for point in access_points:
+
+            # Turn them back into general QR points
+            point.qr_type = "general"
+            point.default_category = None
+
+        # -----------------------------------------
+        # Delete category itself
+        # -----------------------------------------
+
+        db.session.delete(category)
+        db.session.commit()
+
+        flash(
+            f"{category_name} permanently deleted.",
+            "success"
+        )
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        flash(
+            f"Unable to delete category: {exc}",
+            "error"
+        )
+
+    return redirect(
+        url_for("admin.categories")
+    )
 
 def get_expiry_intelligence(item, today=None):
     today = today or date.today()
@@ -303,7 +409,6 @@ def download_access_point_qr(
         as_attachment=True,
         download_name=filename,
     )
-
 
 
 @admin_bp.route("/login", methods=["GET", "POST"])
@@ -654,6 +759,108 @@ def toggle_zone(zone_id):
     flash(f"{zone.name} {'activated' if zone.active else 'deactivated'}.", "success")
     return redirect(url_for("admin.zones"))
 
+@admin_bp.route(
+    "/zones/<int:zone_id>/delete",
+    methods=["POST"]
+)
+def delete_zone(zone_id):
+
+    auth = require_admin()
+    if auth:
+        return auth
+
+    zone = Zone.query.get_or_404(zone_id)
+    zone_name = zone.name
+
+    try:
+        # -----------------------------------------
+        # Delete access points + their scan records
+        # -----------------------------------------
+
+        access_points = AccessPoint.query.filter_by(
+            zone_id=zone.id
+        ).all()
+
+        for point in access_points:
+
+            QRScan.query.filter_by(
+                access_point_id=point.id
+            ).delete(
+                synchronize_session=False
+            )
+
+            db.session.delete(point)
+
+        # -----------------------------------------
+        # Delete content + attached images
+        # -----------------------------------------
+
+        content_items = ContentItem.query.filter_by(
+            zone_id=zone.id
+        ).all()
+
+        for item in content_items:
+
+            # Disconnect submissions that reference
+            # published content.
+            submissions = PendingSubmission.query.filter_by(
+                published_content_id=item.id
+            ).all()
+
+            for submission in submissions:
+                submission.published_content_id = None
+
+            ContentImage.query.filter_by(
+                content_item_id=item.id
+            ).delete(
+                synchronize_session=False
+            )
+
+            db.session.delete(item)
+
+        # -----------------------------------------
+        # Delete pending submissions + images
+        # -----------------------------------------
+
+        pending_submissions = PendingSubmission.query.filter_by(
+            zone_id=zone.id
+        ).all()
+
+        for submission in pending_submissions:
+
+            PendingSubmissionImage.query.filter_by(
+                submission_id=submission.id
+            ).delete(
+                synchronize_session=False
+            )
+
+            db.session.delete(submission)
+
+        # -----------------------------------------
+        # Delete zone
+        # -----------------------------------------
+
+        db.session.delete(zone)
+        db.session.commit()
+
+        flash(
+            f"{zone_name} permanently deleted.",
+            "success"
+        )
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        flash(
+            f"Unable to delete zone: {exc}",
+            "error"
+        )
+
+    return redirect(
+        url_for("admin.zones")
+    )
+
 
 @admin_bp.route("/categories")
 def categories():
@@ -766,29 +973,6 @@ def toggle_category(category_id):
     flash("Category activated." if category.active else "Category deactivated.", "success")
     return redirect(url_for("admin.categories"))
 
-
-@admin_bp.route("/categories/<int:category_id>/delete", methods=["POST"])
-def delete_category(category_id):
-    auth = require_admin()
-    if auth:
-        return auth
-
-    category = Category.query.get_or_404(category_id)
-    in_use = any([
-        ContentItem.query.filter(ContentItem.category == category.slug).count(),
-        AccessPoint.query.filter(AccessPoint.default_category == category.slug).count(),
-        PendingSubmission.query.filter(PendingSubmission.category == category.slug).count(),
-        QRScan.query.filter(QRScan.category_selected == category.slug).count(),
-    ])
-
-    if in_use:
-        flash("This category is already in use. Deactivate it instead of deleting it.", "error")
-        return redirect(url_for("admin.categories"))
-
-    db.session.delete(category)
-    db.session.commit()
-    flash("Category deleted.", "success")
-    return redirect(url_for("admin.categories"))
 
 
 @admin_bp.route("/access-points/new", methods=["GET", "POST"])
@@ -954,6 +1138,58 @@ def toggle_access_point(point_id):
     flash(f"{point.name} {'activated' if point.active else 'deactivated'}.", "success")
     return redirect(url_for("admin.access_points"))
 
+@admin_bp.route(
+    "/access-points/<int:point_id>/delete",
+    methods=["POST"]
+)
+def delete_access_point(point_id):
+
+    auth = require_admin()
+    if auth:
+        return auth
+
+    point = AccessPoint.query.get_or_404(
+        point_id
+    )
+
+    point_name = point.name
+
+    try:
+
+        # -----------------------------------------
+        # Delete QR analytics belonging to point
+        # -----------------------------------------
+
+        QRScan.query.filter_by(
+            access_point_id=point.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # -----------------------------------------
+        # Delete physical access point
+        # -----------------------------------------
+
+        db.session.delete(point)
+        db.session.commit()
+
+        flash(
+            f"{point_name} permanently deleted.",
+            "success"
+        )
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        flash(
+            f"Unable to delete access point: {exc}",
+            "error"
+        )
+
+    return redirect(
+        url_for("admin.access_points")
+    )
 
 @admin_bp.route("/content")
 def content_list():
@@ -1513,19 +1749,65 @@ def toggle_content(item_id):
     flash("Content activated." if item.active else "Content deactivated.", "success")
     return redirect(url_for("admin.content_list"))
 
-
-@admin_bp.route("/content/<int:item_id>/delete", methods=["POST"])
+@admin_bp.route(
+    "/content/<int:item_id>/delete",
+    methods=["POST"]
+)
 def delete_content(item_id):
+
     auth = require_admin()
     if auth:
         return auth
 
     item = ContentItem.query.get_or_404(item_id)
-    db.session.delete(item)
-    db.session.commit()
-    flash("Content deleted.", "success")
-    return redirect(url_for("admin.content_list"))
 
+    try:
+
+        # -----------------------------------------
+        # Remove references from submissions
+        # -----------------------------------------
+
+        submissions = PendingSubmission.query.filter_by(
+            published_content_id=item.id
+        ).all()
+
+        for submission in submissions:
+            submission.published_content_id = None
+
+        # -----------------------------------------
+        # Delete attached content images
+        # -----------------------------------------
+
+        ContentImage.query.filter_by(
+            content_item_id=item.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # -----------------------------------------
+        # Delete content
+        # -----------------------------------------
+
+        db.session.delete(item)
+        db.session.commit()
+
+        flash(
+            "Content permanently deleted.",
+            "success"
+        )
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        flash(
+            f"Unable to delete content: {exc}",
+            "error"
+        )
+
+    return redirect(
+        url_for("admin.content_list")
+    )
 
 @admin_bp.route("/content/<int:item_id>/archive", methods=["POST"])
 def archive_content_now(item_id):
