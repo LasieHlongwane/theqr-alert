@@ -3,7 +3,9 @@ from datetime import date, datetime, timedelta
 from upload_helpers import save_uploaded_image
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from sqlalchemy import func
-
+import qrcode
+import io
+from flask import send_file
 from models import (
     db,
     Zone,
@@ -153,6 +155,155 @@ def archive_expired_content():
         db.session.commit()
 
     return archived_count
+
+
+def get_public_base_url():
+    return os.environ.get(
+        "PUBLIC_BASE_URL",
+        "https://lac-local-access.onrender.com",
+    ).rstrip("/")
+
+
+def get_access_point_qr_url(access_point):
+    """
+    Every QR points to the access point route.
+
+    General QR:
+        /q/KWM-TAXI-001
+
+    Category-specific QR:
+        /q/KWM-GROC-001
+
+    The /q/<code> route decides whether to show
+    categories or redirect to default_category.
+    """
+    return (
+        f"{get_public_base_url()}"
+        f"/q/{access_point.code}"
+    )
+
+def get_public_base_url():
+    return os.environ.get(
+        "PUBLIC_BASE_URL",
+        "https://lac-local-access.onrender.com",
+    ).rstrip("/")
+
+
+def get_access_point_qr_url(access_point):
+    """
+    Every QR points to the access point route.
+
+    General QR:
+        /q/KWM-TAXI-001
+
+    Category-specific QR:
+        /q/KWM-GROC-001
+
+    The /q/<code> route decides whether to show
+    categories or redirect to default_category.
+    """
+    return (
+        f"{get_public_base_url()}"
+        f"/q/{access_point.code}"
+    )
+
+
+
+
+def create_access_point_qr(access_point):
+
+    destination_url = (
+        get_access_point_qr_url(
+            access_point
+        )
+    )
+
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=(
+            qrcode.constants.ERROR_CORRECT_H
+        ),
+        box_size=12,
+        border=4,
+    )
+
+    qr.add_data(
+        destination_url
+    )
+
+    qr.make(
+        fit=True
+    )
+
+    image = qr.make_image(
+        fill_color="black",
+        back_color="white",
+    )
+
+    buffer = io.BytesIO()
+
+    image.save(
+        buffer,
+        format="PNG",
+    )
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@admin_bp.route(
+    "/access-points/<int:access_point_id>/qr"
+)
+def access_point_qr(access_point_id):
+
+    access_point = (
+        AccessPoint.query
+        .get_or_404(access_point_id)
+    )
+
+    qr_buffer = (
+        create_access_point_qr(
+            access_point
+        )
+    )
+
+    return send_file(
+        qr_buffer,
+        mimetype="image/png",
+    )
+
+
+@admin_bp.route(
+    "/access-points/"
+    "<int:access_point_id>/qr/download"
+)
+def download_access_point_qr(
+    access_point_id,
+):
+
+    access_point = (
+        AccessPoint.query
+        .get_or_404(access_point_id)
+    )
+
+    qr_buffer = (
+        create_access_point_qr(
+            access_point
+        )
+    )
+
+    filename = (
+        f"LaC-{access_point.code}.png"
+    )
+
+    return send_file(
+        qr_buffer,
+        mimetype="image/png",
+        as_attachment=True,
+        download_name=filename,
+    )
+
 
 
 @admin_bp.route("/login", methods=["GET", "POST"])
