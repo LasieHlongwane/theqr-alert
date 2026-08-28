@@ -253,11 +253,10 @@ app.register_blueprint(
 @app.route("/")
 def home():
 
-    return redirect(
-        url_for(
-            "admin.analytics"
-        )
+    return render_template(
+         "qr_entry.html"
     )
+
 
 
 # =========================================================
