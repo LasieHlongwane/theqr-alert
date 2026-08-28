@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -46,7 +47,7 @@
             </a>
 
             <a href="{{ url_for('admin.create_access_point') }}">
-                 + Add Access Point
+                + Add Access Point
             </a>
 
         </div>
@@ -56,27 +57,27 @@
 
     <section class="admin-heading">
 
-      <p class="admin-eyebrow">
-        PHYSICAL NETWORK
-      </p>
+        <p class="admin-eyebrow">
+            PHYSICAL NETWORK
+        </p>
 
-      <h1>
-        Access Points
-      </h1>
+        <h1>
+            Access Points
+        </h1>
 
-      <p>
-        Manage physical QR entry points
-        into the LaC network.
-      </p>
+        <p>
+            Manage physical QR entry points
+            into the LaC network.
+        </p>
 
-      <a
-        href="{{ url_for(
-            'admin.create_access_point'
-        ) }}"
-        class="admin-primary-button"
-      >
-        + Add Access Point
-      </a>
+        <a
+            href="{{ url_for(
+                'admin.create_access_point'
+            ) }}"
+            class="admin-primary-button"
+        >
+            + Add Access Point
+        </a>
 
     </section>
 
@@ -163,6 +164,9 @@
 
             <div class="access-point-row">
 
+
+                <!-- ACCESS POINT DETAILS -->
+
                 <div>
 
                     <strong>
@@ -180,6 +184,8 @@
                 </div>
 
 
+                <!-- QR TYPE -->
+
                 <div>
 
                     <span>
@@ -195,13 +201,15 @@
 
                     <span>
                         Category:
-                        {{ point.default_category|title }}
+                        {{ point.default_category|replace("-", " ")|title }}
                     </span>
 
                     {% endif %}
 
                 </div>
 
+
+                <!-- STATUS -->
 
                 <div>
 
@@ -221,6 +229,8 @@
 
                 </div>
 
+
+                <!-- SCANS -->
 
                 <div>
 
@@ -244,17 +254,53 @@
                 </div>
 
 
+                <!-- ACTIONS -->
+
                 <div class="content-actions">
+
+
+                    <!-- EDIT -->
 
                     <a
                         href="{{ url_for(
                             'admin.edit_access_point',
                             point_id=point.id
                         ) }}"
+                        class="admin-button"
                     >
                         Edit
                     </a>
 
+
+                    <!-- VIEW QR -->
+
+                    <a
+                        href="{{ url_for(
+                            'admin.access_point_qr',
+                            access_point_id=point.id
+                        ) }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="admin-button"
+                    >
+                        QR
+                    </a>
+
+
+                    <!-- DOWNLOAD QR -->
+
+                    <a
+                        href="{{ url_for(
+                            'admin.download_access_point_qr',
+                            access_point_id=point.id
+                        ) }}"
+                        class="admin-button"
+                    >
+                        Download QR
+                    </a>
+
+
+                    <!-- ACTIVATE / DEACTIVATE -->
 
                     <form
                         method="POST"
@@ -281,6 +327,7 @@
             </div>
 
             {% endfor %}
+
 
         {% else %}
 
@@ -310,3 +357,4 @@
 </body>
 
 </html>
+
