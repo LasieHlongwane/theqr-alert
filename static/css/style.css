@@ -7484,4 +7484,25 @@ main.listing-detail-page,
     color: #111111 !important;
 }
 
+.lac-public-body .public-website-link {
+    text-align: center;
+    margin: 24px auto;
+    padding: 18px;
+    background: transparent !important;
+    border: none !important;
+}
 
+.lac-public-body .public-website-link p {
+    margin-bottom: 8px;
+    color: #555555 !important;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.lac-public-body .public-website-text-link {
+    color: #111111 !important;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
