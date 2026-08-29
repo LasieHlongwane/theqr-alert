@@ -1,11 +1,25 @@
 import os
-from datetime import date, datetime, timedelta
-from upload_helpers import save_uploaded_image
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
-from sqlalchemy import func
-import qrcode
 import io
-from flask import send_file
+
+from datetime import date, datetime, timedelta
+
+import qrcode
+
+from flask import (
+    Blueprint,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    send_file,
+)
+
+from sqlalchemy import func
+
+from cloud_storage import upload_listing_image
+
 from models import (
     db,
     Zone,
@@ -17,8 +31,8 @@ from models import (
     PendingSubmissionImage,
     ContentImage,
 )
-from qr_generator import generate_access_qr
 
+from qr_generator import generate_access_qr
 ARCHIVE_GRACE_DAYS = 7
 EXPIRING_SOON_DAYS = 3
 
@@ -1594,7 +1608,7 @@ def create_content():
             start=1,
           ):
 
-            image_url = save_uploaded_image(
+            image_url = upload_listing_image(
               uploaded_image
             )
 
@@ -1609,12 +1623,12 @@ def create_content():
             )
 
 
-        except ValueError as error:
+        except Exception as error:
 
             db.session.rollback()
 
             flash(
-             str(error),
+             f"Image upload failed: {error}",
              "error",
             )
 
@@ -1706,24 +1720,25 @@ def edit_content(item_id):
 
           try:
 
-            item.image_url = (
-             save_uploaded_image(
+           item.image_url = (
+            upload_listing_image(
                 uploaded_image
-             )
             )
+           )
 
-          except ValueError as error:
+          except Exception as error:
+
+           db.session.rollback()
 
            flash(
-            str(error),
+            f"Image upload failed: {error}",
             "error",
            )
 
-           return render_template(
-            "admin/content_form.html",
-            zones=zones,
-            categories=categories,
-            item=item,
+           return _render_content_form(
+            zones,
+            categories,
+            item,
            )
         item.featured = request.form.get("featured") == "on"
         item.active = request.form.get("active") == "on"
