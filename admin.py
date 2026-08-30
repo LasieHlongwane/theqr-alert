@@ -2247,10 +2247,7 @@ def edit_submission(submission_id):
         categories=categories,
     )
 
-@admin_bp.route(
-    "/submissions/<int:submission_id>/approve",
-    methods=["POST"],
-)
+
 def approve_submission(
     submission_id,
 ):
@@ -2267,6 +2264,10 @@ def approve_submission(
         )
     )
 
+    # =====================================================
+    # ALREADY REVIEWED
+    # =====================================================
+
     if submission.status != "pending":
 
         flash(
@@ -2280,15 +2281,13 @@ def approve_submission(
             )
         )
 
+    # =====================================================
+    # VALIDATE ZONE
+    # =====================================================
+
     zone = db.session.get(
         Zone,
         submission.zone_id,
-    )
-
-    category = (
-        get_category_by_slug(
-            submission.category
-        )
     )
 
     if not zone:
@@ -2303,6 +2302,16 @@ def approve_submission(
                 "admin.submissions"
             )
         )
+
+    # =====================================================
+    # VALIDATE CATEGORY
+    # =====================================================
+
+    category = (
+        get_category_by_slug(
+            submission.category
+        )
+    )
 
     if not category:
 
@@ -2319,33 +2328,82 @@ def approve_submission(
 
     try:
 
+        # =================================================
+        # DETERMINE MAIN / COVER IMAGE
+        # =================================================
+
+        submission_images = list(
+            submission.images
+        )
+
+        first_image_url = None
+
+        if submission_images:
+
+            first_image = submission_images[0]
+
+            if first_image.image_url:
+                first_image_url = (
+                    first_image.image_url
+                )
+
+        # If the submission itself already has
+        # a main image URL, prefer that.
+        if submission.image_url:
+            first_image_url = (
+                submission.image_url
+            )
+
+        # =================================================
+        # CREATE LIVE CONTENT
+        # =================================================
+
         content = ContentItem(
+
             zone_id=
                 submission.zone_id,
+
             category=
                 submission.category,
+
             title=
                 submission.title,
+
             description=
                 submission.description,
+
             business_name=
                 submission.business_name,
+
             venue=
                 submission.venue,
+
             price=
                 submission.price,
+
             contact=
                 submission.contact,
+
+            # Main / cover image.
+            # This should now be a Cloudinary HTTPS URL.
+            image_url=
+                first_image_url,
+
             publish_from=
                 submission.publish_from,
+
             event_date=
                 submission.event_date,
+
             event_end_date=
                 submission.event_end_date,
+
             start_date=
                 submission.start_date,
+
             end_date=
                 submission.end_date,
+
             featured=False,
             active=True,
             archived=False,
@@ -2355,19 +2413,40 @@ def approve_submission(
             content
         )
 
+        # Generate content.id
         db.session.flush()
 
+        # =================================================
+        # LINK SUBMISSION TO PUBLISHED CONTENT
+        # =================================================
+
         submission.published_content_id = (
-          content.id
+            content.id
         )
 
-        for image in submission.images:
+        # =================================================
+        # COPY CLOUDINARY IMAGE URLS
+        # =================================================
+
+        for image in submission_images:
+
+            if not image.image_url:
+                continue
 
             content_image = ContentImage(
+
                 content_item_id=
                     content.id,
+
+                # IMPORTANT:
+                # We are copying the permanent
+                # Cloudinary URL.
+                #
+                # We are NOT copying/saving a file
+                # to Render.
                 image_url=
                     image.image_url,
+
                 display_order=
                     image.display_order,
             )
@@ -2375,6 +2454,10 @@ def approve_submission(
             db.session.add(
                 content_image
             )
+
+        # =================================================
+        # MARK SUBMISSION APPROVED
+        # =================================================
 
         submission.status = (
             "approved"
@@ -2384,12 +2467,35 @@ def approve_submission(
             datetime.utcnow()
         )
 
+        # =================================================
+        # SAVE
+        # =================================================
+
         db.session.commit()
 
-    except Exception:
+    except Exception as exc:
 
         db.session.rollback()
-        raise
+
+        print(
+            "Approve submission error:",
+            exc,
+        )
+
+        flash(
+            "Unable to approve submission.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions"
+            )
+        )
+
+    # =====================================================
+    # SUCCESS
+    # =====================================================
 
     flash(
         "Submission approved and published.",
@@ -2400,8 +2506,8 @@ def approve_submission(
         url_for(
             "admin.submissions"
         )
-    )
-
+    )        
+            
 @admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
 def reject_submission(submission_id):
     auth = require_admin()
