@@ -789,7 +789,7 @@ def find_live_access_point(
 # =========================================================
 # PUBLIC CONTENT SUBMISSION
 # =========================================================
-    @app.route(
+@app.route(
     "/submit",
     methods=["GET", "POST"],
 )
@@ -917,7 +917,6 @@ def submit_content():
             or not submitter_name
             or not submitter_phone
         ):
-
             flash(
                 "Please complete all required fields.",
                 "error",
@@ -942,7 +941,6 @@ def submit_content():
             not zone
             or not zone.active
         ):
-
             flash(
                 "Please select a valid zone.",
                 "error",
@@ -965,7 +963,6 @@ def submit_content():
         )
 
         if not category_record:
-
             flash(
                 "Please select a valid category.",
                 "error",
@@ -988,7 +985,6 @@ def submit_content():
         end_date = None
 
         try:
-
             publish_from_raw = request.form.get(
                 "publish_from",
                 "",
@@ -1045,7 +1041,6 @@ def submit_content():
                 ).date()
 
         except ValueError:
-
             flash(
                 "One or more dates are invalid.",
                 "error",
@@ -1070,18 +1065,14 @@ def submit_content():
             venue=venue,
             price=price,
             contact=contact,
-
             submitter_name=submitter_name,
             submitter_email=submitter_email,
             submitter_phone=submitter_phone,
-
             publish_from=publish_from,
             event_date=event_date,
             event_end_date=event_end_date,
-
             start_date=start_date,
             end_date=end_date,
-
             status="pending",
         )
 
@@ -1090,32 +1081,27 @@ def submit_content():
         # =================================================
 
         if not submission.tracking_code:
-
             submission.tracking_code = (
                 uuid.uuid4().hex[:12].upper()
             )
 
         try:
-
             db.session.add(
                 submission
             )
 
-            # Needed so submission.id exists
-            # before creating image records.
+            # Create submission.id before image records.
             db.session.flush()
 
             # =================================================
             # CLOUDINARY IMAGE UPLOAD
             # =================================================
 
-            uploaded_files = (
-                request.files.getlist(
-                    "images"
-                )
+            uploaded_files = request.files.getlist(
+                "images"
             )
 
-            # Maximum 3 images
+            # Maximum 3 images.
             uploaded_files = uploaded_files[:3]
 
             first_image_url = None
@@ -1128,11 +1114,9 @@ def submit_content():
                 ):
                     continue
 
-                # ---------------------------------------------
                 # Upload directly to Cloudinary.
-                # Nothing is saved to Render's local filesystem.
-                # ---------------------------------------------
-
+                # Nothing is stored permanently on
+                # Render's local filesystem.
                 image_url = upload_lac_image(
                     image_file,
                     folder="lac/submissions",
@@ -1141,11 +1125,9 @@ def submit_content():
                 if not first_image_url:
                     first_image_url = image_url
 
-                pending_image = (
-                    PendingSubmissionImage(
-                        submission_id=submission.id,
-                        image_url=image_url,
-                    )
+                pending_image = PendingSubmissionImage(
+                    submission_id=submission.id,
+                    image_url=image_url,
                 )
 
                 db.session.add(
@@ -1157,7 +1139,6 @@ def submit_content():
             # =================================================
 
             if first_image_url:
-
                 submission.image_url = (
                     first_image_url
                 )
@@ -1169,7 +1150,6 @@ def submit_content():
             db.session.commit()
 
         except Exception as exc:
-
             db.session.rollback()
 
             print(
@@ -1209,6 +1189,7 @@ def submit_content():
         zones=zones,
         categories=categories,
     )
+
 
         def parse_form_date(
             field_name,
