@@ -132,7 +132,17 @@ os.makedirs(
     UPLOAD_FOLDER,
     exist_ok=True,
 )
+def upload_lac_image(
+    image_file,
+    folder="lac/submissions",
+):
+    result = cloudinary.uploader.upload(
+        image_file,
+        folder=folder,
+        resource_type="image",
+    )
 
+    return result["secure_url"]
 
 def allowed_image_file(filename):
 
