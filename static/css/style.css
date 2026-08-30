@@ -7512,13 +7512,17 @@ main.listing-detail-page,
     gap: 12px;
     margin: 16px 0;
     padding: 12px 14px;
-    border: 1px solid #dddddd;
+
+    background: #1f1f1f !important;
+    border: 1px solid #444444 !important;
     border-radius: 10px;
-    background: #f7f7f7;
+
+    color: #ffffff !important;
 }
 
 .lac-admin-body .content-performance-icon {
     font-size: 22px;
+    color: #ffffff !important;
 }
 
 .lac-admin-body .content-performance div {
@@ -7529,8 +7533,29 @@ main.listing-detail-page,
 .lac-admin-body .content-performance strong {
     font-size: 20px;
     line-height: 1.1;
+    color: #ffffff !important;
 }
 
 .lac-admin-body .content-performance span {
     font-size: 13px;
+    color: #cccccc !important;
+}
+
+.lac-admin-body .view-listing-button {
+    display: inline-block;
+    padding: 10px 16px;
+
+    background: #2d2d2d !important;
+    color: #ffffff !important;
+
+    border: 1px solid #555555 !important;
+    border-radius: 8px;
+
+    text-decoration: none !important;
+    font-weight: 600;
+}
+
+.lac-admin-body .view-listing-button:hover {
+    background: #3b3b3b !important;
+    color: #ffffff !important;
 }
