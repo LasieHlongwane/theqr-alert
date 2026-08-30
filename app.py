@@ -630,7 +630,6 @@ def listing_detail(item_id):
 
     today = date.today()
 
-
     item = (
         ContentItem.query
         .filter(
@@ -641,16 +640,15 @@ def listing_detail(item_id):
         .first_or_404()
     )
 
-
     # -----------------------------------------------------
     # EXPIRY
     # -----------------------------------------------------
 
     if content_is_expired(
-      item,
-      today,
+        item,
+        today,
     ):
-      abort(404)
+        abort(404)
 
     # -----------------------------------------------------
     # CATEGORY
@@ -665,7 +663,6 @@ def listing_detail(item_id):
         .first_or_404()
     )
 
-
     # -----------------------------------------------------
     # RECORD LISTING VIEW
     # -----------------------------------------------------
@@ -675,7 +672,6 @@ def listing_detail(item_id):
     ) + 1
 
     db.session.commit()
-
 
     # -----------------------------------------------------
     # TEMPLATE
@@ -688,7 +684,6 @@ def listing_detail(item_id):
         zone=item.zone,
         today=today,
     )
-
 
 # =========================================================
 # FIND LIVE ACCESS POINT FOR CONTENT
