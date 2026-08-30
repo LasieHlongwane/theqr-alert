@@ -188,37 +188,38 @@
 
             </div>
 
+
             {% if published_content and live_access_point %}
 
             <div class="submission-live-box">
 
-             <div>
+                <div class="submission-live-details">
 
-               <span class="submission-state-label">
-                 YOUR LISTING IS LIVE
-               </span>
+                    <span class="submission-state-label">
+                        YOUR LISTING IS LIVE
+                    </span>
 
-               <strong>
-                 View it on the LaC network.
-               </strong>
+                    <strong>
+                        View it on the LaC network.
+                    </strong>
 
-               <small class="submission-live-location">
-                 📍 {{ published_content.zone.name }}
-               </small>
+                    <small class="submission-live-location">
+                        📍 {{ published_content.zone.name }}
+                    </small>
 
-             </div>
+                </div>
 
 
-             <a
-               href="{{ url_for(
-                 'qr_category',
-                 code=live_access_point.code,
-                 category=published_content.category
-               ) }}"
-               class="submission-live-button"
-             >
-               View Live Listing →
-             </a>
+                <a
+                    href="{{ url_for(
+                        'qr_category',
+                        code=live_access_point.code,
+                        category=published_content.category
+                    ) }}"
+                    class="submission-live-button"
+                >
+                    View Live Listing →
+                </a>
 
             </div>
 
@@ -227,20 +228,21 @@
 
             <div class="submission-status-info">
 
-             <h3>
-               Listing approved
-             </h3>
+                <h3>
+                    Listing approved
+                </h3>
 
-             <p>
-               Your listing has been approved,
-               but there is currently no active
-               LaC Access Point available for
-               this zone.
-             </p>
+                <p>
+                    Your listing has been approved,
+                    but there is currently no active
+                    LaC Access Point available for
+                    this zone.
+                </p>
 
             </div>
 
             {% endif %}
+
 
             <!-- =====================================
                  REJECTED
@@ -338,6 +340,25 @@
             </div>
 
 
+            <!-- =====================================
+                 LISTING DASHBOARD
+            ====================================== -->
+
+            <div class="submission-dashboard-action">
+
+                <a
+                    href="{{ url_for(
+                        'submission_dashboard',
+                        code=submission.tracking_code
+                    ) }}"
+                    class="organiser-dashboard-link"
+                >
+                    Open Listing Dashboard →
+                </a>
+
+            </div>
+
+
         </section>
 
     </main>
@@ -361,16 +382,6 @@
 
 
 </div>
-
-<a
-    href="{{ url_for(
-        'submission_dashboard',
-        code=submission.tracking_code
-    ) }}"
-    class="organiser-dashboard-link"
->
-    Open Listing Dashboard →
-</a>
 
 </body>
 
