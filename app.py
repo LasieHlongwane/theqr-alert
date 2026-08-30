@@ -789,7 +789,7 @@ def find_live_access_point(
 # =========================================================
 # PUBLIC CONTENT SUBMISSION
 # =========================================================
-@app.route(
+    @app.route(
     "/submit",
     methods=["GET", "POST"],
 )
@@ -805,6 +805,10 @@ def submit_content():
     categories = get_active_categories()
 
     if request.method == "POST":
+
+        # =================================================
+        # BASIC FORM DATA
+        # =================================================
 
         zone_id = request.form.get(
             "zone_id",
@@ -873,6 +877,10 @@ def submit_content():
             or None
         )
 
+        # =================================================
+        # SUBMITTER INFORMATION
+        # =================================================
+
         submitter_name = (
             request.form.get(
                 "submitter_name",
@@ -898,6 +906,10 @@ def submit_content():
             .strip()
         )
 
+        # =================================================
+        # VALIDATION
+        # =================================================
+
         if (
             not zone_id
             or not category_slug
@@ -916,6 +928,10 @@ def submit_content():
                 zones=zones,
                 categories=categories,
             )
+
+        # =================================================
+        # VALIDATE ZONE
+        # =================================================
 
         zone = db.session.get(
             Zone,
@@ -938,6 +954,10 @@ def submit_content():
                 categories=categories,
             )
 
+        # =================================================
+        # VALIDATE CATEGORY
+        # =================================================
+
         category_record = (
             get_active_category_by_slug(
                 category_slug
@@ -956,6 +976,239 @@ def submit_content():
                 zones=zones,
                 categories=categories,
             )
+
+        # =================================================
+        # DATES
+        # =================================================
+
+        publish_from = None
+        event_date = None
+        event_end_date = None
+        start_date = None
+        end_date = None
+
+        try:
+
+            publish_from_raw = request.form.get(
+                "publish_from",
+                "",
+            ).strip()
+
+            event_date_raw = request.form.get(
+                "event_date",
+                "",
+            ).strip()
+
+            event_end_date_raw = request.form.get(
+                "event_end_date",
+                "",
+            ).strip()
+
+            start_date_raw = request.form.get(
+                "start_date",
+                "",
+            ).strip()
+
+            end_date_raw = request.form.get(
+                "end_date",
+                "",
+            ).strip()
+
+            if publish_from_raw:
+                publish_from = datetime.strptime(
+                    publish_from_raw,
+                    "%Y-%m-%d",
+                ).date()
+
+            if event_date_raw:
+                event_date = datetime.strptime(
+                    event_date_raw,
+                    "%Y-%m-%d",
+                ).date()
+
+            if event_end_date_raw:
+                event_end_date = datetime.strptime(
+                    event_end_date_raw,
+                    "%Y-%m-%d",
+                ).date()
+
+            if start_date_raw:
+                start_date = datetime.strptime(
+                    start_date_raw,
+                    "%Y-%m-%d",
+                ).date()
+
+            if end_date_raw:
+                end_date = datetime.strptime(
+                    end_date_raw,
+                    "%Y-%m-%d",
+                ).date()
+
+        except ValueError:
+
+            flash(
+                "One or more dates are invalid.",
+                "error",
+            )
+
+            return render_template(
+                "submit.html",
+                zones=zones,
+                categories=categories,
+            )
+
+        # =================================================
+        # CREATE PENDING SUBMISSION
+        # =================================================
+
+        submission = PendingSubmission(
+            zone_id=zone.id,
+            category=category_slug,
+            title=title,
+            description=description,
+            business_name=business_name,
+            venue=venue,
+            price=price,
+            contact=contact,
+
+            submitter_name=submitter_name,
+            submitter_email=submitter_email,
+            submitter_phone=submitter_phone,
+
+            publish_from=publish_from,
+            event_date=event_date,
+            event_end_date=event_end_date,
+
+            start_date=start_date,
+            end_date=end_date,
+
+            status="pending",
+        )
+
+        # =================================================
+        # TRACKING CODE
+        # =================================================
+
+        if not submission.tracking_code:
+
+            submission.tracking_code = (
+                uuid.uuid4().hex[:12].upper()
+            )
+
+        try:
+
+            db.session.add(
+                submission
+            )
+
+            # Needed so submission.id exists
+            # before creating image records.
+            db.session.flush()
+
+            # =================================================
+            # CLOUDINARY IMAGE UPLOAD
+            # =================================================
+
+            uploaded_files = (
+                request.files.getlist(
+                    "images"
+                )
+            )
+
+            # Maximum 3 images
+            uploaded_files = uploaded_files[:3]
+
+            first_image_url = None
+
+            for image_file in uploaded_files:
+
+                if (
+                    not image_file
+                    or not image_file.filename
+                ):
+                    continue
+
+                # ---------------------------------------------
+                # Upload directly to Cloudinary.
+                # Nothing is saved to Render's local filesystem.
+                # ---------------------------------------------
+
+                image_url = upload_lac_image(
+                    image_file,
+                    folder="lac/submissions",
+                )
+
+                if not first_image_url:
+                    first_image_url = image_url
+
+                pending_image = (
+                    PendingSubmissionImage(
+                        submission_id=submission.id,
+                        image_url=image_url,
+                    )
+                )
+
+                db.session.add(
+                    pending_image
+                )
+
+            # =================================================
+            # MAIN / FALLBACK IMAGE
+            # =================================================
+
+            if first_image_url:
+
+                submission.image_url = (
+                    first_image_url
+                )
+
+            # =================================================
+            # SAVE EVERYTHING
+            # =================================================
+
+            db.session.commit()
+
+        except Exception as exc:
+
+            db.session.rollback()
+
+            print(
+                "Submission error:",
+                exc,
+            )
+
+            flash(
+                "Unable to submit your listing. "
+                "Please try again.",
+                "error",
+            )
+
+            return render_template(
+                "submit.html",
+                zones=zones,
+                categories=categories,
+            )
+
+        # =================================================
+        # SUCCESS
+        # =================================================
+
+        return redirect(
+            url_for(
+                "submission_success",
+                code=submission.tracking_code,
+            )
+        )
+
+    # =====================================================
+    # GET REQUEST
+    # =====================================================
+
+    return render_template(
+        "submit.html",
+        zones=zones,
+        categories=categories,
+    )
 
         def parse_form_date(
             field_name,
