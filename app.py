@@ -1190,8 +1190,7 @@ def submit_content():
         categories=categories,
     )
 
-
-        def parse_form_date(
+def parse_form_date(
             field_name,
         ):
 
