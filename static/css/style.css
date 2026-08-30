@@ -7506,3 +7506,31 @@ main.listing-detail-page,
     text-decoration: underline;
     text-underline-offset: 3px;
 }
+.lac-admin-body .content-performance {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 12px 14px;
+    border: 1px solid #dddddd;
+    border-radius: 10px;
+    background: #f7f7f7;
+}
+
+.lac-admin-body .content-performance-icon {
+    font-size: 22px;
+}
+
+.lac-admin-body .content-performance div {
+    display: flex;
+    flex-direction: column;
+}
+
+.lac-admin-body .content-performance strong {
+    font-size: 20px;
+    line-height: 1.1;
+}
+
+.lac-admin-body .content-performance span {
+    font-size: 13px;
+}
