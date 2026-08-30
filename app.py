@@ -1189,11 +1189,9 @@ def submit_content():
         zones=zones,
         categories=categories,
     )
-
-def parse_form_date(
+        def parse_form_date(
             field_name,
         ):
-
             value = (
                 request.form.get(
                     field_name,
@@ -1211,7 +1209,6 @@ def parse_form_date(
             ).date()
 
         try:
-
             publish_from = parse_form_date(
                 "publish_from"
             )
@@ -1233,7 +1230,6 @@ def parse_form_date(
             )
 
         except ValueError:
-
             flash(
                 "One or more dates are invalid.",
                 "error",
@@ -1245,10 +1241,13 @@ def parse_form_date(
                 categories=categories,
             )
 
+        # =================================================
+        # EVENT DATE VALIDATION
+        # =================================================
+
         if category_slug == "events":
 
             if not event_date:
-
                 flash(
                     "Event Date is required for events.",
                     "error",
@@ -1264,7 +1263,6 @@ def parse_form_date(
                 publish_from
                 and publish_from > event_date
             ):
-
                 flash(
                     "Publish From cannot be after Event Date.",
                     "error",
@@ -1280,7 +1278,6 @@ def parse_form_date(
                 event_end_date
                 and event_end_date < event_date
             ):
-
                 flash(
                     "Event End Date cannot be before Event Date.",
                     "error",
@@ -1302,7 +1299,6 @@ def parse_form_date(
                 and end_date
                 and end_date < start_date
             ):
-
                 flash(
                     "End date cannot be before start date.",
                     "error",
@@ -1318,10 +1314,12 @@ def parse_form_date(
             event_date = None
             event_end_date = None
 
-        uploaded_images = (
-            request.files.getlist(
-                "images"
-            )
+        # =================================================
+        # IMAGES
+        # =================================================
+
+        uploaded_images = request.files.getlist(
+            "images"
         )
 
         uploaded_images = [
@@ -1331,7 +1329,6 @@ def parse_form_date(
         ]
 
         if len(uploaded_images) > 3:
-
             flash(
                 "You can upload a maximum of 3 images.",
                 "error",
@@ -1342,6 +1339,10 @@ def parse_form_date(
                 zones=zones,
                 categories=categories,
             )
+
+        # =================================================
+        # CREATE PENDING SUBMISSION
+        # =================================================
 
         submission = PendingSubmission(
             zone_id=zone_id,
@@ -1364,47 +1365,52 @@ def parse_form_date(
         )
 
         try:
-
             db.session.add(
                 submission
             )
 
             db.session.flush()
 
+            first_image_url = None
+
             for index, uploaded_image in enumerate(
                 uploaded_images,
                 start=1,
             ):
-
-                image_url = (
-                    save_uploaded_image(
-                        uploaded_image
-                    )
+                image_url = upload_lac_image(
+                    uploaded_image,
+                    folder="lac/submissions",
                 )
 
-                submission_image = (
-                    PendingSubmissionImage(
-                        submission_id=
-                            submission.id,
-                        image_url=
-                            image_url,
-                        display_order=
-                            index,
-                    )
+                if not first_image_url:
+                    first_image_url = image_url
+
+                submission_image = PendingSubmissionImage(
+                    submission_id=submission.id,
+                    image_url=image_url,
+                    display_order=index,
                 )
 
                 db.session.add(
                     submission_image
                 )
 
+            if first_image_url:
+                submission.image_url = first_image_url
+
             db.session.commit()
 
-        except ValueError as error:
-
+        except Exception as error:
             db.session.rollback()
 
+            print(
+                "Submission error:",
+                error,
+            )
+
             flash(
-                str(error),
+                "Unable to submit your listing. "
+                "Please try again.",
                 "error",
             )
 
@@ -1413,6 +1419,10 @@ def parse_form_date(
                 zones=zones,
                 categories=categories,
             )
+
+        # =================================================
+        # SUCCESS
+        # =================================================
 
         return redirect(
             url_for(
