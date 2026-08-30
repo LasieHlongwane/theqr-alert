@@ -276,19 +276,20 @@
             {% for category in categories %}
 
             <option
-              value="{{ category.slug }}"
-              {% if selected_category == category.slug %}
-                selected
-              {% endif %}
+                value="{{ category.slug }}"
+                {% if selected_category == category.slug %}
+                    selected
+                {% endif %}
             >
-              {% if category.icon %}
-                {{ category.icon }}
-              {% endif %}
+                {% if category.icon %}
+                    {{ category.icon }}
+                {% endif %}
 
-              {{ category.name }}
+                {{ category.name }}
             </option>
 
             {% endfor %}
+
         </select>
 
 
@@ -378,7 +379,7 @@
                     <div class="content-card-top">
 
                         <span class="content-category">
-                            {{ item.category|title }}
+                            {{ item.category|replace("-", " ")|title }}
                         </span>
 
 
@@ -442,6 +443,31 @@
                     </p>
 
                     {% endif %}
+
+
+                    <!-- ===================================
+                         LISTING PERFORMANCE
+                    ==================================== -->
+
+                    <div class="content-performance">
+
+                        <span class="content-performance-icon">
+                            👁
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                {{ item.view_count or 0 }}
+                            </strong>
+
+                            <span>
+                                Full Listing Views
+                            </span>
+
+                        </div>
+
+                    </div>
 
 
                     <!-- ===================================
