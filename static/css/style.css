@@ -7597,3 +7597,159 @@ main.listing-detail-page,
     width: 100%;
     max-width: 360px;
 }
+/* =========================================================
+   LISTING DASHBOARD - LIVE LISTING BUTTONS
+========================================================= */
+
+.lac-public-body .organiser-live-listing-button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 100% !important;
+    box-sizing: border-box !important;
+
+    margin-top: 22px !important;
+    padding: 14px 20px !important;
+
+    background: #111111 !important;
+    background-color: #111111 !important;
+
+    color: #ffffff !important;
+
+    border: 1px solid #333333 !important;
+    border-radius: 10px !important;
+
+    text-decoration: none !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+
+    text-align: center !important;
+
+    cursor: pointer;
+}
+
+
+/* Make absolutely sure link text stays white */
+
+.lac-public-body a.organiser-live-listing-button,
+.lac-public-body a.organiser-live-listing-button:link,
+.lac-public-body a.organiser-live-listing-button:visited {
+    background: #111111 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+
+/* Hover */
+
+.lac-public-body a.organiser-live-listing-button:hover {
+    background: #2b2b2b !important;
+    color: #ffffff !important;
+}
+
+
+/* Active / tap */
+
+.lac-public-body a.organiser-live-listing-button:active {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   SUBMISSION STATUS SECONDARY LINK
+========================================================= */
+
+.lac-public-body .organiser-secondary-link {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    box-sizing: border-box;
+
+    margin-top: 16px;
+    margin-bottom: 30px;
+    padding: 12px 18px;
+
+    background: #fffdf8 !important;
+    color: #111111 !important;
+
+    border: 1px solid #cccccc !important;
+    border-radius: 10px;
+
+    text-decoration: none !important;
+    text-align: center;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.lac-public-body .organiser-secondary-link:hover {
+    background: #f1eee7 !important;
+    color: #111111 !important;
+}
+/* =========================================================
+   SUBMISSION SUCCESS - CHECK STATUS BUTTON
+========================================================= */
+
+.lac-public-body .submission-success-button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 100% !important;
+    box-sizing: border-box !important;
+
+    margin-top: 22px !important;
+    padding: 14px 20px !important;
+
+    background: #111111 !important;
+    background-color: #111111 !important;
+
+    color: #ffffff !important;
+
+    border: 1px solid #333333 !important;
+    border-radius: 10px !important;
+
+    text-decoration: none !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+
+    text-align: center !important;
+
+    cursor: pointer;
+}
+
+
+/* Normal + visited state */
+
+.lac-public-body a.submission-success-button,
+.lac-public-body a.submission-success-button:link,
+.lac-public-body a.submission-success-button:visited {
+    background: #111111 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+
+/* Hover */
+
+.lac-public-body a.submission-success-button:hover {
+    background: #2b2b2b !important;
+    color: #ffffff !important;
+}
+
+
+/* Click / tap */
+
+.lac-public-body a.submission-success-button:active {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
