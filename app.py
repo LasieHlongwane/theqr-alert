@@ -1,20 +1,23 @@
 import os
+import re
+import uuid
 from datetime import date, datetime
-from werkzeug.utils import secure_filename
+from urllib.parse import quote
+
+import cloudinary.uploader
 from dotenv import load_dotenv
 from flask import (
     Flask,
+    abort,
+    flash,
+    redirect,
     render_template,
     request,
-    abort,
-    redirect,
     url_for,
-    flash,
 )
 from flask_migrate import Migrate
 from sqlalchemy import or_
-import re
-from urllib.parse import quote
+
 from models import (
     db,
     Zone,
@@ -42,9 +45,14 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ---------------------------------------------------------
+app.config[
+    "MAX_CONTENT_LENGTH"
+] = 5 * 1024 * 1024
+
+
+# =========================================================
 # PHONE / WHATSAPP HELPERS
-# ---------------------------------------------------------
+# =========================================================
 
 def normalize_phone_number(value):
 
@@ -56,9 +64,6 @@ def normalize_phone_number(value):
         "",
         value,
     )
-
-    # South African international format
-    # 0791234567 -> 27791234567
 
     if digits.startswith("0"):
         digits = (
@@ -106,11 +111,10 @@ def phone_link(value):
 
     return f"tel:+{number}"
 
-UPLOAD_FOLDER = os.path.join(
-    app.root_path,
-    "static",
-    "uploads",
-)
+
+# =========================================================
+# IMAGE UPLOAD HELPERS
+# =========================================================
 
 ALLOWED_IMAGE_EXTENSIONS = {
     "png",
@@ -119,30 +123,6 @@ ALLOWED_IMAGE_EXTENSIONS = {
     "webp",
 }
 
-app.config[
-    "UPLOAD_FOLDER"
-] = UPLOAD_FOLDER
-
-app.config[
-    "MAX_CONTENT_LENGTH"
-] = 5 * 1024 * 1024
-
-
-os.makedirs(
-    UPLOAD_FOLDER,
-    exist_ok=True,
-)
-def upload_lac_image(
-    image_file,
-    folder="lac/submissions",
-):
-    result = cloudinary.uploader.upload(
-        image_file,
-        folder=folder,
-        resource_type="image",
-    )
-
-    return result["secure_url"]
 
 def allowed_image_file(filename):
 
@@ -157,48 +137,35 @@ def allowed_image_file(filename):
     )
 
 
-def save_uploaded_image(file):
+def upload_lac_image(
+    image_file,
+    folder="lac/submissions",
+):
 
     if (
-        not file
-        or not file.filename
+        not image_file
+        or not image_file.filename
     ):
         return None
 
     if not allowed_image_file(
-        file.filename
+        image_file.filename
     ):
         raise ValueError(
             "Only PNG, JPG, JPEG and WEBP images are allowed."
         )
 
-    filename = secure_filename(
-        file.filename
+    result = cloudinary.uploader.upload(
+        image_file,
+        folder=folder,
+        resource_type="image",
     )
 
-    timestamp = datetime.utcnow().strftime(
-        "%Y%m%d%H%M%S%f"
-    )
+    return result[
+        "secure_url"
+    ]
 
-    filename = (
-        f"{timestamp}_{filename}"
-    )
 
-    full_path = os.path.join(
-        app.config[
-            "UPLOAD_FOLDER"
-        ],
-        filename,
-    )
-
-    file.save(
-        full_path
-    )
-
-    return url_for(
-        "static",
-        filename=f"uploads/{filename}",
-    )
 # =========================================================
 # SECRET KEY
 # =========================================================
@@ -244,7 +211,9 @@ app.config[
 }
 
 
-db.init_app(app)
+db.init_app(
+    app
+)
 
 migrate = Migrate(
     app,
@@ -264,9 +233,8 @@ app.register_blueprint(
 def home():
 
     return render_template(
-         "qr_entry.html"
+        "qr_entry.html"
     )
-
 
 
 # =========================================================
@@ -305,6 +273,7 @@ def get_active_category_by_slug(
 # =========================================================
 # ACTIVE CONTENT HELPER
 # =========================================================
+
 def get_active_content(
     zone_id,
     category_slug,
@@ -331,7 +300,6 @@ def get_active_content(
         )
     )
 
-
     # -----------------------------------------------------
     # EVENTS
     # -----------------------------------------------------
@@ -339,12 +307,10 @@ def get_active_content(
     if category_slug == "events":
 
         query = query.filter(
-
             or_(
                 ContentItem.publish_from.is_(None),
                 ContentItem.publish_from <= today,
             ),
-
             or_(
                 ContentItem.event_end_date.is_(None),
                 ContentItem.event_end_date >= today,
@@ -361,18 +327,17 @@ def get_active_content(
             .all()
         )
 
-
     # -----------------------------------------------------
     # OTHER CONTENT
     # Show future listings immediately.
-    # Hide them only after they expire.
+    # Hide only after expiry.
     # -----------------------------------------------------
 
     query = query.filter(
         or_(
             ContentItem.end_date.is_(None),
             ContentItem.end_date >= today,
-        ),
+        )
     )
 
     return (
@@ -424,14 +389,15 @@ def content_is_expired(
     return (
         expiry_date < today
     )
-# =========================================================
-# QR ACCESS POINT
-# =========================================================
+
+
 # =========================================================
 # QR ACCESS POINT
 # =========================================================
 
-@app.route("/q/<code>")
+@app.route(
+    "/q/<code>"
+)
 def qr_access(code):
 
     access_point = (
@@ -448,7 +414,6 @@ def qr_access(code):
         return render_template(
             "qr_error.html"
         ), 404
-
 
     # -----------------------------------------------------
     # RECORD PHYSICAL QR SCAN
@@ -474,7 +439,6 @@ def qr_access(code):
 
     db.session.commit()
 
-
     # -----------------------------------------------------
     # CATEGORY-SPECIFIC QR
     # -----------------------------------------------------
@@ -486,13 +450,8 @@ def qr_access(code):
     ):
 
         category_slug = (
-            access_point
-            .default_category
+            access_point.default_category
         )
-
-
-        # Make sure the configured category
-        # still exists and is active.
 
         category_record = (
             get_active_category_by_slug(
@@ -503,10 +462,6 @@ def qr_access(code):
         if not category_record:
             abort(404)
 
-
-        # Redirect directly to the category page.
-        # User does NOT see the category chooser.
-
         return redirect(
             url_for(
                 "qr_category",
@@ -515,23 +470,17 @@ def qr_access(code):
             )
         )
 
-
     # -----------------------------------------------------
     # GENERAL QR
     # -----------------------------------------------------
 
     return render_template(
         "access.html",
-
-        zone=
-            access_point.zone,
-
-        access_point=
-            access_point,
-
-        categories=
-            get_active_categories(),
+        zone=access_point.zone,
+        access_point=access_point,
+        categories=get_active_categories(),
     )
+
 
 # =========================================================
 # CATEGORY PAGE
@@ -557,9 +506,8 @@ def qr_category(
     if not access_point:
         abort(404)
 
-
     # -----------------------------------------------------
-    # VALIDATE DATABASE CATEGORY
+    # VALIDATE CATEGORY
     # -----------------------------------------------------
 
     category_record = (
@@ -570,7 +518,6 @@ def qr_category(
 
     if not category_record:
         abort(404)
-
 
     # -----------------------------------------------------
     # GET CONTENT
@@ -584,9 +531,8 @@ def qr_category(
             category,
     )
 
-
     # -----------------------------------------------------
-    # RECORD CATEGORY SELECTION
+    # RECORD CATEGORY VIEW
     # -----------------------------------------------------
 
     category_event = QRScan(
@@ -612,23 +558,20 @@ def qr_category(
 
     db.session.commit()
 
-
     # -----------------------------------------------------
-    # DISPLAY CATEGORY
+    # DISPLAY
     # -----------------------------------------------------
 
     return render_template(
-       "category.html",
-       zone=access_point.zone,
-       category=category_record,
-       items=items,
-       access_point=access_point,
-       today=date.today(),
+        "category.html",
+        zone=access_point.zone,
+        category=category_record,
+        items=items,
+        access_point=access_point,
+        today=date.today(),
     )
 
-# =========================================================
-# PUBLIC LISTING DETAIL
-# =========================================================
+
 # =========================================================
 # PUBLIC LISTING DETAIL
 # =========================================================
@@ -695,6 +638,7 @@ def listing_detail(item_id):
         today=today,
     )
 
+
 # =========================================================
 # FIND LIVE ACCESS POINT FOR CONTENT
 # =========================================================
@@ -705,7 +649,6 @@ def find_live_access_point(
 
     if not published_content:
         return None
-
 
     # -----------------------------------------------------
     # 1. CATEGORY-SPECIFIC ACCESS POINT
@@ -733,10 +676,8 @@ def find_live_access_point(
         .first()
     )
 
-
     if access_point:
         return access_point
-
 
     # -----------------------------------------------------
     # 2. GENERAL ACCESS POINT
@@ -761,10 +702,8 @@ def find_live_access_point(
         .first()
     )
 
-
     if access_point:
         return access_point
-
 
     # -----------------------------------------------------
     # 3. ANY ACTIVE ACCESS POINT
@@ -786,9 +725,11 @@ def find_live_access_point(
         .first()
     )
 
+
 # =========================================================
 # PUBLIC CONTENT SUBMISSION
 # =========================================================
+
 @app.route(
     "/submit",
     methods=["GET", "POST"],
@@ -797,12 +738,18 @@ def submit_content():
 
     zones = (
         Zone.query
-        .filter_by(active=True)
-        .order_by(Zone.name)
+        .filter_by(
+            active=True
+        )
+        .order_by(
+            Zone.name
+        )
         .all()
     )
 
-    categories = get_active_categories()
+    categories = (
+        get_active_categories()
+    )
 
     if request.method == "POST":
 
@@ -907,7 +854,7 @@ def submit_content():
         )
 
         # =================================================
-        # VALIDATION
+        # REQUIRED FIELD VALIDATION
         # =================================================
 
         if (
@@ -917,6 +864,7 @@ def submit_content():
             or not submitter_name
             or not submitter_phone
         ):
+
             flash(
                 "Please complete all required fields.",
                 "error",
@@ -941,6 +889,7 @@ def submit_content():
             not zone
             or not zone.active
         ):
+
             flash(
                 "Please select a valid zone.",
                 "error",
@@ -963,6 +912,7 @@ def submit_content():
         )
 
         if not category_record:
+
             flash(
                 "Please select a valid category.",
                 "error",
@@ -975,74 +925,180 @@ def submit_content():
             )
 
         # =================================================
-        # DATES
+        # DATE HELPER
         # =================================================
 
-        publish_from = None
-        event_date = None
-        event_end_date = None
-        start_date = None
-        end_date = None
+        def parse_form_date(
+            field_name,
+        ):
+
+            value = (
+                request.form.get(
+                    field_name,
+                    "",
+                )
+                .strip()
+            )
+
+            if not value:
+                return None
+
+            return datetime.strptime(
+                value,
+                "%Y-%m-%d",
+            ).date()
+
+        # =================================================
+        # PARSE DATES
+        # =================================================
 
         try:
-            publish_from_raw = request.form.get(
-                "publish_from",
-                "",
-            ).strip()
 
-            event_date_raw = request.form.get(
-                "event_date",
-                "",
-            ).strip()
+            publish_from = (
+                parse_form_date(
+                    "publish_from"
+                )
+            )
 
-            event_end_date_raw = request.form.get(
-                "event_end_date",
-                "",
-            ).strip()
+            event_date = (
+                parse_form_date(
+                    "event_date"
+                )
+            )
 
-            start_date_raw = request.form.get(
-                "start_date",
-                "",
-            ).strip()
+            event_end_date = (
+                parse_form_date(
+                    "event_end_date"
+                )
+            )
 
-            end_date_raw = request.form.get(
-                "end_date",
-                "",
-            ).strip()
+            start_date = (
+                parse_form_date(
+                    "start_date"
+                )
+            )
 
-            if publish_from_raw:
-                publish_from = datetime.strptime(
-                    publish_from_raw,
-                    "%Y-%m-%d",
-                ).date()
-
-            if event_date_raw:
-                event_date = datetime.strptime(
-                    event_date_raw,
-                    "%Y-%m-%d",
-                ).date()
-
-            if event_end_date_raw:
-                event_end_date = datetime.strptime(
-                    event_end_date_raw,
-                    "%Y-%m-%d",
-                ).date()
-
-            if start_date_raw:
-                start_date = datetime.strptime(
-                    start_date_raw,
-                    "%Y-%m-%d",
-                ).date()
-
-            if end_date_raw:
-                end_date = datetime.strptime(
-                    end_date_raw,
-                    "%Y-%m-%d",
-                ).date()
+            end_date = (
+                parse_form_date(
+                    "end_date"
+                )
+            )
 
         except ValueError:
+
             flash(
                 "One or more dates are invalid.",
+                "error",
+            )
+
+            return render_template(
+                "submit.html",
+                zones=zones,
+                categories=categories,
+            )
+
+        # =================================================
+        # EVENT DATE VALIDATION
+        # =================================================
+
+        if category_slug == "events":
+
+            if not event_date:
+
+                flash(
+                    "Event Date is required for events.",
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
+
+            if (
+                publish_from
+                and publish_from > event_date
+            ):
+
+                flash(
+                    "Publish From cannot be after Event Date.",
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
+
+            if (
+                event_end_date
+                and event_end_date < event_date
+            ):
+
+                flash(
+                    "Event End Date cannot be before Event Date.",
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
+
+            start_date = None
+            end_date = None
+
+        else:
+
+            if (
+                start_date
+                and end_date
+                and end_date < start_date
+            ):
+
+                flash(
+                    "End date cannot be before start date.",
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
+
+            publish_from = None
+            event_date = None
+            event_end_date = None
+
+        # =================================================
+        # IMAGES
+        # =================================================
+
+        uploaded_images = (
+            request.files.getlist(
+                "images"
+            )
+        )
+
+        uploaded_images = [
+            image
+            for image in uploaded_images
+            if (
+                image
+                and image.filename
+            )
+        ]
+
+        if len(
+            uploaded_images
+        ) > 3:
+
+            flash(
+                "You can upload a maximum of 3 images.",
                 "error",
             )
 
@@ -1081,290 +1137,19 @@ def submit_content():
         # =================================================
 
         if not submission.tracking_code:
+
             submission.tracking_code = (
-                uuid.uuid4().hex[:12].upper()
+                uuid.uuid4()
+                .hex[:12]
+                .upper()
             )
+
+        # =================================================
+        # SAVE SUBMISSION + CLOUDINARY IMAGES
+        # =================================================
 
         try:
-            db.session.add(
-                submission
-            )
 
-            # Create submission.id before image records.
-            db.session.flush()
-
-            # =================================================
-            # CLOUDINARY IMAGE UPLOAD
-            # =================================================
-
-            uploaded_files = request.files.getlist(
-                "images"
-            )
-
-            # Maximum 3 images.
-            uploaded_files = uploaded_files[:3]
-
-            first_image_url = None
-
-            for image_file in uploaded_files:
-
-                if (
-                    not image_file
-                    or not image_file.filename
-                ):
-                    continue
-
-                # Upload directly to Cloudinary.
-                # Nothing is stored permanently on
-                # Render's local filesystem.
-                image_url = upload_lac_image(
-                    image_file,
-                    folder="lac/submissions",
-                )
-
-                if not first_image_url:
-                    first_image_url = image_url
-
-                pending_image = PendingSubmissionImage(
-                    submission_id=submission.id,
-                    image_url=image_url,
-                )
-
-                db.session.add(
-                    pending_image
-                )
-
-            # =================================================
-            # MAIN / FALLBACK IMAGE
-            # =================================================
-
-            if first_image_url:
-                submission.image_url = (
-                    first_image_url
-                )
-
-            # =================================================
-            # SAVE EVERYTHING
-            # =================================================
-
-            db.session.commit()
-
-        except Exception as exc:
-            db.session.rollback()
-
-            print(
-                "Submission error:",
-                exc,
-            )
-
-            flash(
-                "Unable to submit your listing. "
-                "Please try again.",
-                "error",
-            )
-
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-            )
-
-        # =================================================
-        # SUCCESS
-        # =================================================
-
-        return redirect(
-            url_for(
-                "submission_success",
-                code=submission.tracking_code,
-            )
-        )
-
-    # =====================================================
-    # GET REQUEST
-    # =====================================================
-
-    return render_template(
-        "submit.html",
-        zones=zones,
-        categories=categories,
-    )
-        def parse_form_date(
-            field_name,
-        ):
-            value = (
-                request.form.get(
-                    field_name,
-                    "",
-                )
-                .strip()
-            )
-
-            if not value:
-                return None
-
-            return datetime.strptime(
-                value,
-                "%Y-%m-%d",
-            ).date()
-
-        try:
-            publish_from = parse_form_date(
-                "publish_from"
-            )
-
-            event_date = parse_form_date(
-                "event_date"
-            )
-
-            event_end_date = parse_form_date(
-                "event_end_date"
-            )
-
-            start_date = parse_form_date(
-                "start_date"
-            )
-
-            end_date = parse_form_date(
-                "end_date"
-            )
-
-        except ValueError:
-            flash(
-                "One or more dates are invalid.",
-                "error",
-            )
-
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-            )
-
-        # =================================================
-        # EVENT DATE VALIDATION
-        # =================================================
-
-        if category_slug == "events":
-
-            if not event_date:
-                flash(
-                    "Event Date is required for events.",
-                    "error",
-                )
-
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
-
-            if (
-                publish_from
-                and publish_from > event_date
-            ):
-                flash(
-                    "Publish From cannot be after Event Date.",
-                    "error",
-                )
-
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
-
-            if (
-                event_end_date
-                and event_end_date < event_date
-            ):
-                flash(
-                    "Event End Date cannot be before Event Date.",
-                    "error",
-                )
-
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
-
-            start_date = None
-            end_date = None
-
-        else:
-
-            if (
-                start_date
-                and end_date
-                and end_date < start_date
-            ):
-                flash(
-                    "End date cannot be before start date.",
-                    "error",
-                )
-
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
-
-            publish_from = None
-            event_date = None
-            event_end_date = None
-
-        # =================================================
-        # IMAGES
-        # =================================================
-
-        uploaded_images = request.files.getlist(
-            "images"
-        )
-
-        uploaded_images = [
-            image
-            for image in uploaded_images
-            if image and image.filename
-        ]
-
-        if len(uploaded_images) > 3:
-            flash(
-                "You can upload a maximum of 3 images.",
-                "error",
-            )
-
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-            )
-
-        # =================================================
-        # CREATE PENDING SUBMISSION
-        # =================================================
-
-        submission = PendingSubmission(
-            zone_id=zone_id,
-            category=category_slug,
-            title=title,
-            description=description,
-            business_name=business_name,
-            venue=venue,
-            price=price,
-            contact=contact,
-            submitter_name=submitter_name,
-            submitter_email=submitter_email,
-            submitter_phone=submitter_phone,
-            publish_from=publish_from,
-            event_date=event_date,
-            event_end_date=event_end_date,
-            start_date=start_date,
-            end_date=end_date,
-            status="pending",
-        )
-
-        try:
             db.session.add(
                 submission
             )
@@ -1373,22 +1158,42 @@ def submit_content():
 
             first_image_url = None
 
-            for index, uploaded_image in enumerate(
+            for (
+                index,
+                uploaded_image,
+            ) in enumerate(
                 uploaded_images,
                 start=1,
             ):
-                image_url = upload_lac_image(
-                    uploaded_image,
-                    folder="lac/submissions",
+
+                image_url = (
+                    upload_lac_image(
+                        uploaded_image,
+                        folder=
+                            "lac/submissions",
+                    )
                 )
 
-                if not first_image_url:
-                    first_image_url = image_url
+                if not image_url:
+                    continue
 
-                submission_image = PendingSubmissionImage(
-                    submission_id=submission.id,
-                    image_url=image_url,
-                    display_order=index,
+                if not first_image_url:
+
+                    first_image_url = (
+                        image_url
+                    )
+
+                submission_image = (
+                    PendingSubmissionImage(
+                        submission_id=
+                            submission.id,
+
+                        image_url=
+                            image_url,
+
+                        display_order=
+                            index,
+                    )
                 )
 
                 db.session.add(
@@ -1396,11 +1201,30 @@ def submit_content():
                 )
 
             if first_image_url:
-                submission.image_url = first_image_url
+
+                submission.image_url = (
+                    first_image_url
+                )
 
             db.session.commit()
 
+        except ValueError as error:
+
+            db.session.rollback()
+
+            flash(
+                str(error),
+                "error",
+            )
+
+            return render_template(
+                "submit.html",
+                zones=zones,
+                categories=categories,
+            )
+
         except Exception as error:
+
             db.session.rollback()
 
             print(
@@ -1427,16 +1251,22 @@ def submit_content():
         return redirect(
             url_for(
                 "submission_success",
-                code=submission.tracking_code,
+                code=
+                    submission.tracking_code,
             )
         )
+
+    # =====================================================
+    # GET REQUEST
+    # =====================================================
 
     return render_template(
         "submit.html",
         zones=zones,
         categories=categories,
     )
-    
+
+
 # =========================================================
 # SUBMISSION SUCCESS
 # =========================================================
@@ -1459,6 +1289,11 @@ def submission_success(code):
         submission=submission,
     )
 
+
+# =========================================================
+# SUBMISSION STATUS
+# =========================================================
+
 @app.route(
     "/submission/status/<code>"
 )
@@ -1472,10 +1307,8 @@ def submission_status(code):
         .first_or_404()
     )
 
-
     published_content = None
     live_access_point = None
-
 
     if submission.published_content_id:
 
@@ -1486,7 +1319,6 @@ def submission_status(code):
             )
         )
 
-
     if published_content:
 
         live_access_point = (
@@ -1494,7 +1326,6 @@ def submission_status(code):
                 published_content
             )
         )
-
 
     return render_template(
         "submission_status.html",
@@ -1508,7 +1339,6 @@ def submission_status(code):
         live_access_point=
             live_access_point,
     )
-
 
 
 # =========================================================
@@ -1528,14 +1358,12 @@ def submission_dashboard(code):
         .first_or_404()
     )
 
-
     published_content = None
     live_access_point = None
     category_record = None
     listing_expired = False
     expiry_date = None
     days_remaining = None
-
 
     # -----------------------------------------------------
     # CATEGORY
@@ -1548,7 +1376,6 @@ def submission_dashboard(code):
         )
         .first()
     )
-
 
     # -----------------------------------------------------
     # APPROVED CONTENT
@@ -1563,7 +1390,6 @@ def submission_dashboard(code):
             )
         )
 
-
     # -----------------------------------------------------
     # LIVE ACCESS POINT
     # -----------------------------------------------------
@@ -1575,7 +1401,6 @@ def submission_dashboard(code):
                 published_content
             )
         )
-
 
         # -------------------------------------------------
         # EXPIRY
@@ -1597,7 +1422,6 @@ def submission_dashboard(code):
                 published_content.end_date
             )
 
-
         if expiry_date:
 
             days_remaining = (
@@ -1606,10 +1430,9 @@ def submission_dashboard(code):
             ).days
 
             listing_expired = (
-              expiry_date
-              < date.today()
+                expiry_date
+                < date.today()
             )
-
 
     # -----------------------------------------------------
     # TEMPLATE
@@ -1635,25 +1458,24 @@ def submission_dashboard(code):
 
         days_remaining=
             days_remaining,
-            
+
         listing_expired=
             listing_expired,
     )
+
+
 # =========================================================
 # HEALTH CHECK
 # =========================================================
 
-@app.route("/health")
+@app.route(
+    "/health"
+)
 def health():
 
     return {
         "status": "ok"
     }, 200
-
-
-# =========================================================
-# PUBLIC LISTING DETAIL
-# =========================================================
 
 
 # =========================================================
@@ -1665,3 +1487,4 @@ if __name__ == "__main__":
     app.run(
         debug=True,
     )
+
