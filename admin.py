@@ -2247,7 +2247,10 @@ def edit_submission(submission_id):
         categories=categories,
     )
 
-
+@admin_bp.route(
+    "/submissions/<int:submission_id>/approve",
+    methods=["POST"],
+)
 def approve_submission(
     submission_id,
 ):
