@@ -74,37 +74,255 @@ def get_category_by_slug(slug, active_only=True):
     return query.first()
 
 
-def get_content_status(item, today=None):
-    today = today or date.today()
+def get_content_status(
+    item,
+    today=None,
+):
+
+    today = (
+        today
+        or date.today()
+    )
+
+    # ========================================================
+    # ARCHIVED
+    # ========================================================
 
     if item.archived:
-        return {"key": "archived", "label": "ARCHIVED", "icon": "📦"}
+
+        return {
+            "key": "archived",
+            "label": "ARCHIVED",
+            "icon": "📦",
+        }
+
+    # ========================================================
+    # MANUALLY INACTIVE
+    # ========================================================
 
     if not item.active:
-        return {"key": "inactive", "label": "INACTIVE", "icon": "⚪"}
+
+        return {
+            "key": "inactive",
+            "label": "INACTIVE",
+            "icon": "⚪",
+        }
+
+    # ========================================================
+    # AVAILABILITY STATE
+    # ========================================================
+
+    availability_status = (
+        getattr(
+            item,
+            "availability_status",
+            None,
+        )
+        or "available"
+    )
+
+    if availability_status in {
+        "taken",
+        "sold",
+        "filled",
+        "closed",
+    }:
+
+        return {
+            # Keep existing admin filter compatibility
+            # for now by treating unavailable content
+            # as inactive in the content-list status key.
+            "key": "inactive",
+            "label":
+                availability_status.upper(),
+            "icon": "⚫",
+        }
+
+    if availability_status == "expired":
+
+        return {
+            "key": "expired",
+            "label": "EXPIRED",
+            "icon": "🔴",
+        }
+
+    # ========================================================
+    # LIFETIME TYPE
+    # ========================================================
+
+    lifetime_type = (
+        getattr(
+            item,
+            "lifetime_type",
+            None,
+        )
+    )
+
+    # --------------------------------------------------------
+    # LEGACY FALLBACK
+    # --------------------------------------------------------
+
+    if not lifetime_type:
+
+        if item.category == "events":
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        elif item.end_date:
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        else:
+
+            lifetime_type = (
+                "ongoing"
+            )
+
+    # ========================================================
+    # TIME-SPECIFIC
+    # ========================================================
+
+    if lifetime_type == "time_specific":
+
+        # ----------------------------------------------------
+        # EVENT
+        # ----------------------------------------------------
+
+        if item.category == "events":
+
+            if (
+                item.publish_from
+                and
+                item.publish_from > today
+            ):
+
+                return {
+                    "key": "upcoming",
+                    "label": "UPCOMING",
+                    "icon": "🟡",
+                }
+
+            expiry_date = (
+                item.event_end_date
+                or
+                item.event_date
+            )
+
+            if (
+                expiry_date
+                and
+                expiry_date < today
+            ):
+
+                return {
+                    "key": "expired",
+                    "label": "EXPIRED",
+                    "icon": "🔴",
+                }
+
+            return {
+                "key": "live",
+                "label": "LIVE",
+                "icon": "🟢",
+            }
+
+        # ----------------------------------------------------
+        # NON-EVENT
+        # ----------------------------------------------------
+
+        if (
+            item.start_date
+            and
+            item.start_date > today
+        ):
+
+            return {
+                "key": "upcoming",
+                "label": "UPCOMING",
+                "icon": "🟡",
+            }
+
+        if (
+            item.end_date
+            and
+            item.end_date < today
+        ):
+
+            return {
+                "key": "expired",
+                "label": "EXPIRED",
+                "icon": "🔴",
+            }
+
+    # ========================================================
+    # ONGOING / UNTIL UNAVAILABLE / RECURRING
+    # ========================================================
+
+    return {
+        "key": "live",
+        "label": "LIVE",
+        "icon": "🟢",
+    }
+
+
+def get_content_expiry_date(
+    item,
+):
+
+    lifetime_type = (
+        getattr(
+            item,
+            "lifetime_type",
+            None,
+        )
+    )
+
+    # --------------------------------------------------------
+    # Legacy records
+    # --------------------------------------------------------
+
+    if not lifetime_type:
+
+        if item.category == "events":
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        elif item.end_date:
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        else:
+
+            lifetime_type = (
+                "ongoing"
+            )
+
+    # Ongoing and until-unavailable content must NOT
+    # enter automatic expiry/archive logic.
+
+    if lifetime_type not in {
+        "time_specific",
+        "recurring",
+    }:
+
+        return None
 
     if item.category == "events":
-        if item.publish_from and item.publish_from > today:
-            return {"key": "upcoming", "label": "UPCOMING", "icon": "🟡"}
 
-        expiry = item.event_end_date or item.event_date
-        if expiry and expiry < today:
-            return {"key": "expired", "label": "EXPIRED", "icon": "🔴"}
+        return (
+            item.event_end_date
+            or
+            item.event_date
+        )
 
-        return {"key": "live", "label": "LIVE", "icon": "🟢"}
-
-    if item.start_date and item.start_date > today:
-        return {"key": "upcoming", "label": "UPCOMING", "icon": "🟡"}
-
-    if item.end_date and item.end_date < today:
-        return {"key": "expired", "label": "EXPIRED", "icon": "🔴"}
-
-    return {"key": "live", "label": "LIVE", "icon": "🟢"}
-
-
-def get_content_expiry_date(item):
-    if item.category == "events":
-        return item.event_end_date or item.event_date
     return item.end_date
 
 
@@ -1276,20 +1494,44 @@ def content_archive():
     )
     return render_template("admin/content_archive.html", items=items)
 
+@admin_bp.route(
+    "/content/<int:item_id>/restore",
+    methods=["POST"],
+)
+def restore_content(
+    item_id,
+):
 
-@admin_bp.route("/content/<int:item_id>/restore", methods=["POST"])
-def restore_content(item_id):
     auth = require_admin()
+
     if auth:
         return auth
 
-    item = ContentItem.query.get_or_404(item_id)
+    item = (
+        ContentItem.query
+        .get_or_404(
+            item_id
+        )
+    )
+
     item.archived = False
     item.archived_at = None
-    db.session.commit()
-    flash("Content restored from archive.", "success")
-    return redirect(url_for("admin.content_archive"))
 
+    # Restore public visibility.
+    item.active = True
+
+    db.session.commit()
+
+    flash(
+        "Content restored from archive.",
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "admin.content_archive"
+        )
+    )
 
 def _render_content_form(zones, categories, item):
     return render_template(
@@ -1300,36 +1542,695 @@ def _render_content_form(zones, categories, item):
     )
 
 
-def _validate_and_normalize_content_dates(category, form):
-    start_date = parse_date(form.get("start_date"))
-    end_date = parse_date(form.get("end_date"))
-    publish_from = parse_date(form.get("publish_from"))
-    event_date = parse_date(form.get("event_date"))
-    event_end_date = parse_date(form.get("event_end_date"))
+# ============================================================
+# CONTENT WORKFLOW RULES
+# ============================================================
+
+ADMIN_CONTENT_WORKFLOWS = {
+
+    # ========================================================
+    # PROPERTY
+    # ========================================================
+
+    "property": {
+
+        "room": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "rental": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "property_sale": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "hotel_lodge": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "accommodation_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # ========================================================
+    # EVENTS
+    # ========================================================
+
+    "events": {
+
+        "event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "entertainment": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "church_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "sports_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "community_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "business_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # ========================================================
+    # GROCERY / RETAIL SPECIALS
+    # ========================================================
+
+    "discount-deals": {
+
+        "grocery_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "product_discount": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "weekend_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "clearance": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # ========================================================
+    # FOOD
+    # ========================================================
+
+    "local-restaurants": {
+
+        "restaurant": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "takeaway": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "daily_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "weekend_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "food_deal": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # ========================================================
+    # JOBS / OPPORTUNITIES
+    # ========================================================
+
+    "jobs": {
+
+        "job": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "learnership": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "internship": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "training": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "tender": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "business_opportunity": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    "opportunities": {
+
+        "job": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "learnership": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "internship": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "training": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "tender": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "business_opportunity": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # ========================================================
+    # SERVICES
+    # ========================================================
+
+    "services": {
+
+        "service_provider": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "plumber": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "mechanic": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "electrician": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "builder": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "cleaning_service": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+    },
+
+
+    # ========================================================
+    # BEAUTY / SALON
+    # ========================================================
+
+    "beauty-salon": {
+
+        "salon": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "barber": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "beauty_service": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "beauty_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+}
+
+
+# ============================================================
+# GET CONTENT WORKFLOW
+# ============================================================
+
+def _get_content_workflow(
+    category,
+    content_type,
+):
+
+    category = (
+        category or ""
+    ).strip().lower()
+
+    content_type = (
+        content_type or ""
+    ).strip().lower()
+
+
+    category_workflows = (
+        ADMIN_CONTENT_WORKFLOWS.get(
+            category,
+            {},
+        )
+    )
+
+    workflow = (
+        category_workflows.get(
+            content_type
+        )
+    )
+
+    if workflow:
+        return workflow
+
+
+    # -----------------------------------------
+    # EVENTS ALWAYS EXPIRE
+    # -----------------------------------------
 
     if category == "events":
+
+        return {
+            "lifetime_type": "time_specific",
+            "notification_eligible": True,
+        }
+
+
+    # -----------------------------------------
+    # ONLY THESE CATEGORIES ARE ONGOING
+    # -----------------------------------------
+
+    ongoing_categories = {
+        "property",
+        "transport",
+        "services",
+    }
+
+    if category in ongoing_categories:
+
+        return {
+            "lifetime_type": "ongoing",
+            "notification_eligible": False,
+        }
+
+
+    # -----------------------------------------
+    # EVERYTHING ELSE EXPIRES
+    # -----------------------------------------
+
+    return {
+        "lifetime_type": "time_specific",
+        "notification_eligible": True,
+    }
+
+
+# ============================================================
+# DATE VALIDATION + NORMALIZATION
+# ============================================================
+
+def _validate_and_normalize_content_dates(
+    category,
+    form,
+    lifetime_type=None,
+):
+
+    start_date = (
+        parse_date(
+            form.get(
+                "start_date"
+            )
+        )
+    )
+
+    end_date = (
+        parse_date(
+            form.get(
+                "end_date"
+            )
+        )
+    )
+
+    publish_from = (
+        parse_date(
+            form.get(
+                "publish_from"
+            )
+        )
+    )
+
+    event_date = (
+        parse_date(
+            form.get(
+                "event_date"
+            )
+        )
+    )
+
+    event_end_date = (
+        parse_date(
+            form.get(
+                "event_end_date"
+            )
+        )
+    )
+
+    # ========================================================
+    # LEGACY FALLBACK
+    # ========================================================
+
+    if not lifetime_type:
+
+        if category == "events":
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        elif end_date:
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        else:
+
+            lifetime_type = (
+                "ongoing"
+            )
+
+    # ========================================================
+    # EVENTS
+    # ========================================================
+
+    if (
+        category == "events"
+        and
+        lifetime_type == "time_specific"
+    ):
+
         if not event_date:
-            return None, "Event Date is required for events."
-        if publish_from and publish_from > event_date:
-            return None, "Publish From cannot be after Event Date."
-        if event_end_date and event_end_date < event_date:
-            return None, "Event End Date cannot be before Event Date."
+
+            return (
+                None,
+                "Event Date is required for events.",
+            )
+
+        if (
+            publish_from
+            and
+            publish_from > event_date
+        ):
+
+            return (
+                None,
+                "Publish From cannot be after Event Date.",
+            )
+
+        if (
+            event_end_date
+            and
+            event_end_date < event_date
+        ):
+
+            return (
+                None,
+                "Event End Date cannot be before Event Date.",
+            )
+
+        # Events use event-specific date fields.
         start_date = None
         end_date = None
-    else:
-        if start_date and end_date and end_date < start_date:
-            return None, "End date cannot be before start date."
+
+    # ========================================================
+    # TIME-SPECIFIC NON-EVENT CONTENT
+    # ========================================================
+
+    elif lifetime_type == "time_specific":
+
+        # Examples:
+        #
+        # Grocery special
+        # Food promotion
+        # Learnership deadline
+        # Tender deadline
+        # Accommodation special
+
+        if not end_date:
+
+            return (
+                None,
+                "End Date is required for this "
+                "time-specific listing.",
+            )
+
+        if (
+            start_date
+            and
+            end_date < start_date
+        ):
+
+            return (
+                None,
+                "End date cannot be before start date.",
+            )
+
+        # Clear event fields.
         publish_from = None
         event_date = None
         event_end_date = None
 
+    # ========================================================
+    # UNTIL UNAVAILABLE
+    # ========================================================
+
+    elif lifetime_type == "until_unavailable":
+
+        # Examples:
+        #
+        # Room → until taken
+        # Rental → until taken
+        # Property sale → until sold
+        # Job → until filled
+
+        start_date = None
+        end_date = None
+
+        publish_from = None
+        event_date = None
+        event_end_date = None
+
+    # ========================================================
+    # ONGOING
+    # ========================================================
+
+    elif lifetime_type == "ongoing":
+
+        # Examples:
+        #
+        # Restaurant
+        # Hotel
+        # Salon
+        # Mechanic
+        # Plumber
+
+        start_date = None
+        end_date = None
+
+        publish_from = None
+        event_date = None
+        event_end_date = None
+
+    # ========================================================
+    # RECURRING
+    # ========================================================
+
+    elif lifetime_type == "recurring":
+
+        publish_from = None
+        event_date = None
+        event_end_date = None
+
+        if (
+            start_date
+            and
+            end_date
+            and
+            end_date < start_date
+        ):
+
+            return (
+                None,
+                "End date cannot be before start date.",
+            )
+
+    # ========================================================
+    # UNKNOWN LIFETIME
+    # ========================================================
+
+    else:
+
+        return (
+            None,
+            "Invalid listing lifetime type.",
+        )
+
+    # ========================================================
+    # NORMALIZED RESULT
+    # ========================================================
+
     return {
-        "start_date": start_date,
-        "end_date": end_date,
-        "publish_from": publish_from,
-        "event_date": event_date,
-        "event_end_date": event_end_date,
+
+        "start_date":
+            start_date,
+
+        "end_date":
+            end_date,
+
+        "publish_from":
+            publish_from,
+
+        "event_date":
+            event_date,
+
+        "event_end_date":
+            event_end_date,
+
     }, None
+
 
 
 @admin_bp.route(
@@ -1345,15 +2246,24 @@ def create_content():
 
     zones = (
         Zone.query
-        .filter_by(active=True)
-        .order_by(Zone.name.asc())
+        .filter_by(
+            active=True
+        )
+        .order_by(
+            Zone.name.asc()
+        )
         .all()
     )
 
-    categories = get_categories()
-
+    categories = (
+        get_categories()
+    )
 
     if request.method == "POST":
+
+        # =================================================
+        # BASIC DATA
+        # =================================================
 
         zone_id = request.form.get(
             "zone_id",
@@ -1366,6 +2276,17 @@ def create_content():
                 "",
             )
             .strip()
+            .lower()
+        )
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                "",
+            )
+            .strip()
+            .lower()
+            or None
         )
 
         title = (
@@ -1376,10 +2297,9 @@ def create_content():
             .strip()
         )
 
-
-        # -------------------------------------------------
+        # =================================================
         # REQUIRED FIELD VALIDATION
-        # -------------------------------------------------
+        # =================================================
 
         if (
             not zone_id
@@ -1398,10 +2318,9 @@ def create_content():
                 None,
             )
 
-
-        # -------------------------------------------------
+        # =================================================
         # VALIDATE ZONE
-        # -------------------------------------------------
+        # =================================================
 
         zone = db.session.get(
             Zone,
@@ -1424,10 +2343,9 @@ def create_content():
                 None,
             )
 
-
-        # -------------------------------------------------
+        # =================================================
         # VALIDATE CATEGORY
-        # -------------------------------------------------
+        # =================================================
 
         category_record = (
             get_category_by_slug(
@@ -1448,10 +2366,37 @@ def create_content():
                 None,
             )
 
+        # =================================================
+        # DETERMINE CONTENT WORKFLOW
+        # =================================================
 
-        # -------------------------------------------------
+        workflow = (
+            _get_content_workflow(
+                category,
+                content_type,
+            )
+        )
+
+        lifetime_type = (
+            workflow[
+                "lifetime_type"
+            ]
+        )
+
+        notification_eligible = bool(
+            workflow.get(
+                "notification_eligible",
+                False,
+            )
+        )
+
+        availability_status = (
+            "available"
+        )
+
+        # =================================================
         # VALIDATE + NORMALIZE DATES
-        # -------------------------------------------------
+        # =================================================
 
         try:
 
@@ -1459,6 +2404,8 @@ def create_content():
                 _validate_and_normalize_content_dates(
                     category,
                     request.form,
+                    lifetime_type=
+                        lifetime_type,
                 )
             )
 
@@ -1475,7 +2422,6 @@ def create_content():
                 None,
             )
 
-
         if error:
 
             flash(
@@ -1489,37 +2435,41 @@ def create_content():
                 None,
             )
 
-
-        # -------------------------------------------------
+        # =================================================
         # IMAGE UPLOAD
-        # -------------------------------------------------
+        # =================================================
 
-        uploaded_images = request.files.getlist(
-          "images"
+        uploaded_images = (
+            request.files.getlist(
+                "images"
+            )
         )
 
         uploaded_images = [
-          image
-          for image in uploaded_images
-          if image and image.filename
+            image
+            for image in uploaded_images
+            if (
+                image
+                and image.filename
+            )
         ]
 
         if len(uploaded_images) > 3:
 
-          flash(
-           "You can upload a maximum of 3 images.",
-            "error",
-          )
+            flash(
+                "You can upload a maximum of 3 images.",
+                "error",
+            )
 
-          return _render_content_form(
-            zones,
-            categories,
-            None,
-          )
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
 
-        # -------------------------------------------------
+        # =================================================
         # CREATE CONTENT
-        # -------------------------------------------------
+        # =================================================
 
         item = ContentItem(
 
@@ -1528,6 +2478,26 @@ def create_content():
 
             category=
                 category,
+
+            # ---------------------------------------------
+            # NEW
+            # ---------------------------------------------
+
+            content_type=
+                content_type,
+
+            lifetime_type=
+                lifetime_type,
+
+            availability_status=
+                availability_status,
+
+            notification_eligible=
+                notification_eligible,
+
+            # ---------------------------------------------
+            # NORMAL LISTING DATA
+            # ---------------------------------------------
 
             title=
                 title,
@@ -1594,54 +2564,86 @@ def create_content():
             **dates,
         )
 
-
         db.session.add(
             item
         )
 
         db.session.flush()
 
+        # =================================================
+        # IMAGES
+        # =================================================
+
         try:
 
-          for index, uploaded_image in enumerate(
-            uploaded_images,
-            start=1,
-          ):
+            first_image_url = None
 
-            image_url = upload_listing_image(
-              uploaded_image
-            )
+            for (
+                index,
+                uploaded_image,
+            ) in enumerate(
+                uploaded_images,
+                start=1,
+            ):
 
-            content_image = ContentImage(
-              content_item_id=item.id,
-              image_url=image_url,
-              display_order=index,
-            )
+                image_url = (
+                    upload_listing_image(
+                        uploaded_image
+                    )
+                )
 
-            db.session.add(
-              content_image
-            )
+                if not image_url:
+                    continue
 
+                if not first_image_url:
+
+                    first_image_url = (
+                        image_url
+                    )
+
+                content_image = (
+                    ContentImage(
+
+                        content_item_id=
+                            item.id,
+
+                        image_url=
+                            image_url,
+
+                        display_order=
+                            index,
+                    )
+                )
+
+                db.session.add(
+                    content_image
+                )
+
+            # Keep ContentItem.image_url as fallback/cover.
+            if first_image_url:
+
+                item.image_url = (
+                    first_image_url
+                )
 
         except Exception as error:
 
             db.session.rollback()
 
             flash(
-             f"Image upload failed: {error}",
-             "error",
+                f"Image upload failed: {error}",
+                "error",
             )
 
             return _render_content_form(
-             zones,
-             categories,
-             None,
+                zones,
+                categories,
+                None,
             )
 
-
-
-
-
+        # =================================================
+        # SAVE
+        # =================================================
 
         db.session.commit()
 
@@ -1650,13 +2652,11 @@ def create_content():
             "success",
         )
 
-
         return redirect(
             url_for(
                 "admin.content_list"
             )
         )
-
 
     return _render_content_form(
         zones,
@@ -1664,164 +2664,526 @@ def create_content():
         None,
     )
 
-@admin_bp.route("/content/<int:item_id>/edit", methods=["GET", "POST"])
-def edit_content(item_id):
+
+
+@admin_bp.route(
+    "/content/<int:item_id>/edit",
+    methods=["GET", "POST"],
+)
+def edit_content(
+    item_id,
+):
+
     auth = require_admin()
+
     if auth:
         return auth
 
-    item = ContentItem.query.get_or_404(item_id)
-    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
-    categories = get_categories(active_only=False)
+    item = (
+        ContentItem.query
+        .get_or_404(
+            item_id
+        )
+    )
+
+    zones = (
+        Zone.query
+        .filter_by(
+            active=True
+        )
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+    categories = (
+        get_categories(
+            active_only=False
+        )
+    )
 
     if request.method == "POST":
-        zone_id = request.form.get("zone_id", type=int)
-        category = request.form.get("category", "").strip()
-        title = request.form.get("title", "").strip()
 
-        if not zone_id or not category or not title:
-            flash("Zone, category and title are required.", "error")
-            return _render_content_form(zones, categories, item)
+        # =================================================
+        # BASIC DATA
+        # =================================================
 
-        if not db.session.get(Zone, zone_id):
-            flash("Selected zone does not exist.", "error")
-            return _render_content_form(zones, categories, item)
+        zone_id = request.form.get(
+            "zone_id",
+            type=int,
+        )
 
-        if not get_category_by_slug(category, active_only=False):
-            flash("Invalid content category.", "error")
-            return _render_content_form(zones, categories, item)
+        category = (
+            request.form.get(
+                "category",
+                "",
+            )
+            .strip()
+            .lower()
+        )
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                "",
+            )
+            .strip()
+            .lower()
+            or None
+        )
+
+        title = (
+            request.form.get(
+                "title",
+                "",
+            )
+            .strip()
+        )
+
+        # =================================================
+        # REQUIRED FIELDS
+        # =================================================
+
+        if (
+            not zone_id
+            or not category
+            or not title
+        ):
+
+            flash(
+                "Zone, category and title are required.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+        # =================================================
+        # VALIDATE ZONE
+        # =================================================
+
+        zone = db.session.get(
+            Zone,
+            zone_id,
+        )
+
+        if not zone:
+
+            flash(
+                "Selected zone does not exist.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+        # =================================================
+        # VALIDATE CATEGORY
+        # =================================================
+
+        if not get_category_by_slug(
+            category,
+            active_only=False,
+        ):
+
+            flash(
+                "Invalid content category.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+        # =================================================
+        # RECALCULATE WORKFLOW
+        #
+        # If admin changes:
+        #
+        # Property → Room
+        # to
+        # Property → Hotel
+        #
+        # LaC must also change:
+        #
+        # until_unavailable
+        # to
+        # ongoing
+        # =================================================
+
+        workflow = (
+            _get_content_workflow(
+                category,
+                content_type,
+            )
+        )
+
+        lifetime_type = (
+            workflow[
+                "lifetime_type"
+            ]
+        )
+
+        notification_eligible = bool(
+            workflow.get(
+                "notification_eligible",
+                False,
+            )
+        )
+
+        # =================================================
+        # VALIDATE + NORMALIZE DATES
+        # =================================================
 
         try:
-            dates, error = _validate_and_normalize_content_dates(category, request.form)
+
+            dates, error = (
+                _validate_and_normalize_content_dates(
+                    category,
+                    request.form,
+                    lifetime_type=
+                        lifetime_type,
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid dates.", "error")
-            return _render_content_form(zones, categories, item)
+
+            flash(
+                "Please enter valid dates.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
 
         if error:
-            flash(error, "error")
-            return _render_content_form(zones, categories, item)
 
-        item.zone_id = zone_id
-        item.category = category
-        item.title = title
-        item.description = request.form.get("description", "").strip() or None
-        item.business_name = request.form.get("business_name", "").strip() or None
-        item.venue = request.form.get("venue", "").strip() or None
-        item.price = request.form.get("price", "").strip() or None
-        item.contact = request.form.get("contact", "").strip() or None
-        uploaded_image = request.files.get(
-          "image"
+            flash(
+                error,
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+        # =================================================
+        # UPDATE CORE FIELDS
+        # =================================================
+
+        item.zone_id = (
+            zone_id
+        )
+
+        item.category = (
+            category
+        )
+
+        item.content_type = (
+            content_type
+        )
+
+        item.lifetime_type = (
+            lifetime_type
+        )
+
+        item.notification_eligible = (
+            notification_eligible
+        )
+
+        # -------------------------------------------------
+        # Do NOT blindly reset closed listings to available
+        # when editing ordinary text.
+        #
+        # Only initialise if somehow empty/legacy.
+        # -------------------------------------------------
+
+        if not item.availability_status:
+
+            item.availability_status = (
+                "available"
+            )
+
+        item.title = (
+            title
+        )
+
+        item.description = (
+            request.form.get(
+                "description",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        item.business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        item.venue = (
+            request.form.get(
+                "venue",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        item.price = (
+            request.form.get(
+                "price",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        item.contact = (
+            request.form.get(
+                "contact",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        # =================================================
+        # LEGACY SINGLE IMAGE UPLOAD
+        # =================================================
+
+        uploaded_image = (
+            request.files.get(
+                "image"
+            )
         )
 
         if (
-          uploaded_image
-          and uploaded_image.filename
+            uploaded_image
+            and uploaded_image.filename
         ):
 
-          try:
+            try:
 
-           item.image_url = (
-            upload_listing_image(
-                uploaded_image
+                item.image_url = (
+                    upload_listing_image(
+                        uploaded_image
+                    )
+                )
+
+            except Exception as error:
+
+                db.session.rollback()
+
+                flash(
+                    f"Image upload failed: {error}",
+                    "error",
+                )
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    item,
+                )
+
+        # =================================================
+        # FLAGS
+        # =================================================
+
+        item.featured = (
+            request.form.get(
+                "featured"
             )
-           )
+            == "on"
+        )
 
-          except Exception as error:
+        item.active = (
+            request.form.get(
+                "active"
+            )
+            == "on"
+        )
 
-           db.session.rollback()
+        # =================================================
+        # APPLY NORMALIZED DATE FIELDS
+        # =================================================
 
-           flash(
-            f"Image upload failed: {error}",
-            "error",
-           )
-
-           return _render_content_form(
-            zones,
-            categories,
-            item,
-           )
-        item.featured = request.form.get("featured") == "on"
-        item.active = request.form.get("active") == "on"
         for key, value in dates.items():
-            setattr(item, key, value)
+
+            setattr(
+                item,
+                key,
+                value,
+            )
+
+        # =================================================
+        # SAVE
+        # =================================================
 
         db.session.commit()
-        flash("Content updated successfully.", "success")
-        return redirect(url_for("admin.content_list"))
 
-    return _render_content_form(zones, categories, item)
+        flash(
+            "Content updated successfully.",
+            "success",
+        )
 
+        return redirect(
+            url_for(
+                "admin.content_list"
+            )
+        )
 
-@admin_bp.route("/content/<int:item_id>/toggle", methods=["POST"])
-def toggle_content(item_id):
-    auth = require_admin()
-    if auth:
-        return auth
-
-    item = ContentItem.query.get_or_404(item_id)
-    item.active = not item.active
-    db.session.commit()
-    flash("Content activated." if item.active else "Content deactivated.", "success")
-    return redirect(url_for("admin.content_list"))
+    return _render_content_form(
+        zones,
+        categories,
+        item,
+    )
 
 @admin_bp.route(
-    "/content/<int:item_id>/delete",
-    methods=["POST"]
+    "/content/<int:item_id>/toggle",
+    methods=["POST"],
 )
-def delete_content(item_id):
+def toggle_content(
+    item_id,
+):
 
     auth = require_admin()
+
     if auth:
         return auth
 
-    item = ContentItem.query.get_or_404(item_id)
+    item = (
+        ContentItem.query
+        .get_or_404(
+            item_id
+        )
+    )
+
+    item.active = (
+        not item.active
+    )
+
+    db.session.commit()
+
+    flash(
+        (
+            "Content activated."
+            if item.active
+            else
+            "Content deactivated."
+        ),
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "admin.content_list"
+        )
+    )
+@admin_bp.route(
+    "/content/<int:item_id>/delete",
+    methods=["POST"],
+)
+def delete_content(
+    item_id,
+):
+
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+    item = (
+        ContentItem.query
+        .get_or_404(
+            item_id
+        )
+    )
 
     try:
 
-        # -----------------------------------------
-        # Remove references from submissions
-        # -----------------------------------------
+        # =================================================
+        # REMOVE SUBMISSION REFERENCES
+        # =================================================
 
-        submissions = PendingSubmission.query.filter_by(
-            published_content_id=item.id
-        ).all()
+        submissions = (
+            PendingSubmission.query
+            .filter_by(
+                published_content_id=
+                    item.id
+            )
+            .all()
+        )
 
         for submission in submissions:
-            submission.published_content_id = None
 
-        # -----------------------------------------
-        # Delete attached content images
-        # -----------------------------------------
+            submission.published_content_id = (
+                None
+            )
+
+        # =================================================
+        # DELETE ATTACHED IMAGES
+        # =================================================
 
         ContentImage.query.filter_by(
-            content_item_id=item.id
+            content_item_id=
+                item.id
         ).delete(
             synchronize_session=False
         )
 
-        # -----------------------------------------
-        # Delete content
-        # -----------------------------------------
+        # =================================================
+        # DELETE CONTENT
+        # =================================================
 
-        db.session.delete(item)
+        db.session.delete(
+            item
+        )
+
         db.session.commit()
 
         flash(
             "Content permanently deleted.",
-            "success"
+            "success",
         )
 
     except Exception as exc:
 
         db.session.rollback()
 
+        print(
+            "Delete content error:",
+            exc,
+        )
+
         flash(
-            f"Unable to delete content: {exc}",
-            "error"
+            "Unable to permanently delete content.",
+            "error",
         )
 
     return redirect(
-        url_for("admin.content_list")
+        url_for(
+            "admin.content_list"
+        )
     )
 
 @admin_bp.route("/content/<int:item_id>/archive", methods=["POST"])
@@ -2247,6 +3609,8 @@ def edit_submission(submission_id):
         categories=categories,
     )
 
+
+
 @admin_bp.route(
     "/submissions/<int:submission_id>/approve",
     methods=["POST"],
@@ -2343,19 +3707,77 @@ def approve_submission(
 
         if submission_images:
 
-            first_image = submission_images[0]
+            first_image = (
+                submission_images[0]
+            )
 
             if first_image.image_url:
+
                 first_image_url = (
                     first_image.image_url
                 )
 
-        # If the submission itself already has
-        # a main image URL, prefer that.
+        # Prefer explicitly stored cover image if available.
         if submission.image_url:
+
             first_image_url = (
                 submission.image_url
             )
+
+        # =================================================
+        # LEGACY / SAFETY FALLBACK
+        #
+        # Older pending submissions may not yet have the
+        # new lifecycle fields populated.
+        # =================================================
+
+        content_type = (
+            submission.content_type
+            or None
+        )
+
+        lifetime_type = (
+            submission.lifetime_type
+            or None
+        )
+
+        availability_status = (
+            submission.availability_status
+            or "available"
+        )
+
+        notification_eligible = bool(
+            submission.notification_eligible
+        )
+
+        # -------------------------------------------------
+        # For old submissions created before lifecycle
+        # support existed.
+        # -------------------------------------------------
+
+        if not lifetime_type:
+
+            if submission.category == "events":
+
+                lifetime_type = (
+                    "time_specific"
+                )
+
+                notification_eligible = (
+                    True
+                )
+
+            elif submission.end_date:
+
+                lifetime_type = (
+                    "time_specific"
+                )
+
+            else:
+
+                lifetime_type = (
+                    "ongoing"
+                )
 
         # =================================================
         # CREATE LIVE CONTENT
@@ -2368,6 +3790,26 @@ def approve_submission(
 
             category=
                 submission.category,
+
+            # ---------------------------------------------
+            # NEW LIFECYCLE FIELDS
+            # ---------------------------------------------
+
+            content_type=
+                content_type,
+
+            lifetime_type=
+                lifetime_type,
+
+            availability_status=
+                availability_status,
+
+            notification_eligible=
+                notification_eligible,
+
+            # ---------------------------------------------
+            # LISTING DATA
+            # ---------------------------------------------
 
             title=
                 submission.title,
@@ -2387,10 +3829,12 @@ def approve_submission(
             contact=
                 submission.contact,
 
-            # Main / cover image.
-            # This should now be a Cloudinary HTTPS URL.
             image_url=
                 first_image_url,
+
+            # ---------------------------------------------
+            # DATES
+            # ---------------------------------------------
 
             publish_from=
                 submission.publish_from,
@@ -2407,8 +3851,14 @@ def approve_submission(
             end_date=
                 submission.end_date,
 
+            # ---------------------------------------------
+            # STATUS
+            # ---------------------------------------------
+
             featured=False,
+
             active=True,
+
             archived=False,
         )
 
@@ -2441,12 +3891,6 @@ def approve_submission(
                 content_item_id=
                     content.id,
 
-                # IMPORTANT:
-                # We are copying the permanent
-                # Cloudinary URL.
-                #
-                # We are NOT copying/saving a file
-                # to Render.
                 image_url=
                     image.image_url,
 
@@ -2509,7 +3953,9 @@ def approve_submission(
         url_for(
             "admin.submissions"
         )
-    )        
+    )
+
+
             
 @admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
 def reject_submission(submission_id):
