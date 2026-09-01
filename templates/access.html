@@ -350,37 +350,46 @@
              PHONE NOTIFICATIONS
         ========================================== -->
 
+        <!-- =========================================
+        LOCAL PUSH NOTIFICATIONS
+        ========================================== -->
+
         <section class="public-notification-link">
 
-            <p class="notification-eyebrow">
-                STAY UPDATED
-            </p>
+         <p class="notification-eyebrow">
+            STAY UPDATED
+         </p>
 
-            <h3>
-                Get Local Notifications
-            </h3>
 
-            <p>
-                Receive local updates and notifications
-                straight to your phone.
-            </p>
+         <h3>
+            Get {{ zone.name }} Notifications
+         </h3>
 
-            <p>
-                Click below and submit the form.
-                IT'S FREE
-            </p>
 
-            <a
-                href="https://who-are-we23indetail.streamlit.app/Join_Local_Alerts"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="public-notification-button"
-            >
-                Receive Notifications
-            </a>
+         <p>
+            Receive local events, deals,
+            opportunities and useful updates
+            directly on this device.
+         </p>
+
+
+         <button
+            type="button"
+            id="lac-enable-notifications"
+            class="public-notification-button"
+         >
+            Enable Local Notifications
+         </button>
+
+
+         <p
+            id="lac-notification-status"
+            class="lac-notification-status"
+         >
+            Free. No account required.
+         </p>
 
         </section>
-
 
         <!-- =========================================
              MAIN LAC WEBSITE
@@ -468,6 +477,28 @@
     ) }}"
 ></script>
 
+
+<script>
+
+    // =====================================================
+    // LaC PUSH CONFIGURATION
+    // =====================================================
+
+    window.LAC_PUSH_CONFIG = {
+
+        zoneId:
+            {{ zone.id | tojson }}
+
+    };
+
+</script>
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/push-notifications.js'
+    ) }}"
+></script>
 
 </body>
 
