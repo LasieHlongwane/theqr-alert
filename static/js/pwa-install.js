@@ -6,10 +6,12 @@
 // Responsibilities:
 //
 // 1. Register the LaC service worker.
-// 2. Capture the browser install prompt.
-// 3. Show the "Add LaC to Home Screen" button.
-// 4. Trigger installation when the user taps the button.
-// 5. Hide the button when LaC is already installed.
+// 2. Keep the QUICK ACCESS card visible.
+// 3. Show the install button only when installation
+//    is available.
+// 4. Show an installed message when LaC is running
+//    as an installed app.
+// 5. Handle the browser installation prompt.
 //
 // =========================================================
 
@@ -33,6 +35,11 @@ const lacInstalledMessage =
         "lac-installed-message"
     );
 
+const lacInstallHelp =
+    document.getElementById(
+        "lac-install-help"
+    );
+
 
 // =========================================================
 // INSTALL PROMPT STORAGE
@@ -42,7 +49,7 @@ let deferredInstallPrompt = null;
 
 
 // =========================================================
-// CHECK IF RUNNING AS INSTALLED APP
+// CHECK WHETHER LaC IS RUNNING AS AN INSTALLED APP
 // =========================================================
 
 function isRunningStandalone() {
@@ -72,12 +79,21 @@ function isRunningStandalone() {
 
 function updateInstallUI() {
 
-    if (!lacInstallSection) {
-        return;
+    // -----------------------------------------
+    // Keep QUICK ACCESS card visible.
+    // -----------------------------------------
+
+    if (lacInstallSection) {
+
+        lacInstallSection.style.display =
+            "block";
+
     }
 
 
-    // Already launched as an installed PWA.
+    // -----------------------------------------
+    // LaC is already running as installed PWA.
+    // -----------------------------------------
 
     if (isRunningStandalone()) {
 
@@ -97,8 +113,12 @@ function updateInstallUI() {
         }
 
 
-        lacInstallSection.style.display =
-            "block";
+        if (lacInstallHelp) {
+
+            lacInstallHelp.style.display =
+                "none";
+
+        }
 
 
         return;
@@ -106,18 +126,19 @@ function updateInstallUI() {
     }
 
 
-    // Install prompt available.
+    // -----------------------------------------
+    // Browser says LaC can be installed.
+    // -----------------------------------------
 
     if (deferredInstallPrompt) {
-
-        lacInstallSection.style.display =
-            "block";
-
 
         if (lacInstallButton) {
 
             lacInstallButton.style.display =
                 "inline-flex";
+
+            lacInstallButton.disabled =
+                false;
 
         }
 
@@ -130,15 +151,49 @@ function updateInstallUI() {
         }
 
 
+        if (lacInstallHelp) {
+
+            lacInstallHelp.style.display =
+                "block";
+
+        }
+
+
         return;
 
     }
 
 
-    // Browser has not provided an install prompt.
+    // -----------------------------------------
+    // Install prompt is not available yet.
+    //
+    // IMPORTANT:
+    // Keep the QUICK ACCESS card visible.
+    // Hide only the actual installation button.
+    // -----------------------------------------
 
-    lacInstallSection.style.display =
-        "none";
+    if (lacInstallButton) {
+
+        lacInstallButton.style.display =
+            "none";
+
+    }
+
+
+    if (lacInstalledMessage) {
+
+        lacInstalledMessage.style.display =
+            "none";
+
+    }
+
+
+    if (lacInstallHelp) {
+
+        lacInstallHelp.style.display =
+            "block";
+
+    }
 
 }
 
@@ -187,20 +242,20 @@ if (
 
 
 // =========================================================
-// CAPTURE INSTALL EVENT
+// CAPTURE INSTALL PROMPT
 // =========================================================
 //
-// Chromium-based browsers may fire this event when
-// the PWA satisfies installation requirements.
+// Chrome / Edge / Chromium browsers may fire this
+// event once LaC satisfies their installation criteria.
+//
+// We save the event so installation only happens when
+// the user taps our own button.
 //
 // =========================================================
 
 window.addEventListener(
     "beforeinstallprompt",
     function(event) {
-
-        // Prevent browser from immediately showing
-        // its own install UI.
 
         event.preventDefault();
 
@@ -210,7 +265,7 @@ window.addEventListener(
 
 
         console.log(
-            "[LaC PWA] Install prompt ready."
+            "[LaC PWA] Install prompt is available."
         );
 
 
@@ -230,7 +285,16 @@ if (lacInstallButton) {
         "click",
         async function() {
 
+            // -------------------------------------
+            // Browser has not provided an install
+            // prompt.
+            // -------------------------------------
+
             if (!deferredInstallPrompt) {
+
+                console.log(
+                    "[LaC PWA] Install prompt not available."
+                );
 
                 return;
 
@@ -242,6 +306,8 @@ if (lacInstallButton) {
 
 
             try {
+
+                // Show browser installation dialog.
 
                 deferredInstallPrompt.prompt();
 
@@ -263,13 +329,13 @@ if (lacInstallButton) {
                 ) {
 
                     console.log(
-                        "[LaC PWA] Installation accepted."
+                        "[LaC PWA] User accepted installation."
                     );
 
                 } else {
 
                     console.log(
-                        "[LaC PWA] Installation dismissed."
+                        "[LaC PWA] User dismissed installation."
                     );
 
                 }
@@ -283,6 +349,8 @@ if (lacInstallButton) {
 
             }
 
+
+            // The saved prompt can only be used once.
 
             deferredInstallPrompt =
                 null;
@@ -301,7 +369,7 @@ if (lacInstallButton) {
 
 
 // =========================================================
-// APP INSTALLED EVENT
+// APP INSTALLED
 // =========================================================
 
 window.addEventListener(
@@ -309,12 +377,20 @@ window.addEventListener(
     function() {
 
         console.log(
-            "[LaC PWA] App installed."
+            "[LaC PWA] LaC installed successfully."
         );
 
 
         deferredInstallPrompt =
             null;
+
+
+        if (lacInstallSection) {
+
+            lacInstallSection.style.display =
+                "block";
+
+        }
 
 
         if (lacInstallButton) {
@@ -333,10 +409,10 @@ window.addEventListener(
         }
 
 
-        if (lacInstallSection) {
+        if (lacInstallHelp) {
 
-            lacInstallSection.style.display =
-                "block";
+            lacInstallHelp.style.display =
+                "none";
 
         }
 
@@ -345,11 +421,7 @@ window.addEventListener(
 
 
 // =========================================================
-// DISPLAY MODE CHANGE
-// =========================================================
-//
-// Useful if the page changes into standalone mode.
-//
+// WATCH FOR STANDALONE DISPLAY MODE
 // =========================================================
 
 const standaloneMediaQuery =
@@ -367,12 +439,26 @@ if (
 
     standaloneMediaQuery.addEventListener(
         "change",
-        updateInstallUI
+        function() {
+
+            updateInstallUI();
+
+        }
     );
 
 }
 
 
-// Initial check.
+// =========================================================
+// INITIAL PAGE LOAD
+// =========================================================
+//
+// QUICK ACCESS becomes visible immediately.
+//
+// The install button remains hidden until the browser
+// provides beforeinstallprompt.
+//
+// =========================================================
 
 updateInstallUI();
+
