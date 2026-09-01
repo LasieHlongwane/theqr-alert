@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>LaC Local Access</title>
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <style>
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #0b0c0e;
+
+            color: #ffffff;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            text-align: center;
+        }
+
+
+        .launcher {
+            padding: 30px;
+        }
+
+
+        .launcher h1 {
+            margin: 0 0 10px;
+
+            font-size: 38px;
+        }
+
+
+        .launcher p {
+            margin: 0;
+
+            color: #b9bdc4;
+
+            font-size: 14px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="launcher">
+
+        <h1>
+            LaC
+        </h1>
+
+        <p>
+            Opening your local access...
+        </p>
+
+    </div>
+
+
+    <script>
+
+        const accessCode =
+            localStorage.getItem(
+                "lac_access_code"
+            );
+
+
+        if (accessCode) {
+
+            window.location.replace(
+                "/q/" +
+                encodeURIComponent(accessCode)
+            );
+
+        } else {
+
+            window.location.replace("/");
+
+        }
+
+    </script>
+
+</body>
+
+</html>
