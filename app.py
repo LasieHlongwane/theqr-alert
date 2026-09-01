@@ -526,80 +526,125 @@ def qr_category(
     category,
 ):
 
+    # =====================================================
+    # FIND ACCESS POINT
+    # =====================================================
+
     access_point = (
         AccessPoint.query
         .filter_by(
             code=code,
             active=True,
         )
-        .first()
+        .first_or_404()
     )
 
-    if not access_point:
-        abort(404)
 
-    # -----------------------------------------------------
+    zone = access_point.zone
+
+
+    # =====================================================
+    # NORMALIZE CATEGORY SLUG
+    # =====================================================
+
+    category_slug = (
+        category
+        .strip()
+        .lower()
+    )
+
+
+    # =====================================================
     # VALIDATE CATEGORY
-    # -----------------------------------------------------
+    # =====================================================
 
     category_record = (
         get_active_category_by_slug(
-            category
+            category_slug
         )
     )
 
+
     if not category_record:
+
         abort(404)
 
-    # -----------------------------------------------------
-    # GET CONTENT
-    # -----------------------------------------------------
+
+    # =====================================================
+    # GET ACTIVE CONTENT
+    # =====================================================
 
     items = get_active_content(
-        zone_id=
-            access_point.zone_id,
-
-        category_slug=
-            category,
+        zone_id=access_point.zone_id,
+        category_slug=category_slug,
     )
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # RECORD CATEGORY VIEW
-    # -----------------------------------------------------
+    # =====================================================
+    #
+    # Analytics must NEVER prevent residents from
+    # accessing local content.
+    #
+    # If analytics recording fails, roll back the
+    # transaction and continue rendering the page.
+    #
+    # =====================================================
 
-    category_event = QRScan(
-        access_point_id=
-            access_point.id,
+    try:
 
-        event_type=
-            "category_view",
+        category_event = QRScan(
+            access_point_id=access_point.id,
 
-        category_selected=
-            category,
+            event_type="category_view",
 
-        user_agent=
-            request.headers.get(
+            category_selected=category_slug,
+
+            user_agent=request.headers.get(
                 "User-Agent",
                 "",
             ),
-    )
+        )
 
-    db.session.add(
-        category_event
-    )
 
-    db.session.commit()
+        db.session.add(
+            category_event
+        )
 
-    # -----------------------------------------------------
-    # DISPLAY
-    # -----------------------------------------------------
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        app.logger.exception(
+            "Failed to record category view. "
+            "access_point=%s category=%s error=%s",
+            access_point.code,
+            category_slug,
+            exc,
+        )
+
+
+    # =====================================================
+    # DISPLAY CATEGORY PAGE
+    # =====================================================
 
     return render_template(
         "category.html",
-        zone=access_point.zone,
+
+        zone=zone,
+
         category=category_record,
+
         items=items,
+
         access_point=access_point,
+
         today=date.today(),
     )
 
