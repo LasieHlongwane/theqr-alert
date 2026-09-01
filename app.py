@@ -361,14 +361,49 @@ def send_zone_push_notification(
 # =========================================================
 # PHONE / WHATSAPP HELPERS
 # =========================================================
+# =========================================================
+# SERVICE WORKER
+# =========================================================
 
-@app.route("/service-worker.js")
+@app.route(
+    "/service-worker.js"
+)
 def service_worker():
-    return send_from_directory(
-        "static",
+
+    response = send_from_directory(
+        app.static_folder,
         "service-worker.js",
-        mimetype="application/javascript",
+        mimetype=
+            "application/javascript",
     )
+
+
+    response.headers[
+        "Cache-Control"
+    ] = (
+        "no-cache, "
+        "no-store, "
+        "must-revalidate"
+    )
+
+
+    response.headers[
+        "Pragma"
+    ] = "no-cache"
+
+
+    response.headers[
+        "Expires"
+    ] = "0"
+
+
+    response.headers[
+        "Service-Worker-Allowed"
+    ] = "/"
+
+
+    return response
+
 def normalize_phone_number(value):
 
     if not value:
