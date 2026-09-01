@@ -3,7 +3,7 @@ import re
 import uuid
 from datetime import date, datetime
 from urllib.parse import quote
-
+from flask import send_from_directory
 import cloudinary.uploader
 from dotenv import load_dotenv
 from flask import (
@@ -54,6 +54,13 @@ app.config[
 # PHONE / WHATSAPP HELPERS
 # =========================================================
 
+@app.route("/service-worker.js")
+def service_worker():
+    return send_from_directory(
+        "static",
+        "service-worker.js",
+        mimetype="application/javascript",
+    )
 def normalize_phone_number(value):
 
     if not value:
@@ -725,6 +732,483 @@ def find_live_access_point(
         .first()
     )
 
+# =========================================================
+# CONTENT WORKFLOW CONFIGURATION
+# =========================================================
+
+VALID_LIFETIME_TYPES = {
+    "time_specific",
+    "until_unavailable",
+    "ongoing",
+    "recurring",
+}
+
+
+# ---------------------------------------------------------
+# Each category can contain multiple CONTENT TYPES.
+#
+# The content type determines:
+# - how long the listing lives
+# - whether it may trigger notifications later
+#
+# notification_eligible DOES NOT send a notification yet.
+# It only records whether this type is allowed to use
+# notifications once the PWA push system is built.
+# ---------------------------------------------------------
+
+CONTENT_WORKFLOWS = {
+
+    # =====================================================
+    # PROPERTY
+    # =====================================================
+
+    "property": {
+
+        "room": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "rental": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "property_sale": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "hotel_lodge": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "accommodation_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # =====================================================
+    # EVENTS
+    # =====================================================
+
+    "events": {
+
+        "event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "entertainment": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "church_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "sports_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "community_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "business_event": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # =====================================================
+    # GROCERY / RETAIL SPECIALS
+    # =====================================================
+
+    "discount-deals": {
+
+        "grocery_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "product_discount": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "weekend_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "clearance": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # =====================================================
+    # FOOD / RESTAURANTS
+    # =====================================================
+
+    "local-restaurants": {
+
+        "restaurant": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "takeaway": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "daily_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "weekend_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "food_deal": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # =====================================================
+    # JOBS / OPPORTUNITIES
+    # =====================================================
+
+    "jobs": {
+
+        "job": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "learnership": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "internship": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "training": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "tender": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "business_opportunity": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # Optional future category slug.
+    "opportunities": {
+
+        "job": {
+            "lifetime_type":
+                "until_unavailable",
+            "notification_eligible":
+                True,
+        },
+
+        "learnership": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "internship": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "training": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "tender": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+
+        "business_opportunity": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+
+
+    # =====================================================
+    # SERVICES
+    # =====================================================
+
+    "services": {
+
+        "service_provider": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "plumber": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "mechanic": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "electrician": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "builder": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "cleaning_service": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+    },
+
+
+    # =====================================================
+    # BEAUTY / SALON
+    # =====================================================
+
+    "beauty-salon": {
+
+        "salon": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "barber": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "beauty_service": {
+            "lifetime_type":
+                "ongoing",
+            "notification_eligible":
+                False,
+        },
+
+        "beauty_special": {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        },
+    },
+}
+
+
+# =========================================================
+# WORKFLOW HELPERS
+# =========================================================
+
+def get_content_workflow(
+    category_slug,
+    content_type,
+):
+
+    category_slug = (
+        category_slug
+        or ""
+    ).strip().lower()
+
+    content_type = (
+        content_type
+        or ""
+    ).strip().lower()
+
+    category_workflows = (
+        CONTENT_WORKFLOWS.get(
+            category_slug,
+            {},
+        )
+    )
+
+    workflow = (
+        category_workflows.get(
+            content_type
+        )
+    )
+
+    # -----------------------------------------------------
+    # Backward-compatible fallback.
+    #
+    # Unknown content types are allowed for now because
+    # categories are still dynamic in the database.
+    # -----------------------------------------------------
+
+    if workflow:
+        return workflow
+
+    # Existing Events behaviour should remain safe.
+    if category_slug == "events":
+
+        return {
+            "lifetime_type":
+                "time_specific",
+            "notification_eligible":
+                True,
+        }
+
+    return {
+        "lifetime_type":
+            "ongoing",
+        "notification_eligible":
+            False,
+    }
+
+
+def get_legacy_lifetime_type(
+    item,
+):
+
+    """
+    Used for older ContentItem / PendingSubmission records
+    created before lifetime_type existed.
+    """
+
+    if getattr(
+        item,
+        "lifetime_type",
+        None,
+    ):
+        return item.lifetime_type
+
+    if (
+        getattr(
+            item,
+            "category",
+            None,
+        )
+        == "events"
+    ):
+        return "time_specific"
+
+    if getattr(
+        item,
+        "end_date",
+        None,
+    ):
+        return "time_specific"
+
+    return "ongoing"
+
 
 # =========================================================
 # PUBLIC CONTENT SUBMISSION
@@ -769,6 +1253,29 @@ def submit_content():
             )
             .strip()
             .lower()
+        )
+
+        # -------------------------------------------------
+        # NEW:
+        # Type of content INSIDE the selected category.
+        #
+        # Example:
+        #
+        # category = property
+        # content_type = room
+        #
+        # category = property
+        # content_type = hotel_lodge
+        # -------------------------------------------------
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                "",
+            )
+            .strip()
+            .lower()
+            or None
         )
 
         title = (
@@ -836,23 +1343,6 @@ def submit_content():
             .strip()
         )
 
-        submitter_email = (
-            request.form.get(
-                "submitter_email",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submitter_phone = (
-            request.form.get(
-                "submitter_phone",
-                "",
-            )
-            .strip()
-        )
-
         # =================================================
         # REQUIRED FIELD VALIDATION
         # =================================================
@@ -862,7 +1352,7 @@ def submit_content():
             or not category_slug
             or not title
             or not submitter_name
-            or not submitter_phone
+            
         ):
 
             flash(
@@ -923,6 +1413,52 @@ def submit_content():
                 zones=zones,
                 categories=categories,
             )
+
+        # =================================================
+        # DETERMINE CONTENT WORKFLOW
+        # =================================================
+
+        workflow = (
+            get_content_workflow(
+                category_slug,
+                content_type,
+            )
+        )
+
+        lifetime_type = (
+            workflow.get(
+                "lifetime_type"
+            )
+        )
+
+        notification_eligible = bool(
+            workflow.get(
+                "notification_eligible",
+                False,
+            )
+        )
+
+        if (
+            lifetime_type
+            not in VALID_LIFETIME_TYPES
+        ):
+
+            flash(
+                "The selected listing type has an invalid "
+                "lifecycle configuration.",
+                "error",
+            )
+
+            return render_template(
+                "submit.html",
+                zones=zones,
+                categories=categories,
+            )
+
+        # Every new listing begins as available.
+        availability_status = (
+            "available"
+        )
 
         # =================================================
         # DATE HELPER
@@ -998,60 +1534,170 @@ def submit_content():
             )
 
         # =================================================
-        # EVENT DATE VALIDATION
+        # LIFETIME-SPECIFIC DATE VALIDATION
         # =================================================
 
-        if category_slug == "events":
+        if lifetime_type == "time_specific":
 
-            if not event_date:
+            # ---------------------------------------------
+            # EVENTS
+            # ---------------------------------------------
 
-                flash(
-                    "Event Date is required for events.",
-                    "error",
-                )
+            if category_slug == "events":
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
+                if not event_date:
 
-            if (
-                publish_from
-                and publish_from > event_date
-            ):
+                    flash(
+                        "Event Date is required for events.",
+                        "error",
+                    )
 
-                flash(
-                    "Publish From cannot be after Event Date.",
-                    "error",
-                )
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
+                if (
+                    publish_from
+                    and publish_from
+                    > event_date
+                ):
 
-            if (
-                event_end_date
-                and event_end_date < event_date
-            ):
+                    flash(
+                        "Publish From cannot be after "
+                        "Event Date.",
+                        "error",
+                    )
 
-                flash(
-                    "Event End Date cannot be before Event Date.",
-                    "error",
-                )
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                )
+                if (
+                    event_end_date
+                    and event_end_date
+                    < event_date
+                ):
 
+                    flash(
+                        "Event End Date cannot be before "
+                        "Event Date.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                # Events use event-specific dates.
+                start_date = None
+                end_date = None
+
+            # ---------------------------------------------
+            # NON-EVENT TIME-SPECIFIC CONTENT
+            # ---------------------------------------------
+
+            else:
+
+                if not end_date:
+
+                    flash(
+                        "An end date is required for "
+                        "time-specific listings.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                if (
+                    start_date
+                    and end_date
+                    and end_date < start_date
+                ):
+
+                    flash(
+                        "End date cannot be before "
+                        "start date.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                # Non-event content does not use
+                # event-specific fields.
+                publish_from = None
+                event_date = None
+                event_end_date = None
+
+        # =================================================
+        # UNTIL UNAVAILABLE
+        # =================================================
+
+        elif (
+            lifetime_type
+            == "until_unavailable"
+        ):
+
+            # Examples:
+            # Room → until taken
+            # Property → until sold
+            # Job → until filled
+
+            publish_from = None
+            event_date = None
+            event_end_date = None
+
+            # No artificial expiry date.
             start_date = None
             end_date = None
 
-        else:
+        # =================================================
+        # ONGOING
+        # =================================================
+
+        elif lifetime_type == "ongoing":
+
+            # Examples:
+            # Hotel
+            # Restaurant
+            # Salon
+            # Mechanic
+            # Plumber
+
+            publish_from = None
+            event_date = None
+            event_end_date = None
+            start_date = None
+            end_date = None
+
+        # =================================================
+        # RECURRING
+        # =================================================
+
+        elif lifetime_type == "recurring":
+
+            # Recurring schedule fields will be added later.
+            #
+            # For now start/end dates may optionally describe
+            # the overall period during which the recurring
+            # listing is valid.
+
+            publish_from = None
+            event_date = None
+            event_end_date = None
 
             if (
                 start_date
@@ -1069,10 +1715,6 @@ def submit_content():
                     zones=zones,
                     categories=categories,
                 )
-
-            publish_from = None
-            event_date = None
-            event_end_date = None
 
         # =================================================
         # IMAGES
@@ -1113,23 +1755,64 @@ def submit_content():
         # =================================================
 
         submission = PendingSubmission(
-            zone_id=zone.id,
-            category=category_slug,
-            title=title,
-            description=description,
-            business_name=business_name,
-            venue=venue,
-            price=price,
-            contact=contact,
-            submitter_name=submitter_name,
-            submitter_email=submitter_email,
-            submitter_phone=submitter_phone,
-            publish_from=publish_from,
-            event_date=event_date,
-            event_end_date=event_end_date,
-            start_date=start_date,
-            end_date=end_date,
-            status="pending",
+
+            zone_id=
+                zone.id,
+
+            category=
+                category_slug,
+
+            # NEW
+            content_type=
+                content_type,
+
+            lifetime_type=
+                lifetime_type,
+
+            availability_status=
+                availability_status,
+
+            notification_eligible=
+                notification_eligible,
+
+            title=
+                title,
+
+            description=
+                description,
+
+            business_name=
+                business_name,
+
+            venue=
+                venue,
+
+            price=
+                price,
+
+            contact=
+                contact,
+
+            submitter_name=
+                submitter_name,
+
+            publish_from=
+                publish_from,
+
+            event_date=
+                event_date,
+
+            event_end_date=
+                event_end_date,
+
+            start_date=
+                start_date,
+
+            end_date=
+                end_date,
+
+            status=
+                "pending",
         )
 
         # =================================================
@@ -1185,6 +1868,7 @@ def submit_content():
 
                 submission_image = (
                     PendingSubmissionImage(
+
                         submission_id=
                             submission.id,
 
@@ -1361,9 +2045,18 @@ def submission_dashboard(code):
     published_content = None
     live_access_point = None
     category_record = None
+
     listing_expired = False
+    listing_closed = False
+
     expiry_date = None
     days_remaining = None
+
+    lifetime_type = (
+        get_legacy_lifetime_type(
+            submission
+        )
+    )
 
     # -----------------------------------------------------
     # CATEGORY
@@ -1402,37 +2095,84 @@ def submission_dashboard(code):
             )
         )
 
+        lifetime_type = (
+            get_legacy_lifetime_type(
+                published_content
+            )
+        )
+
+        # -------------------------------------------------
+        # AVAILABILITY STATUS
+        # -------------------------------------------------
+
+        closed_statuses = {
+            "taken",
+            "sold",
+            "filled",
+            "closed",
+            "expired",
+        }
+
+        listing_closed = (
+            published_content
+            .availability_status
+            in closed_statuses
+        )
+
         # -------------------------------------------------
         # EXPIRY
+        #
+        # Only time-specific content automatically expires.
         # -------------------------------------------------
 
         if (
-            published_content.category
-            == "events"
+            lifetime_type
+            == "time_specific"
         ):
 
-            expiry_date = (
-                published_content.event_end_date
-                or published_content.event_date
-            )
+            if (
+                published_content.category
+                == "events"
+            ):
+
+                expiry_date = (
+                    published_content
+                    .event_end_date
+                    or
+                    published_content
+                    .event_date
+                )
+
+            else:
+
+                expiry_date = (
+                    published_content
+                    .end_date
+                )
+
+            if expiry_date:
+
+                days_remaining = (
+                    expiry_date
+                    - date.today()
+                ).days
+
+                listing_expired = (
+                    expiry_date
+                    < date.today()
+                )
+
+        # -------------------------------------------------
+        # UNTIL-UNAVAILABLE / ONGOING
+        #
+        # These intentionally have no automatic expiry date.
+        # -------------------------------------------------
 
         else:
 
-            expiry_date = (
-                published_content.end_date
-            )
-
-        if expiry_date:
-
-            days_remaining = (
-                expiry_date
-                - date.today()
-            ).days
-
-            listing_expired = (
-                expiry_date
-                < date.today()
-            )
+            expiry_date = None
+            days_remaining = None
+            listing_expired = False
 
     # -----------------------------------------------------
     # TEMPLATE
@@ -1453,6 +2193,9 @@ def submission_dashboard(code):
         category_record=
             category_record,
 
+        lifetime_type=
+            lifetime_type,
+
         expiry_date=
             expiry_date,
 
@@ -1461,6 +2204,9 @@ def submission_dashboard(code):
 
         listing_expired=
             listing_expired,
+
+        listing_closed=
+            listing_closed,
     )
 
 
@@ -1487,4 +2233,5 @@ if __name__ == "__main__":
     app.run(
         debug=True,
     )
+
 
