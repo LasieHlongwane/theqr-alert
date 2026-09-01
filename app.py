@@ -232,7 +232,24 @@ app.register_blueprint(
     admin_bp
 )
 
+# =========================================================
+# WEB PUSH / VAPID CONFIGURATION
+# =========================================================
 
+VAPID_PUBLIC_KEY = os.environ.get(
+    "VAPID_PUBLIC_KEY",
+    "",
+)
+
+VAPID_PRIVATE_KEY = os.environ.get(
+    "VAPID_PRIVATE_KEY",
+    "",
+)
+
+VAPID_SUBJECT = os.environ.get(
+    "VAPID_SUBJECT",
+    "https://lac-acess-delivered.onrender.com/",
+)
 # =========================================================
 # HOME
 # =========================================================
