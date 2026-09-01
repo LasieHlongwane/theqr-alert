@@ -3012,7 +3012,116 @@ def submission_dashboard(code):
             listing_closed,
     )
 
+#TESTING ONLY
 
+
+
+# =========================================================
+# ADMIN - TEST PUSH NOTIFICATION
+# =========================================================
+
+@app.route(
+    "/admin/push/test/<int:subscriber_id>",
+    methods=["POST"],
+)
+def admin_test_push(
+    subscriber_id,
+):
+
+    # -----------------------------------------------------
+    # ADMIN LOGIN REQUIRED
+    # -----------------------------------------------------
+
+    if not session.get(
+        "lac_admin"
+    ):
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Admin login required.",
+
+        }), 401
+
+
+    # -----------------------------------------------------
+    # FIND SUBSCRIBER
+    # -----------------------------------------------------
+
+    subscriber = db.session.get(
+        PushSubscriber,
+        subscriber_id,
+    )
+
+
+    if not subscriber:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Subscriber not found.",
+
+        }), 404
+
+
+    # -----------------------------------------------------
+    # SEND TEST
+    # -----------------------------------------------------
+
+    success = send_push_notification(
+
+        subscriber=
+            subscriber,
+
+        title=
+            "LaC Notifications Are Live 🔔",
+
+        body=
+            "Your LaC local notification system is working.",
+
+        url=
+            "/app",
+
+        tag=
+            "lac-test",
+
+    )
+
+
+    if not success:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Push failed. Check Render logs.",
+
+        }), 500
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "message":
+            "Test notification sent.",
+
+        "subscriber_id":
+            subscriber.id,
+
+        "zone_id":
+            subscriber.zone_id,
+
+    }), 200
 # =========================================================
 # HEALTH CHECK
 # =========================================================
