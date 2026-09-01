@@ -7525,16 +7525,125 @@ main.listing-detail-page,
 
     padding: 18px;
 
-    /* DARK GREY BACKGROUND */
-    background-color: #34373c !important;
+    /* LIGHT GREY BACKGROUND */
+    background-color: #d9d9d9 !important;
 
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.12);
 
     border-radius: 16px;
 
     box-shadow:
         0 10px 30px
-        rgba(0, 0, 0, 0.35);
+        rgba(0, 0, 0, 0.25);
 
-    color: #ffffff;
+    color: #111111;
+}
+
+
+/* =========================================================
+   QUICK ACCESS LABEL
+========================================================= */
+
+.lac-install-eyebrow {
+    color: #111111;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.lac-install-content h2 {
+    color: #111111;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.lac-install-content p {
+    color: #333333;
+}
+
+
+/* =========================================================
+   ADD TO HOME SCREEN BUTTON
+========================================================= */
+
+.lac-install-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    padding: 12px 16px;
+
+    border: none;
+    border-radius: 10px;
+
+    /* YELLOW */
+    background-color: #f5b800 !important;
+
+    color: #111111 !important;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background-color 0.15s ease;
+}
+
+
+.lac-install-button:hover {
+    background-color: #ffc928 !important;
+
+    transform: translateY(-1px);
+}
+
+
+.lac-install-button:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
+.lac-install-close {
+    color: #111111;
+
+    background: rgba(0, 0, 0, 0.08);
+}
+
+
+.lac-install-close:hover {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================================
+   INSTALLED MESSAGE
+========================================================= */
+
+.lac-installed-message {
+    color: #111111 !important;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.lac-install-help {
+    color: #555555 !important;
 }
