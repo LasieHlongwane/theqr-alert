@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,6 +20,68 @@
         LaC | {{ zone.name }}
     </title>
 
+
+    <!-- =========================================
+         PWA / ADD TO HOME SCREEN
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="{{ url_for(
+            'static',
+            filename='manifest.json'
+        ) }}"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="192x192"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="192x192"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
+    >
+
+    <meta
+        name="application-name"
+        content="LaC"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="LaC"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+
+    <!-- =========================================
+         CSS
+    ========================================== -->
+
     <link
         rel="stylesheet"
         href="{{ url_for(
@@ -31,61 +92,6 @@
 
 </head>
 
-<!-- =========================================
-     ADD LaC TO HOME SCREEN
-========================================== -->
-
-<section
-    id="lac-install-section"
-    class="lac-install-section"
-    style="display: none;"
->
-
-    <div class="lac-install-card">
-
-        <div class="lac-install-icon">
-            📲
-        </div>
-
-        <div class="lac-install-content">
-
-            <span class="lac-install-eyebrow">
-                QUICK ACCESS
-            </span>
-
-            <h2>
-                Add LaC to your Home Screen
-            </h2>
-
-            <p>
-                Open local events, deals, jobs,
-                services and other useful information
-                directly from your phone.
-            </p>
-
-
-            <button
-                type="button"
-                id="lac-install-button"
-                class="lac-install-button"
-            >
-                Add LaC to Home Screen
-            </button>
-
-
-            <p
-                id="lac-installed-message"
-                class="lac-installed-message"
-                style="display: none;"
-            >
-                ✓ LaC is installed on this device.
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
 
 <body class="lac-public-body">
 
@@ -121,7 +127,9 @@
     <main class="access-container">
 
 
-        <!-- LOCATION -->
+        <!-- =========================================
+             LOCATION
+        ========================================== -->
 
         <div class="location-label">
 
@@ -136,11 +144,6 @@
         </div>
 
 
-        <!-- HERO -->
-
-
-
-
         <!-- =========================================
              CATEGORY SECTION
         ========================================== -->
@@ -152,7 +155,8 @@
                 <div>
 
                     <p class="category-section-eyebrow">
-                        STORE DEALS, SPECIAL EVENTS, LOCAL SERVICES, USEFUL INFORMATION, ENTLEK ALLES. - ALL IN ONE PLACE
+                        STORE DEALS, SPECIAL EVENTS, LOCAL SERVICES,
+                        USEFUL INFORMATION, ENTLEK ALLES. - ALL IN ONE PLACE
                     </p>
 
                     <h2>
@@ -234,6 +238,78 @@
 
 
         <!-- =========================================
+             QUICK ACCESS / ADD TO HOME SCREEN
+        ========================================== -->
+
+        <section
+            id="lac-install-section"
+            class="lac-install-section"
+        >
+
+            <div class="lac-install-card">
+
+                <div class="lac-install-icon">
+                    📲
+                </div>
+
+
+                <div class="lac-install-content">
+
+
+                    <span class="lac-install-eyebrow">
+                        QUICK ACCESS
+                    </span>
+
+
+                    <h2>
+                        Add LaC to your Home Screen
+                    </h2>
+
+
+                    <p>
+                        Access {{ zone.name }} events,
+                        deals, jobs, services and useful
+                        local information without scanning
+                        the QR code every time.
+                    </p>
+
+
+                    <button
+                        type="button"
+                        id="lac-install-button"
+                        class="lac-install-button"
+                        style="display: none;"
+                    >
+                        Add LaC to Home Screen
+                    </button>
+
+
+                    <p
+                        id="lac-installed-message"
+                        class="lac-installed-message"
+                        style="display: none;"
+                    >
+                        ✓ LaC is installed on this device.
+                    </p>
+
+
+                    <p
+                        id="lac-install-help"
+                        class="lac-install-help"
+                    >
+                        Add LaC for faster access to
+                        {{ zone.name }}.
+                    </p>
+
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
              TRUST / CONTEXT
         ========================================== -->
 
@@ -250,15 +326,13 @@
                 </strong>
 
                 <p>
-                    Stay ahead of {{ zone.name}}'s premier events and promos.
+                    Stay ahead of {{ zone.name }}'s
+                    premier events and promos.
                 </p>
 
             </div>
 
         </section>
-
-
-
 
 
         <!-- =========================================
@@ -277,11 +351,12 @@
 
             <p>
                 Receive local updates and notifications
-                straight to your phone
+                straight to your phone.
             </p>
 
             <p>
-                Click below and submit the form. IT'S FREE
+                Click below and submit the form.
+                IT'S FREE
             </p>
 
             <a
@@ -295,7 +370,8 @@
 
         </section>
 
-                <!-- =========================================
+
+        <!-- =========================================
              MAIN LAC WEBSITE
         ========================================== -->
 
@@ -343,12 +419,20 @@
 
 </div>
 
+
+<!-- =========================================
+     PWA INSTALL SCRIPT
+========================================== -->
+
 <script
     src="{{ url_for(
         'static',
         filename='js/pwa-install.js'
     ) }}"
 ></script>
+
+
 </body>
 
 </html>
+
