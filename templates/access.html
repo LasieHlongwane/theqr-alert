@@ -434,7 +434,33 @@
 <!-- =========================================
      PWA INSTALL SCRIPT
 ========================================== -->
+<script>
 
+    // =====================================================
+    // REMEMBER CURRENT LaC ACCESS POINT
+    // =====================================================
+
+    const lacCurrentAccessCode =
+        "{{ access_point.code }}";
+
+
+    if (lacCurrentAccessCode) {
+
+        localStorage.setItem(
+            "lac_access_code",
+            lacCurrentAccessCode
+        );
+
+
+        console.log(
+            "[LaC] Remembered access point:",
+            lacCurrentAccessCode
+        );
+
+    }
+
+</script>
+    
 <script
     src="{{ url_for(
         'static',
