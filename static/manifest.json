@@ -3,7 +3,7 @@
   "short_name": "LaC",
   "description": "Discover useful local information, events, deals, jobs, services, property and transport around your area.",
 
-  "start_url": "/q/KWM-TAXI-001?source=pwa",
+  "start_url": "/app",
 
   "scope": "/",
 
