@@ -1,14 +1,20 @@
-
 {
   "name": "LaC Local Access",
   "short_name": "LaC",
   "description": "Discover useful local information, events, deals, jobs, services, property and transport around your area.",
-  "start_url": "/",
+
+  "start_url": "/q/KWM-TAXI-001?source=pwa",
+
   "scope": "/",
+
   "display": "standalone",
+
   "background_color": "#0b0c0e",
+
   "theme_color": "#0b0c0e",
+
   "orientation": "portrait",
+
   "icons": [
     {
       "src": "/static/icons/lac-192.png",
@@ -23,12 +29,14 @@
       "purpose": "any maskable"
     }
   ],
+
   "categories": [
     "lifestyle",
     "local",
     "business"
   ],
+
   "lang": "en",
+
   "dir": "ltr"
 }
-
