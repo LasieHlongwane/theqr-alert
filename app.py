@@ -407,72 +407,73 @@ def content_is_expired(
 # QR ACCESS POINT
 # =========================================================
 
-
 @app.route("/q/<access_code>")
 def qr_access(access_code):
 
-    access_point = AccessPoint.query.filter_by(
-        code=access_code,
-        active=True,
-    ).first_or_404()
+    # -----------------------------------------------------
+    # FIND ACCESS POINT
+    # -----------------------------------------------------
+
+    access_point = (
+        AccessPoint.query
+        .filter_by(
+            code=access_code,
+            active=True,
+        )
+        .first_or_404()
+    )
+
 
     zone = access_point.zone
 
-    # Category-specific QR
-    if access_point.default_category:
 
-        return redirect(
-            url_for(
-                "category_page",
-                access_code=access_point.code,
-                category=access_point.default_category,
-            )
-        )
-
-
-    # General QR
-    return render_template(
-        "access.html",
-        access_point=access_point,
-        zone=zone,
-    )
     # -----------------------------------------------------
     # RECORD PHYSICAL QR SCAN
     # -----------------------------------------------------
 
-    scan = QRScan(
-        access_point_id=
-            access_point.id,
+    try:
 
-        event_type=
-            "scan",
-
-        user_agent=
-            request.headers.get(
+        scan = QRScan(
+            access_point_id=access_point.id,
+            event_type="scan",
+            user_agent=request.headers.get(
                 "User-Agent",
                 "",
             ),
-    )
+        )
 
-    db.session.add(
-        scan
-    )
 
-    db.session.commit()
+        db.session.add(scan)
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        # Do not prevent the public QR page from loading
+        # just because analytics recording failed.
+
+        db.session.rollback()
+
+        app.logger.exception(
+            "Failed to record QR scan for %s: %s",
+            access_point.code,
+            exc,
+        )
+
 
     # -----------------------------------------------------
     # CATEGORY-SPECIFIC QR
     # -----------------------------------------------------
 
-    if (
-        access_point.qr_type
-        == "category"
-        and access_point.default_category
-    ):
+    if access_point.default_category:
 
         category_slug = (
             access_point.default_category
+            .strip()
+            .lower()
         )
+
 
         category_record = (
             get_active_category_by_slug(
@@ -480,8 +481,11 @@ def qr_access(access_code):
             )
         )
 
+
         if not category_record:
+
             abort(404)
+
 
         return redirect(
             url_for(
@@ -491,18 +495,25 @@ def qr_access(access_code):
             )
         )
 
+
     # -----------------------------------------------------
     # GENERAL QR
     # -----------------------------------------------------
 
-    return render_template(
-        "access.html",
-        zone=access_point.zone,
-        access_point=access_point,
-        categories=get_active_categories(),
+    categories = (
+        get_active_categories()
     )
 
 
+    return render_template(
+        "access.html",
+
+        zone=zone,
+
+        access_point=access_point,
+
+        categories=categories,
+    )
 # =========================================================
 # CATEGORY PAGE
 # =========================================================
