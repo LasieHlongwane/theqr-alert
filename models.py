@@ -855,3 +855,106 @@ class PushSubscriber(db.Model):
         nullable=False,
         default=datetime.utcnow,
     )
+
+# =========================================================
+# PUSH SUBSCRIBERS
+# =========================================================
+
+class PushSubscriber(db.Model):
+
+    __tablename__ = "push_subscribers"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # -----------------------------------------------------
+    # ZONE
+    # -----------------------------------------------------
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey("zones.id"),
+        nullable=False,
+        index=True,
+    )
+
+
+    # -----------------------------------------------------
+    # BROWSER PUSH SUBSCRIPTION
+    # -----------------------------------------------------
+
+    endpoint = db.Column(
+        db.Text,
+        nullable=False,
+        unique=True,
+    )
+
+
+    p256dh = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+
+    auth_key = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+
+    # -----------------------------------------------------
+    # STATUS
+    # -----------------------------------------------------
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    # -----------------------------------------------------
+    # TIMESTAMPS
+    # -----------------------------------------------------
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.now(),
+    )
+
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.now(),
+        onupdate=db.func.now(),
+    )
+
+
+    # -----------------------------------------------------
+    # RELATIONSHIP
+    # -----------------------------------------------------
+
+    zone = db.relationship(
+        "Zone",
+        backref=db.backref(
+            "push_subscribers",
+            lazy=True,
+        ),
+    )
+
+
+    def __repr__(self):
+
+        return (
+            f"<PushSubscriber "
+            f"id={self.id} "
+            f"zone_id={self.zone_id} "
+            f"active={self.active}>"
+        )
