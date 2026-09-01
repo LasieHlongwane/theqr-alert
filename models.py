@@ -1,10 +1,16 @@
 
 from datetime import datetime
-
-from flask_sqlalchemy import SQLAlchemy
 import secrets
 
+from flask_sqlalchemy import SQLAlchemy
+
+
 db = SQLAlchemy()
+
+
+# ============================================================
+# CATEGORY
+# ============================================================
 
 class Category(db.Model):
 
@@ -55,14 +61,36 @@ class Category(db.Model):
             f"<Category "
             f"{self.slug}>"
         )
-    
+
+
+# ============================================================
+# ZONE
+# ============================================================
+
 class Zone(db.Model):
+
     __tablename__ = "zones"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    slug = db.Column(db.String(100), unique=True, nullable=False)
-    active = db.Column(db.Boolean, default=True)
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    name = db.Column(
+        db.String(100),
+        nullable=False,
+    )
+
+    slug = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=False,
+    )
+
+    active = db.Column(
+        db.Boolean,
+        default=True,
+    )
 
     access_points = db.relationship(
         "AccessPoint",
@@ -77,10 +105,18 @@ class Zone(db.Model):
     )
 
 
+# ============================================================
+# ACCESS POINT
+# ============================================================
+
 class AccessPoint(db.Model):
+
     __tablename__ = "access_points"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
 
     code = db.Column(
         db.String(100),
@@ -129,7 +165,13 @@ class AccessPoint(db.Model):
         default=datetime.utcnow,
     )
 
+
+# ============================================================
+# CONTENT ITEM
+# ============================================================
+
 class ContentItem(db.Model):
+
     __tablename__ = "content_items"
 
     id = db.Column(
@@ -143,10 +185,124 @@ class ContentItem(db.Model):
         nullable=False,
     )
 
+    # --------------------------------------------------------
+    # CATEGORY
+    #
+    # Examples:
+    # property
+    # events
+    # discount-deals
+    # local-restaurants
+    # jobs
+    # services
+    # --------------------------------------------------------
+
     category = db.Column(
         db.String(50),
         nullable=False,
     )
+
+    # --------------------------------------------------------
+    # CONTENT TYPE
+    #
+    # Describes WHAT the listing is inside its category.
+    #
+    # Examples:
+    #
+    # Property:
+    # room
+    # rental
+    # property_sale
+    # hotel
+    # accommodation_special
+    #
+    # Food:
+    # restaurant
+    # daily_special
+    # weekend_special
+    #
+    # Opportunities:
+    # job
+    # learnership
+    # internship
+    # tender
+    #
+    # Existing/legacy records may initially have NULL.
+    # --------------------------------------------------------
+
+    content_type = db.Column(
+        db.String(60),
+        nullable=True,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # LIFETIME TYPE
+    #
+    # Controls HOW LONG the listing should remain relevant.
+    #
+    # Supported values:
+    #
+    # time_specific
+    # until_unavailable
+    # ongoing
+    # recurring
+    #
+    # NULL is temporarily allowed for legacy records.
+    # --------------------------------------------------------
+
+    lifetime_type = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # AVAILABILITY STATUS
+    #
+    # Current lifecycle state of the listing.
+    #
+    # Common values:
+    #
+    # available
+    # taken
+    # sold
+    # filled
+    # closed
+    # expired
+    #
+    # We default NEW records to available.
+    # --------------------------------------------------------
+
+    availability_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="available",
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # NOTIFICATION ELIGIBILITY
+    #
+    # True:
+    # This listing may later trigger category notifications.
+    #
+    # False:
+    # Normally discovery/search only.
+    #
+    # Default False is intentional while push notifications
+    # are not yet implemented.
+    # --------------------------------------------------------
+
+    notification_eligible = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    # --------------------------------------------------------
+    # LISTING INFORMATION
+    # --------------------------------------------------------
 
     title = db.Column(
         db.String(200),
@@ -183,6 +339,10 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
+    # --------------------------------------------------------
+    # ARCHIVING
+    # --------------------------------------------------------
+
     archived = db.Column(
         db.Boolean,
         default=False,
@@ -194,7 +354,17 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-    # General validity window
+    # --------------------------------------------------------
+    # GENERAL VALIDITY WINDOW
+    #
+    # Used primarily by time-specific non-event listings.
+    #
+    # Examples:
+    # grocery specials
+    # food specials
+    # temporary promotions
+    # --------------------------------------------------------
+
     start_date = db.Column(
         db.Date,
         nullable=True,
@@ -205,7 +375,10 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-    # Event-specific dates
+    # --------------------------------------------------------
+    # EVENT-SPECIFIC DATES
+    # --------------------------------------------------------
+
     publish_from = db.Column(
         db.Date,
         nullable=True,
@@ -220,6 +393,10 @@ class ContentItem(db.Model):
         db.Date,
         nullable=True,
     )
+
+    # --------------------------------------------------------
+    # DISPLAY / STATUS
+    # --------------------------------------------------------
 
     featured = db.Column(
         db.Boolean,
@@ -242,9 +419,49 @@ class ContentItem(db.Model):
         default=datetime.utcnow,
     )
 
+    # --------------------------------------------------------
+    # LIFECYCLE HELPERS
+    # --------------------------------------------------------
 
-from datetime import datetime
+    @property
+    def is_time_specific(self):
+        return (
+            self.lifetime_type
+            == "time_specific"
+        )
 
+    @property
+    def is_until_unavailable(self):
+        return (
+            self.lifetime_type
+            == "until_unavailable"
+        )
+
+    @property
+    def is_ongoing(self):
+        return (
+            self.lifetime_type
+            == "ongoing"
+        )
+
+    @property
+    def is_recurring(self):
+        return (
+            self.lifetime_type
+            == "recurring"
+        )
+
+    @property
+    def is_available(self):
+        return (
+            self.availability_status
+            == "available"
+        )
+
+
+# ============================================================
+# PENDING SUBMISSION
+# ============================================================
 
 class PendingSubmission(db.Model):
 
@@ -265,6 +482,42 @@ class PendingSubmission(db.Model):
         db.String(50),
         nullable=False,
     )
+
+    # --------------------------------------------------------
+    # NEW WORKFLOW FIELDS
+    #
+    # These fields are copied into ContentItem when an admin
+    # approves the submission.
+    # --------------------------------------------------------
+
+    content_type = db.Column(
+        db.String(60),
+        nullable=True,
+        index=True,
+    )
+
+    lifetime_type = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
+    )
+
+    availability_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="available",
+        index=True,
+    )
+
+    notification_eligible = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    # --------------------------------------------------------
+    # LISTING INFORMATION
+    # --------------------------------------------------------
 
     title = db.Column(
         db.String(200),
@@ -301,6 +554,10 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+    # --------------------------------------------------------
+    # SUBMITTER INFORMATION
+    # --------------------------------------------------------
+
     submitter_name = db.Column(
         db.String(150),
         nullable=False,
@@ -313,8 +570,12 @@ class PendingSubmission(db.Model):
 
     submitter_phone = db.Column(
         db.String(100),
-        nullable=False,
+        nullable=True,
     )
+
+    # --------------------------------------------------------
+    # EVENT DATES
+    # --------------------------------------------------------
 
     publish_from = db.Column(
         db.Date,
@@ -331,6 +592,10 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+    # --------------------------------------------------------
+    # GENERAL VALIDITY DATES
+    # --------------------------------------------------------
+
     start_date = db.Column(
         db.Date,
         nullable=True,
@@ -340,6 +605,10 @@ class PendingSubmission(db.Model):
         db.Date,
         nullable=True,
     )
+
+    # --------------------------------------------------------
+    # SUBMISSION STATUS
+    # --------------------------------------------------------
 
     status = db.Column(
         db.String(30),
@@ -353,8 +622,8 @@ class PendingSubmission(db.Model):
         nullable=False,
         index=True,
         default=lambda: (
-          "LAC-"
-          + secrets.token_hex(4).upper()
+            "LAC-"
+            + secrets.token_hex(4).upper()
         ),
     )
 
@@ -364,9 +633,9 @@ class PendingSubmission(db.Model):
     )
 
     published_content_id = db.Column(
-      db.Integer,
-      db.ForeignKey("content_items.id"),
-      nullable=True,
+        db.Integer,
+        db.ForeignKey("content_items.id"),
+        nullable=True,
     )
 
     created_at = db.Column(
@@ -385,6 +654,10 @@ class PendingSubmission(db.Model):
         backref="pending_submissions",
     )
 
+
+# ============================================================
+# PENDING SUBMISSION IMAGE
+# ============================================================
 
 class PendingSubmissionImage(db.Model):
 
@@ -428,11 +701,18 @@ class PendingSubmissionImage(db.Model):
             "images",
             lazy=True,
             cascade="all, delete-orphan",
-            order_by="PendingSubmissionImage.display_order",
+            order_by=
+                "PendingSubmissionImage.display_order",
         ),
     )
 
+
+# ============================================================
+# QR SCAN
+# ============================================================
+
 class QRScan(db.Model):
+
     __tablename__ = "qr_scans"
 
     id = db.Column(
@@ -448,6 +728,7 @@ class QRScan(db.Model):
 
     # scan = physical QR opened
     # category_view = category selected
+
     event_type = db.Column(
         db.String(30),
         nullable=False,
@@ -476,6 +757,9 @@ class QRScan(db.Model):
     )
 
 
+# ============================================================
+# CONTENT IMAGE
+# ============================================================
 
 class ContentImage(db.Model):
 
@@ -513,13 +797,61 @@ class ContentImage(db.Model):
         nullable=False,
     )
 
-
     content_item = db.relationship(
         "ContentItem",
         backref=db.backref(
             "images",
             lazy=True,
             cascade="all, delete-orphan",
-            order_by="ContentImage.display_order",
+            order_by=
+                "ContentImage.display_order",
         ),
+    )
+
+
+
+
+
+class PushSubscriber(db.Model):
+
+    __tablename__ = "push_subscribers"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey("zones.id"),
+        nullable=False,
+        index=True,
+    )
+
+    endpoint = db.Column(
+        db.Text,
+        nullable=False,
+        unique=True,
+    )
+
+    p256dh = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    auth_key = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
     )
