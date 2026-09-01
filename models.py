@@ -808,54 +808,6 @@ class ContentImage(db.Model):
         ),
     )
 
-
-
-
-
-class PushSubscriber(db.Model):
-
-    __tablename__ = "push_subscribers"
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-    )
-
-    zone_id = db.Column(
-        db.Integer,
-        db.ForeignKey("zones.id"),
-        nullable=False,
-        index=True,
-    )
-
-    endpoint = db.Column(
-        db.Text,
-        nullable=False,
-        unique=True,
-    )
-
-    p256dh = db.Column(
-        db.Text,
-        nullable=False,
-    )
-
-    auth_key = db.Column(
-        db.Text,
-        nullable=False,
-    )
-
-    active = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True,
-    )
-
-    created_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow,
-    )
-
 # =========================================================
 # PUSH SUBSCRIBERS
 # =========================================================
