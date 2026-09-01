@@ -7632,3 +7632,35 @@ main.listing-detail-page,
     }
 
 }
+/* =========================================================
+   PUSH NOTIFICATION STATUS
+========================================================= */
+
+.lac-notification-status {
+    margin-top: 10px;
+
+    font-size: 12px;
+
+    opacity: 0.8;
+}
+
+
+.lac-notification-status[data-status="success"] {
+    font-weight: 700;
+
+    opacity: 1;
+}
+
+
+.lac-notification-status[data-status="error"] {
+    font-weight: 700;
+
+    opacity: 1;
+}
+
+
+#lac-enable-notifications:disabled {
+    opacity: 0.7;
+
+    cursor: default;
+}
