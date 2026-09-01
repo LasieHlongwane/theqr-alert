@@ -171,7 +171,7 @@ def upload_lac_image(
     return result[
         "secure_url"
     ]
-
+    
 
 # =========================================================
 # SECRET KEY
@@ -243,6 +243,11 @@ def home():
         "qr_entry.html"
     )
 
+@app.route("/app")
+def pwa_app():
+    return render_template(
+        "pwa_launcher.html"
+    )
 
 # =========================================================
 # CATEGORY HELPERS
