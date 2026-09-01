@@ -534,3 +534,33 @@ self.addEventListener(
 
     }
 );
+<script>
+
+    window.LAC_PUSH_CONFIG = {
+
+        zoneId:
+            {{ zone.id | tojson }}
+
+    };
+
+</script>
+
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/push-notifications.js'
+    ) }}"
+></script>
+
+<button
+    type="button"
+    id="lac-enable-notifications"
+>
+    Enable Local Notifications
+</button>
+
+
+<p id="lac-notification-status">
+    Free. No account required.
+</p>
