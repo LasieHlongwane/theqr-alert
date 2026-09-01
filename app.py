@@ -402,26 +402,35 @@ def content_is_expired(
 # QR ACCESS POINT
 # =========================================================
 
-@app.route(
-    "/q/<code>"
-)
-def qr_access(code):
 
-    access_point = (
-        AccessPoint.query
-        .filter_by(
-            code=code,
-            active=True,
+@app.route("/q/<access_code>")
+def qr_access(access_code):
+
+    access_point = AccessPoint.query.filter_by(
+        code=access_code,
+        active=True,
+    ).first_or_404()
+
+    zone = access_point.zone
+
+    # Category-specific QR
+    if access_point.default_category:
+
+        return redirect(
+            url_for(
+                "category_page",
+                access_code=access_point.code,
+                category=access_point.default_category,
+            )
         )
-        .first()
+
+
+    # General QR
+    return render_template(
+        "access.html",
+        access_point=access_point,
+        zone=zone,
     )
-
-    if not access_point:
-
-        return render_template(
-            "qr_error.html"
-        ), 404
-
     # -----------------------------------------------------
     # RECORD PHYSICAL QR SCAN
     # -----------------------------------------------------
