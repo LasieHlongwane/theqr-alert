@@ -2,6 +2,11 @@ import os
 import re
 import uuid
 from datetime import date, datetime
+import json
+from pywebpush import (
+    webpush,
+    WebPushException,
+)
 from urllib.parse import quote
 from flask import send_from_directory
 import cloudinary.uploader
@@ -12,6 +17,7 @@ from flask import (
     flash,
     jsonify,
     redirect,
+    session,
     render_template,
     request,
     url_for,
@@ -28,6 +34,7 @@ from models import (
     PendingSubmission,
     PendingSubmissionImage,
     Category,
+    PushSubscriber,
 )
 
 from admin import admin_bp
@@ -50,7 +57,307 @@ app.config[
     "MAX_CONTENT_LENGTH"
 ] = 5 * 1024 * 1024
 
+# =========================================================
+# WEB PUSH / VAPID CONFIGURATION
+# =========================================================
 
+VAPID_PUBLIC_KEY = os.environ.get(
+    "VAPID_PUBLIC_KEY",
+    "",
+)
+
+VAPID_PRIVATE_KEY = os.environ.get(
+    "VAPID_PRIVATE_KEY",
+    "",
+)
+
+VAPID_SUBJECT = os.environ.get(
+    "VAPID_SUBJECT",
+    "https://lac-acess-delivered.onrender.com/",
+)
+
+# =========================================================
+# SEND ONE WEB PUSH NOTIFICATION
+# =========================================================
+
+def send_push_notification(
+    subscriber,
+    title,
+    body,
+    url="/app",
+    icon="/static/icons/lac-192.png",
+    badge="/static/icons/lac-192.png",
+    tag=None,
+):
+
+    # -----------------------------------------------------
+    # VALIDATE SUBSCRIBER
+    # -----------------------------------------------------
+
+    if not subscriber:
+        return False
+
+    if not subscriber.active:
+        return False
+
+
+    # -----------------------------------------------------
+    # VALIDATE VAPID CONFIGURATION
+    # -----------------------------------------------------
+
+    if not VAPID_PRIVATE_KEY:
+
+        app.logger.error(
+            "[LaC Push] VAPID_PRIVATE_KEY is missing."
+        )
+
+        return False
+
+
+    if not VAPID_SUBJECT:
+
+        app.logger.error(
+            "[LaC Push] VAPID_SUBJECT is missing."
+        )
+
+        return False
+
+
+    # -----------------------------------------------------
+    # BUILD BROWSER SUBSCRIPTION
+    # -----------------------------------------------------
+
+    subscription_info = {
+
+        "endpoint":
+            subscriber.endpoint,
+
+        "keys": {
+
+            "p256dh":
+                subscriber.p256dh,
+
+            "auth":
+                subscriber.auth_key,
+
+        },
+
+    }
+
+
+    # -----------------------------------------------------
+    # BUILD NOTIFICATION
+    # -----------------------------------------------------
+
+    payload = {
+
+        "title":
+            title,
+
+        "body":
+            body,
+
+        "url":
+            url,
+
+        "icon":
+            icon,
+
+        "badge":
+            badge,
+
+        "tag":
+            tag or "lac-local-alert",
+
+    }
+
+
+    # -----------------------------------------------------
+    # SEND
+    # -----------------------------------------------------
+
+    try:
+
+        webpush(
+
+            subscription_info=
+                subscription_info,
+
+            data=
+                json.dumps(payload),
+
+            vapid_private_key=
+                VAPID_PRIVATE_KEY,
+
+            vapid_claims={
+                "sub":
+                    VAPID_SUBJECT,
+            },
+
+            ttl=86400,
+
+        )
+
+
+        app.logger.info(
+            "[LaC Push] SUCCESS "
+            "subscriber_id=%s "
+            "zone_id=%s",
+            subscriber.id,
+            subscriber.zone_id,
+        )
+
+
+        return True
+
+
+    # -----------------------------------------------------
+    # WEB PUSH ERROR
+    # -----------------------------------------------------
+
+    except WebPushException as exc:
+
+        response = getattr(
+            exc,
+            "response",
+            None,
+        )
+
+        status_code = (
+            getattr(
+                response,
+                "status_code",
+                None,
+            )
+            if response
+            else None
+        )
+
+
+        app.logger.warning(
+            "[LaC Push] FAILED "
+            "subscriber_id=%s "
+            "status=%s "
+            "error=%s",
+            subscriber.id,
+            status_code,
+            exc,
+        )
+
+
+        # Browser subscription no longer exists.
+        if status_code in (
+            404,
+            410,
+        ):
+
+            subscriber.active = False
+
+            try:
+
+                db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
+
+
+        return False
+
+
+    # -----------------------------------------------------
+    # UNEXPECTED ERROR
+    # -----------------------------------------------------
+
+    except Exception as exc:
+
+        app.logger.exception(
+            "[LaC Push] Unexpected error "
+            "subscriber_id=%s error=%s",
+            subscriber.id,
+            exc,
+        )
+
+
+        return False
+
+
+
+# =========================================================
+# SEND NOTIFICATION TO A ZONE
+# =========================================================
+
+def send_zone_push_notification(
+    zone_id,
+    title,
+    body,
+    url="/app",
+    tag=None,
+):
+
+    subscribers = (
+        PushSubscriber.query
+        .filter_by(
+            zone_id=zone_id,
+            active=True,
+        )
+        .all()
+    )
+
+
+    sent_count = 0
+    failed_count = 0
+
+
+    for subscriber in subscribers:
+
+        success = send_push_notification(
+
+            subscriber=subscriber,
+
+            title=title,
+
+            body=body,
+
+            url=url,
+
+            tag=tag,
+
+        )
+
+
+        if success:
+            sent_count += 1
+
+        else:
+            failed_count += 1
+
+
+    result = {
+
+        "total":
+            len(subscribers),
+
+        "sent":
+            sent_count,
+
+        "failed":
+            failed_count,
+
+    }
+
+
+    app.logger.info(
+        "[LaC Push] Zone notification "
+        "zone_id=%s total=%s sent=%s failed=%s",
+        zone_id,
+        result["total"],
+        result["sent"],
+        result["failed"],
+    )
+
+
+    return result
 # =========================================================
 # PHONE / WHATSAPP HELPERS
 # =========================================================
@@ -894,7 +1201,187 @@ def qr_category(
         today=date.today(),
     )
 
+# =========================================================
+# PUBLIC VAPID KEY
+# =========================================================
 
+@app.route(
+    "/push/public-key",
+    methods=["GET"],
+)
+def push_public_key():
+
+    if not VAPID_PUBLIC_KEY:
+
+        return jsonify({
+            "success": False,
+            "error":
+                "VAPID public key is not configured.",
+        }), 500
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "public_key":
+            VAPID_PUBLIC_KEY,
+
+    }), 200
+
+# =========================================================
+# PUSH SUBSCRIBE
+# =========================================================
+
+@app.route(
+    "/push/subscribe",
+    methods=["POST"],
+)
+def push_subscribe():
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+
+    zone_id = data.get(
+        "zone_id"
+    )
+
+
+    subscription = data.get(
+        "subscription"
+    ) or {}
+
+
+    endpoint = subscription.get(
+        "endpoint"
+    )
+
+
+    keys = subscription.get(
+        "keys"
+    ) or {}
+
+
+    p256dh = keys.get(
+        "p256dh"
+    )
+
+
+    auth_key = keys.get(
+        "auth"
+    )
+
+
+    # -----------------------------------------------------
+    # VALIDATION
+    # -----------------------------------------------------
+
+    if not zone_id:
+
+        return jsonify({
+            "success": False,
+            "error": "zone_id is required.",
+        }), 400
+
+
+    if not endpoint:
+
+        return jsonify({
+            "success": False,
+            "error": "Push endpoint is missing.",
+        }), 400
+
+
+    if not p256dh or not auth_key:
+
+        return jsonify({
+            "success": False,
+            "error": "Push keys are missing.",
+        }), 400
+
+
+    # -----------------------------------------------------
+    # VALIDATE ZONE
+    # -----------------------------------------------------
+
+    zone = db.session.get(
+        Zone,
+        zone_id,
+    )
+
+
+    if not zone:
+
+        return jsonify({
+            "success": False,
+            "error": "Zone not found.",
+        }), 404
+
+
+    # -----------------------------------------------------
+    # EXISTING SUBSCRIPTION?
+    # -----------------------------------------------------
+
+    subscriber = (
+        PushSubscriber.query
+        .filter_by(
+            endpoint=endpoint
+        )
+        .first()
+    )
+
+
+    if subscriber:
+
+        subscriber.zone_id = zone.id
+
+        subscriber.p256dh = p256dh
+
+        subscriber.auth_key = auth_key
+
+        subscriber.active = True
+
+
+    else:
+
+        subscriber = PushSubscriber(
+
+            zone_id=zone.id,
+
+            endpoint=endpoint,
+
+            p256dh=p256dh,
+
+            auth_key=auth_key,
+
+            active=True,
+
+        )
+
+
+        db.session.add(
+            subscriber
+        )
+
+
+    db.session.commit()
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "subscriber_id":
+            subscriber.id,
+
+        "zone_id":
+            subscriber.zone_id,
+
+    }), 200
 # =========================================================
 # PUBLIC LISTING DETAIL
 # =========================================================
