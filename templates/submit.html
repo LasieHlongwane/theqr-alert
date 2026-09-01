@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,8 +17,61 @@
     >
 
     <title>
-        Submit Content | LaC
+        LaC | Local Access
     </title>
+
+
+    <!-- =========================================
+         PWA / ADD TO HOME SCREEN
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="{{ url_for('static', filename='manifest.json') }}"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="192x192"
+        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="192x192"
+        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+    >
+
+    <meta
+        name="application-name"
+        content="LaC"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="LaC"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+
+    <!-- =========================================
+         CSS
+    ========================================== -->
 
     <link
         rel="stylesheet"
@@ -32,7 +86,6 @@
 <body class="lac-public-body">
 
 <div class="lac-page">
-
 
     <!-- =========================================
          HEADER
@@ -60,7 +113,6 @@
     ========================================== -->
 
     <main class="public-submit-container">
-
 
         <!-- =====================================
              INTRO
@@ -116,9 +168,9 @@
 
             {% for message in messages %}
 
-            <div class="public-submit-alert">
-                {{ message }}
-            </div>
+                <div class="public-submit-alert">
+                    {{ message }}
+                </div>
 
             {% endfor %}
 
@@ -134,7 +186,6 @@
             enctype="multipart/form-data"
             class="public-submit-form-new"
         >
-
 
             <!-- =================================
                  YOUR DETAILS
@@ -155,8 +206,7 @@
                         </h2>
 
                         <p>
-                            who is submitting
-                            this listing.
+                            Who is submitting this listing.
                         </p>
 
                     </div>
@@ -176,43 +226,13 @@
                             type="text"
                             name="submitter_name"
                             required
+                            value="{{ request.form.get('submitter_name', '') }}"
                             placeholder="Your full name"
                         >
 
                     </label>
 
-
-                    <label class="public-field">
-
-                        <span>
-                            Phone Number *
-                        </span>
-
-                        <input
-                            type="tel"
-                            name="submitter_phone"
-                            required
-                            placeholder="079 000 0000"
-                        >
-
-                    </label>
-
                 </div>
-
-
-                <label class="public-field">
-
-                    <span>
-                        Email
-                    </span>
-
-                    <input
-                        type="email"
-                        name="submitter_email"
-                        placeholder="you@example.com"
-                    >
-
-                </label>
 
             </section>
 
@@ -236,9 +256,9 @@
                         </h2>
 
                         <p>
-                            Choose the local zone and
-                            category where customers
-                            should discover it.
+                            Choose where the listing
+                            should appear and what kind
+                            of information it contains.
                         </p>
 
                     </div>
@@ -247,6 +267,8 @@
 
 
                 <div class="public-form-grid">
+
+                    <!-- ZONE -->
 
                     <label class="public-field">
 
@@ -265,11 +287,14 @@
 
                             {% for zone in zones %}
 
-                            <option
-                                value="{{ zone.id }}"
-                            >
-                                {{ zone.name }}
-                            </option>
+                                <option
+                                    value="{{ zone.id }}"
+                                    {% if request.form.get('zone_id') == zone.id|string %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ zone.name }}
+                                </option>
 
                             {% endfor %}
 
@@ -277,6 +302,8 @@
 
                     </label>
 
+
+                    <!-- CATEGORY -->
 
                     <label class="public-field">
 
@@ -296,23 +323,89 @@
 
                             {% for category in categories %}
 
-                            <option
-                                value="{{ category.slug }}"
-                            >
+                                <option
+                                    value="{{ category.slug }}"
+                                    {% if request.form.get('category') == category.slug %}
+                                        selected
+                                    {% endif %}
+                                >
 
-                                {% if category.icon %}
-                                    {{ category.icon }}
-                                {% endif %}
+                                    {% if category.icon %}
+                                        {{ category.icon }}
+                                    {% endif %}
 
-                                {{ category.name }}
+                                    {{ category.name }}
 
-                            </option>
+                                </option>
 
                             {% endfor %}
 
                         </select>
 
                     </label>
+
+                </div>
+
+
+                <!-- =================================
+                     CONTENT TYPE
+                ================================== -->
+
+                <div
+                    id="content-type-wrapper"
+                    style="display: none;"
+                >
+
+                    <label class="public-field">
+
+                        <span id="content-type-label">
+                            What are you listing? *
+                        </span>
+
+                        <select
+                            name="content_type"
+                            id="content-type-select"
+                        >
+
+                            <option value="">
+                                Select listing type
+                            </option>
+
+                        </select>
+
+                        <small id="content-type-help">
+                            Choose the option that best
+                            describes your listing.
+                        </small>
+
+                    </label>
+
+                </div>
+
+
+                <!-- =================================
+                     WORKFLOW NOTE
+                ================================== -->
+
+                <div
+                    id="listing-workflow-note"
+                    class="submit-review-note"
+                    style="display: none;"
+                >
+
+                    <span class="submit-review-note-icon">
+                        ✓
+                    </span>
+
+                    <div>
+
+                        <strong id="workflow-note-title">
+                            Listing behaviour
+                        </strong>
+
+                        <p id="workflow-note-text"></p>
+
+                    </div>
 
                 </div>
 
@@ -339,7 +432,8 @@
 
                         <p>
                             Add the information customers
-                            will see when your listing is approved.
+                            will see when your listing
+                            is approved.
                         </p>
 
                     </div>
@@ -357,6 +451,7 @@
                         type="text"
                         name="title"
                         required
+                        value="{{ request.form.get('title', '') }}"
                         placeholder="Example: Rooms to Rent"
                     >
 
@@ -372,6 +467,7 @@
                     <input
                         type="text"
                         name="business_name"
+                        value="{{ request.form.get('business_name', '') }}"
                         placeholder="Business or organisation name"
                     >
 
@@ -388,7 +484,7 @@
                         name="description"
                         rows="5"
                         placeholder="Tell customers what they need to know."
-                    ></textarea>
+                    >{{ request.form.get('description', '') }}</textarea>
 
                 </label>
 
@@ -404,6 +500,7 @@
                         <input
                             type="text"
                             name="venue"
+                            value="{{ request.form.get('venue', '') }}"
                             placeholder="Example: Zakheni"
                         >
 
@@ -419,6 +516,7 @@
                         <input
                             type="text"
                             name="price"
+                            value="{{ request.form.get('price', '') }}"
                             placeholder="R750 / Free / Negotiable"
                         >
 
@@ -436,12 +534,14 @@
                     <input
                         type="tel"
                         name="contact"
+                        value="{{ request.form.get('contact', '') }}"
                         placeholder="Number customers should contact"
                     >
 
                     <small>
-                        This number may appear on the public
-                        listing for WhatsApp and calls.
+                        This number may appear on the
+                        public listing for WhatsApp
+                        and calls.
                     </small>
 
                 </label>
@@ -468,8 +568,9 @@
                         </h2>
 
                         <p>
-                            Upload up to 3 photos or posters
-                            that represent the listing.
+                            Upload up to 3 photos or
+                            posters that represent
+                            the listing.
                         </p>
 
                     </div>
@@ -494,7 +595,6 @@
                     <small>
                         Maximum 3 images
                     </small>
-
 
                     <input
                         type="file"
@@ -522,6 +622,7 @@
             <section
                 id="event-date-fields"
                 class="public-form-section"
+                style="display: none;"
             >
 
                 <div class="public-form-section-heading">
@@ -556,7 +657,9 @@
 
                         <input
                             type="date"
+                            id="publish-from"
                             name="publish_from"
+                            value="{{ request.form.get('publish_from', '') }}"
                         >
 
                     </label>
@@ -565,12 +668,14 @@
                     <label class="public-field">
 
                         <span>
-                            Event Date
+                            Event Date *
                         </span>
 
                         <input
                             type="date"
+                            id="event-date"
                             name="event_date"
+                            value="{{ request.form.get('event_date', '') }}"
                         >
 
                     </label>
@@ -586,8 +691,14 @@
 
                     <input
                         type="date"
+                        id="event-end-date"
                         name="event_end_date"
+                        value="{{ request.form.get('event_end_date', '') }}"
                     >
+
+                    <small>
+                        Leave empty for a one-day event.
+                    </small>
 
                 </label>
 
@@ -595,12 +706,13 @@
 
 
             <!-- =================================
-                 GENERAL DATES
+                 TIME-SPECIFIC DATES
             ================================== -->
 
             <section
                 id="general-date-fields"
                 class="public-form-section"
+                style="display: none;"
             >
 
                 <div class="public-form-section-heading">
@@ -616,9 +728,8 @@
                         </h2>
 
                         <p>
-                            Tell us when the listing
-                            becomes relevant and when
-                            it should expire.
+                            Set how long this temporary
+                            listing should remain active.
                         </p>
 
                     </div>
@@ -636,7 +747,9 @@
 
                         <input
                             type="date"
+                            id="start-date"
                             name="start_date"
+                            value="{{ request.form.get('start_date', '') }}"
                         >
 
                     </label>
@@ -645,15 +758,70 @@
                     <label class="public-field">
 
                         <span>
-                            End Date
+                            End Date *
                         </span>
 
                         <input
                             type="date"
+                            id="end-date"
                             name="end_date"
+                            value="{{ request.form.get('end_date', '') }}"
                         >
 
                     </label>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================
+                 ONGOING LISTING
+            ================================== -->
+
+            <section
+                id="status-lifetime-section"
+                class="public-form-section"
+                style="display: none;"
+            >
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        05
+                    </span>
+
+                    <div>
+
+                        <h2 id="status-lifetime-title">
+                            Ongoing Listing
+                        </h2>
+
+                        <p id="status-lifetime-text"></p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="submit-review-note">
+
+                    <span class="submit-review-note-icon">
+                        ✓
+                    </span>
+
+                    <div>
+
+                        <strong id="status-card-title">
+                            No expiry date required
+                        </strong>
+
+                        <p id="status-card-text">
+                            This listing remains active
+                            until it is manually deactivated.
+                        </p>
+
+                    </div>
 
                 </div>
 
@@ -720,73 +888,880 @@
 
 
 <script>
-
-    // =========================================
-    // DATE FIELD SWITCHING
-    // =========================================
+    // =====================================================
+    // FORM ELEMENTS
+    // =====================================================
 
     const categorySelect =
-        document.getElementById(
-            "category-select"
-        );
+        document.getElementById("category-select");
+
+    const contentTypeWrapper =
+        document.getElementById("content-type-wrapper");
+
+    const contentTypeSelect =
+        document.getElementById("content-type-select");
+
+    const contentTypeLabel =
+        document.getElementById("content-type-label");
+
+    const listingWorkflowNote =
+        document.getElementById("listing-workflow-note");
+
+    const workflowNoteTitle =
+        document.getElementById("workflow-note-title");
+
+    const workflowNoteText =
+        document.getElementById("workflow-note-text");
 
     const eventDateFields =
-        document.getElementById(
-            "event-date-fields"
-        );
+        document.getElementById("event-date-fields");
 
     const generalDateFields =
-        document.getElementById(
-            "general-date-fields"
-        );
+        document.getElementById("general-date-fields");
+
+    const statusLifetimeSection =
+        document.getElementById("status-lifetime-section");
+
+    const statusLifetimeTitle =
+        document.getElementById("status-lifetime-title");
+
+    const statusLifetimeText =
+        document.getElementById("status-lifetime-text");
+
+    const statusCardTitle =
+        document.getElementById("status-card-title");
+
+    const statusCardText =
+        document.getElementById("status-card-text");
+
+    const eventDateInput =
+        document.getElementById("event-date");
+
+    const endDateInput =
+        document.getElementById("end-date");
 
 
-    function updateDateFields() {
+    // =====================================================
+    // LIFECYCLE RULE
+    //
+    // ONLY:
+    // property
+    // transport
+    // services
+    //
+    // are ongoing.
+    //
+    // Everything else automatically expires.
+    // Events use event-specific dates.
+    // =====================================================
 
-        if (!categorySelect) {
-            return;
+    const ongoingCategories = new Set([
+        "property",
+        "transport",
+        "services"
+    ]);
+
+
+    // =====================================================
+    // CONTENT TYPE CONFIG
+    // =====================================================
+
+    const contentTypeConfig = {
+
+        "property": {
+
+            label: "What are you listing?",
+
+            options: [
+
+                {
+                    value: "room",
+                    label: "🏠 Room to Rent"
+                },
+
+                {
+                    value: "rental",
+                    label: "🏘 House / Apartment to Rent"
+                },
+
+                {
+                    value: "property_sale",
+                    label: "🏡 Property for Sale"
+                },
+
+                {
+                    value: "hotel_lodge",
+                    label: "🛏 Hotel / Lodge / Guest House"
+                },
+
+                {
+                    value: "accommodation_special",
+                    label: "🏷 Accommodation Listing / Special"
+                }
+
+            ]
+
+        },
+
+
+        "transport": {
+
+            label: "What transport service are you listing?",
+
+            options: [
+
+                {
+                    value: "transport_service",
+                    label: "🚌 Transport Service"
+                },
+
+                {
+                    value: "taxi_service",
+                    label: "🚕 Taxi Service"
+                },
+
+                {
+                    value: "shuttle_service",
+                    label: "🚐 Shuttle Service"
+                },
+
+                {
+                    value: "delivery_service",
+                    label: "📦 Delivery Service"
+                }
+
+            ]
+
+        },
+
+
+        "services": {
+
+            label: "What type of service is this?",
+
+            options: [
+
+                {
+                    value: "service_provider",
+                    label: "🛠 General Service"
+                },
+
+                {
+                    value: "plumber",
+                    label: "🔧 Plumber"
+                },
+
+                {
+                    value: "mechanic",
+                    label: "🚗 Mechanic"
+                },
+
+                {
+                    value: "electrician",
+                    label: "⚡ Electrician"
+                },
+
+                {
+                    value: "builder",
+                    label: "🧱 Builder"
+                },
+
+                {
+                    value: "cleaning_service",
+                    label: "🧹 Cleaning Service"
+                }
+
+            ]
+
+        },
+
+
+        "events": {
+
+            label: "What type of event is this?",
+
+            options: [
+
+                {
+                    value: "event",
+                    label: "📅 General Event"
+                },
+
+                {
+                    value: "entertainment",
+                    label: "🎵 Entertainment / Party"
+                },
+
+                {
+                    value: "church_event",
+                    label: "⛪ Church / Religious Event"
+                },
+
+                {
+                    value: "sports_event",
+                    label: "⚽ Sports Event"
+                },
+
+                {
+                    value: "community_event",
+                    label: "👥 Community Event"
+                },
+
+                {
+                    value: "business_event",
+                    label: "💼 Business Event"
+                }
+
+            ]
+
+        },
+
+
+        "discount-deals": {
+
+            label: "What kind of deal is this?",
+
+            options: [
+
+                {
+                    value: "grocery_special",
+                    label: "🛒 Grocery Special"
+                },
+
+                {
+                    value: "product_discount",
+                    label: "🏷 Product Discount"
+                },
+
+                {
+                    value: "weekend_special",
+                    label: "📆 Weekend Special"
+                },
+
+                {
+                    value: "clearance",
+                    label: "🔥 Clearance Deal"
+                }
+
+            ]
+
+        },
+
+
+        "local-restaurants": {
+
+            label: "What are you listing?",
+
+            options: [
+
+                {
+                    value: "restaurant",
+                    label: "🍽 Restaurant"
+                },
+
+                {
+                    value: "takeaway",
+                    label: "🍔 Takeaway / Fast Food"
+                },
+
+                {
+                    value: "daily_special",
+                    label: "🍟 Daily Special"
+                },
+
+                {
+                    value: "weekend_special",
+                    label: "📆 Weekend Special"
+                },
+
+                {
+                    value: "food_deal",
+                    label: "🏷 Food Deal / Promotion"
+                }
+
+            ]
+
+        },
+
+
+        "jobs": {
+
+            label: "What kind of opportunity is this?",
+
+            options: [
+
+                {
+                    value: "job",
+                    label: "💼 Job Vacancy"
+                },
+
+                {
+                    value: "learnership",
+                    label: "🎓 Learnership"
+                },
+
+                {
+                    value: "internship",
+                    label: "🧑‍💻 Internship"
+                },
+
+                {
+                    value: "training",
+                    label: "📚 Training Programme"
+                },
+
+                {
+                    value: "tender",
+                    label: "📄 Tender"
+                },
+
+                {
+                    value: "business_opportunity",
+                    label: "🤝 Business Opportunity"
+                }
+
+            ]
+
+        },
+
+
+        "opportunities": {
+
+            label: "What kind of opportunity is this?",
+
+            options: [
+
+                {
+                    value: "job",
+                    label: "💼 Job Vacancy"
+                },
+
+                {
+                    value: "learnership",
+                    label: "🎓 Learnership"
+                },
+
+                {
+                    value: "internship",
+                    label: "🧑‍💻 Internship"
+                },
+
+                {
+                    value: "training",
+                    label: "📚 Training Programme"
+                },
+
+                {
+                    value: "tender",
+                    label: "📄 Tender"
+                },
+
+                {
+                    value: "business_opportunity",
+                    label: "🤝 Business Opportunity"
+                }
+
+            ]
+
+        },
+
+
+        "beauty-salon": {
+
+            label: "What are you listing?",
+
+            options: [
+
+                {
+                    value: "salon",
+                    label: "💇 Salon"
+                },
+
+                {
+                    value: "barber",
+                    label: "💈 Barber"
+                },
+
+                {
+                    value: "beauty_service",
+                    label: "💅 Beauty Service"
+                },
+
+                {
+                    value: "beauty_special",
+                    label: "🏷 Beauty / Salon Special"
+                }
+
+            ]
+
         }
 
+    };
 
-        if (
+
+    // =====================================================
+    // FALLBACK
+    //
+    // Unknown/new categories expire automatically.
+    // =====================================================
+
+    const fallbackContentType = {
+
+        label: "What are you listing?",
+
+        options: [
+
+            {
+                value: "general_listing",
+                label: "General Listing"
+            }
+
+        ]
+
+    };
+
+
+    // =====================================================
+    // RESTORE FORM AFTER VALIDATION ERROR
+    // =====================================================
+
+    const previousContentType =
+        {{ request.form.get('content_type', '') | tojson }};
+
+
+    // =====================================================
+    // NORMALIZE CATEGORY
+    // =====================================================
+
+    function getNormalizedCategory() {
+
+        if (!categorySelect) {
+            return "";
+        }
+
+        const rawCategory =
             categorySelect.value
-            === "events"
-        ) {
+                .trim()
+                .toLowerCase();
 
-            eventDateFields.style.display =
-                "block";
 
-            generalDateFields.style.display =
-                "none";
+        const aliases = {
 
-        } else {
+            "event": "events",
+            "local-events": "events",
+            "local_events": "events",
 
-            eventDateFields.style.display =
-                "none";
+            "restaurant": "local-restaurants",
+            "restaurants": "local-restaurants",
 
-            generalDateFields.style.display =
-                "block";
+            "beauty": "beauty-salon",
+            "salon": "beauty-salon",
 
+            "opportunity": "opportunities"
+
+        };
+
+
+        return aliases[rawCategory] || rawCategory;
+
+    }
+
+
+    // =====================================================
+    // HIDE LIFETIME SECTIONS
+    // =====================================================
+
+    function hideLifetimeSections() {
+
+        if (eventDateFields) {
+            eventDateFields.style.display = "none";
+        }
+
+        if (generalDateFields) {
+            generalDateFields.style.display = "none";
+        }
+
+        if (statusLifetimeSection) {
+            statusLifetimeSection.style.display = "none";
+        }
+
+        if (eventDateInput) {
+            eventDateInput.required = false;
+        }
+
+        if (endDateInput) {
+            endDateInput.required = false;
         }
 
     }
 
+
+    // =====================================================
+    // WORKFLOW NOTE
+    // =====================================================
+
+    function showWorkflowNote(
+        title,
+        message
+    ) {
+
+        if (!listingWorkflowNote) {
+            return;
+        }
+
+        listingWorkflowNote.style.display = "flex";
+
+        if (workflowNoteTitle) {
+            workflowNoteTitle.textContent = title;
+        }
+
+        if (workflowNoteText) {
+            workflowNoteText.textContent = message;
+        }
+
+    }
+
+
+    function hideWorkflowNote() {
+
+        if (listingWorkflowNote) {
+            listingWorkflowNote.style.display = "none";
+        }
+
+    }
+
+
+    // =====================================================
+    // POPULATE CONTENT TYPES
+    // =====================================================
+
+    function updateContentTypes(
+        restorePrevious = false
+    ) {
+
+        if (
+            !categorySelect ||
+            !contentTypeSelect ||
+            !contentTypeWrapper
+        ) {
+            return;
+        }
+
+
+        const category =
+            getNormalizedCategory();
+
+
+        contentTypeSelect.innerHTML = "";
+
+
+        const defaultOption =
+            document.createElement("option");
+
+        defaultOption.value = "";
+
+        defaultOption.textContent =
+            "Select listing type";
+
+        contentTypeSelect.appendChild(
+            defaultOption
+        );
+
+
+        if (!category) {
+
+            contentTypeWrapper.style.display =
+                "none";
+
+            contentTypeSelect.required =
+                false;
+
+            hideLifetimeSections();
+
+            hideWorkflowNote();
+
+            return;
+
+        }
+
+
+        const config =
+            contentTypeConfig[category] ||
+            fallbackContentType;
+
+
+        if (contentTypeLabel) {
+
+            contentTypeLabel.textContent =
+                config.label + " *";
+
+        }
+
+
+        config.options.forEach(
+            function(optionConfig) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    optionConfig.value;
+
+                option.textContent =
+                    optionConfig.label;
+
+                contentTypeSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        contentTypeWrapper.style.display =
+            "block";
+
+        contentTypeSelect.required =
+            true;
+
+
+        if (
+            restorePrevious &&
+            previousContentType
+        ) {
+
+            const previousExists =
+                Array.from(
+                    contentTypeSelect.options
+                ).some(
+                    function(option) {
+
+                        return (
+                            option.value ===
+                            previousContentType
+                        );
+
+                    }
+                );
+
+
+            if (previousExists) {
+
+                contentTypeSelect.value =
+                    previousContentType;
+
+            }
+
+        }
+
+
+        updateLifetimeFields();
+
+    }
+
+
+    // =====================================================
+    // UPDATE LIFETIME FIELDS
+    // =====================================================
+
+    function updateLifetimeFields() {
+
+        hideLifetimeSections();
+
+
+        if (
+            !categorySelect ||
+            !contentTypeSelect
+        ) {
+            return;
+        }
+
+
+        const category =
+            getNormalizedCategory();
+
+        const contentType =
+            contentTypeSelect.value;
+
+
+        if (
+            !category ||
+            !contentType
+        ) {
+
+            hideWorkflowNote();
+
+            return;
+
+        }
+
+
+        // =============================================
+        // EVENTS
+        // =============================================
+
+        if (category === "events") {
+
+            if (eventDateFields) {
+
+                eventDateFields.style.display =
+                    "block";
+
+            }
+
+
+            if (eventDateInput) {
+
+                eventDateInput.required =
+                    true;
+
+            }
+
+
+            showWorkflowNote(
+                "Event listing",
+                "This event will automatically expire after its event date or event end date."
+            );
+
+            return;
+
+        }
+
+
+        // =============================================
+        // ONGOING
+        //
+        // Property
+        // Transport
+        // Services
+        // =============================================
+
+        if (
+            ongoingCategories.has(
+                category
+            )
+        ) {
+
+            if (statusLifetimeSection) {
+
+                statusLifetimeSection.style.display =
+                    "block";
+
+            }
+
+
+            if (statusLifetimeTitle) {
+
+                statusLifetimeTitle.textContent =
+                    "Ongoing Listing";
+
+            }
+
+
+            if (statusLifetimeText) {
+
+                statusLifetimeText.textContent =
+                    "This listing does not automatically expire.";
+
+            }
+
+
+            if (statusCardTitle) {
+
+                statusCardTitle.textContent =
+                    "No expiry date required";
+
+            }
+
+
+            if (statusCardText) {
+
+                statusCardText.textContent =
+                    "The listing remains active until it is manually updated or deactivated.";
+
+            }
+
+
+            showWorkflowNote(
+                "Ongoing listing",
+                "No expiry date is required for this category."
+            );
+
+            return;
+
+        }
+
+
+        // =============================================
+        // EVERYTHING ELSE EXPIRES
+        // =============================================
+
+        if (generalDateFields) {
+
+            generalDateFields.style.display =
+                "block";
+
+        }
+
+
+        if (endDateInput) {
+
+            endDateInput.required =
+                true;
+
+        }
+
+
+        showWorkflowNote(
+            "Time-specific listing",
+            "This listing will automatically expire on its end date."
+        );
+
+    }
+
+
+    // =====================================================
+    // CATEGORY EVENTS
+    // =====================================================
 
     if (categorySelect) {
 
         categorySelect.addEventListener(
             "change",
-            updateDateFields
-        );
+            function() {
 
-        updateDateFields();
+                updateContentTypes(false);
+
+            }
+        );
 
     }
 
 
-    // =========================================
+    if (contentTypeSelect) {
+
+        contentTypeSelect.addEventListener(
+            "change",
+            updateLifetimeFields
+        );
+
+    }
+
+
+    // Initial page load.
+
+    if (categorySelect) {
+
+        updateContentTypes(true);
+
+    }
+
+
+    // =====================================================
     // MULTI-IMAGE SELECTION
-    // =========================================
+    // =====================================================
 
     const imageInput =
         document.getElementById(
@@ -802,6 +1777,11 @@
 
 
     function rebuildImageInput() {
+
+        if (!imageInput) {
+            return;
+        }
+
 
         const dataTransfer =
             new DataTransfer();
@@ -826,8 +1806,12 @@
 
     function renderImagePreviews() {
 
-        imagePreview.innerHTML =
-            "";
+        if (!imagePreview) {
+            return;
+        }
+
+
+        imagePreview.innerHTML = "";
 
 
         selectedImages.forEach(
@@ -848,21 +1832,35 @@
                     );
 
 
-                image.src =
+                const objectUrl =
                     URL.createObjectURL(
                         file
                     );
 
 
+                image.src =
+                    objectUrl;
+
                 image.alt =
                     file.name;
+
+
+                image.addEventListener(
+                    "load",
+                    function() {
+
+                        URL.revokeObjectURL(
+                            objectUrl
+                        );
+
+                    }
+                );
 
 
                 const removeButton =
                     document.createElement(
                         "button"
                     );
-
 
                 removeButton.type =
                     "button";
@@ -921,37 +1919,60 @@
                     );
 
 
-                for (
-                    const file of newFiles
-                ) {
+                let maximumExceeded =
+                    false;
+
+
+                for (const file of newFiles) {
 
                     const duplicate =
                         selectedImages.some(
                             function(existing) {
 
                                 return (
-                                    existing.name
-                                        === file.name
+                                    existing.name ===
+                                        file.name
                                     &&
-                                    existing.size
-                                        === file.size
+                                    existing.size ===
+                                        file.size
+                                    &&
+                                    existing.lastModified ===
+                                        file.lastModified
                                 );
 
                             }
                         );
 
 
+                    if (duplicate) {
+                        continue;
+                    }
+
+
                     if (
-                        !duplicate
-                        &&
-                        selectedImages.length < 3
+                        selectedImages.length >= 3
                     ) {
 
-                        selectedImages.push(
-                            file
-                        );
+                        maximumExceeded =
+                            true;
+
+                        break;
 
                     }
+
+
+                    selectedImages.push(
+                        file
+                    );
+
+                }
+
+
+                if (maximumExceeded) {
+
+                    alert(
+                        "You can upload a maximum of 3 images."
+                    );
 
                 }
 
@@ -977,3 +1998,4 @@
 </body>
 
 </html>
+
