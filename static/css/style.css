@@ -7315,6 +7315,11 @@ main.listing-detail-page,
 
 
 
+
+
+
+
+
 .public-website-link {
     margin: 32px auto 24px;
     padding: 24px 20px;
@@ -7484,272 +7489,89 @@ main.listing-detail-page,
     color: #111111 !important;
 }
 
-.lac-public-body .public-website-link {
-    text-align: center;
-    margin: 24px auto;
-    padding: 18px;
-    background: transparent !important;
-    border: none !important;
+.lac-install-section {
+    margin: 24px 0;
 }
 
-.lac-public-body .public-website-link p {
-    margin-bottom: 8px;
-    color: #555555 !important;
-    font-size: 14px;
-    font-weight: 400;
-}
-
-.lac-public-body .public-website-text-link {
-    color: #111111 !important;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-.lac-admin-body .content-performance {
+.lac-install-card {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 16px 0;
-    padding: 12px 14px;
+    gap: 18px;
+    align-items: flex-start;
 
-    background: #1f1f1f !important;
-    border: 1px solid #444444 !important;
-    border-radius: 10px;
+    padding: 22px;
 
-    color: #ffffff !important;
+    background: #15171a;
+
+    border: 1px solid
+        rgba(255, 255, 255, 0.08);
+
+    border-radius: 18px;
 }
 
-.lac-admin-body .content-performance-icon {
-    font-size: 22px;
-    color: #ffffff !important;
+.lac-install-icon {
+    font-size: 34px;
 }
 
-.lac-admin-body .content-performance div {
-    display: flex;
-    flex-direction: column;
+.lac-install-content {
+    flex: 1;
 }
 
-.lac-admin-body .content-performance strong {
-    font-size: 20px;
-    line-height: 1.1;
-    color: #ffffff !important;
+.lac-install-eyebrow {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    color: #f5b800;
 }
 
-.lac-admin-body .content-performance span {
-    font-size: 13px;
-    color: #cccccc !important;
+.lac-install-content h2 {
+    margin: 0 0 8px;
+
+    color: #ffffff;
 }
 
-.lac-admin-body .view-listing-button {
-    display: inline-block;
-    padding: 10px 16px;
+.lac-install-content p {
+    margin: 0 0 16px;
 
-    background: #2d2d2d !important;
-    color: #ffffff !important;
+    color: #b9bcc2;
 
-    border: 1px solid #555555 !important;
-    border-radius: 8px;
-
-    text-decoration: none !important;
-    font-weight: 600;
+    line-height: 1.5;
 }
 
-.lac-admin-body .view-listing-button:hover {
-    background: #3b3b3b !important;
-    color: #ffffff !important;
-}
-.lac-public-body .submission-live-button,
-.lac-public-body .organiser-dashboard-link {
-    display: inline-flex !important;
+.lac-install-button {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    padding: 13px 20px;
+    border: 0;
 
-    background: #111111 !important;
-    color: #ffffff !important;
+    border-radius: 12px;
 
-    border: 1px solid #333333 !important;
-    border-radius: 10px;
+    padding: 13px 18px;
 
-    text-decoration: none !important;
-    font-weight: 600;
+    background: #f5b800;
 
-    text-align: center;
-}
+    color: #0b0c0e;
 
-.lac-public-body .submission-live-button:hover,
-.lac-public-body .organiser-dashboard-link:hover {
-    background: #2b2b2b !important;
-    color: #ffffff !important;
-}
-
-.lac-public-body .submission-dashboard-action {
-    display: flex;
-    justify-content: center;
-
-    margin-top: 22px;
-    margin-bottom: 30px;
-}
-
-.lac-public-body .organiser-dashboard-link {
-    width: 100%;
-    max-width: 360px;
-}
-/* =========================================================
-   LISTING DASHBOARD - LIVE LISTING BUTTONS
-========================================================= */
-
-.lac-public-body .organiser-live-listing-button {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    width: 100% !important;
-    box-sizing: border-box !important;
-
-    margin-top: 22px !important;
-    padding: 14px 20px !important;
-
-    background: #111111 !important;
-    background-color: #111111 !important;
-
-    color: #ffffff !important;
-
-    border: 1px solid #333333 !important;
-    border-radius: 10px !important;
-
-    text-decoration: none !important;
-
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    line-height: 1.4 !important;
-
-    text-align: center !important;
+    font-weight: 700;
 
     cursor: pointer;
 }
 
-
-/* Make absolutely sure link text stays white */
-
-.lac-public-body a.organiser-live-listing-button,
-.lac-public-body a.organiser-live-listing-button:link,
-.lac-public-body a.organiser-live-listing-button:visited {
-    background: #111111 !important;
-    color: #ffffff !important;
-    text-decoration: none !important;
+.lac-install-button:disabled {
+    opacity: 0.6;
+    cursor: default;
 }
 
+.lac-installed-message {
+    margin-top: 12px !important;
 
-/* Hover */
-
-.lac-public-body a.organiser-live-listing-button:hover {
-    background: #2b2b2b !important;
-    color: #ffffff !important;
-}
-
-
-/* Active / tap */
-
-.lac-public-body a.organiser-live-listing-button:active {
-    background: #000000 !important;
-    color: #ffffff !important;
-}
-
-
-/* =========================================================
-   SUBMISSION STATUS SECONDARY LINK
-========================================================= */
-
-.lac-public-body .organiser-secondary-link {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    box-sizing: border-box;
-
-    margin-top: 16px;
-    margin-bottom: 30px;
-    padding: 12px 18px;
-
-    background: #fffdf8 !important;
-    color: #111111 !important;
-
-    border: 1px solid #cccccc !important;
-    border-radius: 10px;
-
-    text-decoration: none !important;
-    text-align: center;
-
-    font-size: 14px;
     font-weight: 600;
-}
 
-
-.lac-public-body .organiser-secondary-link:hover {
-    background: #f1eee7 !important;
-    color: #111111 !important;
-}
-/* =========================================================
-   SUBMISSION SUCCESS - CHECK STATUS BUTTON
-========================================================= */
-
-.lac-public-body .submission-success-button {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    width: 100% !important;
-    box-sizing: border-box !important;
-
-    margin-top: 22px !important;
-    padding: 14px 20px !important;
-
-    background: #111111 !important;
-    background-color: #111111 !important;
-
-    color: #ffffff !important;
-
-    border: 1px solid #333333 !important;
-    border-radius: 10px !important;
-
-    text-decoration: none !important;
-
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    line-height: 1.4 !important;
-
-    text-align: center !important;
-
-    cursor: pointer;
-}
-
-
-/* Normal + visited state */
-
-.lac-public-body a.submission-success-button,
-.lac-public-body a.submission-success-button:link,
-.lac-public-body a.submission-success-button:visited {
-    background: #111111 !important;
-    color: #ffffff !important;
-    text-decoration: none !important;
-}
-
-
-/* Hover */
-
-.lac-public-body a.submission-success-button:hover {
-    background: #2b2b2b !important;
-    color: #ffffff !important;
-}
-
-
-/* Click / tap */
-
-.lac-public-body a.submission-success-button:active {
-    background: #000000 !important;
     color: #ffffff !important;
 }
