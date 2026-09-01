@@ -235,57 +235,94 @@ document.addEventListener(
         // GET VAPID PUBLIC KEY
         // =================================================
 
+        // =========================================================
+// GET VAPID PUBLIC KEY
+// =========================================================
+
         async function getPublicKey() {
 
-            console.log(
-                "[LaC Push] Fetching VAPID public key..."
+          console.log(
+            "[LaC Push] Fetching VAPID public key..."
+          );
+
+
+          const response =
+             await fetch(
+               "/push/public-key",
+               {
+                 method: "GET",
+                 cache: "no-store"
+               }
+             );
+   
+
+          const responseText =
+            await response.text();
+
+
+          console.log(
+            "[LaC Push] Public key response:",
+            response.status,
+            responseText
+          );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Public-key request failed. HTTP "
+              + response.status
+              + ": "
+              + responseText.substring(0, 150)
             );
 
-
-            const response =
-                await fetch(
-                    "/push/public-key",
-                    {
-                        method: "GET",
-                        cache: "no-store"
-                    }
-                );
+          }
 
 
-            if (!response.ok) {
-
-                throw new Error(
-                    "Could not load VAPID public key."
-                );
-
-            }
+          let data;
 
 
-            const data =
-                await response.json();
+          try {
 
+            data =
+             JSON.parse(
+                responseText
+             );
 
-            if (
-                !data.success ||
-                !data.public_key
-            ) {
+          } catch (error) {
 
-                throw new Error(
-                    data.error ||
-                    "VAPID public key is missing."
-                );
-
-            }
-
-
-            console.log(
-                "[LaC Push] VAPID public key received."
+            throw new Error(
+              "Public-key endpoint returned "
+              + "non-JSON data. HTTP "
+              + response.status
+              + ": "
+              + responseText.substring(0, 150)
             );
 
+          }
 
-            return data.public_key;
 
-        }
+          if (
+           !data.success ||
+           !data.public_key
+          ) {
+
+           throw new Error(
+             data.error ||
+             "VAPID public key is missing."
+           );
+
+          }
+       
+
+          console.log(
+            "[LaC Push] VAPID public key received."
+          );
+
+
+          return data.public_key;
+
+        }  
 
 
         // =================================================
@@ -329,32 +366,68 @@ document.addEventListener(
                 );
 
 
-            const data =
-                await response.json();
+            const responseText =
+                await response.text();
+
+            console.log(
+                "[LaC Push] Subscribe response:",
+                response.status,
+                responseText
+            );
 
 
-            if (
-                !response.ok ||
-                !data.success
-            ) {
-
+            if (!response.ok) {
+              
                 throw new Error(
-                    data.error ||
-                    "Could not save push subscription."
+                  "Subscription request failed. HTTP "
+                  + response.status
+                  + ": "
+                  + responseText.substring(0, 150)
                 );
 
             }
 
+            let data;
 
-            console.log(
-                "[LaC Push] Subscription saved:",
-                data
-            );
+            try {
+                
+                data =
+                    JSON.parse(
+                        responseText
+                    );
 
 
-            return data;
+            } catch(error) {
 
-        }
+                throw new Error(
+                  "Subscription endpoint returned "
+                  + "non-JSON data. HTTP "
+                  + response.status
+                  + ": "
+                  + responseText.substring(0, 150)
+                );
+
+             }
+             if (!data.success) {
+
+               throw new Error(
+                 data.error ||
+                 "Could not save push subscription."
+               );
+
+             }
+
+
+             console.log(
+              "[LaC Push] Subscription saved:",
+              data
+             );
+
+
+             return data;
+
+          }
+        
 
 
         // =================================================
