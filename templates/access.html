@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -29,6 +30,62 @@
     >
 
 </head>
+
+<!-- =========================================
+     ADD LaC TO HOME SCREEN
+========================================== -->
+
+<section
+    id="lac-install-section"
+    class="lac-install-section"
+    style="display: none;"
+>
+
+    <div class="lac-install-card">
+
+        <div class="lac-install-icon">
+            📲
+        </div>
+
+        <div class="lac-install-content">
+
+            <span class="lac-install-eyebrow">
+                QUICK ACCESS
+            </span>
+
+            <h2>
+                Add LaC to your Home Screen
+            </h2>
+
+            <p>
+                Open local events, deals, jobs,
+                services and other useful information
+                directly from your phone.
+            </p>
+
+
+            <button
+                type="button"
+                id="lac-install-button"
+                class="lac-install-button"
+            >
+                Add LaC to Home Screen
+            </button>
+
+
+            <p
+                id="lac-installed-message"
+                class="lac-installed-message"
+                style="display: none;"
+            >
+                ✓ LaC is installed on this device.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
 
 <body class="lac-public-body">
 
@@ -286,8 +343,12 @@
 
 </div>
 
-
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/pwa-install.js'
+    ) }}"
+></script>
 </body>
 
 </html>
-
