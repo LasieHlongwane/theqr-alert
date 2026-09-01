@@ -1,4 +1,3 @@
-
 // =========================================================
 // LaC PWA INSTALL
 // =========================================================
@@ -6,12 +5,13 @@
 // Responsibilities:
 //
 // 1. Register the LaC service worker.
-// 2. Keep the QUICK ACCESS card visible.
+// 2. Keep the QUICK ACCESS card visible in the browser.
 // 3. Show the install button only when installation
 //    is available.
 // 4. Show an installed message when LaC is running
 //    as an installed app.
 // 5. Handle the browser installation prompt.
+// 6. Allow the user to dismiss the QUICK ACCESS card.
 //
 // =========================================================
 
@@ -40,16 +40,23 @@ const lacInstallHelp =
         "lac-install-help"
     );
 
+const lacInstallClose =
+    document.getElementById(
+        "lac-install-close"
+    );
+
 
 // =========================================================
-// INSTALL PROMPT STORAGE
+// INSTALL STATE
 // =========================================================
 
 let deferredInstallPrompt = null;
 
+let installCardDismissed = false;
+
 
 // =========================================================
-// CHECK WHETHER LaC IS RUNNING AS AN INSTALLED APP
+// CHECK WHETHER LaC IS RUNNING AS INSTALLED APP
 // =========================================================
 
 function isRunningStandalone() {
@@ -79,9 +86,27 @@ function isRunningStandalone() {
 
 function updateInstallUI() {
 
-    // -----------------------------------------
-    // Keep QUICK ACCESS card visible.
-    // -----------------------------------------
+    // -----------------------------------------------------
+    // USER DISMISSED THE QUICK ACCESS CARD
+    // -----------------------------------------------------
+
+    if (installCardDismissed) {
+
+        if (lacInstallSection) {
+
+            lacInstallSection.style.display =
+                "none";
+
+        }
+
+        return;
+
+    }
+
+
+    // -----------------------------------------------------
+    // KEEP QUICK ACCESS CARD VISIBLE
+    // -----------------------------------------------------
 
     if (lacInstallSection) {
 
@@ -91,9 +116,9 @@ function updateInstallUI() {
     }
 
 
-    // -----------------------------------------
-    // LaC is already running as installed PWA.
-    // -----------------------------------------
+    // -----------------------------------------------------
+    // LaC IS RUNNING AS AN INSTALLED PWA
+    // -----------------------------------------------------
 
     if (isRunningStandalone()) {
 
@@ -126,9 +151,9 @@ function updateInstallUI() {
     }
 
 
-    // -----------------------------------------
-    // Browser says LaC can be installed.
-    // -----------------------------------------
+    // -----------------------------------------------------
+    // BROWSER SAYS LaC CAN BE INSTALLED
+    // -----------------------------------------------------
 
     if (deferredInstallPrompt) {
 
@@ -164,13 +189,12 @@ function updateInstallUI() {
     }
 
 
-    // -----------------------------------------
-    // Install prompt is not available yet.
+    // -----------------------------------------------------
+    // INSTALL PROMPT NOT AVAILABLE YET
     //
-    // IMPORTANT:
-    // Keep the QUICK ACCESS card visible.
-    // Hide only the actual installation button.
-    // -----------------------------------------
+    // Keep the card visible.
+    // Hide only the install button.
+    // -----------------------------------------------------
 
     if (lacInstallButton) {
 
@@ -194,6 +218,43 @@ function updateInstallUI() {
             "block";
 
     }
+
+}
+
+
+// =========================================================
+// CLOSE QUICK ACCESS CARD
+// =========================================================
+
+if (lacInstallClose) {
+
+    lacInstallClose.addEventListener(
+        "click",
+        function(event) {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            installCardDismissed =
+                true;
+
+
+            if (lacInstallSection) {
+
+                lacInstallSection.style.display =
+                    "none";
+
+            }
+
+
+            console.log(
+                "[LaC PWA] Quick Access card dismissed."
+            );
+
+        }
+    );
 
 }
 
@@ -245,11 +306,11 @@ if (
 // CAPTURE INSTALL PROMPT
 // =========================================================
 //
-// Chrome / Edge / Chromium browsers may fire this
-// event once LaC satisfies their installation criteria.
+// Chrome / Edge / Chromium browsers may fire this event
+// when LaC satisfies PWA installation requirements.
 //
-// We save the event so installation only happens when
-// the user taps our own button.
+// We store the event and use it when the user presses
+// our own install button.
 //
 // =========================================================
 
@@ -283,12 +344,15 @@ if (lacInstallButton) {
 
     lacInstallButton.addEventListener(
         "click",
-        async function() {
+        async function(event) {
 
-            // -------------------------------------
-            // Browser has not provided an install
-            // prompt.
-            // -------------------------------------
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            // Browser has not provided
+            // an installation prompt yet.
 
             if (!deferredInstallPrompt) {
 
@@ -350,7 +414,8 @@ if (lacInstallButton) {
             }
 
 
-            // The saved prompt can only be used once.
+            // beforeinstallprompt can only
+            // be used once.
 
             deferredInstallPrompt =
                 null;
@@ -369,7 +434,7 @@ if (lacInstallButton) {
 
 
 // =========================================================
-// APP INSTALLED
+// APP INSTALLED EVENT
 // =========================================================
 
 window.addEventListener(
@@ -453,12 +518,11 @@ if (
 // INITIAL PAGE LOAD
 // =========================================================
 //
-// QUICK ACCESS becomes visible immediately.
+// QUICK ACCESS is visible immediately.
 //
-// The install button remains hidden until the browser
-// provides beforeinstallprompt.
+// The install button stays hidden until the browser
+// supplies beforeinstallprompt.
 //
 // =========================================================
 
 updateInstallUI();
-
