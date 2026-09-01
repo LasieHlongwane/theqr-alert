@@ -1,33 +1,17 @@
-
-const CACHE_VERSION = "lac-v1";
-
-const STATIC_CACHE =
-    `${CACHE_VERSION}-static`;
-
-
 // =========================================================
-// FILES TO CACHE
+// LaC SERVICE WORKER
 // =========================================================
-//
-// Keep this list limited to files that are safe to cache.
-//
-// Dynamic QR pages, listings and category feeds are NOT
-// permanently cached here because their content changes.
-//
-// =========================================================
+
+const CACHE_VERSION = "lac-v3";
+
+const STATIC_CACHE = CACHE_VERSION + "-static";
+
 
 const STATIC_ASSETS = [
-
-    "/",
-
     "/static/manifest.json",
-
     "/static/css/style.css",
-
     "/static/icons/lac-192.png",
-
     "/static/icons/lac-512.png"
-
 ];
 
 
@@ -37,10 +21,10 @@ const STATIC_ASSETS = [
 
 self.addEventListener(
     "install",
-    function(event) {
+    function (event) {
 
         console.log(
-            "[LaC Service Worker] Installing..."
+            "[LaC SW] Installing..."
         );
 
 
@@ -49,7 +33,7 @@ self.addEventListener(
             caches
                 .open(STATIC_CACHE)
                 .then(
-                    function(cache) {
+                    function (cache) {
 
                         return cache.addAll(
                             STATIC_ASSETS
@@ -57,23 +41,11 @@ self.addEventListener(
 
                     }
                 )
-                .then(
-                    function() {
-
-                        console.log(
-                            "[LaC Service Worker] Static assets cached."
-                        );
-
-
-                        return self.skipWaiting();
-
-                    }
-                )
                 .catch(
-                    function(error) {
+                    function (error) {
 
                         console.error(
-                            "[LaC Service Worker] Install error:",
+                            "[LaC SW] Cache install error:",
                             error
                         );
 
@@ -82,6 +54,9 @@ self.addEventListener(
 
         );
 
+
+        self.skipWaiting();
+
     }
 );
 
@@ -89,18 +64,13 @@ self.addEventListener(
 // =========================================================
 // ACTIVATE
 // =========================================================
-//
-// Remove old LaC caches when the service-worker version
-// changes.
-//
-// =========================================================
 
 self.addEventListener(
     "activate",
-    function(event) {
+    function (event) {
 
         console.log(
-            "[LaC Service Worker] Activating..."
+            "[LaC SW] Activating..."
         );
 
 
@@ -109,36 +79,27 @@ self.addEventListener(
             caches
                 .keys()
                 .then(
-                    function(cacheNames) {
+                    function (cacheNames) {
 
                         return Promise.all(
 
                             cacheNames.map(
-                                function(cacheName) {
+                                function (cacheName) {
 
                                     if (
-                                        cacheName.startsWith(
+                                        cacheName.indexOf(
                                             "lac-"
-                                        )
+                                        ) === 0
                                         &&
                                         cacheName !==
                                             STATIC_CACHE
                                     ) {
-
-                                        console.log(
-                                            "[LaC Service Worker] Removing old cache:",
-                                            cacheName
-                                        );
-
 
                                         return caches.delete(
                                             cacheName
                                         );
 
                                     }
-
-
-                                    return Promise.resolve();
 
                                 }
                             )
@@ -148,7 +109,7 @@ self.addEventListener(
                     }
                 )
                 .then(
-                    function() {
+                    function () {
 
                         return self.clients.claim();
 
@@ -164,37 +125,14 @@ self.addEventListener(
 // =========================================================
 // FETCH
 // =========================================================
-//
-// Strategy:
-//
-// STATIC FILES
-// Cache first.
-//
-// HTML / DYNAMIC REQUESTS
-// Network first.
-//
-// This matters for LaC because:
-// - events change
-// - deals expire
-// - jobs expire
-// - listings may be approved/deactivated
-//
-// We do not want users seeing stale local information.
-//
-// =========================================================
 
 self.addEventListener(
     "fetch",
-    function(event) {
-
-        const request =
-            event.request;
-
-
-        // Only handle GET requests.
+    function (event) {
 
         if (
-            request.method !== "GET"
+            event.request.method !==
+            "GET"
         ) {
 
             return;
@@ -204,38 +142,64 @@ self.addEventListener(
 
         const requestUrl =
             new URL(
-                request.url
+                event.request.url
             );
 
 
-        // Ignore requests to other domains.
+        // -------------------------------------------------
+        // NAVIGATION
+        // -------------------------------------------------
 
         if (
-            requestUrl.origin !==
-            self.location.origin
+            event.request.mode ===
+            "navigate"
         ) {
+
+            event.respondWith(
+
+                fetch(
+                    event.request
+                )
+                .catch(
+                    function () {
+
+                        return caches.match(
+                            event.request
+                        );
+
+                    }
+                )
+
+            );
 
             return;
 
         }
 
 
-        // =================================================
-        // STATIC ASSETS
-        // =================================================
+        // -------------------------------------------------
+        // STATIC FILES
+        // -------------------------------------------------
 
         if (
-            requestUrl.pathname.startsWith(
+            requestUrl.origin ===
+                self.location.origin
+            &&
+            requestUrl.pathname.indexOf(
                 "/static/"
-            )
+            ) === 0
         ) {
 
             event.respondWith(
 
                 caches
-                    .match(request)
+                    .match(
+                        event.request
+                    )
                     .then(
-                        function(cachedResponse) {
+                        function (
+                            cachedResponse
+                        ) {
 
                             if (
                                 cachedResponse
@@ -247,10 +211,12 @@ self.addEventListener(
 
 
                             return fetch(
-                                request
+                                event.request
                             )
                             .then(
-                                function(networkResponse) {
+                                function (
+                                    networkResponse
+                                ) {
 
                                     if (
                                         !networkResponse
@@ -264,7 +230,7 @@ self.addEventListener(
                                     }
 
 
-                                    const responseCopy =
+                                    const responseClone =
                                         networkResponse.clone();
 
 
@@ -273,11 +239,13 @@ self.addEventListener(
                                             STATIC_CACHE
                                         )
                                         .then(
-                                            function(cache) {
+                                            function (
+                                                cache
+                                            ) {
 
                                                 cache.put(
-                                                    request,
-                                                    responseCopy
+                                                    event.request,
+                                                    responseClone
                                                 );
 
                                             }
@@ -294,47 +262,6 @@ self.addEventListener(
 
             );
 
-
-            return;
-
-        }
-
-
-        // =================================================
-        // HTML / DYNAMIC CONTENT
-        // =================================================
-        //
-        // Network-first keeps local information fresh.
-        //
-        // If the network fails completely, try cache.
-        //
-        // =================================================
-
-        if (
-            request.mode ===
-            "navigate"
-        ) {
-
-            event.respondWith(
-
-                fetch(
-                    request
-                )
-                .catch(
-                    function() {
-
-                        return caches.match(
-                            request
-                        );
-
-                    }
-                )
-
-            );
-
-
-            return;
-
         }
 
     }
@@ -342,29 +269,19 @@ self.addEventListener(
 
 
 // =========================================================
-// PUSH NOTIFICATIONS
-// =========================================================
-//
-// We are adding this foundation now.
-//
-// Later the Flask push engine will send payloads like:
-//
-// {
-//     "title": "New event in KwaMhlanga",
-//     "body": "KwaMhlanga Saturday Groove",
-//     "url": "/listing/123"
-// }
-//
-// =========================================================
-// =========================================================
 // PUSH NOTIFICATION
 // =========================================================
 
 self.addEventListener(
     "push",
-    function(event) {
+    function (event) {
 
-        let data = {
+        console.log(
+            "[LaC SW] Push received."
+        );
+
+
+        let notificationData = {
 
             title:
                 "LaC Local Alert",
@@ -387,7 +304,9 @@ self.addEventListener(
         };
 
 
-        if (event.data) {
+        if (
+            event.data
+        ) {
 
             try {
 
@@ -395,15 +314,75 @@ self.addEventListener(
                     event.data.json();
 
 
-                data = {
-                    ...data,
-                    ...incoming
-                };
+                if (
+                    incoming.title
+                ) {
+
+                    notificationData.title =
+                        incoming.title;
+
+                }
+
+
+                if (
+                    incoming.body
+                ) {
+
+                    notificationData.body =
+                        incoming.body;
+
+                }
+
+
+                if (
+                    incoming.url
+                ) {
+
+                    notificationData.url =
+                        incoming.url;
+
+                }
+
+
+                if (
+                    incoming.icon
+                ) {
+
+                    notificationData.icon =
+                        incoming.icon;
+
+                }
+
+
+                if (
+                    incoming.badge
+                ) {
+
+                    notificationData.badge =
+                        incoming.badge;
+
+                }
+
+
+                if (
+                    incoming.tag
+                ) {
+
+                    notificationData.tag =
+                        incoming.tag;
+
+                }
 
 
             } catch (error) {
 
-                data.body =
+                console.error(
+                    "[LaC SW] Could not parse JSON push payload:",
+                    error
+                );
+
+
+                notificationData.body =
                     event.data.text();
 
             }
@@ -414,21 +393,21 @@ self.addEventListener(
         const options = {
 
             body:
-                data.body,
+                notificationData.body,
 
             icon:
-                data.icon,
+                notificationData.icon,
 
             badge:
-                data.badge,
+                notificationData.badge,
 
             tag:
-                data.tag,
+                notificationData.tag,
 
             data: {
 
                 url:
-                    data.url || "/app"
+                    notificationData.url
 
             }
 
@@ -439,8 +418,11 @@ self.addEventListener(
 
             self.registration
                 .showNotification(
-                    data.title,
+
+                    notificationData.title,
+
                     options
+
                 )
 
         );
@@ -455,20 +437,35 @@ self.addEventListener(
 
 self.addEventListener(
     "notificationclick",
-    function(event) {
+    function (event) {
+
+        console.log(
+            "[LaC SW] Notification clicked."
+        );
+
 
         event.notification.close();
 
 
-        const targetUrl =
-            event.notification.data?.url
-            ||
+        let targetUrl =
             "/app";
+
+
+        if (
+            event.notification.data
+            &&
+            event.notification.data.url
+        ) {
+
+            targetUrl =
+                event.notification.data.url;
+
+        }
 
 
         event.waitUntil(
 
-            clients
+            self.clients
                 .matchAll({
 
                     type:
@@ -479,12 +476,17 @@ self.addEventListener(
 
                 })
                 .then(
-                    function(clientList) {
+                    function (clientList) {
 
                         for (
-                            const client
-                            of clientList
+                            let i = 0;
+                            i < clientList.length;
+                            i++
                         ) {
+
+                            const client =
+                                clientList[i];
+
 
                             if (
                                 "focus"
@@ -494,17 +496,16 @@ self.addEventListener(
                                 return client
                                     .focus()
                                     .then(
-                                        function() {
+                                        function () {
 
                                             if (
                                                 "navigate"
                                                 in client
                                             ) {
 
-                                                return client
-                                                    .navigate(
-                                                        targetUrl
-                                                    );
+                                                return client.navigate(
+                                                    targetUrl
+                                                );
 
                                             }
 
@@ -517,13 +518,12 @@ self.addEventListener(
 
 
                         if (
-                            clients.openWindow
+                            self.clients.openWindow
                         ) {
 
-                            return clients
-                                .openWindow(
-                                    targetUrl
-                                );
+                            return self.clients.openWindow(
+                                targetUrl
+                            );
 
                         }
 
@@ -534,33 +534,3 @@ self.addEventListener(
 
     }
 );
-<script>
-
-    window.LAC_PUSH_CONFIG = {
-
-        zoneId:
-            {{ zone.id | tojson }}
-
-    };
-
-</script>
-
-
-<script
-    src="{{ url_for(
-        'static',
-        filename='js/push-notifications.js'
-    ) }}"
-></script>
-
-<button
-    type="button"
-    id="lac-enable-notifications"
->
-    Enable Local Notifications
-</button>
-
-
-<p id="lac-notification-status">
-    Free. No account required.
-</p>
