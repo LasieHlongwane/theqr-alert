@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,85 +8,211 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
     >
 
     <title>
         LaC | Local Access
     </title>
 
+
+    <!-- =========================================
+         PWA / ADD TO HOME SCREEN
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="{{ url_for('static', filename='manifest.json') }}"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="192x192"
+        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="192x192"
+        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+    >
+
+    <meta
+        name="application-name"
+        content="LaC"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="LaC"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+
+    <!-- =========================================
+         CSS
+    ========================================== -->
+
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
     >
 
 </head>
 
 
-<body class="qr-entry-body">
+<!-- =========================================
+     ADD LaC TO HOME SCREEN
+========================================== -->
 
+<section
+    id="lac-install-section"
+    class="lac-install-section"
+    style="display: none;"
+>
 
-    <main class="qr-entry-page">
+    <div class="lac-install-card">
 
-        <section class="qr-entry-card">
+        <div class="lac-install-icon">
+            📲
+        </div>
 
-            <div class="qr-entry-logo">
-                LaC
-            </div>
+        <div class="lac-install-content">
 
+            <span class="lac-install-eyebrow">
+                QUICK ACCESS
+            </span>
 
-            <h1>
-                ACCESS.
-                <br>
-                DELIVERED.
-            </h1>
-
+            <h2>
+                Add LaC to your Home Screen
+            </h2>
 
             <p>
-                Access local content by
-                scanning a LaC QR code.
+                Open local events, deals, jobs,
+                services and other useful information
+                directly from your phone.
             </p>
 
 
-            <div class="qr-entry-flow">
+            <button
+                type="button"
+                id="lac-install-button"
+                class="lac-install-button"
+            >
+                Add LaC to Home Screen
+            </button>
+
+
+            <p
+                id="lac-installed-message"
+                class="lac-installed-message"
+                style="display: none;"
+            >
+                ✓ LaC is installed on this device.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<body>
+
+    <main
+        style="
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+        "
+    >
+
+        <div
+            style="
+                max-width: 520px;
+                width: 100%;
+            "
+        >
+
+            <h1>
+                LaC
+            </h1>
+
+            <h2>
+                LOCAL ACCESS. DELIVERED.
+            </h2>
+
+            <p>
+                Access useful local information by scanning
+                a LaC QR code near you.
+            </p>
+
+            <div
+                style="
+                    margin-top: 30px;
+                    line-height: 2;
+                "
+            >
+
+                <strong>
+                    SCAN
+                </strong>
 
                 <div>
-                    <span>01</span>
-                    <strong>Scan</strong>
-                </div>
-
-                <div class="qr-entry-arrow">
                     ↓
                 </div>
 
-                <div>
-                    <span>02</span>
-                    <strong>Discover</strong>
-                </div>
+                <strong>
+                    DISCOVER
+                </strong>
 
-                <div class="qr-entry-arrow">
+                <div>
                     ↓
                 </div>
 
-                <div>
-                    <span>03</span>
-                    <strong>Connect</strong>
-                </div>
+                <strong>
+                    CONNECT
+                </strong>
 
             </div>
 
-
-            <small>
-                QR ACCESS POINTS
-                · LOCAL CONTENT
-                · LOCAL CONNECTIONS
-            </small>
-
-        </section>
+        </div>
 
     </main>
 
-
+    <script
+      src="{{ url_for(
+        'static',
+        filename='js/pwa-install.js'
+      ) }}"
+    ></script>
 </body>
 
 </html>
