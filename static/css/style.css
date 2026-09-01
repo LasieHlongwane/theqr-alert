@@ -7489,89 +7489,233 @@ main.listing-detail-page,
     color: #111111 !important;
 }
 
+/* =========================================================
+   LaC QUICK ACCESS / PWA INSTALL CARD
+========================================================= */
+
+/*
+   Position the Quick Access card in the
+   top-right corner of the screen.
+*/
+
 .lac-install-section {
-    margin: 24px 0;
+    position: fixed;
+
+    top: 20px;
+    right: 20px;
+
+    width: 340px;
+    max-width: calc(100vw - 40px);
+
+    margin: 0;
+
+    z-index: 1000;
 }
+
+
+/* =========================================================
+   CARD
+========================================================= */
 
 .lac-install-card {
     display: flex;
-    gap: 18px;
     align-items: flex-start;
 
-    padding: 22px;
+    gap: 14px;
 
-    background: #15171a;
+    padding: 18px;
+
+    /*
+       Grey instead of black.
+    */
+    background: #3a3d42;
 
     border: 1px solid
-        rgba(255, 255, 255, 0.08);
+        rgba(255, 255, 255, 0.12);
 
-    border-radius: 18px;
+    border-radius: 16px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.28);
 }
+
+
+/* =========================================================
+   ICON
+========================================================= */
 
 .lac-install-icon {
-    font-size: 34px;
+    flex-shrink: 0;
+
+    font-size: 30px;
+
+    line-height: 1;
 }
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
 
 .lac-install-content {
     flex: 1;
+
+    min-width: 0;
 }
+
 
 .lac-install-eyebrow {
     display: block;
 
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 800;
 
     letter-spacing: 0.12em;
 
     color: #f5b800;
 }
 
+
 .lac-install-content h2 {
-    margin: 0 0 8px;
+    margin: 0 0 7px;
+
+    font-size: 18px;
+    line-height: 1.25;
 
     color: #ffffff;
 }
 
+
 .lac-install-content p {
-    margin: 0 0 16px;
+    margin: 0 0 12px;
 
-    color: #b9bcc2;
+    font-size: 13px;
+    line-height: 1.45;
 
-    line-height: 1.5;
+    color: #d7d9dc;
 }
+
+
+/* =========================================================
+   INSTALL BUTTON
+========================================================= */
 
 .lac-install-button {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
+    width: 100%;
+
+    padding: 11px 14px;
+
     border: 0;
-
-    border-radius: 12px;
-
-    padding: 13px 18px;
+    border-radius: 10px;
 
     background: #f5b800;
 
-    color: #0b0c0e;
+    color: #111111;
 
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 800;
 
     cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
 }
+
+
+.lac-install-button:hover {
+    transform: translateY(-1px);
+}
+
 
 .lac-install-button:disabled {
     opacity: 0.6;
+
     cursor: default;
+
+    transform: none;
 }
 
-.lac-installed-message {
-    margin-top: 12px !important;
 
-    font-weight: 600;
+/* =========================================================
+   INSTALLED MESSAGE
+========================================================= */
+
+.lac-installed-message {
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+
+    font-weight: 700;
 
     color: #ffffff !important;
 }
+
+
+/* =========================================================
+   SMALL HELP TEXT
+========================================================= */
+
+.lac-install-help {
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+
+    font-size: 11px !important;
+
+    color: #bfc2c7 !important;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+/*
+   On small phones we keep it near the top,
+   but give it enough space on both sides.
+
+   This prevents the card from becoming too narrow.
+*/
+
+@media (max-width: 600px) {
+
+    .lac-install-section {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+
+        width: auto;
+        max-width: none;
+    }
+
+
+    .lac-install-card {
+        padding: 14px;
+
+        border-radius: 14px;
+    }
+
+
+    .lac-install-icon {
+        font-size: 26px;
+    }
+
+
+    .lac-install-content h2 {
+        font-size: 16px;
+    }
+
+
+    .lac-install-content p {
+        font-size: 12px;
+    }
+
+}
+
