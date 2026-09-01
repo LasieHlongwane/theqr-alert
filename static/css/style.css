@@ -7511,74 +7511,30 @@ main.listing-detail-page,
 
     z-index: 1000;
 }
-
 /* =========================================================
-   QUICK ACCESS CLOSE BUTTON
+   QUICK ACCESS / ADD TO HOME SCREEN CARD
 ========================================================= */
 
 .lac-install-card {
     position: relative;
-}
-
-
-.lac-install-close {
-    position: absolute;
-
-    top: 8px;
-    right: 8px;
-
-    z-index: 9999;
 
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
 
-    width: 36px;
-    height: 36px;
+    gap: 14px;
 
-    padding: 0;
+    padding: 18px;
 
-    border: none;
-    border-radius: 50%;
+    /* DARK GREY BACKGROUND */
+    background-color: #34373c !important;
 
-    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.35);
 
     color: #ffffff;
-
-    font-size: 25px;
-    font-weight: 400;
-    line-height: 1;
-
-    cursor: pointer;
-
-    pointer-events: auto;
-
-    touch-action: manipulation;
-
-    -webkit-tap-highlight-color: transparent;
-}
-
-
-.lac-install-close:hover {
-    background: rgba(255, 255, 255, 0.22);
-}
-
-
-.lac-install-close:active {
-    transform: scale(0.92);
-}
-
-
-.lac-install-close:focus-visible {
-    outline: 2px solid #f5b800;
-    outline-offset: 2px;
-}
-
-
-/*
-   Leave room for the X button.
-*/
-
-.lac-install-content {
-    padding-right: 38px;
 }
