@@ -16,8 +16,61 @@
     >
 
     <title>
-        {{ item.title }} | LaC
+        LaC | Local Access
     </title>
+
+
+    <!-- =========================================
+         PWA / ADD TO HOME SCREEN
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="{{ url_for('static', filename='manifest.json') }}"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="192x192"
+        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="192x192"
+        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+    >
+
+    <meta
+        name="application-name"
+        content="LaC"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="LaC"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+
+    <!-- =========================================
+         CSS
+    ========================================== -->
 
     <link
         rel="stylesheet"
