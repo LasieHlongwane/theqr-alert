@@ -356,15 +356,13 @@ self.addEventListener(
 // }
 //
 // =========================================================
+// =========================================================
+// PUSH NOTIFICATION
+// =========================================================
 
 self.addEventListener(
     "push",
     function(event) {
-
-        console.log(
-            "[LaC Service Worker] Push received."
-        );
-
 
         let data = {
 
@@ -372,45 +370,38 @@ self.addEventListener(
                 "LaC Local Alert",
 
             body:
-                "New local information is available.",
+                "Something new is happening near you.",
 
             url:
-                "/",
+                "/app",
 
             icon:
                 "/static/icons/lac-192.png",
 
             badge:
-                "/static/icons/lac-192.png"
+                "/static/icons/lac-192.png",
+
+            tag:
+                "lac-local-alert"
 
         };
 
 
-        if (
-            event.data
-        ) {
+        if (event.data) {
 
             try {
 
-                const payload =
+                const incoming =
                     event.data.json();
 
 
                 data = {
-
                     ...data,
-
-                    ...payload
-
+                    ...incoming
                 };
 
+
             } catch (error) {
-
-                console.error(
-                    "[LaC Service Worker] Invalid push payload:",
-                    error
-                );
-
 
                 data.body =
                     event.data.text();
@@ -420,7 +411,7 @@ self.addEventListener(
         }
 
 
-        const notificationOptions = {
+        const options = {
 
             body:
                 data.body,
@@ -431,19 +422,15 @@ self.addEventListener(
             badge:
                 data.badge,
 
+            tag:
+                data.tag,
+
             data: {
 
                 url:
-                    data.url || "/"
+                    data.url || "/app"
 
-            },
-
-            tag:
-                data.tag ||
-                "lac-local-alert",
-
-            renotify:
-                false
+            }
 
         };
 
@@ -453,7 +440,7 @@ self.addEventListener(
             self.registration
                 .showNotification(
                     data.title,
-                    notificationOptions
+                    options
                 )
 
         );
@@ -465,44 +452,18 @@ self.addEventListener(
 // =========================================================
 // NOTIFICATION CLICK
 // =========================================================
-//
-// When the user taps a notification:
-//
-// 1. Check whether LaC is already open.
-// 2. Focus it if possible.
-// 3. Otherwise open the target listing/page.
-//
-// =========================================================
 
 self.addEventListener(
     "notificationclick",
     function(event) {
 
-        console.log(
-            "[LaC Service Worker] Notification clicked."
-        );
-
-
         event.notification.close();
 
 
         const targetUrl =
-
-            event.notification.data
-            &&
-            event.notification.data.url
-
-                ? event.notification.data.url
-
-                : "/";
-
-
-        const absoluteTargetUrl =
-
-            new URL(
-                targetUrl,
-                self.location.origin
-            ).href;
+            event.notification.data?.url
+            ||
+            "/app";
 
 
         event.waitUntil(
@@ -526,13 +487,29 @@ self.addEventListener(
                         ) {
 
                             if (
-                                client.url ===
-                                absoluteTargetUrl
-                                &&
-                                "focus" in client
+                                "focus"
+                                in client
                             ) {
 
-                                return client.focus();
+                                return client
+                                    .focus()
+                                    .then(
+                                        function() {
+
+                                            if (
+                                                "navigate"
+                                                in client
+                                            ) {
+
+                                                return client
+                                                    .navigate(
+                                                        targetUrl
+                                                    );
+
+                                            }
+
+                                        }
+                                    );
 
                             }
 
@@ -543,14 +520,12 @@ self.addEventListener(
                             clients.openWindow
                         ) {
 
-                            return clients.openWindow(
-                                absoluteTargetUrl
-                            );
+                            return clients
+                                .openWindow(
+                                    targetUrl
+                                );
 
                         }
-
-
-                        return null;
 
                     }
                 )
