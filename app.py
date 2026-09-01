@@ -1093,6 +1093,9 @@ def push_public_key():
 # =========================================================
 # PUSH SUBSCRIBE
 # =========================================================
+# =========================================================
+# PUSH SUBSCRIBE
+# =========================================================
 
 @app.route(
     "/push/subscribe",
@@ -1100,148 +1103,188 @@ def push_public_key():
 )
 def push_subscribe():
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    try:
+
+        data = request.get_json(
+            silent=True
+        ) or {}
 
 
-    zone_id = data.get(
-        "zone_id"
-    )
-
-
-    subscription = data.get(
-        "subscription"
-    ) or {}
-
-
-    endpoint = subscription.get(
-        "endpoint"
-    )
-
-
-    keys = subscription.get(
-        "keys"
-    ) or {}
-
-
-    p256dh = keys.get(
-        "p256dh"
-    )
-
-
-    auth_key = keys.get(
-        "auth"
-    )
-
-
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
-
-    if not zone_id:
-
-        return jsonify({
-            "success": False,
-            "error": "zone_id is required.",
-        }), 400
-
-
-    if not endpoint:
-
-        return jsonify({
-            "success": False,
-            "error": "Push endpoint is missing.",
-        }), 400
-
-
-    if not p256dh or not auth_key:
-
-        return jsonify({
-            "success": False,
-            "error": "Push keys are missing.",
-        }), 400
-
-
-    # -----------------------------------------------------
-    # VALIDATE ZONE
-    # -----------------------------------------------------
-
-    zone = db.session.get(
-        Zone,
-        zone_id,
-    )
-
-
-    if not zone:
-
-        return jsonify({
-            "success": False,
-            "error": "Zone not found.",
-        }), 404
-
-
-    # -----------------------------------------------------
-    # EXISTING SUBSCRIPTION?
-    # -----------------------------------------------------
-
-    subscriber = (
-        PushSubscriber.query
-        .filter_by(
-            endpoint=endpoint
+        zone_id = data.get(
+            "zone_id"
         )
-        .first()
-    )
 
+        subscription = data.get(
+            "subscription"
+        ) or {}
 
-    if subscriber:
+        endpoint = subscription.get(
+            "endpoint"
+        )
 
-        subscriber.zone_id = zone.id
+        keys = subscription.get(
+            "keys"
+        ) or {}
 
-        subscriber.p256dh = p256dh
+        p256dh = keys.get(
+            "p256dh"
+        )
 
-        subscriber.auth_key = auth_key
-
-        subscriber.active = True
-
-
-    else:
-
-        subscriber = PushSubscriber(
-
-            zone_id=zone.id,
-
-            endpoint=endpoint,
-
-            p256dh=p256dh,
-
-            auth_key=auth_key,
-
-            active=True,
-
+        auth_key = keys.get(
+            "auth"
         )
 
 
-        db.session.add(
-            subscriber
+        # ---------------------------------------------
+        # VALIDATION
+        # ---------------------------------------------
+
+        if not zone_id:
+
+            return jsonify({
+                "success": False,
+                "error": "zone_id is required.",
+            }), 400
+
+
+        if not endpoint:
+
+            return jsonify({
+                "success": False,
+                "error": "Push endpoint is missing.",
+            }), 400
+
+
+        if not p256dh or not auth_key:
+
+            return jsonify({
+                "success": False,
+                "error": "Push subscription keys are missing.",
+            }), 400
+
+
+        # ---------------------------------------------
+        # ZONE
+        # ---------------------------------------------
+
+        zone = db.session.get(
+            Zone,
+            int(zone_id),
         )
 
 
-    db.session.commit()
+        if not zone:
+
+            return jsonify({
+                "success": False,
+                "error": "Zone not found.",
+            }), 404
 
 
-    return jsonify({
+        # ---------------------------------------------
+        # EXISTING SUBSCRIBER
+        # ---------------------------------------------
 
-        "success":
-            True,
+        subscriber = (
+            PushSubscriber.query
+            .filter_by(
+                endpoint=endpoint
+            )
+            .first()
+        )
 
-        "subscriber_id":
+
+        if subscriber:
+
+            subscriber.zone_id = (
+                zone.id
+            )
+
+            subscriber.p256dh = (
+                p256dh
+            )
+
+            subscriber.auth_key = (
+                auth_key
+            )
+
+            subscriber.active = True
+
+
+        else:
+
+            subscriber = PushSubscriber(
+
+                zone_id=
+                    zone.id,
+
+                endpoint=
+                    endpoint,
+
+                p256dh=
+                    p256dh,
+
+                auth_key=
+                    auth_key,
+
+                active=
+                    True,
+
+            )
+
+            db.session.add(
+                subscriber
+            )
+
+
+        db.session.commit()
+
+
+        app.logger.info(
+            "[LaC Push] Subscriber saved. "
+            "subscriber_id=%s zone_id=%s",
             subscriber.id,
-
-        "zone_id":
             subscriber.zone_id,
+        )
 
-    }), 200
+
+        return jsonify({
+
+            "success":
+                True,
+
+            "subscriber_id":
+                subscriber.id,
+
+            "zone_id":
+                subscriber.zone_id,
+
+            "zone":
+                zone.name,
+
+        }), 200
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        app.logger.exception(
+            "[LaC Push] Subscription failed: %s",
+            exc,
+        )
+
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                str(exc),
+
+        }), 500
 # =========================================================
 # PUBLIC LISTING DETAIL
 # =========================================================
