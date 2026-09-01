@@ -10,6 +10,7 @@ from flask import (
     Flask,
     abort,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -517,6 +518,234 @@ def qr_access(access_code):
 # =========================================================
 # CATEGORY PAGE
 # =========================================================
+# =========================================================
+# PUSH NOTIFICATION SUBSCRIBE
+# =========================================================
+
+@app.route(
+    "/push/subscribe",
+    methods=["POST"],
+)
+def push_subscribe():
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+
+    # -----------------------------------------------------
+    # GET REQUEST DATA
+    # -----------------------------------------------------
+
+    zone_id = data.get(
+        "zone_id"
+    )
+
+
+    subscription = data.get(
+        "subscription"
+    ) or {}
+
+
+    endpoint = subscription.get(
+        "endpoint"
+    )
+
+
+    keys = subscription.get(
+        "keys"
+    ) or {}
+
+
+    p256dh = keys.get(
+        "p256dh"
+    )
+
+
+    auth_key = keys.get(
+        "auth"
+    )
+
+
+    # -----------------------------------------------------
+    # VALIDATION
+    # -----------------------------------------------------
+
+    if not zone_id:
+
+        return jsonify({
+            "success": False,
+            "error": "zone_id is required",
+        }), 400
+
+
+    if not endpoint:
+
+        return jsonify({
+            "success": False,
+            "error": "Push endpoint is missing",
+        }), 400
+
+
+    if not p256dh or not auth_key:
+
+        return jsonify({
+            "success": False,
+            "error": "Push subscription keys are missing",
+        }), 400
+
+
+    # -----------------------------------------------------
+    # VALIDATE ZONE
+    # -----------------------------------------------------
+
+    zone = db.session.get(
+        Zone,
+        zone_id,
+    )
+
+
+    if not zone:
+
+        return jsonify({
+            "success": False,
+            "error": "Zone not found",
+        }), 404
+
+
+    # -----------------------------------------------------
+    # CHECK EXISTING DEVICE
+    # -----------------------------------------------------
+
+    subscriber = (
+        PushSubscriber.query
+        .filter_by(
+            endpoint=endpoint
+        )
+        .first()
+    )
+
+
+    # -----------------------------------------------------
+    # UPDATE EXISTING SUBSCRIBER
+    # -----------------------------------------------------
+
+    if subscriber:
+
+        subscriber.zone_id = (
+            zone.id
+        )
+
+        subscriber.p256dh = (
+            p256dh
+        )
+
+        subscriber.auth_key = (
+            auth_key
+        )
+
+        subscriber.active = (
+            True
+        )
+
+
+    # -----------------------------------------------------
+    # CREATE NEW SUBSCRIBER
+    # -----------------------------------------------------
+
+    else:
+
+        subscriber = PushSubscriber(
+
+            zone_id=zone.id,
+
+            endpoint=endpoint,
+
+            p256dh=p256dh,
+
+            auth_key=auth_key,
+
+            active=True,
+
+        )
+
+
+        db.session.add(
+            subscriber
+        )
+
+
+    # -----------------------------------------------------
+    # SAVE
+    # -----------------------------------------------------
+
+    db.session.commit()
+
+
+    return jsonify({
+
+        "success": True,
+
+        "subscriber_id":
+            subscriber.id,
+
+        "zone_id":
+            zone.id,
+
+        "zone":
+            zone.name,
+
+    }), 200
+
+# =========================================================
+# PUSH NOTIFICATION UNSUBSCRIBE
+# =========================================================
+
+@app.route(
+    "/push/unsubscribe",
+    methods=["POST"],
+)
+def push_unsubscribe():
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+
+    endpoint = data.get(
+        "endpoint"
+    )
+
+
+    if not endpoint:
+
+        return jsonify({
+            "success": False,
+            "error": "Endpoint is required",
+        }), 400
+
+
+    subscriber = (
+        PushSubscriber.query
+        .filter_by(
+            endpoint=endpoint
+        )
+        .first()
+    )
+
+
+    if subscriber:
+
+        subscriber.active = (
+            False
+        )
+
+        db.session.commit()
+
+
+    return jsonify({
+        "success": True,
+    }), 200
 
 @app.route(
     "/q/<code>/<category>"
