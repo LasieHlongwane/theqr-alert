@@ -1041,6 +1041,286 @@ def analytics():
 
       listing_action_rate = 0
 
+
+
+
+    # =========================================================
+# TOP LISTINGS / CONTENT PERFORMANCE
+# =========================================================
+
+    content_performance_rows = (
+
+      db.session.query(
+
+        EngagementEvent.content_item_id,
+
+        db.func.sum(
+            db.case(
+                (
+                    EngagementEvent.event_type
+                    == "listing_view",
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "listing_views"
+        ),
+
+        db.func.sum(
+            db.case(
+                (
+                    EngagementEvent.event_type
+                    == "whatsapp_click",
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "whatsapp_clicks"
+        ),
+
+        db.func.sum(
+            db.case(
+                (
+                    EngagementEvent.event_type
+                    == "call_click",
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "call_clicks"
+        ),
+
+        db.func.sum(
+            db.case(
+                (
+                    EngagementEvent.event_type
+                    == "directions_click",
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "directions_clicks"
+        ),
+
+        db.func.sum(
+            db.case(
+                (
+                    EngagementEvent.event_type
+                    == "share_click",
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "share_clicks"
+        ),
+
+      )
+
+      .filter(
+        EngagementEvent.content_item_id.isnot(
+            None
+        )
+      )
+
+      .group_by(
+        EngagementEvent.content_item_id
+      )
+
+      .all()
+
+    )
+
+
+    content_performance = []
+
+
+    for row in content_performance_rows:
+
+      item = db.session.get(
+        ContentItem,
+        row.content_item_id,
+      )
+
+
+    # Content may have been deleted after
+    # historical engagement was recorded.
+
+      if item is None:
+        continue
+
+
+      views = int(
+        row.listing_views or 0
+      )
+
+      whatsapp = int(
+        row.whatsapp_clicks or 0
+      )
+
+      calls = int(
+        row.call_clicks or 0
+      )
+
+      directions = int(
+        row.directions_clicks or 0
+      )
+
+      shares = int(
+        row.share_clicks or 0
+      )
+
+
+      useful_actions = (
+        whatsapp
+        + calls
+        + directions
+        + shares
+      )
+
+
+    # This is not a unique-user conversion rate.
+    #
+    # One listing view can generate several
+    # actions, so this metric can exceed 100%.
+    #
+    # It means:
+    #
+    # useful actions per 100 listing views.
+
+      if views > 0:
+
+        actions_per_100_views = round(
+            (
+                useful_actions
+                /
+                views
+            )
+            * 100,
+            1,
+        )
+
+      else:
+
+        actions_per_100_views = 0
+
+
+      content_performance.append({
+
+        "id":
+            item.id,
+
+        "title":
+            item.title,
+
+        "category":
+            item.category,
+
+        "zone_id":
+            item.zone_id,
+
+        "views":
+            views,
+
+        "whatsapp":
+            whatsapp,
+
+        "calls":
+            calls,
+
+        "directions":
+            directions,
+
+        "shares":
+            shares,
+
+        "useful_actions":
+            useful_actions,
+
+        "actions_per_100_views":
+            actions_per_100_views,
+
+      })
+
+
+# Highest useful-action listings first.
+# Views break ties.
+
+    content_performance.sort(
+
+      key=lambda row: (
+        row["useful_actions"],
+        row["views"],
+      ),
+
+      reverse=True,
+
+    )
+
+
+    top_content_performance = (
+      content_performance[:10]
+    )
+
+
+# =========================================================
+# MOST VIEWED LISTINGS
+# =========================================================
+
+    most_viewed_listings = sorted(
+
+      content_performance,
+
+      key=lambda row:
+        row["views"],
+
+      reverse=True,
+
+    )[:5]
+
+
+# =========================================================
+# HIGH INTEREST / LOW ACTION
+# =========================================================
+#
+# These are strategically interesting:
+#
+# people are looking at the listing,
+# but nobody is taking a useful action.
+
+    high_interest_low_action = [
+
+      row
+
+      for row in content_performance
+
+      if (
+        row["views"] > 0
+        and
+        row["useful_actions"] == 0
+      )
+
+    ]
+
+
+    high_interest_low_action.sort(
+
+      key=lambda row:
+        row["views"],
+
+      reverse=True,
+
+    )
+
+
+    high_interest_low_action = (
+      high_interest_low_action[:5]
+    )
+
     return render_template(
         "admin/analytics.html",
         total_scans=total_scans,
@@ -1085,6 +1365,9 @@ def analytics():
         listing_action_rate=(
           listing_action_rate
         ),
+        top_content_performance=top_content_performance,
+        most_viewed_listings=most_viewed_listings,
+        high_interest_low_action=high_interest_low_action,
     
     )
 
