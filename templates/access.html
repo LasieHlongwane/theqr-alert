@@ -247,14 +247,13 @@
         >
 
             <div class="lac-install-card">
-
                 <!-- CLOSE BUTTON -->
                 <button
                   type="button"
                   id="lac-install-close"
                   class="lac-install-close"
                   aria-label="Close Quick Access"
-                  title="Close"
+                  
                 >
                   ×
                 </button>
@@ -350,46 +349,37 @@
              PHONE NOTIFICATIONS
         ========================================== -->
 
-        <!-- =========================================
-        LOCAL PUSH NOTIFICATIONS
-        ========================================== -->
-
         <section class="public-notification-link">
 
-         <p class="notification-eyebrow">
-            STAY UPDATED
-         </p>
+            <p class="notification-eyebrow">
+                STAY UPDATED
+            </p>
 
+            <h3>
+                Get Local Notifications
+            </h3>
 
-         <h3>
-            Get {{ zone.name }} Notifications
-         </h3>
+            <p>
+                Receive local updates and notifications
+                straight to your phone.
+            </p>
 
+            <p>
+                Click below and submit the form.
+                IT'S FREE
+            </p>
 
-         <p>
-            Receive local events, deals,
-            opportunities and useful updates
-            directly on this device.
-         </p>
-
-
-         <button
-            type="button"
-            id="lac-enable-notifications"
-            class="public-notification-button"
-         >
-            Enable Local Notifications
-         </button>
-
-
-         <p
-            id="lac-notification-status"
-            class="lac-notification-status"
-         >
-            Free. No account required.
-         </p>
+            <a
+                href="https://who-are-we23indetail.streamlit.app/Join_Local_Alerts"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="public-notification-button"
+            >
+                Receive Notifications
+            </a>
 
         </section>
+
 
         <!-- =========================================
              MAIN LAC WEBSITE
@@ -443,60 +433,44 @@
 <!-- =========================================
      PWA INSTALL SCRIPT
 ========================================== -->
+
+
 <script>
 
-    // =====================================================
-    // REMEMBER CURRENT LaC ACCESS POINT
-    // =====================================================
+const lacCurrentAccessCode =
+    "{{ access_point.code }}";
 
-    const lacCurrentAccessCode =
-        "{{ access_point.code }}";
-
-
-    if (lacCurrentAccessCode) {
-
-        localStorage.setItem(
-            "lac_access_code",
-            lacCurrentAccessCode
-        );
+const lacCurrentAccessPointId =
+    {{ access_point.id | tojson }};
 
 
-        console.log(
-            "[LaC] Remembered access point:",
-            lacCurrentAccessCode
-        );
+if (lacCurrentAccessCode) {
 
-    }
+    localStorage.setItem(
+        "lac_access_code",
+        lacCurrentAccessCode
+    );
+
+}
+
+
+if (lacCurrentAccessPointId) {
+
+    localStorage.setItem(
+        "lac_access_point_id",
+        String(
+            lacCurrentAccessPointId
+        )
+    );
+
+}
 
 </script>
-    
+
 <script
     src="{{ url_for(
         'static',
         filename='js/pwa-install.js'
-    ) }}"
-></script>
-
-
-<script>
-
-    // =====================================================
-    // LaC PUSH CONFIGURATION
-    // =====================================================
-
-    window.LAC_PUSH_CONFIG = {
-
-        zoneId:
-            {{ zone.id | tojson }}
-
-    };
-
-</script>
-
-<script
-    src="{{ url_for(
-        'static',
-        filename='js/push-notifications.js'
     ) }}"
 ></script>
 
