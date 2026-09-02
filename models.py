@@ -910,3 +910,88 @@ class PushSubscriber(db.Model):
             f"zone_id={self.zone_id} "
             f"active={self.active}>"
         )
+
+class PushNotification(db.Model):
+
+    __tablename__ = "push_notifications"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    content_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey("content_items.id"),
+        nullable=True,
+        index=True,
+    )
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey("zones.id"),
+        nullable=False,
+        index=True,
+    )
+
+    title = db.Column(
+        db.String(200),
+        nullable=False,
+    )
+
+    body = db.Column(
+        db.String(500),
+        nullable=False,
+    )
+
+    target_url = db.Column(
+        db.String(500),
+        nullable=False,
+    )
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    total_subscribers = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    sent_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    failed_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    attempts = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    last_error = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.now(),
+    )
+
+    sent_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
