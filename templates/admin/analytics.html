@@ -94,10 +94,6 @@
                 Categories
             </a>
 
-            <a href="{{ url_for('admin.notifications') }}">
-                Notifications
-            </a>
-
             <a
                 href="{{ url_for(
                     'admin.logout'
@@ -293,6 +289,126 @@
             </strong>
 
         </div>
+
+    </section>
+
+    
+
+    <!-- =========================================
+     ENGAGEMENT
+========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+      <div class="analytics-panel-heading">
+
+        <div>
+
+            <p class="admin-eyebrow">
+                USER ACTIONS
+            </p>
+
+            <h2>
+                Listing Engagement
+            </h2>
+
+        </div>
+
+
+        <span class="analytics-period">
+
+            {{
+                listing_action_rate
+            }}%
+            action rate
+
+        </span>
+
+      </div>
+
+
+      <section class="analytics-v2-grid">
+
+
+        <div class="metric-card">
+
+            <span>
+                Listing Views
+            </span>
+
+            <strong>
+                {{ total_listing_views }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                WhatsApp Clicks
+            </span>
+
+            <strong>
+                {{ total_whatsapp_clicks }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Calls
+            </span>
+
+            <strong>
+                {{ total_call_clicks }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Shares
+            </span>
+
+            <strong>
+                {{ total_share_clicks }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Directions
+            </span>
+
+            <strong>
+                {{ total_directions_clicks }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Useful Actions
+            </span>
+
+            <strong>
+                {{ total_useful_actions }}
+            </strong>
+
+        </div>
+
+
+      </section>
 
     </section>
 
