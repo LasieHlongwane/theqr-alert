@@ -6,11 +6,6 @@ from push_service import (
     send_push_notification,
     send_zone_push_notification,
 )
-import json
-from pywebpush import (
-    webpush,
-    WebPushException,
-)
 from urllib.parse import quote
 from flask import send_from_directory
 import cloudinary.uploader
@@ -39,8 +34,9 @@ from models import (
     PendingSubmissionImage,
     Category,
     PushSubscriber,
+    EngagementEvent,
 )
-
+import json
 from admin import admin_bp
 
 
@@ -65,22 +61,18 @@ app.config[
 # WEB PUSH / VAPID CONFIGURATION
 # =========================================================
 
-VAPID_PUBLIC_KEY = os.environ.get(
-    "VAPID_PUBLIC_KEY",
-    "",
-)
+ENGAGEMENT_EVENT_TYPES = {
+    "category_view",
+    "listing_view",
+    "whatsapp_click",
+    "call_click",
+    "share_click",
+    "directions_click",
+}
 
-VAPID_PRIVATE_KEY = os.environ.get(
-    "VAPID_PRIVATE_KEY",
-    "",
-)
-
-VAPID_SUBJECT = os.environ.get(
-    "VAPID_SUBJECT",
-    "https://lac-acess-delivered.onrender.com/",
-)
-
-
+# =========================================================
+# PHONE / WHATSAPP HELPERS
+# =========================================================
 # =========================================================
 # SERVICE WORKER
 # =========================================================
@@ -483,6 +475,35 @@ def content_is_expired(
     )
 
 
+@app.route(
+    "/api/engagement",
+    methods=["POST"],
+)
+def record_engagement():
+
+    data = request.get_json(
+        silent=True,
+    )
+
+    if data is None:
+
+        try:
+
+            data = json.loads(
+                request.get_data(
+                    as_text=True
+                )
+            )
+
+        except Exception:
+
+            data = {}
+
+
+    event_type = (
+        data.get("event_type")
+        or ""
+    ).strip()
 # =========================================================
 # QR ACCESS POINT
 # =========================================================
@@ -612,9 +633,19 @@ def qr_access(access_code):
 def push_unsubscribe():
 
     data = request.get_json(
-        silent=True
-    ) or {}
+      silent=True,
+    )
 
+    if data is None:
+
+      try:
+        data = json.loads(
+            request.get_data(
+                as_text=True
+            )
+        )
+      except Exception:
+        data = {}
 
     endpoint = data.get(
         "endpoint"
@@ -784,6 +815,91 @@ def qr_category(
 # =========================================================
 # PUBLIC VAPID KEY
 # =========================================================
+@app.route(
+    "/api/engagement",
+    methods=["POST"],
+)
+def record_engagement():
+
+    data = request.get_json(
+        silent=True,
+    ) or {}
+
+    event_type = (
+        data.get("event_type")
+        or ""
+    ).strip()
+
+    if event_type not in ENGAGEMENT_EVENT_TYPES:
+
+        return jsonify({
+            "ok": False,
+            "error": "Invalid event type.",
+        }), 400
+
+
+    zone_id = data.get("zone_id")
+
+    access_point_id = data.get(
+        "access_point_id"
+    )
+
+    content_item_id = data.get(
+        "content_item_id"
+    )
+
+    category = (
+        data.get("category")
+        or None
+    )
+
+
+    try:
+
+        event = EngagementEvent(
+
+            event_type=event_type,
+
+            zone_id=zone_id,
+
+            access_point_id=(
+                access_point_id
+            ),
+
+            content_item_id=(
+                content_item_id
+            ),
+
+            category=category,
+
+        )
+
+        db.session.add(event)
+
+        db.session.commit()
+
+
+        return jsonify({
+            "ok": True,
+        }), 201
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[LaC Engagement] "
+            "Unable to record event "
+            "type=%s error=%s",
+            event_type,
+            exc,
+        )
+
+        return jsonify({
+            "ok": False,
+        }), 500
+
 
 @app.route(
     "/push/public-key",
@@ -2639,7 +2755,112 @@ def submission_dashboard(code):
 
 
 
+# =========================================================
+# ADMIN - TEST PUSH NOTIFICATION
+# =========================================================
 
+@app.route(
+    "/admin/push/test/<int:subscriber_id>",
+    methods=["POST"],
+)
+def admin_test_push(
+    subscriber_id,
+):
+
+    # -----------------------------------------------------
+    # ADMIN LOGIN REQUIRED
+    # -----------------------------------------------------
+
+    if not session.get(
+        "lac_admin"
+    ):
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Admin login required.",
+
+        }), 401
+
+
+    # -----------------------------------------------------
+    # FIND SUBSCRIBER
+    # -----------------------------------------------------
+
+    subscriber = db.session.get(
+        PushSubscriber,
+        subscriber_id,
+    )
+
+
+    if not subscriber:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Subscriber not found.",
+
+        }), 404
+
+
+    # -----------------------------------------------------
+    # SEND TEST
+    # -----------------------------------------------------
+
+    success = send_push_notification(
+
+        subscriber=
+            subscriber,
+
+        title=
+            "LaC Notifications Are Live 🔔",
+
+        body=
+            "Your LaC local notification system is working.",
+
+        url=
+            "/app",
+
+        tag=
+            "lac-test",
+
+    )
+
+
+    if not success:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "error":
+                "Push failed. Check Render logs.",
+
+        }), 500
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "message":
+            "Test notification sent.",
+
+        "subscriber_id":
+            subscriber.id,
+
+        "zone_id":
+            subscriber.zone_id,
+
+    }), 200
 # =========================================================
 # HEALTH CHECK
 # =========================================================
@@ -2663,5 +2884,3 @@ if __name__ == "__main__":
     app.run(
         debug=True,
     )
-
-
