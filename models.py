@@ -1003,3 +1003,77 @@ class PushNotification(db.Model):
         db.DateTime,
         nullable=True,
     )
+
+
+class EngagementEvent(db.Model):
+
+    __tablename__ = "engagement_events"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    event_type = db.Column(
+        db.String(50),
+        nullable=False,
+        index=True,
+    )
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey("zones.id"),
+        nullable=True,
+        index=True,
+    )
+
+    access_point_id = db.Column(
+        db.Integer,
+        db.ForeignKey("access_points.id"),
+        nullable=True,
+        index=True,
+    )
+
+    content_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey("content_items.id"),
+        nullable=True,
+        index=True,
+    )
+
+    category = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.now(),
+        index=True,
+    )
+
+    zone = db.relationship(
+        "Zone",
+        backref=db.backref(
+            "engagement_events",
+            lazy=True,
+        ),
+    )
+
+    access_point = db.relationship(
+        "AccessPoint",
+        backref=db.backref(
+            "engagement_events",
+            lazy=True,
+        ),
+    )
+
+    content_item = db.relationship(
+        "ContentItem",
+        backref=db.backref(
+            "engagement_events",
+            lazy=True,
+        ),
+    )
