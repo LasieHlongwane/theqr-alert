@@ -911,6 +911,7 @@ class PushSubscriber(db.Model):
             f"active={self.active}>"
         )
 
+
 class PushNotification(db.Model):
 
     __tablename__ = "push_notifications"
@@ -978,6 +979,13 @@ class PushNotification(db.Model):
         db.Integer,
         nullable=False,
         default=0,
+    )
+
+    __table_args__ = (
+      db.UniqueConstraint(
+        "content_item_id",
+        name="uq_push_notification_content_item",
+      ),
     )
 
     last_error = db.Column(
