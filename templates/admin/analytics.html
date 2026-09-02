@@ -295,6 +295,339 @@
     
 
     <!-- =========================================
+     CONTENT PERFORMANCE
+========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+          <div>
+
+            <p class="admin-eyebrow">
+                CONTENT INTELLIGENCE
+            </p>
+
+            <h2>
+                Top Listings
+            </h2>
+
+          </div>
+
+          <span class="analytics-period">
+            Top 10
+          </span>
+
+        </div>
+
+
+        {% if top_content_performance %}
+
+        <div class="content-performance-table-wrap">
+
+          <table class="content-performance-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Listing
+                    </th>
+
+                    <th>
+                        Views
+                    </th>
+
+                    <th>
+                        WhatsApp
+                    </th>
+
+                    <th>
+                        Calls
+                    </th>
+
+                    <th>
+                        Directions
+                    </th>
+
+                    <th>
+                        Shares
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
+                    <th>
+                        Actions / 100 Views
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for row in top_content_performance %}
+
+                <tr>
+
+                    <td>
+
+                        <div class="performance-listing-title">
+
+                            <a
+                                href="{{ url_for(
+                                    'listing_detail',
+                                    item_id=row.id
+                                ) }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {{ row.title }}
+                            </a>
+
+                            <small>
+
+                                {{
+                                    row.category
+                                    | replace("-", " ")
+                                    | replace("_", " ")
+                                    | title
+                                }}
+
+                            </small>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+                        {{ row.views }}
+                    </td>
+
+
+                    <td>
+                        {{ row.whatsapp }}
+                    </td>
+
+
+                    <td>
+                        {{ row.calls }}
+                    </td>
+
+
+                    <td>
+                        {{ row.directions }}
+                    </td>
+
+
+                    <td>
+                        {{ row.shares }}
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+                            {{ row.useful_actions }}
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        {{ row.actions_per_100_views }}%
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+
+        {% else %}
+
+        <p class="muted">
+          No listing engagement data yet.
+        </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="admin-two-column">
+
+
+    <!-- =====================================
+         MOST VIEWED
+    ====================================== -->
+
+      <div class="admin-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    ATTENTION
+                </p>
+
+                <h2>
+                    Most Viewed Listings
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        {% if most_viewed_listings %}
+
+            {% for row in most_viewed_listings %}
+
+            <div class="content-performance-row">
+
+                <div>
+
+                    <strong>
+                        {{ row.title }}
+                    </strong>
+
+                    <small>
+
+                        {{
+                            row.category
+                            | replace("-", " ")
+                            | replace("_", " ")
+                            | title
+                        }}
+
+                    </small>
+
+                </div>
+
+
+                <div class="content-performance-number">
+
+                    <strong>
+                        {{ row.views }}
+                    </strong>
+
+                    <span>
+                        views
+                    </span>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p class="muted">
+                No listing views yet.
+            </p>
+
+        {% endif %}
+
+      </div>
+
+
+
+    <!-- =====================================
+         HIGH INTEREST / LOW ACTION
+    ====================================== -->
+
+      <div class="admin-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    OPPORTUNITY
+                </p>
+
+                <h2>
+                    Viewed But No Action
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        {% if high_interest_low_action %}
+
+            {% for row in high_interest_low_action %}
+
+            <div class="content-performance-row">
+
+                <div>
+
+                    <strong>
+                        {{ row.title }}
+                    </strong>
+
+                    <small>
+
+                        {{
+                            row.category
+                            | replace("-", " ")
+                            | replace("_", " ")
+                            | title
+                        }}
+
+                    </small>
+
+                </div>
+
+
+                <div class="content-performance-number">
+
+                    <strong>
+                        {{ row.views }}
+                    </strong>
+
+                    <span>
+                        views
+                    </span>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <p class="muted">
+                No high-interest listings without actions.
+            </p>
+
+        {% endif %}
+
+      </div>
+
+
+    </section>
+
+    <!-- =========================================
      ENGAGEMENT
 ========================================== -->
 
