@@ -35,6 +35,7 @@ from models import (
     ContentImage,
     PushNotification,
     PushSubscriber,
+    EngagementEvent,
 )
 ONGOING_CATEGORIES = {
     "property",
@@ -961,6 +962,85 @@ def analytics():
       .count()
     )
 
+
+    # =========================================================
+# ENGAGEMENT ANALYTICS
+# =========================================================
+
+    total_listing_views = (
+      EngagementEvent.query
+      .filter_by(
+        event_type="listing_view"
+      )
+      .count()
+    )
+
+
+    total_whatsapp_clicks = (
+      EngagementEvent.query
+      .filter_by(
+        event_type="whatsapp_click"
+      )
+      .count()
+    )
+
+
+    total_call_clicks = (
+      EngagementEvent.query
+      .filter_by(
+        event_type="call_click"
+      )
+      .count()
+    )
+
+
+    total_share_clicks = (
+      EngagementEvent.query
+      .filter_by(
+        event_type="share_click"
+      )
+      .count()
+    )
+
+
+    total_directions_clicks = (
+      EngagementEvent.query
+      .filter_by(
+        event_type="directions_click"
+      )
+      .count()
+    )
+
+
+    total_useful_actions = (
+
+      total_whatsapp_clicks
+      +
+      total_call_clicks
+      +
+      total_share_clicks
+      +
+      total_directions_clicks
+
+    )
+
+
+    if total_listing_views > 0:
+
+      listing_action_rate = round(
+        (
+            total_useful_actions
+            /
+            total_listing_views
+        )
+        * 100,
+        1,
+      )
+
+    else:
+
+      listing_action_rate = 0
+
     return render_template(
         "admin/analytics.html",
         total_scans=total_scans,
@@ -980,6 +1060,32 @@ def analytics():
         daily_scan_trend=daily_scan_trend,
         recent_scans=recent_scans,
         pending_submissions_count=pending_submissions_count,
+        total_listing_views=total_listing_views,
+
+        total_whatsapp_clicks=(
+          total_whatsapp_clicks
+        ),
+
+        total_call_clicks=(
+          total_call_clicks
+        ),
+
+        total_share_clicks=(
+          total_share_clicks
+        ),
+
+        total_directions_clicks=(
+          total_directions_clicks
+        ),
+
+        total_useful_actions=(
+          total_useful_actions
+        ),
+
+        listing_action_rate=(
+          listing_action_rate
+        ),
+    
     )
 
 
