@@ -474,36 +474,6 @@ def content_is_expired(
         expiry_date < today
     )
 
-
-@app.route(
-    "/api/engagement",
-    methods=["POST"],
-)
-def record_engagement():
-
-    data = request.get_json(
-        silent=True,
-    )
-
-    if data is None:
-
-        try:
-
-            data = json.loads(
-                request.get_data(
-                    as_text=True
-                )
-            )
-
-        except Exception:
-
-            data = {}
-
-
-    event_type = (
-        data.get("event_type")
-        or ""
-    ).strip()
 # =========================================================
 # QR ACCESS POINT
 # =========================================================
