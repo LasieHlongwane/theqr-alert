@@ -3929,14 +3929,7 @@ def approve_submission(
         # =================================================
 
         db.session.commit()
-        print(
-          "[LaC Push Debug] "
-          f"content_id={content.id} "
-          f"category={content.category} "
-          f"active={content.active} "
-          f"notification_eligible={content.notification_eligible} "
-          f"zone_id={content.zone_id}"
-        )
+
 
     except Exception as exc:
 
