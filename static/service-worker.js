@@ -1,10 +1,7 @@
-// =========================================================
-// LaC SERVICE WORKER
-// =========================================================
+const CACHE_VERSION = "lac-v4";
 
-const CACHE_VERSION = "lac-v3";
-
-const STATIC_CACHE = CACHE_VERSION + "-static";
+const STATIC_CACHE =
+    CACHE_VERSION + "-static";
 
 
 const STATIC_ASSETS = [
@@ -26,7 +23,6 @@ self.addEventListener(
         console.log(
             "[LaC SW] Installing..."
         );
-
 
         event.waitUntil(
 
@@ -54,7 +50,6 @@ self.addEventListener(
 
         );
 
-
         self.skipWaiting();
 
     }
@@ -72,7 +67,6 @@ self.addEventListener(
         console.log(
             "[LaC SW] Activating..."
         );
-
 
         event.waitUntil(
 
@@ -100,6 +94,8 @@ self.addEventListener(
                                         );
 
                                     }
+
+                                    return null;
 
                                 }
                             )
@@ -147,7 +143,9 @@ self.addEventListener(
 
 
         // -------------------------------------------------
-        // NAVIGATION
+        // PAGE NAVIGATION
+        //
+        // Prefer fresh network content.
         // -------------------------------------------------
 
         if (
@@ -243,7 +241,7 @@ self.addEventListener(
                                                 cache
                                             ) {
 
-                                                cache.put(
+                                                return cache.put(
                                                     event.request,
                                                     responseClone
                                                 );
@@ -439,11 +437,6 @@ self.addEventListener(
     "notificationclick",
     function (event) {
 
-        console.log(
-            "[LaC SW] Notification clicked."
-        );
-
-
         event.notification.close();
 
 
@@ -463,9 +456,64 @@ self.addEventListener(
         }
 
 
+        let absoluteUrl;
+
+
+        try {
+
+            absoluteUrl =
+                new URL(
+                    targetUrl,
+                    self.location.origin
+                );
+
+
+            // ---------------------------------------------
+            // SECURITY / PWA SCOPE SAFETY
+            //
+            // Never allow a push payload to redirect a
+            // notification click to another origin.
+            // ---------------------------------------------
+
+            if (
+                absoluteUrl.origin !==
+                self.location.origin
+            ) {
+
+                console.warn(
+                    "[LaC SW] External notification URL blocked:",
+                    absoluteUrl.href
+                );
+
+                absoluteUrl =
+                    new URL(
+                        "/app",
+                        self.location.origin
+                    );
+
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "[LaC SW] Invalid notification URL:",
+                error
+            );
+
+
+            absoluteUrl =
+                new URL(
+                    "/app",
+                    self.location.origin
+                );
+
+        }
+
+
         event.waitUntil(
 
-            self.clients
+            clients
                 .matchAll({
 
                     type:
@@ -476,56 +524,97 @@ self.addEventListener(
 
                 })
                 .then(
-                    function (clientList) {
+                    async function (
+                        windowClients
+                    ) {
+
+                        // ---------------------------------
+                        // FIRST:
+                        // Look for an existing LaC window.
+                        // ---------------------------------
 
                         for (
-                            let i = 0;
-                            i < clientList.length;
-                            i++
+                            const client
+                            of windowClients
                         ) {
 
-                            const client =
-                                clientList[i];
+                            try {
 
-
-                            if (
-                                "focus"
-                                in client
-                            ) {
-
-                                return client
-                                    .focus()
-                                    .then(
-                                        function () {
-
-                                            if (
-                                                "navigate"
-                                                in client
-                                            ) {
-
-                                                return client.navigate(
-                                                    targetUrl
-                                                );
-
-                                            }
-
-                                        }
+                                const clientUrl =
+                                    new URL(
+                                        client.url
                                     );
+
+
+                                if (
+                                    clientUrl.origin ===
+                                    self.location.origin
+                                ) {
+
+                                    // Navigate first so the
+                                    // correct listing opens.
+
+                                    if (
+                                        "navigate" in client
+                                    ) {
+
+                                        await client.navigate(
+                                            absoluteUrl.href
+                                        );
+
+                                    }
+
+
+                                    // Then bring LaC forward.
+
+                                    if (
+                                        "focus" in client
+                                    ) {
+
+                                        return client.focus();
+
+                                    }
+
+
+                                    return client;
+
+                                }
+
+
+                            } catch (error) {
+
+                                console.error(
+                                    "[LaC SW] Client navigation error:",
+                                    error
+                                );
 
                             }
 
                         }
 
 
+                        // ---------------------------------
+                        // NO EXISTING WINDOW:
+                        //
+                        // Open the notification target.
+                        // Because this URL is same-origin
+                        // and within the PWA scope, Android
+                        // can route it into the installed
+                        // LaC PWA.
+                        // ---------------------------------
+
                         if (
-                            self.clients.openWindow
+                            clients.openWindow
                         ) {
 
-                            return self.clients.openWindow(
-                                targetUrl
+                            return clients.openWindow(
+                                absoluteUrl.href
                             );
 
                         }
+
+
+                        return null;
 
                     }
                 )
