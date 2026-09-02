@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LAC Notification History
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+    <!-- =========================================
+         NOTIFICATION PAGE ONLY
+         Uses existing LaC admin design.
+    ========================================== -->
+
+    <style>
+
+        /* =========================================
+           NOTIFICATION METRICS
+        ========================================== */
+
+        .notification-metrics {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(160px, 1fr)
+                );
+
+            gap: 16px;
+
+            margin-bottom: 24px;
+        }
+
+
+        /* =========================================
+           FILTER PANEL
+        ========================================== */
+
+        .notification-filters {
+            display: flex;
+
+            align-items: flex-end;
+
+            gap: 14px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .notification-filter-group {
+            display: flex;
+            flex-direction: column;
+
+            gap: 6px;
+
+            min-width: 180px;
+        }
+
+
+        .notification-filter-group label {
+            font-size: 12px;
+
+            font-weight: 700;
+
+            opacity: 0.65;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.04em;
+        }
+
+
+        .notification-filter-group select {
+            width: 100%;
+
+            padding: 11px 12px;
+
+            border-radius: 8px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.12
+                );
+
+            background: #151515;
+
+            color: inherit;
+
+            font: inherit;
+        }
+
+
+        .notification-filter-actions {
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .notification-button {
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 10px 14px;
+
+            border: 0;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            text-decoration: none;
+
+            font: inherit;
+
+            font-size: 13px;
+
+            font-weight: 700;
+        }
+
+
+        .notification-button-primary {
+            background: #f3f3f3;
+
+            color: #111;
+        }
+
+
+        .notification-button-secondary {
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            color: inherit;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.1
+                );
+        }
+
+
+        .notification-button-warning {
+            background: #f0b429;
+
+            color: #111;
+        }
+
+
+        /* =========================================
+           NOTIFICATION HISTORY
+        ========================================== */
+
+        .notification-history {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 14px;
+        }
+
+
+        .notification-history-card {
+            padding: 18px 0;
+
+            border-bottom:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+        }
+
+
+        .notification-history-card:first-child {
+            padding-top: 4px;
+        }
+
+
+        .notification-history-card:last-child {
+            border-bottom: 0;
+
+            padding-bottom: 4px;
+        }
+
+
+        .notification-history-top {
+            display: flex;
+
+            align-items: flex-start;
+
+            justify-content: space-between;
+
+            gap: 18px;
+        }
+
+
+        .notification-history-title {
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 10px;
+        }
+
+
+        .notification-status-icon {
+            font-size: 20px;
+
+            line-height: 1.2;
+        }
+
+
+        .notification-history-title h3 {
+            margin: 0 0 5px;
+
+            font-size: 17px;
+        }
+
+
+        .notification-history-title p {
+            margin: 0;
+
+            opacity: 0.7;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           STATUS
+        ========================================== */
+
+        .notification-status {
+            display: inline-flex;
+
+            align-items: center;
+
+            padding: 6px 9px;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.03em;
+
+            white-space: nowrap;
+        }
+
+
+        .notification-status-sent {
+            background:
+                rgba(
+                    46,
+                    204,
+                    113,
+                    0.13
+                );
+
+            color: #67db98;
+        }
+
+
+        .notification-status-partial_failure {
+            background:
+                rgba(
+                    240,
+                    180,
+                    41,
+                    0.15
+                );
+
+            color: #f0c45c;
+        }
+
+
+        .notification-status-failed {
+            background:
+                rgba(
+                    231,
+                    76,
+                    60,
+                    0.14
+                );
+
+            color: #ff8c80;
+        }
+
+
+        .notification-status-pending {
+            background:
+                rgba(
+                    52,
+                    152,
+                    219,
+                    0.14
+                );
+
+            color: #79bde9;
+        }
+
+
+        .notification-status-no_subscribers {
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            opacity: 0.75;
+        }
+
+
+        /* =========================================
+           DELIVERY DATA
+        ========================================== */
+
+        .notification-delivery-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(100px, 1fr)
+                );
+
+            gap: 10px;
+
+            margin-top: 16px;
+        }
+
+
+        .notification-delivery-stat {
+            padding: 12px;
+
+            border-radius: 8px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.035
+                );
+        }
+
+
+        .notification-delivery-stat span {
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 11px;
+
+            opacity: 0.6;
+
+            text-transform: uppercase;
+        }
+
+
+        .notification-delivery-stat strong {
+            font-size: 18px;
+        }
+
+
+        /* =========================================
+           META
+        ========================================== */
+
+        .notification-meta {
+            display: flex;
+
+            gap: 16px;
+
+            flex-wrap: wrap;
+
+            margin-top: 14px;
+
+            font-size: 12px;
+
+            opacity: 0.65;
+        }
+
+
+        /* =========================================
+           ERROR
+        ========================================== */
+
+        .notification-error {
+            margin-top: 14px;
+
+            padding: 11px 12px;
+
+            border-radius: 8px;
+
+            background:
+                rgba(
+                    231,
+                    76,
+                    60,
+                    0.08
+                );
+
+            color: #ffaaa2;
+
+            font-size: 13px;
+        }
+
+
+        /* =========================================
+           ACTIONS
+        ========================================== */
+
+        .notification-actions {
+            display: flex;
+
+            gap: 9px;
+
+            flex-wrap: wrap;
+
+            align-items: center;
+
+            margin-top: 15px;
+        }
+
+
+        .notification-actions form {
+            margin: 0;
+        }
+
+
+        /* =========================================
+           EMPTY STATE
+        ========================================== */
+
+        .notification-empty {
+            padding: 35px 10px;
+
+            text-align: center;
+
+            opacity: 0.65;
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================== */
+
+        @media (
+            max-width: 700px
+        ) {
+
+            .notification-history-top {
+                flex-direction: column;
+            }
+
+
+            .notification-delivery-grid {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(100px, 1fr)
+                    );
+            }
+
+
+            .notification-filters {
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+
+            .notification-filter-group {
+                width: 100%;
+            }
+
+
+            .notification-filter-actions {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="lac-admin-body">
+
+<div class="admin-shell">
+
+
+    <!-- =========================================
+         NAVIGATION
+    ========================================== -->
+
+    <nav class="admin-nav">
+
+        <div>
+
+            <strong>
+                LaC
+            </strong>
+
+            <span>
+                NETWORK
+            </span>
+
+        </div>
+
+
+        <div class="admin-nav-links">
+
+            <a
+                href="{{ url_for(
+                    'admin.analytics'
+                ) }}"
+            >
+                Analytics
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.zones'
+                ) }}"
+            >
+                Zones
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.access_points'
+                ) }}"
+            >
+                Access Points
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.content_list'
+                ) }}"
+            >
+                Content
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.submissions'
+                ) }}"
+            >
+                Submissions
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.categories'
+                ) }}"
+            >
+                Categories
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.notifications'
+                ) }}"
+            >
+                Notifications
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin.logout'
+                ) }}"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <section class="admin-heading">
+
+        <p class="admin-eyebrow">
+            LOCAL ALERT DELIVERY
+        </p>
+
+        <h1>
+            Push Notifications
+        </h1>
+
+        <p>
+            Monitor notification delivery across
+            the LaC network and identify alerts
+            that need attention.
+        </p>
+
+    </section>
+
+
+    <!-- =========================================
+         PRIMARY METRICS
+    ========================================== -->
+
+    <section class="notification-metrics">
+
+
+        <div class="metric-card">
+
+            <span>
+                Active Subscribers
+            </span>
+
+            <strong>
+                {{ active_subscribers }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Notifications
+            </span>
+
+            <strong>
+                {{ total_notifications }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Successful
+            </span>
+
+            <strong>
+                {{ successful_notifications }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Problems
+            </span>
+
+            <strong>
+                {{ problem_notifications }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Pending
+            </span>
+
+            <strong>
+                {{ pending_notifications }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Pushes Delivered
+            </span>
+
+            <strong>
+                {{ sent_deliveries }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <span>
+                Failed Deliveries
+            </span>
+
+            <strong>
+                {{ failed_deliveries }}
+            </strong>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =========================================
+         FILTERS
+    ========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    DELIVERY CONTROL
+                </p>
+
+                <h2>
+                    Filter Notification History
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="GET"
+            action="{{ url_for(
+                'admin.notifications'
+            ) }}"
+            class="notification-filters"
+        >
+
+
+            <!-- ZONE -->
+
+            <div class="notification-filter-group">
+
+                <label for="zone_id">
+                    Zone
+                </label>
+
+                <select
+                    name="zone_id"
+                    id="zone_id"
+                >
+
+                    <option value="">
+                        All Zones
+                    </option>
+
+
+                    {% for zone in zones %}
+
+                        <option
+                            value="{{ zone.id }}"
+
+                            {% if
+                                selected_zone_id
+                                ==
+                                zone.id
+                            %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{ zone.name }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="notification-filter-group">
+
+                <label for="status">
+                    Status
+                </label>
+
+                <select
+                    name="status"
+                    id="status"
+                >
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+
+                    {% for status in [
+                        "sent",
+                        "partial_failure",
+                        "failed",
+                        "pending",
+                        "no_subscribers"
+                    ] %}
+
+                        <option
+                            value="{{ status }}"
+
+                            {% if
+                                selected_status
+                                ==
+                                status
+                            %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{
+                                status
+                                |replace(
+                                    "_",
+                                    " "
+                                )
+                                |title
+                            }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="notification-filter-actions">
+
+                <button
+                    type="submit"
+                    class="
+                        notification-button
+                        notification-button-primary
+                    "
+                >
+                    Apply Filter
+                </button>
+
+
+                <a
+                    href="{{ url_for(
+                        'admin.notifications'
+                    ) }}"
+                    class="
+                        notification-button
+                        notification-button-secondary
+                    "
+                >
+                    Clear
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- =========================================
+         NOTIFICATION HISTORY
+    ========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    DELIVERY HISTORY
+                </p>
+
+                <h2>
+                    Recent Notifications
+                </h2>
+
+            </div>
+
+
+            <span class="analytics-period">
+
+                Up to 200 records
+
+            </span>
+
+        </div>
+
+
+        {% if notifications %}
+
+
+            <div class="notification-history">
+
+
+                {% for item in notifications %}
+
+
+                    {% set zone =
+                        zone_lookup.get(
+                            item.zone_id
+                        )
+                    %}
+
+
+                    <div class="notification-history-card">
+
+
+                        <!-- =============================
+                             TITLE + STATUS
+                        ============================== -->
+
+                        <div class="notification-history-top">
+
+
+                            <div class="notification-history-title">
+
+
+                                <div class="notification-status-icon">
+
+                                    {% if item.status == "sent" %}
+
+                                        ✓
+
+                                    {% elif
+                                        item.status
+                                        ==
+                                        "partial_failure"
+                                    %}
+
+                                        ⚠
+
+                                    {% elif item.status == "failed" %}
+
+                                        ✕
+
+                                    {% elif item.status == "pending" %}
+
+                                        ◷
+
+                                    {% else %}
+
+                                        ○
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div>
+
+                                    <h3>
+                                        {{ item.title }}
+                                    </h3>
+
+                                    <p>
+                                        {{ item.body }}
+                                    </p>
+
+                                </div>
+
+
+                            </div>
+
+
+                            <span
+                                class="
+                                    notification-status
+                                    notification-status-{{ item.status }}
+                                "
+                            >
+
+                                {{
+                                    item.status
+                                    |replace(
+                                        "_",
+                                        " "
+                                    )
+                                }}
+
+                            </span>
+
+
+                        </div>
+
+
+                        <!-- =============================
+                             DELIVERY COUNTS
+                        ============================== -->
+
+                        <div class="notification-delivery-grid">
+
+
+                            <div class="notification-delivery-stat">
+
+                                <span>
+                                    Subscribers
+                                </span>
+
+                                <strong>
+                                    {{
+                                        item.total_subscribers
+                                    }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="notification-delivery-stat">
+
+                                <span>
+                                    Sent
+                                </span>
+
+                                <strong>
+                                    {{ item.sent_count }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="notification-delivery-stat">
+
+                                <span>
+                                    Failed
+                                </span>
+
+                                <strong>
+                                    {{ item.failed_count }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="notification-delivery-stat">
+
+                                <span>
+                                    Attempts
+                                </span>
+
+                                <strong>
+                                    {{ item.attempts }}
+                                </strong>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- =============================
+                             META
+                        ============================== -->
+
+                        <div class="notification-meta">
+
+
+                            <span>
+
+                                📍
+
+                                {% if zone %}
+
+                                    {{ zone.name }}
+
+                                {% else %}
+
+                                    Unknown Zone
+
+                                {% endif %}
+
+                            </span>
+
+
+                            {% if item.created_at %}
+
+                                <span>
+
+                                    Created
+
+                                    {{
+                                        item.created_at.strftime(
+                                            "%d %b %Y %H:%M"
+                                        )
+                                    }}
+
+                                </span>
+
+                            {% endif %}
+
+
+                            {% if item.sent_at %}
+
+                                <span>
+
+                                    Sent
+
+                                    {{
+                                        item.sent_at.strftime(
+                                            "%d %b %Y %H:%M"
+                                        )
+                                    }}
+
+                                </span>
+
+                            {% endif %}
+
+
+                            {% if item.content_item_id %}
+
+                                <span>
+
+                                    Content #
+
+                                    {{ item.content_item_id }}
+
+                                </span>
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                        <!-- =============================
+                             ERROR
+                        ============================== -->
+
+                        {% if item.last_error %}
+
+                            <div class="notification-error">
+
+                                <strong>
+                                    Delivery note:
+                                </strong>
+
+                                {{ item.last_error }}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- =============================
+                             ACTIONS
+                        ============================== -->
+
+                        <div class="notification-actions">
+
+
+                            {% if item.target_url %}
+
+                                <a
+                                    href="{{ item.target_url }}"
+                                    target="_blank"
+
+                                    class="
+                                        notification-button
+                                        notification-button-secondary
+                                    "
+                                >
+                                    View Listing →
+                                </a>
+
+                            {% endif %}
+
+
+                            {% if item.status in [
+                                "failed",
+                                "partial_failure",
+                                "pending",
+                                "no_subscribers"
+                            ] %}
+
+                                <form
+                                    method="POST"
+
+                                    action="{{ url_for(
+                                        'admin.retry_notification',
+                                        notification_id=item.id
+                                    ) }}"
+                                >
+
+                                    <button
+                                        type="submit"
+
+                                        class="
+                                            notification-button
+                                            notification-button-warning
+                                        "
+
+                                        onclick="
+                                            return confirm(
+                                                'Retry this notification?'
+                                            );
+                                        "
+                                    >
+                                        Retry Notification
+                                    </button>
+
+                                </form>
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="notification-empty">
+
+                <p>
+                    No push notification history
+                    has been recorded yet.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+</div>
+
+</body>
+
+</html>
