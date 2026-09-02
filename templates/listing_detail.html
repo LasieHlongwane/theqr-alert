@@ -16,7 +16,7 @@
     >
 
     <title>
-        LaC | Local Access
+        {{ item.title }} | LaC
     </title>
 
 
@@ -87,6 +87,10 @@
 
 <div class="lac-page">
 
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
 
     <header class="access-header">
 
@@ -258,8 +262,10 @@
 
                         {% if category.slug == "property" %}
                             🏠 Rent
+
                         {% elif category.slug == "events" %}
                             🎟️ Entry
+
                         {% else %}
                             💰 Price / Deal
                         {% endif %}
@@ -276,6 +282,7 @@
 
 
                 {% if category.slug == "events" %}
+
 
                     {% if item.event_date %}
 
@@ -347,6 +354,7 @@
 
                     {% endif %}
 
+
                 {% endif %}
 
 
@@ -354,10 +362,10 @@
 
 
             <!-- =================================
-                 CONTACT
+                 CONTACT / USEFUL ACTIONS
             ================================== -->
 
-            {% if item.contact %}
+            {% if item.contact or item.venue %}
 
             <section class="listing-detail-contact">
 
@@ -366,32 +374,79 @@
                 </p>
 
                 <h2>
-                    Contact the listing owner
+                    Take action
                 </h2>
+
+
+                {% if item.contact %}
 
                 <p>
                     {{ item.contact }}
                 </p>
 
+                {% endif %}
+
 
                 <div class="listing-actions">
+
+
+                    <!-- =============================
+                         WHATSAPP
+                    ============================== -->
+
+                    {% if item.contact %}
 
                     <a
                         href="{{ item.contact|whatsapp_link }}"
                         class="listing-action-button whatsapp-button"
                         target="_blank"
                         rel="noopener noreferrer"
+                        data-lac-event="whatsapp_click"
                     >
                         💬 WhatsApp
                     </a>
 
+                    {% endif %}
+
+
+                    <!-- =============================
+                         PHONE CALL
+                    ============================== -->
+
+                    {% if item.contact %}
 
                     <a
                         href="{{ item.contact|phone_link }}"
                         class="listing-action-button call-button"
+                        data-lac-event="call_click"
                     >
                         📞 Call
                     </a>
+
+                    {% endif %}
+
+
+                    <!-- =============================
+                         DIRECTIONS
+
+                         Uses the existing venue field.
+                         No directions_url DB field needed.
+                    ============================== -->
+
+                    {% if item.venue %}
+
+                    <a
+                        href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
+                        class="listing-action-button directions-button"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-lac-event="directions_click"
+                    >
+                        🧭 Directions
+                    </a>
+
+                    {% endif %}
+
 
                 </div>
 
@@ -406,7 +461,9 @@
 
             <button
                 type="button"
+                id="share-listing"
                 class="listing-share-button"
+                data-lac-event="share_click"
                 onclick="shareListing()"
             >
                 ↗ Share Listing
@@ -423,6 +480,10 @@
 
     </main>
 
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
 
     <footer class="public-footer">
 
@@ -443,7 +504,9 @@
 </div>
 
 
-<!-- IMAGE MODAL -->
+<!-- =========================================
+     IMAGE MODAL
+========================================== -->
 
 <div
     id="image-modal"
@@ -487,18 +550,23 @@
                 "image-modal-content"
             );
 
+
         image.src =
             button.dataset.imageUrl;
 
+
         image.alt =
             button.dataset.imageAlt || "";
+
 
         modal.classList.add(
             "show"
         );
 
+
         document.body.style.overflow =
             "hidden";
+
     }
 
 
@@ -514,15 +582,19 @@
                 "image-modal-content"
             );
 
+
         modal.classList.remove(
             "show"
         );
 
+
         image.src =
             "";
 
+
         document.body.style.overflow =
             "";
+
     }
 
 
@@ -570,6 +642,10 @@
 
         try {
 
+            // -------------------------------------
+            // MOBILE NATIVE SHARE
+            // -------------------------------------
+
             if (
                 navigator.share
             ) {
@@ -578,7 +654,14 @@
                     shareData
                 );
 
-            } else if (
+            }
+
+
+            // -------------------------------------
+            // FALLBACK - COPY LINK
+            // -------------------------------------
+
+            else if (
                 navigator.clipboard
             ) {
 
@@ -586,8 +669,10 @@
                     window.location.href
                 );
 
+
                 feedback.textContent =
                     "Listing link copied ✓";
+
 
                 setTimeout(
                     function() {
@@ -599,14 +684,25 @@
                     2500
                 );
 
-            } else {
+            }
+
+
+            // -------------------------------------
+            // FINAL FALLBACK
+            // -------------------------------------
+
+            else {
 
                 feedback.textContent =
                     window.location.href;
 
             }
 
+
         } catch (error) {
+
+            // User cancelling the native share
+            // dialog is not an application error.
 
             if (
                 error.name !== "AbortError"
@@ -622,6 +718,70 @@
     }
 
 </script>
+
+
+<!-- =========================================
+     ENGAGEMENT TRACKING CONFIGURATION
+========================================== -->
+
+<script>
+
+window.LAC_ENGAGEMENT_CONFIG = {
+
+    zoneId:
+        {{ item.zone_id | tojson }},
+
+    accessPointId:
+        null,
+
+    contentItemId:
+        {{ item.id | tojson }},
+
+    category:
+        {{ item.category | tojson }}
+
+};
+
+</script>
+
+
+<!-- =========================================
+     ENGAGEMENT TRACKING ENGINE
+========================================== -->
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/engagement.js'
+    ) }}"
+></script>
+
+
+<!-- =========================================
+     RECORD LISTING VIEW
+========================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        if (
+            window.LaCTrack
+        ) {
+
+            window.LaCTrack(
+                "listing_view"
+            );
+
+        }
+
+    }
+);
+
+</script>
+
 
 </body>
 
