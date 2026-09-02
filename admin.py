@@ -16,6 +16,7 @@ from flask import (
     session,
     url_for,
     send_file,
+    current_app
 )
 
 from sqlalchemy import func
@@ -32,18 +33,20 @@ from models import (
     PendingSubmission,
     PendingSubmissionImage,
     ContentImage,
+    PushNotification,
+    PushSubscriber,
 )
-
-from qr_generator import generate_access_qr
-ARCHIVE_GRACE_DAYS = 7
-EXPIRING_SOON_DAYS = 3
-
-admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 ONGOING_CATEGORIES = {
     "property",
     "transport",
     "services",
 }
+from qr_generator import generate_access_qr
+ARCHIVE_GRACE_DAYS = 7
+EXPIRING_SOON_DAYS = 3
+
+admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+
 
 def admin_logged_in():
     return session.get("lac_admin") is True
@@ -552,6 +555,77 @@ def get_access_point_qr_url(access_point):
     )
 
 
+def _get_content_workflow(
+    category,
+    content_type,
+):
+
+    category = (
+        category or ""
+    ).strip().lower()
+
+    content_type = (
+        content_type or ""
+    ).strip().lower()
+
+
+    category_workflows = (
+        ADMIN_CONTENT_WORKFLOWS.get(
+            category,
+            {},
+        )
+    )
+
+    workflow = (
+        category_workflows.get(
+            content_type
+        )
+    )
+
+    if workflow:
+        return workflow
+
+
+    # -----------------------------------------
+    # EVENTS ALWAYS EXPIRE
+    # -----------------------------------------
+
+    if category == "events":
+
+        return {
+            "lifetime_type": "time_specific",
+            "notification_eligible": True,
+        }
+
+
+    # -----------------------------------------
+    # ONLY THESE CATEGORIES ARE ONGOING
+    # -----------------------------------------
+
+    ongoing_categories = {
+        "property",
+        "transport",
+        "services",
+    }
+
+    if category in ongoing_categories:
+
+        return {
+            "lifetime_type": "ongoing",
+            "notification_eligible": False,
+        }
+
+
+    # -----------------------------------------
+    # EVERYTHING ELSE EXPIRES
+    # -----------------------------------------
+
+    return {
+        "lifetime_type": "time_specific",
+        "notification_eligible": True,
+    }
+
+
 
 
 def create_access_point_qr(access_point):
@@ -908,6 +982,430 @@ def analytics():
         pending_submissions_count=pending_submissions_count,
     )
 
+
+@admin_bp.route(
+    "/notifications"
+)
+def notifications():
+
+    require_admin()
+
+    # =====================================================
+    # FILTERS
+    # =====================================================
+
+    selected_zone_id = request.args.get(
+        "zone_id",
+        type=int,
+    )
+
+    selected_status = (
+        request.args.get(
+            "status",
+            "",
+        )
+        .strip()
+    )
+
+
+    # =====================================================
+    # NOTIFICATION QUERY
+    # =====================================================
+
+    query = (
+        PushNotification.query
+        .order_by(
+            PushNotification.created_at.desc()
+        )
+    )
+
+
+    if selected_zone_id:
+
+        query = query.filter(
+            PushNotification.zone_id ==
+            selected_zone_id
+        )
+
+
+    if selected_status:
+
+        query = query.filter(
+            PushNotification.status ==
+            selected_status
+        )
+
+
+    notifications = (
+        query
+        .limit(200)
+        .all()
+    )
+
+
+    # =====================================================
+    # ZONES
+    # =====================================================
+
+    zones = (
+        Zone.query
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+
+    zone_lookup = {
+        zone.id: zone
+        for zone in zones
+    }
+
+
+    # =====================================================
+    # DASHBOARD COUNTERS
+    # =====================================================
+
+    active_subscribers = (
+        PushSubscriber.query
+        .filter_by(
+            active=True
+        )
+        .count()
+    )
+
+
+    total_notifications = (
+        PushNotification.query
+        .count()
+    )
+
+
+    successful_notifications = (
+        PushNotification.query
+        .filter(
+            PushNotification.status ==
+            "sent"
+        )
+        .count()
+    )
+
+
+    problem_notifications = (
+        PushNotification.query
+        .filter(
+            PushNotification.status.in_(
+                [
+                    "failed",
+                    "partial_failure",
+                ]
+            )
+        )
+        .count()
+    )
+
+
+    pending_notifications = (
+        PushNotification.query
+        .filter(
+            PushNotification.status ==
+            "pending"
+        )
+        .count()
+    )
+
+
+    # =====================================================
+    # TOTAL DELIVERY COUNTS
+    # =====================================================
+
+    sent_deliveries = (
+        db.session.query(
+            db.func.coalesce(
+                db.func.sum(
+                    PushNotification.sent_count
+                ),
+                0,
+            )
+        )
+        .scalar()
+    )
+
+
+    failed_deliveries = (
+        db.session.query(
+            db.func.coalesce(
+                db.func.sum(
+                    PushNotification.failed_count
+                ),
+                0,
+            )
+        )
+        .scalar()
+    )
+
+
+    return render_template(
+        "admin/notifications.html",
+
+        notifications=
+            notifications,
+
+        zones=
+            zones,
+
+        zone_lookup=
+            zone_lookup,
+
+        selected_zone_id=
+            selected_zone_id,
+
+        selected_status=
+            selected_status,
+
+        active_subscribers=
+            active_subscribers,
+
+        total_notifications=
+            total_notifications,
+
+        successful_notifications=
+            successful_notifications,
+
+        problem_notifications=
+            problem_notifications,
+
+        pending_notifications=
+            pending_notifications,
+
+        sent_deliveries=
+            sent_deliveries,
+
+        failed_deliveries=
+            failed_deliveries,
+    )
+
+@admin_bp.route(
+    "/notifications/<int:notification_id>/retry",
+    methods=["POST"],
+)
+def retry_notification(
+    notification_id,
+):
+
+    require_admin()
+
+
+    notification = (
+        PushNotification.query
+        .get_or_404(
+            notification_id
+        )
+    )
+
+
+    # =====================================================
+    # ONLY RETRY PROBLEM NOTIFICATIONS
+    # =====================================================
+
+    allowed_statuses = {
+        "failed",
+        "partial_failure",
+        "pending",
+        "no_subscribers",
+    }
+
+
+    if (
+        notification.status
+        not in allowed_statuses
+    ):
+
+        flash(
+            "This notification does not need to be retried.",
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "admin.notifications"
+            )
+        )
+
+
+    try:
+
+        notification.attempts += 1
+
+        notification.status = (
+            "pending"
+        )
+
+        db.session.commit()
+
+
+        # =================================================
+        # ATTEMPT DELIVERY
+        # =================================================
+
+        result = (
+            send_zone_push_notification(
+
+                zone_id=
+                    notification.zone_id,
+
+                title=
+                    notification.title,
+
+                body=
+                    notification.body,
+
+                url=
+                    notification.target_url,
+
+                tag=
+                    (
+                        f"notification-"
+                        f"{notification.id}"
+                    ),
+
+            )
+        )
+
+
+        notification.total_subscribers = (
+            result["total"]
+        )
+
+        notification.sent_count = (
+            result["sent"]
+        )
+
+        notification.failed_count = (
+            result["failed"]
+        )
+
+
+        # =================================================
+        # DETERMINE NEW STATUS
+        # =================================================
+
+        if (
+            result["sent"] > 0
+            and
+            result["failed"] == 0
+        ):
+
+            notification.status = (
+                "sent"
+            )
+
+            notification.sent_at = (
+                datetime.utcnow()
+            )
+
+            notification.last_error = (
+                None
+            )
+
+
+        elif (
+            result["sent"] > 0
+            and
+            result["failed"] > 0
+        ):
+
+            notification.status = (
+                "partial_failure"
+            )
+
+            notification.sent_at = (
+                datetime.utcnow()
+            )
+
+            notification.last_error = (
+                f"{result['failed']} "
+                "subscriber delivery failures."
+            )
+
+
+        elif (
+            result["total"] == 0
+        ):
+
+            notification.status = (
+                "no_subscribers"
+            )
+
+            notification.last_error = (
+                "No active subscribers "
+                "were found for this zone."
+            )
+
+
+        else:
+
+            notification.status = (
+                "failed"
+            )
+
+            notification.last_error = (
+                "Push delivery failed "
+                "for all subscribers."
+            )
+
+
+        db.session.commit()
+
+
+        current_app.logger.info(
+            "[LaC Push] Notification retried "
+            "notification_id=%s "
+            "zone_id=%s "
+            "sent=%s "
+            "failed=%s "
+            "status=%s",
+            notification.id,
+            notification.zone_id,
+            notification.sent_count,
+            notification.failed_count,
+            notification.status,
+        )
+
+
+        flash(
+            (
+                "Notification retry completed. "
+                f"Sent: {notification.sent_count}, "
+                f"Failed: {notification.failed_count}."
+            ),
+            "success",
+        )
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[LaC Push] Retry failed "
+            "notification_id=%s "
+            "error=%s",
+            notification.id,
+            exc,
+        )
+
+        flash(
+            "Unable to retry notification.",
+            "error",
+        )
+
+
+    return redirect(
+        url_for(
+            "admin.notifications"
+        )
+    )
 
 @admin_bp.route("/zones")
 def zones():
@@ -1912,77 +2410,6 @@ ADMIN_CONTENT_WORKFLOWS = {
 # ============================================================
 # GET CONTENT WORKFLOW
 # ============================================================
-
-def _get_content_workflow(
-    category,
-    content_type,
-):
-
-    category = (
-        category or ""
-    ).strip().lower()
-
-    content_type = (
-        content_type or ""
-    ).strip().lower()
-
-
-    category_workflows = (
-        ADMIN_CONTENT_WORKFLOWS.get(
-            category,
-            {},
-        )
-    )
-
-    workflow = (
-        category_workflows.get(
-            content_type
-        )
-    )
-
-    if workflow:
-        return workflow
-
-
-    # -----------------------------------------
-    # EVENTS ALWAYS EXPIRE
-    # -----------------------------------------
-
-    if category == "events":
-
-        return {
-            "lifetime_type": "time_specific",
-            "notification_eligible": True,
-        }
-
-
-    # -----------------------------------------
-    # ONLY THESE CATEGORIES ARE ONGOING
-    # -----------------------------------------
-
-    ongoing_categories = {
-        "property",
-        "transport",
-        "services",
-    }
-
-    if category in ongoing_categories:
-
-        return {
-            "lifetime_type": "ongoing",
-            "notification_eligible": False,
-        }
-
-
-    # -----------------------------------------
-    # EVERYTHING ELSE EXPIRES
-    # -----------------------------------------
-
-    return {
-        "lifetime_type": "time_specific",
-        "notification_eligible": True,
-    }
-
 
 # ============================================================
 # DATE VALIDATION + NORMALIZATION
@@ -3950,31 +4377,19 @@ def approve_submission(
                 "admin.submissions"
             )
         )
-         # =====================================================
-    # PUSH NOTIFICATION AFTER SUCCESSFUL DATABASE COMMIT
+
     # =====================================================
-
-    print(
-        "[LaC Push Debug] Reached notification section "
-        f"content_id={content.id}"
-    )
-
-
+    # SUCCESS
+    # =====================================================
+        # =====================================================
+    # PUSH NOTIFICATION AFTER SUCCESSFUL CONTENT COMMIT
+    # =====================================================
     if (
         content.active
         and content.notification_eligible
     ):
 
-        print(
-            "[LaC Push Debug] Content is eligible. "
-            "Calling send_zone_push_notification..."
-        )
-
         try:
-
-            # ---------------------------------------------
-            # BUILD CATEGORY LABEL
-            # ---------------------------------------------
 
             category_label = (
                 content.category
@@ -3982,11 +4397,6 @@ def approve_submission(
                 .replace("_", " ")
                 .title()
             )
-
-
-            # ---------------------------------------------
-            # BUILD NOTIFICATION
-            # ---------------------------------------------
 
             notification_title = (
                 f"New {category_label} in {zone.name}"
@@ -4000,13 +4410,37 @@ def approve_submission(
                 f"/listing/{content.id}"
             )
 
+            # =================================================
+            # DUPLICATE PROTECTION
+            # =================================================
 
-            # ---------------------------------------------
-            # SEND TO THIS ZONE
-            # ---------------------------------------------
+            existing_notification = (
+                PushNotification.query
+                .filter_by(
+                    content_item_id=content.id
+                )
+                .first()
+            )
 
-            push_result = (
-                send_zone_push_notification(
+            if existing_notification:
+
+                current_app.logger.info(
+                    "[LaC Push] Duplicate notification skipped "
+                    "content_id=%s notification_id=%s",
+                    content.id,
+                    existing_notification.id,
+                )
+
+            else:
+
+                # =============================================
+                # CREATE HISTORY / OUTBOX RECORD
+                # =============================================
+
+                push_record = PushNotification(
+
+                    content_item_id=
+                        content.id,
 
                     zone_id=
                         content.zone_id,
@@ -4017,49 +4451,172 @@ def approve_submission(
                     body=
                         notification_body,
 
-                    url=
+                    target_url=
                         notification_url,
 
-                    tag=
-                        f"content-{content.id}",
+                    status=
+                        "pending",
+
+                    total_subscribers=
+                        0,
+
+                    sent_count=
+                        0,
+
+                    failed_count=
+                        0,
+
+                    attempts=
+                        0,
 
                 )
-            )
+
+                db.session.add(
+                    push_record
+                )
+
+                db.session.commit()
 
 
-            print(
-                "[LaC Push] Approval notification processed "
-                f"content_id={content.id} "
-                f"zone_id={content.zone_id} "
-                f"total={push_result['total']} "
-                f"sent={push_result['sent']} "
-                f"failed={push_result['failed']}"
-            )
+                # =============================================
+                # ATTEMPT DELIVERY
+                # =============================================
+
+                push_record.attempts += 1
+
+                push_result = (
+                    send_zone_push_notification(
+
+                        zone_id=
+                            content.zone_id,
+
+                        title=
+                            notification_title,
+
+                        body=
+                            notification_body,
+
+                        url=
+                            notification_url,
+
+                        tag=
+                            f"content-{content.id}",
+
+                    )
+                )
+
+
+                # =============================================
+                # SAVE RESULT
+                # =============================================
+
+                push_record.total_subscribers = (
+                    push_result["total"]
+                )
+
+                push_record.sent_count = (
+                    push_result["sent"]
+                )
+
+                push_record.failed_count = (
+                    push_result["failed"]
+                )
+
+
+                if (
+                    push_result["sent"] > 0
+                    and
+                    push_result["failed"] == 0
+                ):
+
+                    push_record.status = "sent"
+
+                    push_record.sent_at = (
+                        datetime.utcnow()
+                    )
+
+                    push_record.last_error = None
+
+
+                elif (
+                    push_result["sent"] > 0
+                    and
+                    push_result["failed"] > 0
+                ):
+
+                    push_record.status = (
+                        "partial_failure"
+                    )
+
+                    push_record.sent_at = (
+                        datetime.utcnow()
+                    )
+
+                    push_record.last_error = (
+                        f"{push_result['failed']} "
+                        "subscriber delivery failures."
+                    )
+
+
+                elif push_result["total"] == 0:
+
+                    push_record.status = (
+                        "no_subscribers"
+                    )
+
+                    push_record.last_error = (
+                        "No active subscribers "
+                        "were found for this zone."
+                    )
+
+
+                else:
+
+                    push_record.status = "failed"
+
+                    push_record.last_error = (
+                        "Push delivery failed for "
+                        "all subscribers."
+                    )
+
+
+                db.session.commit()
+
+
+                current_app.logger.info(
+                    "[LaC Push] Approval notification processed "
+                    "notification_id=%s "
+                    "content_id=%s "
+                    "zone_id=%s "
+                    "total=%s "
+                    "sent=%s "
+                    "failed=%s "
+                    "status=%s",
+                    push_record.id,
+                    content.id,
+                    content.zone_id,
+                    push_record.total_subscribers,
+                    push_record.sent_count,
+                    push_record.failed_count,
+                    push_record.status,
+                )
 
 
         except Exception as exc:
 
-            print(
+            db.session.rollback()
+
+            current_app.logger.exception(
                 "[LaC Push] Approval notification failed "
-                f"content_id={content.id} "
-                f"zone_id={content.zone_id} "
-                f"error={repr(exc)}"
+                "content_id=%s "
+                "zone_id=%s "
+                "error=%s",
+                content.id,
+                content.zone_id,
+                exc,
             )
 
 
-    else:
-
-        print(
-            "[LaC Push] Notification skipped "
-            f"content_id={content.id} "
-            f"active={content.active} "
-            f"eligible={content.notification_eligible}"
-        )
-
-
-    # =====================================================
-    # SUCCESS
-    # =====================================================
 
     flash(
         "Submission approved and published.",
