@@ -39,7 +39,11 @@ ARCHIVE_GRACE_DAYS = 7
 EXPIRING_SOON_DAYS = 3
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
+ONGOING_CATEGORIES = {
+    "property",
+    "transport",
+    "services",
+}
 
 def admin_logged_in():
     return session.get("lac_admin") is True
@@ -3748,9 +3752,13 @@ def approve_submission(
             or "available"
         )
 
-        notification_eligible = bool(
-            submission.notification_eligible
-        )
+        if submission.category in ONGOING_CATEGORIES:
+
+          notification_eligible = False
+
+        else:
+
+          notification_eligible = True
 
         # -------------------------------------------------
         # For old submissions created before lifecycle
@@ -3921,6 +3929,14 @@ def approve_submission(
         # =================================================
 
         db.session.commit()
+        print(
+          "[LaC Push Debug] "
+          f"content_id={content.id} "
+          f"category={content.category} "
+          f"active={content.active} "
+          f"notification_eligible={content.notification_eligible} "
+          f"zone_id={content.zone_id}"
+        )
 
     except Exception as exc:
 
