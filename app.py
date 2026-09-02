@@ -281,7 +281,74 @@ def send_push_notification(
 
         return False
 
+# =========================================================
+# TEST PUSH NOTIFICATION
+# =========================================================
 
+@app.route(
+    "/admin/push/test-latest",
+    methods=["GET"],
+)
+def admin_test_latest_push():
+
+    # Require LaC admin login
+    if not session.get("lac_admin"):
+        return jsonify({
+            "success": False,
+            "error": "Admin login required.",
+        }), 401
+
+
+    # Get latest active subscriber
+    subscriber = (
+        PushSubscriber.query
+        .filter_by(active=True)
+        .order_by(
+            PushSubscriber.id.desc()
+        )
+        .first()
+    )
+
+
+    if not subscriber:
+        return jsonify({
+            "success": False,
+            "error": "No active push subscribers found.",
+        }), 404
+
+
+    success = send_push_notification(
+        subscriber=subscriber,
+
+        title="LaC Test Notification 🔔",
+
+        body=(
+            "Your LaC local notification "
+            "system is working."
+        ),
+
+        url="/app",
+
+        tag="lac-phone-test",
+    )
+
+
+    if not success:
+        return jsonify({
+            "success": False,
+            "error": (
+                "Push delivery failed. "
+                "Check Render logs."
+            ),
+        }), 500
+
+
+    return jsonify({
+        "success": True,
+        "message": "Test notification sent.",
+        "subscriber_id": subscriber.id,
+        "zone_id": subscriber.zone_id,
+    }), 200
 
 # =========================================================
 # SEND NOTIFICATION TO A ZONE
