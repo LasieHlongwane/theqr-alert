@@ -3957,6 +3957,112 @@ def approve_submission(
                 "admin.submissions"
             )
         )
+         # =====================================================
+    # PUSH NOTIFICATION AFTER SUCCESSFUL DATABASE COMMIT
+    # =====================================================
+
+    print(
+        "[LaC Push Debug] Reached notification section "
+        f"content_id={content.id}"
+    )
+
+
+    if (
+        content.active
+        and content.notification_eligible
+    ):
+
+        print(
+            "[LaC Push Debug] Content is eligible. "
+            "Calling send_zone_push_notification..."
+        )
+
+        try:
+
+            # ---------------------------------------------
+            # BUILD CATEGORY LABEL
+            # ---------------------------------------------
+
+            category_label = (
+                content.category
+                .replace("-", " ")
+                .replace("_", " ")
+                .title()
+            )
+
+
+            # ---------------------------------------------
+            # BUILD NOTIFICATION
+            # ---------------------------------------------
+
+            notification_title = (
+                f"New {category_label} in {zone.name}"
+            )
+
+            notification_body = (
+                content.title
+            )
+
+            notification_url = (
+                f"/listing/{content.id}"
+            )
+
+
+            # ---------------------------------------------
+            # SEND TO THIS ZONE
+            # ---------------------------------------------
+
+            push_result = (
+                send_zone_push_notification(
+
+                    zone_id=
+                        content.zone_id,
+
+                    title=
+                        notification_title,
+
+                    body=
+                        notification_body,
+
+                    url=
+                        notification_url,
+
+                    tag=
+                        f"content-{content.id}",
+
+                )
+            )
+
+
+            print(
+                "[LaC Push] Approval notification processed "
+                f"content_id={content.id} "
+                f"zone_id={content.zone_id} "
+                f"total={push_result['total']} "
+                f"sent={push_result['sent']} "
+                f"failed={push_result['failed']}"
+            )
+
+
+        except Exception as exc:
+
+            print(
+                "[LaC Push] Approval notification failed "
+                f"content_id={content.id} "
+                f"zone_id={content.zone_id} "
+                f"error={repr(exc)}"
+            )
+
+
+    else:
+
+        print(
+            "[LaC Push] Notification skipped "
+            f"content_id={content.id} "
+            f"active={content.active} "
+            f"eligible={content.notification_eligible}"
+        )
+
 
     # =====================================================
     # SUCCESS
