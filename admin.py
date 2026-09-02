@@ -2,7 +2,9 @@ import os
 import io
 
 from datetime import date, datetime, timedelta
-
+from push_service import (
+    send_zone_push_notification,
+)
 import qrcode
 
 from flask import (
