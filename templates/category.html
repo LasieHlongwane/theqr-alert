@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1131,7 +1132,52 @@
 
 </script>
 
+<script>
 
+window.LAC_ENGAGEMENT_CONFIG = {
+
+    zoneId:
+        {{ zone.id | tojson }},
+
+    accessPointId:
+        {{ access_point.id | tojson }},
+
+    contentItemId:
+        null,
+
+    category:
+        {{ category | tojson }}
+
+};
+
+</script>
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/engagement.js'
+    ) }}"
+></script>
+
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        if (window.LaCTrack) {
+
+            window.LaCTrack(
+                "category_view"
+            );
+
+        }
+
+    }
+);
+
+</script>
 </body>
 
 </html>
