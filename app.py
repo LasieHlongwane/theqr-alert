@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from flask import (
     Flask,
     abort,
+    current_app,
     flash,
     jsonify,
     redirect,
