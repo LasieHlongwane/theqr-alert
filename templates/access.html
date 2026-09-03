@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -170,67 +169,60 @@
 
             <div class="category-grid">
 
-
                 {% for category in categories %}
 
+                    <a
+                        class="category-card"
+                        href="{{ url_for(
+                            'qr_category',
+                            code=access_point.code,
+                            category=category.slug
+                        ) }}"
+                    >
 
-                <a
-                    class="category-card"
-                    href="{{ url_for(
-                        'qr_category',
-                        code=access_point.code,
-                        category=category.slug
-                    ) }}"
-                >
+                        <div class="category-card-top">
+
+                            <div class="category-icon-wrap">
+
+                                <span class="category-icon">
+
+                                    {% if category.icon %}
+
+                                        {{ category.icon }}
+
+                                    {% else %}
+
+                                        📌
+
+                                    {% endif %}
+
+                                </span>
+
+                            </div>
 
 
-                    <div class="category-card-top">
-
-
-                        <div class="category-icon-wrap">
-
-                            <span class="category-icon">
-
-                                {% if category.icon %}
-
-                                    {{ category.icon }}
-
-                                {% else %}
-
-                                    📌
-
-                                {% endif %}
-
+                            <span class="category-arrow">
+                                →
                             </span>
 
                         </div>
 
 
-                        <span class="category-arrow">
-                            →
-                        </span>
+                        <div class="category-card-bottom">
 
-                    </div>
+                            <span class="category-name">
+                                {{ category.name }}
+                            </span>
 
+                            <span class="category-discover">
+                                OPEN
+                            </span>
 
-                    <div class="category-card-bottom">
+                        </div>
 
-                        <span class="category-name">
-                            {{ category.name }}
-                        </span>
-
-                        <span class="category-discover">
-                            OPEN
-                        </span>
-
-                    </div>
-
-
-                </a>
-
+                    </a>
 
                 {% endfor %}
-
 
             </div>
 
@@ -247,16 +239,16 @@
         >
 
             <div class="lac-install-card">
-                <!-- CLOSE BUTTON -->
+
                 <button
-                  type="button"
-                  id="lac-install-close"
-                  class="lac-install-close"
-                  aria-label="Close Quick Access"
-                  
+                    type="button"
+                    id="lac-install-close"
+                    class="lac-install-close"
+                    aria-label="Close Quick Access"
                 >
-                  ×
+                    ×
                 </button>
+
 
                 <div class="lac-install-icon">
                     📲
@@ -264,7 +256,6 @@
 
 
                 <div class="lac-install-content">
-
 
                     <span class="lac-install-eyebrow">
                         QUICK ACCESS
@@ -311,7 +302,6 @@
                         {{ zone.name }}.
                     </p>
 
-
                 </div>
 
             </div>
@@ -329,6 +319,7 @@
                 ✦
             </div>
 
+
             <div>
 
                 <strong>
@@ -345,145 +336,179 @@
         </section>
 
 
-<!-- =========================================
-     LOCAL NOTIFICATION PREFERENCES
-========================================== -->
+        <!-- =========================================
+             LOCAL NOTIFICATION PREFERENCES
+        ========================================== -->
 
-    <section
-      class="public-notification-link"
-      id="lac-notification-section"
-    >
-
-      <p class="notification-eyebrow">
-        STAY UPDATED
-      </p>
-
-
-      <h3>
-        Get Local Notifications
-      </h3>
-
-
-      <p>
-        Choose the {{ zone.name }} updates
-        you want LaC to send to your phone.
-      </p>
-
-
-    <!-- =====================================
-         ENABLE BUTTON
-    ====================================== -->
-
-      <button
-        type="button"
-        id="lac-enable-notifications"
-        class="public-notification-button"
-      >
-        🔔 Enable Local Notifications
-      </button>
-
-
-      <p
-        id="lac-notification-status"
-        class="lac-notification-status"
-      >
-        Free. No account required.
-      </p>
-
-
-    <!-- =====================================
-         CATEGORY PREFERENCES
-    ====================================== -->
-
-      <div
-        id="lac-notification-preferences"
-        class="lac-notification-preferences"
-        hidden
-      >
-
-        <div class="notification-preference-heading">
+        <section
+            class="public-notification-link"
+            id="lac-notification-section"
+        >
 
             <p class="notification-eyebrow">
-                YOUR INTERESTS
+                STAY UPDATED
             </p>
 
-            <h4>
-                What would you like
-                to hear about?
-            </h4>
+
+            <h3>
+                Get Local Notifications
+            </h3>
+
 
             <p>
-                Select one or more categories.
-                You can change these later.
+                Choose the {{ zone.name }} updates
+                you want LaC to send to your phone.
             </p>
 
-        </div>
 
-
-        <div class="notification-category-list">
-
-            {% for category in categories %}
-
-            <label class="notification-category-option">
-
-                <input
-                    type="checkbox"
-                    name="lac_notification_category"
-                    value="{{ category.slug }}"
-                >
-
-                <span class="notification-category-icon">
-
-                    {% if category.icon %}
-                        {{ category.icon }}
-                    {% else %}
-                        🔔
-                    {% endif %}
-
-                </span>
-
-
-                <span class="notification-category-name">
-                    {{ category.name }}
-                </span>
-
-            </label>
-
-            {% endfor %}
-
-        </div>
-
-
-        <div class="notification-preference-actions">
+            <!-- =====================================
+                 ENABLE BUTTON
+            ====================================== -->
 
             <button
                 type="button"
-                id="lac-select-all-categories"
-                class="notification-secondary-button"
-            >
-                Select All
-            </button>
-
-
-            <button
-                type="button"
-                id="lac-save-notification-preferences"
+                id="lac-enable-notifications"
                 class="public-notification-button"
             >
-                Save My Preferences
+                🔔 Enable Local Notifications
             </button>
 
-        </div>
+
+            <p
+                id="lac-notification-status"
+                class="lac-notification-status"
+            >
+                Free. No account required.
+            </p>
 
 
-        <p
-            id="lac-preference-status"
-            class="lac-notification-status"
-        ></p>
+            <!-- =====================================
+                 CATEGORY PREFERENCES
+            ====================================== -->
 
-      </div>
+            <div
+                id="lac-notification-preferences"
+                class="lac-notification-preferences"
+                hidden
+            >
 
-    </section>
+                <div class="notification-preference-heading">
+
+                    <p class="notification-eyebrow">
+                        YOUR INTERESTS
+                    </p>
+
+
+                    <h4>
+                        What would you like
+                        to hear about?
+                    </h4>
+
+
+                    <p>
+                        Select one or more categories.
+                        You can change these later.
+                    </p>
+
+                </div>
+
+
+                <div class="notification-category-list">
+
+                    {% for category in categories %}
+
+                        <label class="notification-category-option">
+
+                            <input
+                                type="checkbox"
+                                name="lac_notification_category"
+                                value="{{ category.slug }}"
+                            >
+
+
+                            <span class="notification-category-icon">
+
+                                {% if category.icon %}
+
+                                    {{ category.icon }}
+
+                                {% else %}
+
+                                    🔔
+
+                                {% endif %}
+
+                            </span>
+
+
+                            <span class="notification-category-name">
+                                {{ category.name }}
+                            </span>
+
+                        </label>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="notification-preference-actions">
+
+                    <button
+                        type="button"
+                        id="lac-select-all-categories"
+                        class="notification-secondary-button"
+                    >
+                        Select All
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="lac-save-notification-preferences"
+                        class="public-notification-button"
+                    >
+                        Save My Preferences
+                    </button>
+
+                </div>
+
+
+                <p
+                    id="lac-preference-status"
+                    class="lac-notification-status"
+                ></p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             MAIN LAC WEBSITE
+        ========================================== -->
+
+        <section class="public-website-link">
+
+            <p>
+                Want to learn more about Us?
+            </p>
+
+
+            <a
+                href="https://lac-acess-delivered.onrender.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="public-website-button"
+            >
+                Visit Our Website
+            </a>
+
+        </section>
+
+
+    </main>
+
 
     <!-- =========================================
          FOOTER
@@ -495,9 +520,11 @@
             LaC
         </div>
 
+
         <div class="footer-tagline">
             LOCAL DIGITAL INFRASTRUCTURE
         </div>
+
 
         <div class="footer-zone">
             📍 {{ zone.name }}
@@ -510,41 +537,61 @@
 
 
 <!-- =========================================
-     PWA INSTALL SCRIPT
+     STORE CURRENT QR ACCESS POINT
 ========================================== -->
-
 
 <script>
 
-const lacCurrentAccessCode =
-    "{{ access_point.code }}";
+    const lacCurrentAccessCode =
+        "{{ access_point.code }}";
 
-const lacCurrentAccessPointId =
-    {{ access_point.id | tojson }};
-
-
-if (lacCurrentAccessCode) {
-
-    localStorage.setItem(
-        "lac_access_code",
-        lacCurrentAccessCode
-    );
-
-}
+    const lacCurrentAccessPointId =
+        {{ access_point.id | tojson }};
 
 
-if (lacCurrentAccessPointId) {
+    if (lacCurrentAccessCode) {
 
-    localStorage.setItem(
-        "lac_access_point_id",
-        String(
-            lacCurrentAccessPointId
-        )
-    );
+        localStorage.setItem(
+            "lac_access_code",
+            lacCurrentAccessCode
+        );
 
-}
+    }
+
+
+    if (lacCurrentAccessPointId) {
+
+        localStorage.setItem(
+            "lac_access_point_id",
+            String(
+                lacCurrentAccessPointId
+            )
+        );
+
+    }
 
 </script>
+
+
+<!-- =========================================
+     PUSH NOTIFICATION CONFIG
+========================================== -->
+
+<script>
+
+    window.LAC_PUSH_CONFIG = {
+
+        zoneId:
+            {{ zone.id | tojson }}
+
+    };
+
+</script>
+
+
+<!-- =========================================
+     PWA INSTALL SCRIPT
+========================================== -->
 
 <script
     src="{{ url_for(
@@ -553,8 +600,19 @@ if (lacCurrentAccessPointId) {
     ) }}"
 ></script>
 
+
+<!-- =========================================
+     PUSH NOTIFICATION SCRIPT
+========================================== -->
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/push-notifications.js'
+    ) }}"
+></script>
+
+
 </body>
 
 </html>
-
-
