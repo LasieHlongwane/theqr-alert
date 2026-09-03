@@ -901,97 +901,192 @@ def push_public_key():
 # =========================================================
 # PUSH SUBSCRIBE
 # =========================================================
-# =========================================================
-# PUSH SUBSCRIBE
-# =========================================================
-
 @app.route(
     "/push/subscribe",
     methods=["POST"],
 )
 def push_subscribe():
 
-    try:
+    data = (
+        request.get_json(silent=True)
+        or {}
+    )
 
-        data = request.get_json(
-            silent=True
-        ) or {}
 
+    # =====================================================
+    # READ REQUEST
+    # =====================================================
 
-        zone_id = data.get(
-            "zone_id"
-        )
+    zone_id = data.get(
+        "zone_id"
+    )
 
-        subscription = data.get(
+    subscription = (
+        data.get(
             "subscription"
-        ) or {}
-
-        endpoint = subscription.get(
-            "endpoint"
         )
+        or {}
+    )
 
-        keys = subscription.get(
+    categories = (
+        data.get(
+            "categories"
+        )
+        or []
+    )
+
+
+    endpoint = subscription.get(
+        "endpoint"
+    )
+
+    keys = (
+        subscription.get(
             "keys"
-        ) or {}
-
-        p256dh = keys.get(
-            "p256dh"
         )
+        or {}
+    )
 
-        auth_key = keys.get(
-            "auth"
+    p256dh = keys.get(
+        "p256dh"
+    )
+
+    auth_key = keys.get(
+        "auth"
+    )
+
+
+    # =====================================================
+    # VALIDATION
+    # =====================================================
+
+    if not zone_id:
+
+        return jsonify({
+            "ok": False,
+            "error": "Zone is required.",
+        }), 400
+
+
+    if not endpoint:
+
+        return jsonify({
+            "ok": False,
+            "error": "Push endpoint is required.",
+        }), 400
+
+
+    if not p256dh or not auth_key:
+
+        return jsonify({
+            "ok": False,
+            "error": "Push subscription keys are missing.",
+        }), 400
+
+
+    if not isinstance(
+        categories,
+        list,
+    ):
+
+        return jsonify({
+            "ok": False,
+            "error": "Categories must be a list.",
+        }), 400
+
+
+    # -----------------------------------------------------
+    # CLEAN CATEGORY SLUGS
+    # -----------------------------------------------------
+
+    cleaned_categories = []
+
+
+    for category in categories:
+
+        if not isinstance(
+            category,
+            str,
+        ):
+            continue
+
+
+        category = category.strip()
+
+
+        if (
+            category
+            and
+            category
+            not in cleaned_categories
+        ):
+
+            cleaned_categories.append(
+                category
+            )
+
+
+    if not cleaned_categories:
+
+        return jsonify({
+            "ok": False,
+            "error": (
+                "Choose at least one "
+                "notification category."
+            ),
+        }), 400
+
+
+    # =====================================================
+    # VERIFY CATEGORIES
+    # =====================================================
+    #
+    # Your existing category system is the source of truth.
+    # This prevents clients from storing arbitrary category
+    # strings.
+    # =====================================================
+
+    active_categories = (
+        get_categories(
+            active_only=True
         )
+    )
 
 
-        # ---------------------------------------------
-        # VALIDATION
-        # ---------------------------------------------
-
-        if not zone_id:
-
-            return jsonify({
-                "success": False,
-                "error": "zone_id is required.",
-            }), 400
+    valid_category_slugs = {
+        category.slug
+        for category in active_categories
+    }
 
 
-        if not endpoint:
+    cleaned_categories = [
 
-            return jsonify({
-                "success": False,
-                "error": "Push endpoint is missing.",
-            }), 400
+        category
 
+        for category in cleaned_categories
 
-        if not p256dh or not auth_key:
+        if category
+        in valid_category_slugs
 
-            return jsonify({
-                "success": False,
-                "error": "Push subscription keys are missing.",
-            }), 400
+    ]
 
 
-        # ---------------------------------------------
-        # ZONE
-        # ---------------------------------------------
+    if not cleaned_categories:
 
-        zone = db.session.get(
-            Zone,
-            int(zone_id),
-        )
-
-
-        if not zone:
-
-            return jsonify({
-                "success": False,
-                "error": "Zone not found.",
-            }), 404
+        return jsonify({
+            "ok": False,
+            "error": (
+                "No valid notification "
+                "categories were selected."
+            ),
+        }), 400
 
 
-        # ---------------------------------------------
-        # EXISTING SUBSCRIBER
-        # ---------------------------------------------
+    # =====================================================
+    # CREATE / UPDATE SUBSCRIBER
+    # =====================================================
+
+    try:
 
         subscriber = (
             PushSubscriber.query
@@ -1002,29 +1097,12 @@ def push_subscribe():
         )
 
 
-        if subscriber:
-
-            subscriber.zone_id = (
-                zone.id
-            )
-
-            subscriber.p256dh = (
-                p256dh
-            )
-
-            subscriber.auth_key = (
-                auth_key
-            )
-
-            subscriber.active = True
-
-
-        else:
+        if subscriber is None:
 
             subscriber = PushSubscriber(
 
                 zone_id=
-                    zone.id,
+                    zone_id,
 
                 endpoint=
                     endpoint,
@@ -1044,31 +1122,93 @@ def push_subscribe():
                 subscriber
             )
 
+            # We need the subscriber ID before
+            # inserting preference rows.
+
+            db.session.flush()
+
+
+        else:
+
+            subscriber.zone_id = (
+                zone_id
+            )
+
+            subscriber.p256dh = (
+                p256dh
+            )
+
+            subscriber.auth_key = (
+                auth_key
+            )
+
+            subscriber.active = (
+                True
+            )
+
+
+        # =================================================
+        # REPLACE PREFERENCES
+        # =================================================
+        #
+        # This also allows "Manage Preferences" later:
+        #
+        # old preferences are removed,
+        # current selections become the source of truth.
+        # =================================================
+
+        PushSubscriberPreference.query.filter_by(
+            subscriber_id=subscriber.id
+        ).delete(
+            synchronize_session=False
+        )
+
+
+        for category in cleaned_categories:
+
+            preference = (
+                PushSubscriberPreference(
+
+                    subscriber_id=
+                        subscriber.id,
+
+                    category=
+                        category,
+
+                )
+            )
+
+            db.session.add(
+                preference
+            )
+
 
         db.session.commit()
 
 
-        app.logger.info(
-            "[LaC Push] Subscriber saved. "
-            "subscriber_id=%s zone_id=%s",
+        current_app.logger.info(
+            "[LaC Push] Subscription saved "
+            "subscriber_id=%s "
+            "zone_id=%s "
+            "categories=%s",
             subscriber.id,
             subscriber.zone_id,
+            ",".join(
+                cleaned_categories
+            ),
         )
 
 
         return jsonify({
 
-            "success":
+            "ok":
                 True,
 
             "subscriber_id":
                 subscriber.id,
 
-            "zone_id":
-                subscriber.zone_id,
-
-            "zone":
-                zone.name,
+            "categories":
+                cleaned_categories,
 
         }), 200
 
@@ -1078,20 +1218,20 @@ def push_subscribe():
         db.session.rollback()
 
 
-        app.logger.exception(
-            "[LaC Push] Subscription failed: %s",
+        current_app.logger.exception(
+            "[LaC Push] Unable to save "
+            "subscription preferences "
+            "error=%s",
             exc,
         )
 
 
         return jsonify({
-
-            "success":
-                False,
-
-            "error":
-                str(exc),
-
+            "ok": False,
+            "error": (
+                "Unable to save "
+                "notification preferences."
+            ),
         }), 500
 # =========================================================
 # PUBLIC LISTING DETAIL
