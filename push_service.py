@@ -2,9 +2,16 @@ import json
 import os
 
 from flask import current_app
-from pywebpush import webpush, WebPushException
+from pywebpush import (
+    webpush,
+    WebPushException,
+)
 
-from models import db, PushSubscriber
+from models import (
+    db,
+    PushSubscriber,
+    PushSubscriberPreference,
+)
 
 
 # =========================================================
@@ -246,7 +253,7 @@ def send_push_notification(
 
 
 # =========================================================
-# SEND NOTIFICATION TO ALL ACTIVE SUBSCRIBERS IN A ZONE
+# SEND ZONE / CATEGORY PUSH NOTIFICATION
 # =========================================================
 
 def send_zone_push_notification(
@@ -255,32 +262,75 @@ def send_zone_push_notification(
     body,
     url="/app",
     tag=None,
+    category=None,
 ):
 
     # -----------------------------------------------------
-    # GET ACTIVE SUBSCRIBERS FOR THIS ZONE ONLY
+    # BASE QUERY
     # -----------------------------------------------------
 
-    subscribers = (
+    query = (
         PushSubscriber.query
-        .filter_by(
-            zone_id=zone_id,
-            active=True,
+        .filter(
+            PushSubscriber.zone_id == zone_id,
+            PushSubscriber.active.is_(True),
         )
+    )
+
+
+    # -----------------------------------------------------
+    # CATEGORY TARGETING
+    # -----------------------------------------------------
+    #
+    # If category is supplied:
+    #
+    # zone
+    # +
+    # active subscriber
+    # +
+    # selected category
+    #
+    # must all match.
+    #
+    # If category is None, the function keeps the old
+    # behaviour and targets all active subscribers in
+    # the zone. This is useful for system/admin alerts.
+    # -----------------------------------------------------
+
+    if category:
+
+        query = (
+            query
+            .join(
+                PushSubscriberPreference,
+                PushSubscriberPreference.subscriber_id
+                == PushSubscriber.id,
+            )
+            .filter(
+                PushSubscriberPreference.category
+                == category
+            )
+        )
+
+
+    subscribers = (
+        query
+        .distinct()
         .all()
     )
 
 
     # -----------------------------------------------------
-    # NO SUBSCRIBERS
+    # NO MATCHING SUBSCRIBERS
     # -----------------------------------------------------
 
     if not subscribers:
 
         current_app.logger.info(
-            "[LaC Push] No active subscribers "
-            "for zone_id=%s",
+            "[LaC Push] No matching subscribers "
+            "zone_id=%s category=%s",
             zone_id,
+            category,
         )
 
         return {
@@ -343,12 +393,14 @@ def send_zone_push_notification(
 
 
     current_app.logger.info(
-        "[LaC Push] Zone notification "
+        "[LaC Push] Zone/category notification "
         "zone_id=%s "
+        "category=%s "
         "total=%s "
         "sent=%s "
         "failed=%s",
         zone_id,
+        category,
         result["total"],
         result["sent"],
         result["failed"],
