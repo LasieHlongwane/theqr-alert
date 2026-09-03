@@ -5754,6 +5754,8 @@ def approve_submission(
                         zone_id=
                             content.zone_id,
 
+                        category=content.category,
+
                         title=
                             notification_title,
 
