@@ -37,7 +37,7 @@ def send_push_notification(
     body,
     url="/app",
     icon="/static/icons/lac-192.png",
-    badge="/static/icons/lac-192.png",
+    badge="/static/icons/lac-notification.png",
     tag=None,
 ):
 
