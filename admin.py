@@ -2331,7 +2331,90 @@ def retry_notification(
         )
 
 
+    # =====================================================
+    # RESOLVE ORIGINAL CONTENT
+    # =====================================================
+    #
+    # Category preferences are attached to the original
+    # content category.
+    #
+    # We deliberately do NOT fall back to a zone-wide
+    # broadcast if the original content cannot be found.
+    # =====================================================
+
+    if not notification.content_item_id:
+
+        flash(
+            (
+                "Unable to retry this notification "
+                "because it is not linked to content."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.notifications"
+            )
+        )
+
+
+    content = db.session.get(
+        ContentItem,
+        notification.content_item_id,
+    )
+
+
+    if content is None:
+
+        flash(
+            (
+                "Unable to retry this notification "
+                "because the original content "
+                "no longer exists."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.notifications"
+            )
+        )
+
+
+    # =====================================================
+    # ORIGINAL NOTIFICATION CATEGORY
+    # =====================================================
+
+    notification_category = (
+        content.category
+    )
+
+
+    if not notification_category:
+
+        flash(
+            (
+                "Unable to retry this notification "
+                "because the original content "
+                "has no category."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.notifications"
+            )
+        )
+
+
     try:
+
+        # =================================================
+        # MARK RETRY ATTEMPT
+        # =================================================
 
         notification.attempts += 1
 
@@ -2339,11 +2422,32 @@ def retry_notification(
             "pending"
         )
 
+        notification.last_error = (
+            None
+        )
+
         db.session.commit()
 
 
         # =================================================
-        # ATTEMPT DELIVERY
+        # ATTEMPT CATEGORY-TARGETED DELIVERY
+        # =================================================
+        #
+        # The push service will now target:
+        #
+        # active subscriber
+        # +
+        # same zone
+        # +
+        # matching notification preference
+        #
+        # Example:
+        #
+        # zone = KwaMhlanga
+        # category = local-events
+        #
+        # Only KwaMhlanga subscribers who selected
+        # "local-events" will receive the retry.
         # =================================================
 
         result = (
@@ -2351,6 +2455,9 @@ def retry_notification(
 
                 zone_id=
                     notification.zone_id,
+
+                category=
+                    notification_category,
 
                 title=
                     notification.title,
@@ -2370,6 +2477,10 @@ def retry_notification(
             )
         )
 
+
+        # =================================================
+        # UPDATE DELIVERY COUNTS
+        # =================================================
 
         notification.total_subscribers = (
             result["total"]
@@ -2435,9 +2546,17 @@ def retry_notification(
                 "no_subscribers"
             )
 
+            notification.sent_at = (
+                None
+            )
+
             notification.last_error = (
-                "No active subscribers "
-                "were found for this zone."
+                (
+                    "No active subscribers "
+                    "in this zone selected "
+                    f"the '{notification_category}' "
+                    "notification category."
+                )
             )
 
 
@@ -2447,51 +2566,98 @@ def retry_notification(
                 "failed"
             )
 
-            notification.last_error = (
-                "Push delivery failed "
-                "for all subscribers."
+            notification.sent_at = (
+                None
             )
 
+            notification.last_error = (
+                "Push delivery failed "
+                "for all matching subscribers."
+            )
+
+
+        # =================================================
+        # SAVE RESULT
+        # =================================================
 
         db.session.commit()
 
 
+        # =================================================
+        # LOG RESULT
+        # =================================================
+
         current_app.logger.info(
             "[LaC Push] Notification retried "
             "notification_id=%s "
+            "content_item_id=%s "
             "zone_id=%s "
+            "category=%s "
+            "total=%s "
             "sent=%s "
             "failed=%s "
             "status=%s",
             notification.id,
+            notification.content_item_id,
             notification.zone_id,
+            notification_category,
+            notification.total_subscribers,
             notification.sent_count,
             notification.failed_count,
             notification.status,
         )
 
 
-        flash(
-            (
-                "Notification retry completed. "
-                f"Sent: {notification.sent_count}, "
-                f"Failed: {notification.failed_count}."
-            ),
-            "success",
-        )
+        # =================================================
+        # ADMIN MESSAGE
+        # =================================================
+
+        if result["total"] == 0:
+
+            flash(
+                (
+                    "Notification retry completed, "
+                    "but no active subscribers in "
+                    "this zone selected "
+                    f"'{notification_category}'."
+                ),
+                "info",
+            )
+
+        else:
+
+            flash(
+                (
+                    "Notification retry completed. "
+                    f"Category: {notification_category}. "
+                    f"Matching subscribers: "
+                    f"{notification.total_subscribers}. "
+                    f"Sent: {notification.sent_count}. "
+                    f"Failed: {notification.failed_count}."
+                ),
+                "success",
+            )
 
 
     except Exception as exc:
 
         db.session.rollback()
 
+
         current_app.logger.exception(
             "[LaC Push] Retry failed "
             "notification_id=%s "
+            "content_item_id=%s "
+            "zone_id=%s "
+            "category=%s "
             "error=%s",
             notification.id,
+            notification.content_item_id,
+            notification.zone_id,
+            notification_category,
             exc,
         )
+
 
         flash(
             "Unable to retry notification.",
