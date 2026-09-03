@@ -890,7 +890,7 @@ class PushSubscriber(db.Model):
 
 
     # -----------------------------------------------------
-    # RELATIONSHIP
+    # RELATIONSHIPS
     # -----------------------------------------------------
 
     zone = db.relationship(
@@ -899,6 +899,14 @@ class PushSubscriber(db.Model):
             "push_subscribers",
             lazy=True,
         ),
+    )
+
+
+    notification_preferences = db.relationship(
+        "PushSubscriberPreference",
+        back_populates="subscriber",
+        cascade="all, delete-orphan",
+        lazy=True,
     )
 
 
@@ -911,6 +919,105 @@ class PushSubscriber(db.Model):
             f"active={self.active}>"
         )
 
+
+# =========================================================
+# PUSH SUBSCRIBER CATEGORY PREFERENCES
+# =========================================================
+
+class PushSubscriberPreference(db.Model):
+
+    __tablename__ = "push_subscriber_preferences"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # -----------------------------------------------------
+    # SUBSCRIBER
+    # -----------------------------------------------------
+
+    subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "push_subscribers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # -----------------------------------------------------
+    # CATEGORY
+    # -----------------------------------------------------
+    #
+    # Store the Category slug here.
+    #
+    # Examples:
+    #
+    # local-events
+    # jobs
+    # property
+    # specials
+    #
+    # We deliberately store the slug rather than the
+    # display name because ContentItem.category also uses
+    # the category slug.
+    # -----------------------------------------------------
+
+    category = db.Column(
+        db.String(100),
+        nullable=False,
+        index=True,
+    )
+
+
+    # -----------------------------------------------------
+    # TIMESTAMP
+    # -----------------------------------------------------
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.now(),
+    )
+
+
+    # -----------------------------------------------------
+    # RELATIONSHIP
+    # -----------------------------------------------------
+
+    subscriber = db.relationship(
+        "PushSubscriber",
+        back_populates="notification_preferences",
+    )
+
+
+    # -----------------------------------------------------
+    # PREVENT DUPLICATE PREFERENCES
+    # -----------------------------------------------------
+
+    __table_args__ = (
+
+        db.UniqueConstraint(
+            "subscriber_id",
+            "category",
+            name="uq_push_subscriber_category",
+        ),
+
+    )
+
+
+    def __repr__(self):
+
+        return (
+            f"<PushSubscriberPreference "
+            f"subscriber_id={self.subscriber_id} "
+            f"category={self.category}>"
+        )
 
 class PushNotification(db.Model):
 
