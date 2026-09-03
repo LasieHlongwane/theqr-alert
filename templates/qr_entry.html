@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -27,20 +26,29 @@
 
     <link
         rel="manifest"
-        href="{{ url_for('static', filename='manifest.json') }}"
+        href="{{ url_for(
+            'static',
+            filename='manifest.json'
+        ) }}"
     >
 
     <link
         rel="icon"
         type="image/png"
         sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
     >
 
     <link
         rel="apple-touch-icon"
         sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
     >
 
     <meta
@@ -81,7 +89,429 @@
         ) }}"
     >
 
+
+    <!-- =========================================
+         ENTRY PAGE STYLES
+    ========================================== -->
+
+    <style>
+
+        .lac-entry-body {
+            margin: 0;
+            min-height: 100vh;
+            background: #0b0c0e;
+            color: #ffffff;
+        }
+
+
+        .lac-entry-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        .lac-entry-main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 48px 20px 40px;
+        }
+
+
+        .lac-entry-container {
+            width: 100%;
+            max-width: 620px;
+        }
+
+
+        .lac-entry-brand {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+
+        .lac-entry-logo {
+            margin: 0;
+            font-size: 3rem;
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: -2px;
+        }
+
+
+        .lac-entry-tagline {
+            margin: 12px 0 0;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            opacity: 0.65;
+        }
+
+
+        .lac-zone-intro {
+            margin-bottom: 24px;
+        }
+
+
+        .lac-zone-eyebrow {
+            margin: 0 0 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            opacity: 0.6;
+        }
+
+
+        .lac-zone-intro h2 {
+            margin: 0;
+            font-size: 1.75rem;
+            line-height: 1.2;
+        }
+
+
+        .lac-zone-description {
+            margin: 12px 0 0;
+            line-height: 1.6;
+            opacity: 0.7;
+        }
+
+
+        .lac-zone-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+
+        .lac-zone-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+            text-decoration: none;
+            transition:
+                transform 0.15s ease,
+                border-color 0.15s ease,
+                background 0.15s ease;
+        }
+
+
+        .lac-zone-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+
+        .lac-zone-card:active {
+            transform: scale(0.99);
+        }
+
+
+        .lac-zone-card-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 0;
+        }
+
+
+        .lac-zone-icon {
+            width: 46px;
+            height: 46px;
+            flex: 0 0 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 1.25rem;
+        }
+
+
+        .lac-zone-information {
+            min-width: 0;
+        }
+
+
+        .lac-zone-name {
+            display: block;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+
+        .lac-zone-action {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.78rem;
+            opacity: 0.55;
+        }
+
+
+        .lac-zone-arrow {
+            flex-shrink: 0;
+            font-size: 1.4rem;
+            opacity: 0.7;
+        }
+
+
+        .lac-no-zones {
+            padding: 24px;
+            margin-top: 24px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+
+        .lac-no-zones p {
+            margin: 0;
+            opacity: 0.65;
+            line-height: 1.6;
+        }
+
+
+        .lac-entry-explanation {
+            margin-top: 34px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+
+        .lac-entry-explanation p {
+            margin: 0;
+            text-align: center;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            opacity: 0.55;
+        }
+
+
+        .lac-entry-footer {
+            padding: 24px 20px 30px;
+            text-align: center;
+        }
+
+
+        .lac-entry-footer-brand {
+            font-weight: 800;
+        }
+
+
+        .lac-entry-footer-text {
+            margin-top: 5px;
+            font-size: 0.68rem;
+            letter-spacing: 1.5px;
+            opacity: 0.45;
+        }
+
+
+        @media (max-width: 480px) {
+
+            .lac-entry-main {
+                padding-top: 35px;
+            }
+
+
+            .lac-entry-brand {
+                margin-bottom: 34px;
+            }
+
+
+            .lac-entry-logo {
+                font-size: 2.7rem;
+            }
+
+
+            .lac-zone-intro h2 {
+                font-size: 1.5rem;
+            }
+
+
+            .lac-zone-card {
+                padding: 17px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
+<body class="lac-entry-body">
+
+
+<div class="lac-entry-page">
+
+
+    <!-- =========================================
+         MAIN ENTRY EXPERIENCE
+    ========================================== -->
+
+    <main class="lac-entry-main">
+
+        <div class="lac-entry-container">
+
+
+            <!-- =========================================
+                 BRAND
+            ========================================== -->
+
+            <header class="lac-entry-brand">
+
+                <h1 class="lac-entry-logo">
+                    LaC
+                </h1>
+
+                <p class="lac-entry-tagline">
+                    LOCAL ACCESS. DELIVERED.
+                </p>
+
+            </header>
+
+
+            <!-- =========================================
+                 ZONE SELECTOR
+            ========================================== -->
+
+            <section class="lac-zone-section">
+
+
+                <div class="lac-zone-intro">
+
+                    <p class="lac-zone-eyebrow">
+                        EXPLORE LOCAL
+                    </p>
+
+                    <h2>
+                        Which area do you want to explore?
+                    </h2>
+
+                    <p class="lac-zone-description">
+                        Choose your location to discover
+                        events, deals, jobs, services and
+                        useful information available in
+                        that area.
+                    </p>
+
+                </div>
+
+
+                <!-- =========================================
+                     AVAILABLE ZONES
+                ========================================== -->
+
+                {% if zone_access_points %}
+
+                    <div class="lac-zone-list">
+
+                        {% for item in zone_access_points %}
+
+                            <a
+                                class="lac-zone-card"
+                                href="{{ url_for(
+                                    'qr_entry',
+                                    code=item.access_point.code
+                                ) }}"
+                            >
+
+                                <div class="lac-zone-card-left">
+
+                                    <div class="lac-zone-icon">
+                                        📍
+                                    </div>
+
+
+                                    <div class="lac-zone-information">
+
+                                        <span class="lac-zone-name">
+                                            {{ item.zone.name }}
+                                        </span>
+
+                                        <span class="lac-zone-action">
+                                            Explore local information
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+
+                                <span class="lac-zone-arrow">
+                                    →
+                                </span>
+
+                            </a>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                {% else %}
+
+                    <div class="lac-no-zones">
+
+                        <p>
+                            No LaC locations are available
+                            right now.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+
+            </section>
+
+
+            <!-- =========================================
+                 CONTEXT
+            ========================================== -->
+
+            <section class="lac-entry-explanation">
+
+                <p>
+                    LaC connects you to useful digital
+                    information from communities and
+                    physical access points around you.
+                </p>
+
+            </section>
+
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="lac-entry-footer">
+
+        <div class="lac-entry-footer-brand">
+            LaC
+        </div>
+
+        <div class="lac-entry-footer-text">
+            LOCAL DIGITAL INFRASTRUCTURE
+        </div>
+
+    </footer>
+
+
+</div>
 
 
 <!-- =========================================
@@ -100,15 +530,18 @@
             📲
         </div>
 
+
         <div class="lac-install-content">
 
             <span class="lac-install-eyebrow">
                 QUICK ACCESS
             </span>
 
+
             <h2>
                 Add LaC to your Home Screen
             </h2>
+
 
             <p>
                 Open local events, deals, jobs,
@@ -141,78 +574,18 @@
 </section>
 
 
-<body>
+<!-- =========================================
+     PWA INSTALL SCRIPT
+========================================== -->
 
-    <main
-        style="
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            text-align: center;
-        "
-    >
-
-        <div
-            style="
-                max-width: 520px;
-                width: 100%;
-            "
-        >
-
-            <h1>
-                LaC
-            </h1>
-
-            <h2>
-                LOCAL ACCESS. DELIVERED.
-            </h2>
-
-            <p>
-                Access useful local information by scanning
-                a LaC QR code near you.
-            </p>
-
-            <div
-                style="
-                    margin-top: 30px;
-                    line-height: 2;
-                "
-            >
-
-                <strong>
-                    SCAN
-                </strong>
-
-                <div>
-                    ↓
-                </div>
-
-                <strong>
-                    DISCOVER
-                </strong>
-
-                <div>
-                    ↓
-                </div>
-
-                <strong>
-                    CONNECT
-                </strong>
-
-            </div>
-
-        </div>
-
-    </main>
-
-    <script
-      src="{{ url_for(
+<script
+    src="{{ url_for(
         'static',
         filename='js/pwa-install.js'
-      ) }}"
-    ></script>
+    ) }}"
+></script>
+
+
 </body>
 
 </html>
