@@ -1047,9 +1047,11 @@ def push_subscribe():
     # =====================================================
 
     active_categories = (
-        get_categories(
-            active_only=True
+        Category.query
+        .filter_by(
+           active=True
         )
+        .all()
     )
 
 
@@ -1057,7 +1059,6 @@ def push_subscribe():
         category.slug
         for category in active_categories
     }
-
 
     cleaned_categories = [
 
