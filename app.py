@@ -313,8 +313,39 @@ VAPID_SUBJECT = os.environ.get(
 @app.route("/")
 def home():
 
+    zones = (
+        Zone.query
+        .filter_by(active=True)
+        .order_by(Zone.name.asc())
+        .all()
+    )
+
+    zone_access_points = []
+
+    for zone in zones:
+
+        access_point = (
+            AccessPoint.query
+            .filter_by(
+                zone_id=zone.id,
+                active=True,
+            )
+            .order_by(
+                AccessPoint.id.asc()
+            )
+            .first()
+        )
+
+        if access_point:
+
+            zone_access_points.append({
+                "zone": zone,
+                "access_point": access_point,
+            })
+
     return render_template(
-        "qr_entry.html"
+        "entry_qr.html",
+        zone_access_points=zone_access_points,
     )
 
 @app.route("/app")
