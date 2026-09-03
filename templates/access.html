@@ -345,66 +345,145 @@
         </section>
 
 
-        <!-- =========================================
-             PHONE NOTIFICATIONS
-        ========================================== -->
+<!-- =========================================
+     LOCAL NOTIFICATION PREFERENCES
+========================================== -->
 
-        <section class="public-notification-link">
+    <section
+      class="public-notification-link"
+      id="lac-notification-section"
+    >
+
+      <p class="notification-eyebrow">
+        STAY UPDATED
+      </p>
+
+
+      <h3>
+        Get Local Notifications
+      </h3>
+
+
+      <p>
+        Choose the {{ zone.name }} updates
+        you want LaC to send to your phone.
+      </p>
+
+
+    <!-- =====================================
+         ENABLE BUTTON
+    ====================================== -->
+
+      <button
+        type="button"
+        id="lac-enable-notifications"
+        class="public-notification-button"
+      >
+        🔔 Enable Local Notifications
+      </button>
+
+
+      <p
+        id="lac-notification-status"
+        class="lac-notification-status"
+      >
+        Free. No account required.
+      </p>
+
+
+    <!-- =====================================
+         CATEGORY PREFERENCES
+    ====================================== -->
+
+      <div
+        id="lac-notification-preferences"
+        class="lac-notification-preferences"
+        hidden
+      >
+
+        <div class="notification-preference-heading">
 
             <p class="notification-eyebrow">
-                STAY UPDATED
+                YOUR INTERESTS
             </p>
 
-            <h3>
-                Get Local Notifications
-            </h3>
+            <h4>
+                What would you like
+                to hear about?
+            </h4>
 
             <p>
-                Receive local updates and notifications
-                straight to your phone.
+                Select one or more categories.
+                You can change these later.
             </p>
 
-            <p>
-                Click below and submit the form.
-                IT'S FREE
-            </p>
+        </div>
 
-            <a
-                href="https://who-are-we23indetail.streamlit.app/Join_Local_Alerts"
-                target="_blank"
-                rel="noopener noreferrer"
+
+        <div class="notification-category-list">
+
+            {% for category in categories %}
+
+            <label class="notification-category-option">
+
+                <input
+                    type="checkbox"
+                    name="lac_notification_category"
+                    value="{{ category.slug }}"
+                >
+
+                <span class="notification-category-icon">
+
+                    {% if category.icon %}
+                        {{ category.icon }}
+                    {% else %}
+                        🔔
+                    {% endif %}
+
+                </span>
+
+
+                <span class="notification-category-name">
+                    {{ category.name }}
+                </span>
+
+            </label>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="notification-preference-actions">
+
+            <button
+                type="button"
+                id="lac-select-all-categories"
+                class="notification-secondary-button"
+            >
+                Select All
+            </button>
+
+
+            <button
+                type="button"
+                id="lac-save-notification-preferences"
                 class="public-notification-button"
             >
-                Receive Notifications
-            </a>
+                Save My Preferences
+            </button>
 
-        </section>
-
-
-        <!-- =========================================
-             MAIN LAC WEBSITE
-        ========================================== -->
-
-        <section class="public-website-link">
-
-            <p>
-                Want to learn more about Us?
-            </p>
-
-            <a
-                href="https://lac-acess-delivered.onrender.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="public-website-button"
-            >
-                Visit Our Website
-            </a>
-
-        </section>
+        </div>
 
 
-    </main>
+        <p
+            id="lac-preference-status"
+            class="lac-notification-status"
+        ></p>
 
+      </div>
+
+    </section>
 
     <!-- =========================================
          FOOTER
