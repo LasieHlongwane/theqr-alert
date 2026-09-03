@@ -977,10 +977,7 @@
 
                             <a
                                 class="lac-zone-card"
-                                href="{{ url_for(
-                                    'qr_entry',
-                                    code=item.access_point.code
-                                ) }}"
+                                href="/q/{{ item.access_point.code }}"
                             >
 
                                 <div class="lac-zone-card-left">
