@@ -36,7 +36,7 @@ from models import (
     Category,
     PushSubscriber,
     EngagementEvent,
-    PushSubscriberPreferences,
+    PushSubscriberPreference,
 )
 import json
 from admin import admin_bp
