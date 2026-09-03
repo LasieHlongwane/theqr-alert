@@ -1,10 +1,10 @@
-// =========================================================
-// LaC PUSH NOTIFICATIONS
-// =========================================================
-
 document.addEventListener(
     "DOMContentLoaded",
     function () {
+
+        // =================================================
+        // ELEMENTS
+        // =================================================
 
         const enableButton =
             document.getElementById(
@@ -16,64 +16,85 @@ document.addEventListener(
                 "lac-notification-status"
             );
 
-
-        // -------------------------------------------------
-        // NO BUTTON ON THIS PAGE
-        // -------------------------------------------------
-
-        if (!enableButton) {
-
-            console.log(
-                "[LaC Push] Notification button not found."
+        const preferencePanel =
+            document.getElementById(
+                "lac-notification-preferences"
             );
 
+        const saveButton =
+            document.getElementById(
+                "lac-save-notification-preferences"
+            );
+
+        const selectAllButton =
+            document.getElementById(
+                "lac-select-all-categories"
+            );
+
+        const preferenceStatus =
+            document.getElementById(
+                "lac-preference-status"
+            );
+
+
+        if (
+            !enableButton
+            ||
+            !preferencePanel
+            ||
+            !saveButton
+        ) {
             return;
         }
 
 
-        // -------------------------------------------------
-        // ZONE CONFIG
-        // -------------------------------------------------
+        // =================================================
+        // CONFIG
+        // =================================================
 
-        const pushConfig =
+        const config =
             window.LAC_PUSH_CONFIG || {};
 
 
         const zoneId =
-            pushConfig.zoneId;
+            config.zoneId;
 
 
-        console.log(
-            "[LaC Push] Loaded. Zone:",
-            zoneId
-        );
+        let pushSubscription =
+            null;
 
 
         // =================================================
-        // STATUS HELPER
+        // HELPERS
         // =================================================
 
         function setStatus(
-            message,
-            type = ""
+            message
         ) {
 
-            if (!statusElement) {
-                return;
+            if (statusElement) {
+
+                statusElement.textContent =
+                    message;
+
             }
-
-            statusElement.textContent =
-                message;
-
-            statusElement.dataset.status =
-                type;
 
         }
 
 
-        // =================================================
-        // BASE64 VAPID KEY → UINT8ARRAY
-        // =================================================
+        function setPreferenceStatus(
+            message
+        ) {
+
+            if (preferenceStatus) {
+
+                preferenceStatus.textContent =
+                    message;
+
+            }
+
+        }
+
 
         function urlBase64ToUint8Array(
             base64String
@@ -82,17 +103,18 @@ document.addEventListener(
             const padding =
                 "=".repeat(
                     (
-                        4 -
+                        4
+                        -
                         base64String.length % 4
-                    ) % 4
+                    )
+                    % 4
                 );
 
 
-            const base64 =
-                (
-                    base64String +
-                    padding
-                )
+            const base64 = (
+                base64String
+                + padding
+            )
                 .replace(
                     /-/g,
                     "+"
@@ -119,50 +141,68 @@ document.addEventListener(
         }
 
 
-        // =================================================
-        // PROMISE TIMEOUT
-        // =================================================
-
-        function withTimeout(
-            promise,
-            milliseconds,
-            message
+        async function fetchWithTimeout(
+            url,
+            options = {},
+            timeout = 15000
         ) {
 
-            const timeout =
-                new Promise(
-                    (
-                        resolve,
-                        reject
-                    ) => {
+            const controller =
+                new AbortController();
 
-                        setTimeout(
-                            () => {
 
-                                reject(
-                                    new Error(
-                                        message
-                                    )
-                                );
-
-                            },
-                            milliseconds
-                        );
-
-                    }
+            const timer =
+                setTimeout(
+                    () =>
+                        controller.abort(),
+                    timeout
                 );
 
 
-            return Promise.race([
-                promise,
-                timeout
-            ]);
+            try {
+
+                return await fetch(
+                    url,
+                    {
+                        ...options,
+                        signal:
+                            controller.signal,
+                    }
+                );
+
+            }
+
+            finally {
+
+                clearTimeout(
+                    timer
+                );
+
+            }
+
+        }
+
+
+        function getSelectedCategories() {
+
+            const selected =
+                document.querySelectorAll(
+                    'input[name="lac_notification_category"]:checked'
+                );
+
+
+            return Array.from(
+                selected
+            ).map(
+                input =>
+                    input.value
+            );
 
         }
 
 
         // =================================================
-        // GET / REGISTER SERVICE WORKER
+        // SERVICE WORKER
         // =================================================
 
         async function getServiceWorkerRegistration() {
@@ -175,284 +215,118 @@ document.addEventListener(
             ) {
 
                 throw new Error(
-                    "Service workers are not supported on this browser."
+                    "Service workers are not supported."
                 );
 
             }
 
 
-            console.log(
-                "[LaC Push] Registering service worker..."
+            await navigator.serviceWorker.register(
+                "/service-worker.js",
+                {
+                    scope: "/",
+                }
             );
 
 
-            const registration =
-                await withTimeout(
-
-                    navigator.serviceWorker.register(
-                        "/service-worker.js",
-                        {
-                            scope: "/"
-                        }
-                    ),
-
-                    10000,
-
-                    "Service worker registration timed out."
-
-                );
-
-
-            console.log(
-                "[LaC Push] Service worker registered:",
-                registration.scope
+            return await (
+                navigator.serviceWorker.ready
             );
-
-
-            const readyRegistration =
-                await withTimeout(
-
-                    navigator.serviceWorker.ready,
-
-                    10000,
-
-                    "Service worker did not become ready."
-
-                );
-
-
-            console.log(
-                "[LaC Push] Service worker ready."
-            );
-
-
-            return readyRegistration;
 
         }
 
 
         // =================================================
-        // GET VAPID PUBLIC KEY
+        // GET / CREATE PUSH SUBSCRIPTION
         // =================================================
 
-        // =========================================================
-// GET VAPID PUBLIC KEY
-// =========================================================
+        async function getPushSubscription() {
 
-        async function getPublicKey() {
-
-          console.log(
-            "[LaC Push] Fetching VAPID public key..."
-          );
+            const registration =
+                await getServiceWorkerRegistration();
 
 
-          const response =
-             await fetch(
-               "/push/public-key",
-               {
-                 method: "GET",
-                 cache: "no-store"
-               }
-             );
-   
-
-          const responseText =
-            await response.text();
-
-
-          console.log(
-            "[LaC Push] Public key response:",
-            response.status,
-            responseText
-          );
-
-
-          if (!response.ok) {
-
-            throw new Error(
-              "Public-key request failed. HTTP "
-              + response.status
-              + ": "
-              + responseText.substring(0, 150)
-            );
-
-          }
-
-
-          let data;
-
-
-          try {
-
-            data =
-             JSON.parse(
-                responseText
-             );
-
-          } catch (error) {
-
-            throw new Error(
-              "Public-key endpoint returned "
-              + "non-JSON data. HTTP "
-              + response.status
-              + ": "
-              + responseText.substring(0, 150)
-            );
-
-          }
-
-
-          if (
-           !data.success ||
-           !data.public_key
-          ) {
-
-           throw new Error(
-             data.error ||
-             "VAPID public key is missing."
-           );
-
-          }
-       
-
-          console.log(
-            "[LaC Push] VAPID public key received."
-          );
-
-
-          return data.public_key;
-
-        }  
-
-
-        // =================================================
-        // SAVE SUBSCRIPTION TO FLASK
-        // =================================================
-
-        async function saveSubscription(
-            subscription
-        ) {
-
-            console.log(
-                "[LaC Push] Saving subscription..."
-            );
-
-
-            const response =
-                await fetch(
-                    "/push/subscribe",
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                zone_id:
-                                    zoneId,
-
-                                subscription:
-                                    subscription.toJSON()
-
-                            })
-
-                    }
+            let subscription =
+                await (
+                    registration
+                    .pushManager
+                    .getSubscription()
                 );
 
 
-            const responseText =
-                await response.text();
+            if (subscription) {
 
-            console.log(
-                "[LaC Push] Subscribe response:",
-                response.status,
-                responseText
-            );
+                return subscription;
+
+            }
+
+
+            const response =
+                await fetchWithTimeout(
+                    "/push/public-key"
+                );
 
 
             if (!response.ok) {
-              
+
                 throw new Error(
-                  "Subscription request failed. HTTP "
-                  + response.status
-                  + ": "
-                  + responseText.substring(0, 150)
+                    "Unable to load push configuration."
                 );
 
             }
 
-            let data;
 
-            try {
-                
-                data =
-                    JSON.parse(
-                        responseText
-                    );
+            const data =
+                await response.json();
 
 
-            } catch(error) {
-
-                throw new Error(
-                  "Subscription endpoint returned "
-                  + "non-JSON data. HTTP "
-                  + response.status
-                  + ": "
-                  + responseText.substring(0, 150)
+            const publicKey =
+                (
+                    data.public_key
+                    ||
+                    data.publicKey
+                    ||
+                    data.key
                 );
 
-             }
-             if (!data.success) {
 
-               throw new Error(
-                 data.error ||
-                 "Could not save push subscription."
-               );
+            if (!publicKey) {
 
-             }
+                throw new Error(
+                    "Push public key is missing."
+                );
 
-
-             console.log(
-              "[LaC Push] Subscription saved:",
-              data
-             );
+            }
 
 
-             return data;
+            subscription =
+                await (
+                    registration
+                    .pushManager
+                    .subscribe({
+                        userVisibleOnly:
+                            true,
 
-          }
-        
+                        applicationServerKey:
+                            urlBase64ToUint8Array(
+                                publicKey
+                            ),
+                    })
+                );
+
+
+            return subscription;
+
+        }
 
 
         // =================================================
-        // ENABLE PUSH
+        // ENABLE NOTIFICATIONS
         // =================================================
 
-        async function enableNotifications() {
-
-            enableButton.disabled =
-                true;
-
-            enableButton.textContent =
-                "Enabling...";
-
-
-            setStatus(
-                "Preparing notifications..."
-            );
-
-
-            try {
-
-                // -----------------------------------------
-                // CHECK BROWSER SUPPORT
-                // -----------------------------------------
+        enableButton.addEventListener(
+            "click",
+            async function () {
 
                 if (
                     !(
@@ -461,216 +335,415 @@ document.addEventListener(
                     )
                 ) {
 
-                    throw new Error(
+                    setStatus(
                         "Notifications are not supported on this browser."
                     );
 
-                }
-
-
-                if (
-                    !(
-                        "PushManager"
-                        in window
-                    )
-                ) {
-
-                    throw new Error(
-                        "Push notifications are not supported on this browser."
-                    );
+                    return;
 
                 }
 
 
                 if (!zoneId) {
 
-                    throw new Error(
-                        "LaC zone information is missing."
+                    setStatus(
+                        "Unable to identify your local zone."
                     );
+
+                    return;
 
                 }
 
 
-                // -----------------------------------------
-                // SERVICE WORKER
-                // -----------------------------------------
+                try {
 
-                setStatus(
-                    "Preparing notification service..."
-                );
+                    enableButton.disabled =
+                        true;
 
-
-                const registration =
-                    await getServiceWorkerRegistration();
-
-
-                // -----------------------------------------
-                // PERMISSION
-                // -----------------------------------------
-
-                let permission =
-                    Notification.permission;
-
-
-                console.log(
-                    "[LaC Push] Current permission:",
-                    permission
-                );
-
-
-                if (
-                    permission ===
-                    "default"
-                ) {
 
                     setStatus(
-                        "Waiting for notification permission..."
+                        "Checking notification permission..."
                     );
 
 
-                    permission =
-                        await Notification
-                            .requestPermission();
+                    let permission =
+                        Notification.permission;
+
+
+                    if (
+                        permission
+                        !== "granted"
+                    ) {
+
+                        permission =
+                            await (
+                                Notification
+                                .requestPermission()
+                            );
+
+                    }
+
+
+                    if (
+                        permission
+                        !== "granted"
+                    ) {
+
+                        setStatus(
+                            "Notification permission was not enabled."
+                        );
+
+                        return;
+
+                    }
+
+
+                    setStatus(
+                        "Choose the local updates you want."
+                    );
+
+
+                    preferencePanel.hidden =
+                        false;
+
+
+                    preferencePanel.scrollIntoView({
+                        behavior:
+                            "smooth",
+
+                        block:
+                            "nearest",
+                    });
+
 
                 }
 
+                catch (error) {
 
-                console.log(
-                    "[LaC Push] Permission result:",
-                    permission
-                );
+                    console.error(
+                        "[LaC Push]",
+                        error
+                    );
+
+
+                    setStatus(
+                        "Unable to enable notifications."
+                    );
+
+                }
+
+                finally {
+
+                    enableButton.disabled =
+                        false;
+
+                }
+
+            }
+        );
+
+
+        // =================================================
+        // SELECT ALL
+        // =================================================
+
+        if (selectAllButton) {
+
+            selectAllButton.addEventListener(
+                "click",
+                function () {
+
+                    const checkboxes =
+                        document.querySelectorAll(
+                            'input[name="lac_notification_category"]'
+                        );
+
+
+                    const allSelected =
+                        Array.from(
+                            checkboxes
+                        ).every(
+                            checkbox =>
+                                checkbox.checked
+                        );
+
+
+                    checkboxes.forEach(
+                        checkbox => {
+
+                            checkbox.checked =
+                                !allSelected;
+
+                        }
+                    );
+
+
+                    selectAllButton.textContent =
+                        allSelected
+                            ? "Select All"
+                            : "Clear All";
+
+                }
+            );
+
+        }
+
+
+        // =================================================
+        // SAVE PREFERENCES
+        // =================================================
+
+        saveButton.addEventListener(
+            "click",
+            async function () {
+
+                const categories =
+                    getSelectedCategories();
 
 
                 if (
-                    permission !==
-                    "granted"
+                    categories.length
+                    === 0
                 ) {
 
-                    throw new Error(
-                        "Notification permission was not granted."
+                    setPreferenceStatus(
+                        "Choose at least one category."
                     );
+
+                    return;
 
                 }
 
 
-                // -----------------------------------------
-                // VAPID PUBLIC KEY
-                // -----------------------------------------
+                try {
 
-                setStatus(
-                    "Connecting notifications..."
-                );
+                    saveButton.disabled =
+                        true;
 
 
-                const publicKey =
-                    await getPublicKey();
-
-
-                const applicationServerKey =
-                    urlBase64ToUint8Array(
-                        publicKey
+                    setPreferenceStatus(
+                        "Saving your preferences..."
                     );
 
 
-                // -----------------------------------------
-                // EXISTING SUBSCRIPTION
-                // -----------------------------------------
-
-                let subscription =
-                    await registration
-                        .pushManager
-                        .getSubscription();
+                    pushSubscription =
+                        await (
+                            getPushSubscription()
+                        );
 
 
-                // -----------------------------------------
-                // CREATE SUBSCRIPTION
-                // -----------------------------------------
+                    const response =
+                        await fetchWithTimeout(
 
-                if (!subscription) {
+                            "/push/subscribe",
 
-                    console.log(
-                        "[LaC Push] Creating browser subscription..."
-                    );
+                            {
+                                method:
+                                    "POST",
 
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
 
-                    subscription =
-                        await withTimeout(
+                                body:
+                                    JSON.stringify({
 
-                            registration
-                                .pushManager
-                                .subscribe({
+                                        zone_id:
+                                            zoneId,
 
-                                    userVisibleOnly:
-                                        true,
+                                        subscription:
+                                            pushSubscription
+                                                .toJSON(),
 
-                                    applicationServerKey:
-                                        applicationServerKey
+                                        categories:
+                                            categories,
 
-                                }),
-
-                            15000,
-
-                            "Browser push subscription timed out."
+                                    }),
+                            }
 
                         );
 
-                } else {
 
-                    console.log(
-                        "[LaC Push] Existing subscription found."
+                    const responseText =
+                        await response.text();
+
+
+                    let data = {};
+
+
+                    try {
+
+                        data =
+                            JSON.parse(
+                                responseText
+                            );
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "[LaC Push] Invalid JSON response:",
+                            responseText
+                        );
+
+                    }
+
+
+                    if (
+                        !response.ok
+                        ||
+                        !data.ok
+                    ) {
+
+                        throw new Error(
+                            data.error
+                            ||
+                            "Unable to save preferences."
+                        );
+
+                    }
+
+
+                    // -------------------------------------
+                    // STORE LOCAL COPY
+                    // -------------------------------------
+
+                    localStorage.setItem(
+                        "lac_notification_categories",
+                        JSON.stringify(
+                            data.categories
+                            || categories
+                        )
+                    );
+
+
+                    localStorage.setItem(
+                        "lac_notifications_enabled",
+                        "true"
+                    );
+
+
+                    setPreferenceStatus(
+                        "✓ Your notification preferences are saved."
+                    );
+
+
+                    setStatus(
+                        "✓ Local notifications enabled."
+                    );
+
+
+                    enableButton.textContent =
+                        "Manage Notification Preferences";
+
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        "[LaC Push]",
+                        error
+                    );
+
+
+                    setPreferenceStatus(
+                        error.message
+                        ||
+                        "Unable to save notification preferences."
                     );
 
                 }
 
+                finally {
 
-                // -----------------------------------------
-                // SAVE TO DATABASE
-                // -----------------------------------------
+                    saveButton.disabled =
+                        false;
 
-                await saveSubscription(
-                    subscription
-                );
+                }
+
+            }
+        );
 
 
-                // -----------------------------------------
-                // SUCCESS
-                // -----------------------------------------
+        // =================================================
+        // RESTORE SAVED PREFERENCES
+        // =================================================
 
-                enableButton.textContent =
-                    "Notifications Enabled ✓";
+        function restorePreferences() {
 
+            let saved = [];
+
+
+            try {
+
+                saved =
+                    JSON.parse(
+                        localStorage.getItem(
+                            "lac_notification_categories"
+                        )
+                        ||
+                        "[]"
+                    );
+
+            }
+
+            catch (error) {
+
+                saved = [];
+
+            }
+
+
+            if (
+                !Array.isArray(
+                    saved
+                )
+            ) {
+
+                saved = [];
+
+            }
+
+
+            saved.forEach(
+                category => {
+
+                    const checkbox =
+                        document.querySelector(
+                            'input[name="lac_notification_category"][value="' +
+                            CSS.escape(category) +
+                            '"]'
+                        );
+
+
+                    if (checkbox) {
+
+                        checkbox.checked =
+                            true;
+
+                    }
+
+                }
+            );
+
+
+            if (
+                Notification.permission
+                === "granted"
+                &&
+                saved.length > 0
+            ) {
 
                 setStatus(
-                    "✓ Local notifications are enabled.",
-                    "success"
+                    "✓ Local notifications enabled."
                 );
-
-
-                console.log(
-                    "[LaC Push] Notifications successfully enabled."
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "[LaC Push] ERROR:",
-                    error
-                );
-
-
-                enableButton.disabled =
-                    false;
 
 
                 enableButton.textContent =
-                    "Enable Local Notifications";
-
-
-                setStatus(
-                    error.message ||
-                    "Could not enable notifications.",
-                    "error"
-                );
+                    "Manage Notification Preferences";
 
             }
 
@@ -678,13 +751,37 @@ document.addEventListener(
 
 
         // =================================================
-        // BUTTON CLICK
+        // MANAGE EXISTING PREFERENCES
         // =================================================
 
-        enableButton.addEventListener(
-            "click",
-            enableNotifications
-        );
+        if (
+            localStorage.getItem(
+                "lac_notifications_enabled"
+            )
+            === "true"
+        ) {
+
+            enableButton.addEventListener(
+                "click",
+                function () {
+
+                    if (
+                        Notification.permission
+                        === "granted"
+                    ) {
+
+                        preferencePanel.hidden =
+                            false;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        restorePreferences();
 
     }
 );
