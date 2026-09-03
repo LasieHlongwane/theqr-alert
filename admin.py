@@ -1321,6 +1321,690 @@ def analytics():
       high_interest_low_action[:5]
     )
 
+        # =========================================================
+    # ACCESS POINT PERFORMANCE
+    # =========================================================
+
+    engagement_by_access_point = {}
+
+
+    engagement_access_rows = (
+
+        db.session.query(
+
+            EngagementEvent.access_point_id,
+
+            EngagementEvent.event_type,
+
+            func.count(
+                EngagementEvent.id
+            ).label(
+                "event_count"
+            ),
+
+        )
+
+        .filter(
+            EngagementEvent.access_point_id.isnot(
+                None
+            )
+        )
+
+        .group_by(
+            EngagementEvent.access_point_id,
+            EngagementEvent.event_type,
+        )
+
+        .all()
+
+    )
+
+
+    for row in engagement_access_rows:
+
+        if (
+            row.access_point_id
+            not in engagement_by_access_point
+        ):
+
+            engagement_by_access_point[
+                row.access_point_id
+            ] = {}
+
+
+        engagement_by_access_point[
+            row.access_point_id
+        ][
+            row.event_type
+        ] = row.event_count
+
+
+    access_point_performance = []
+
+
+    for point in top_locations:
+
+        events = (
+            engagement_by_access_point.get(
+                point["id"],
+                {},
+            )
+        )
+
+
+        listing_views = int(
+            events.get(
+                "listing_view",
+                0,
+            )
+        )
+
+
+        useful_actions = (
+
+            int(
+                events.get(
+                    "whatsapp_click",
+                    0,
+                )
+            )
+
+            +
+
+            int(
+                events.get(
+                    "call_click",
+                    0,
+                )
+            )
+
+            +
+
+            int(
+                events.get(
+                    "directions_click",
+                    0,
+                )
+            )
+
+            +
+
+            int(
+                events.get(
+                    "share_click",
+                    0,
+                )
+            )
+
+        )
+
+
+        if listing_views > 0:
+
+            actions_per_100_views = round(
+                (
+                    useful_actions
+                    /
+                    listing_views
+                )
+                * 100,
+                1,
+            )
+
+        else:
+
+            actions_per_100_views = 0
+
+
+        access_point_performance.append({
+
+            **point,
+
+            "listing_views":
+                listing_views,
+
+            "useful_actions":
+                useful_actions,
+
+            "actions_per_100_views":
+                actions_per_100_views,
+
+        })
+
+
+    # =========================================================
+    # ZONE PERFORMANCE
+    # =========================================================
+
+    zone_engagement_rows = (
+
+        db.session.query(
+
+            EngagementEvent.zone_id,
+
+            EngagementEvent.event_type,
+
+            func.count(
+                EngagementEvent.id
+            ).label(
+                "event_count"
+            ),
+
+        )
+
+        .filter(
+            EngagementEvent.zone_id.isnot(
+                None
+            )
+        )
+
+        .group_by(
+            EngagementEvent.zone_id,
+            EngagementEvent.event_type,
+        )
+
+        .all()
+
+    )
+
+
+    zone_engagement_map = {}
+
+
+    for row in zone_engagement_rows:
+
+        if (
+            row.zone_id
+            not in zone_engagement_map
+        ):
+
+            zone_engagement_map[
+                row.zone_id
+            ] = {}
+
+
+        zone_engagement_map[
+            row.zone_id
+        ][
+            row.event_type
+        ] = row.event_count
+
+
+    zone_scan_map = {
+        zone.name: zone.scan_count
+        for zone in zone_query
+    }
+
+
+    zone_performance = []
+
+
+    all_zones = (
+        Zone.query
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+
+    for zone in all_zones:
+
+        events = (
+            zone_engagement_map.get(
+                zone.id,
+                {},
+            )
+        )
+
+
+        listing_views = int(
+            events.get(
+                "listing_view",
+                0,
+            )
+        )
+
+
+        useful_actions = (
+
+            int(
+                events.get(
+                    "whatsapp_click",
+                    0,
+                )
+            )
+
+            +
+
+            int(
+                events.get(
+                    "call_click",
+                    0,
+                )
+            )
+
+            +
+
+            int(
+                events.get(
+                    "directions_click",
+                    0,
+                )
+            )
+
+            +
+
+            int(
+                events.get(
+                    "share_click",
+                    0,
+                )
+            )
+
+        )
+
+
+        scan_count = int(
+            zone_scan_map.get(
+                zone.name,
+                0,
+            )
+        )
+
+
+        percentage = (
+
+            scan_count
+            /
+            total_scans
+            *
+            100
+
+            if total_scans
+
+            else 0
+
+        )
+
+
+        zone_performance.append({
+
+            "id":
+                zone.id,
+
+            "name":
+                zone.name,
+
+            "scan_count":
+                scan_count,
+
+            "listing_views":
+                listing_views,
+
+            "useful_actions":
+                useful_actions,
+
+            "percentage":
+                round(
+                    percentage,
+                    1,
+                ),
+
+        })
+
+
+    zone_performance.sort(
+
+        key=lambda row:
+            row["scan_count"],
+
+        reverse=True,
+
+    )
+
+
+    # =========================================================
+    # CATEGORY PERFORMANCE
+    # =========================================================
+
+    category_engagement_rows = (
+
+        db.session.query(
+
+            EngagementEvent.category,
+
+            EngagementEvent.event_type,
+
+            func.count(
+                EngagementEvent.id
+            ).label(
+                "event_count"
+            ),
+
+        )
+
+        .filter(
+            EngagementEvent.category.isnot(
+                None
+            )
+        )
+
+        .group_by(
+            EngagementEvent.category,
+            EngagementEvent.event_type,
+        )
+
+        .all()
+
+    )
+
+
+    category_engagement_map = {}
+
+
+    for row in category_engagement_rows:
+
+        if (
+            row.category
+            not in category_engagement_map
+        ):
+
+            category_engagement_map[
+                row.category
+            ] = {}
+
+
+        category_engagement_map[
+            row.category
+        ][
+            row.event_type
+        ] = row.event_count
+
+
+    category_view_map = {
+
+        item["category"]:
+            item["views"]
+
+        for item in category_activity
+
+    }
+
+
+    category_performance = []
+
+
+    all_category_slugs = set(
+        category_view_map.keys()
+    ) | set(
+        category_engagement_map.keys()
+    )
+
+
+    for slug in all_category_slugs:
+
+        events = (
+            category_engagement_map.get(
+                slug,
+                {},
+            )
+        )
+
+
+        category_record = (
+            category_map.get(
+                slug
+            )
+        )
+
+
+        whatsapp = int(
+            events.get(
+                "whatsapp_click",
+                0,
+            )
+        )
+
+
+        calls = int(
+            events.get(
+                "call_click",
+                0,
+            )
+        )
+
+
+        directions = int(
+            events.get(
+                "directions_click",
+                0,
+            )
+        )
+
+
+        shares = int(
+            events.get(
+                "share_click",
+                0,
+            )
+        )
+
+
+        useful_actions = (
+            whatsapp
+            + calls
+            + directions
+            + shares
+        )
+
+
+        category_performance.append({
+
+            "slug":
+                slug,
+
+            "name":
+                (
+                    category_record.name
+
+                    if category_record
+
+                    else slug.replace(
+                        "-",
+                        " ",
+                    ).title()
+                ),
+
+            "icon":
+                (
+                    category_record.icon
+
+                    if category_record
+
+                    else ""
+                ),
+
+            "category_views":
+                int(
+                    category_view_map.get(
+                        slug,
+                        0,
+                    )
+                ),
+
+            "listing_views":
+                int(
+                    events.get(
+                        "listing_view",
+                        0,
+                    )
+                ),
+
+            "whatsapp":
+                whatsapp,
+
+            "calls":
+                calls,
+
+            "directions":
+                directions,
+
+            "shares":
+                shares,
+
+            "useful_actions":
+                useful_actions,
+
+        })
+
+
+    category_performance.sort(
+
+        key=lambda row: (
+
+            row["listing_views"],
+            row["useful_actions"],
+
+        ),
+
+        reverse=True,
+
+    )
+
+
+    # =========================================================
+    # DAILY NETWORK ACTIVITY
+    # =========================================================
+
+    engagement_14_day_rows = (
+
+        EngagementEvent.query
+
+        .filter(
+            EngagementEvent.created_at
+            >= fourteen_days_ago
+        )
+
+        .all()
+
+    )
+
+
+    daily_engagement_counts = {}
+
+
+    for number in range(14):
+
+        day = (
+            fourteen_days_ago.date()
+            +
+            timedelta(
+                days=number
+            )
+        )
+
+
+        daily_engagement_counts[
+            day
+        ] = {
+
+            "listing_views":
+                0,
+
+            "useful_actions":
+                0,
+
+        }
+
+
+    useful_event_types = {
+        "whatsapp_click",
+        "call_click",
+        "directions_click",
+        "share_click",
+    }
+
+
+    for event in engagement_14_day_rows:
+
+        event_day = (
+            event.created_at.date()
+        )
+
+
+        if (
+            event_day
+            not in daily_engagement_counts
+        ):
+
+            continue
+
+
+        if (
+            event.event_type
+            == "listing_view"
+        ):
+
+            daily_engagement_counts[
+                event_day
+            ][
+                "listing_views"
+            ] += 1
+
+
+        elif (
+            event.event_type
+            in useful_event_types
+        ):
+
+            daily_engagement_counts[
+                event_day
+            ][
+                "useful_actions"
+            ] += 1
+
+
+    daily_activity = []
+
+
+    for scan_day in daily_scan_trend:
+
+        day = scan_day["date"]
+
+        engagement = (
+            daily_engagement_counts.get(
+                day,
+                {},
+            )
+        )
+
+
+        daily_activity.append({
+
+            "date":
+                day,
+
+            "label":
+                scan_day["label"],
+
+            "scans":
+                scan_day["count"],
+
+            "listing_views":
+                engagement.get(
+                    "listing_views",
+                    0,
+                ),
+
+            "useful_actions":
+                engagement.get(
+                    "useful_actions",
+                    0,
+                ),
+
+        })
+
     return render_template(
         "admin/analytics.html",
         total_scans=total_scans,
