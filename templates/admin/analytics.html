@@ -11,7 +11,7 @@
     >
 
     <title>
-        LAC Network Analytics
+        LaC Network Analytics
     </title>
 
     <link
@@ -22,7 +22,170 @@
         ) }}"
     >
 
+
+    <style>
+
+        /* =========================================
+           ANALYTICS TABLES
+        ========================================== */
+
+        .analytics-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 18px;
+        }
+
+
+        .analytics-table {
+            width: 100%;
+            min-width: 780px;
+            border-collapse: collapse;
+        }
+
+
+        .analytics-table th {
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.6;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+
+        .analytics-table td {
+            padding: 15px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            vertical-align: middle;
+        }
+
+
+        .analytics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        .analytics-table tbody tr:hover {
+            background: rgba(255,255,255,0.025);
+        }
+
+
+        .analytics-table-title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+
+        .analytics-table-title strong {
+            font-size: 0.92rem;
+        }
+
+
+        .analytics-table-title small {
+            opacity: 0.55;
+            font-size: 0.76rem;
+        }
+
+
+        .analytics-number {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+
+        .analytics-muted-number {
+            opacity: 0.65;
+        }
+
+
+        .analytics-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            background: rgba(255,255,255,0.07);
+        }
+
+
+        .analytics-status-strong {
+            background: rgba(80, 200, 120, 0.12);
+        }
+
+
+        .analytics-status-moderate {
+            background: rgba(255, 190, 70, 0.12);
+        }
+
+
+        .analytics-status-low {
+            background: rgba(255, 100, 100, 0.12);
+        }
+
+
+        .analytics-section-note {
+            margin-top: 6px;
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+
+
+        .analytics-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+
+        .analytics-link:hover {
+            text-decoration: underline;
+        }
+
+
+        .analytics-summary-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(150px, 1fr)
+                );
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+
+        .analytics-empty {
+            padding: 24px 0 8px;
+            opacity: 0.6;
+        }
+
+
+        .analytics-table-code {
+            font-family: monospace;
+            font-size: 0.78rem;
+            opacity: 0.65;
+        }
+
+
+        @media (max-width: 700px) {
+
+            .analytics-table th,
+            .analytics-table td {
+                padding: 12px 10px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body class="lac-admin-body">
 
@@ -50,43 +213,23 @@
 
         <div class="admin-nav-links">
 
-            <a
-                href="{{ url_for(
-                    'admin.analytics'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.analytics') }}">
                 Analytics
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.zones'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.zones') }}">
                 Zones
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.access_points'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.access_points') }}">
                 Access Points
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.content_list'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.content_list') }}">
                 Content
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.submissions'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.submissions') }}">
                 Submissions
             </a>
 
@@ -94,11 +237,11 @@
                 Categories
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.logout'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.notifications') }}">
+                Notifications
+            </a>
+
+            <a href="{{ url_for('admin.logout') }}">
                 Logout
             </a>
 
@@ -122,9 +265,10 @@
         </h1>
 
         <p>
-            Understand how people discover
-            local information across the LaC
-            physical access network.
+            Understand physical reach,
+            local demand, content interest
+            and useful actions across the
+            LaC network.
         </p>
 
     </section>
@@ -135,16 +279,13 @@
     ========================================== -->
 
     <a
-        href="{{ url_for(
-            'admin.submissions'
-        ) }}"
+        href="{{ url_for('admin.submissions') }}"
         class="pending-review-card"
     >
 
         <div class="pending-review-icon">
             📥
         </div>
-
 
         <div class="pending-review-content">
 
@@ -176,290 +317,317 @@
 
 
     <!-- =========================================
-         PRIMARY METRICS
+         NETWORK OVERVIEW
     ========================================== -->
-
-    <section class="analytics-v2-grid">
-
-        <div class="metric-card">
-
-            <span>
-                Total QR Scans
-            </span>
-
-            <strong>
-                {{ total_scans }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Today
-            </span>
-
-            <strong>
-                {{ today_scans }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Last 7 Days
-            </span>
-
-            <strong>
-                {{ seven_day_scans }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Last 30 Days
-            </span>
-
-            <strong>
-                {{ thirty_day_scans }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                7-Day Growth
-            </span>
-
-            <strong>
-
-                {% if seven_day_growth > 0 %}
-                    +
-                {% endif %}
-
-                {{ seven_day_growth }}%
-
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Active Access Points
-            </span>
-
-            <strong>
-                {{ active_access_points }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                30-Day Scans / Access Point
-            </span>
-
-            <strong>
-                {{ scans_per_access_point }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Category Engagement
-            </span>
-
-            <strong>
-                {{ category_engagement_rate }}%
-            </strong>
-
-        </div>
-
-    </section>
-
-    
-
-    <!-- =========================================
-     CONTENT PERFORMANCE
-========================================== -->
 
     <section class="admin-panel analytics-full-panel">
 
         <div class="analytics-panel-heading">
 
-          <div>
+            <div>
 
-            <p class="admin-eyebrow">
-                CONTENT INTELLIGENCE
-            </p>
+                <p class="admin-eyebrow">
+                    NETWORK OVERVIEW
+                </p>
 
-            <h2>
-                Top Listings
-            </h2>
+                <h2>
+                    Key Metrics
+                </h2>
 
-          </div>
+            </div>
 
-          <span class="analytics-period">
-            Top 10
-          </span>
+        </div>
+
+
+        <div class="analytics-summary-grid">
+
+            <div class="metric-card">
+
+                <span>
+                    Total QR Scans
+                </span>
+
+                <strong>
+                    {{ total_scans }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    Today
+                </span>
+
+                <strong>
+                    {{ today_scans }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    Last 7 Days
+                </span>
+
+                <strong>
+                    {{ seven_day_scans }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    Last 30 Days
+                </span>
+
+                <strong>
+                    {{ thirty_day_scans }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    7-Day Growth
+                </span>
+
+                <strong>
+
+                    {% if seven_day_growth > 0 %}
+                        +
+                    {% endif %}
+
+                    {{ seven_day_growth }}%
+
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    Active Access Points
+                </span>
+
+                <strong>
+                    {{ active_access_points }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    Listing Views
+                </span>
+
+                <strong>
+                    {{ total_listing_views }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric-card">
+
+                <span>
+                    Useful Actions
+                </span>
+
+                <strong>
+                    {{ total_useful_actions }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         CONTENT PERFORMANCE
+    ========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    CONTENT INTELLIGENCE
+                </p>
+
+                <h2>
+                    Top Listings
+                </h2>
+
+                <p class="analytics-section-note">
+                    Listings ranked by useful actions,
+                    with views used as the tie-breaker.
+                </p>
+
+            </div>
+
+            <span class="analytics-period">
+                Top 10
+            </span>
 
         </div>
 
 
         {% if top_content_performance %}
 
-        <div class="content-performance-table-wrap">
+        <div class="analytics-table-wrap">
 
-          <table class="content-performance-table">
+            <table class="analytics-table">
 
-            <thead>
+                <thead>
 
-                <tr>
+                    <tr>
 
-                    <th>
-                        Listing
-                    </th>
+                        <th>
+                            Listing
+                        </th>
 
-                    <th>
-                        Views
-                    </th>
+                        <th>
+                            Views
+                        </th>
 
-                    <th>
-                        WhatsApp
-                    </th>
+                        <th>
+                            WhatsApp
+                        </th>
 
-                    <th>
-                        Calls
-                    </th>
+                        <th>
+                            Calls
+                        </th>
 
-                    <th>
-                        Directions
-                    </th>
+                        <th>
+                            Directions
+                        </th>
 
-                    <th>
-                        Shares
-                    </th>
+                        <th>
+                            Shares
+                        </th>
 
-                    <th>
-                        Actions
-                    </th>
+                        <th>
+                            Actions
+                        </th>
 
-                    <th>
-                        Actions / 100 Views
-                    </th>
+                        <th>
+                            Actions / 100 Views
+                        </th>
 
-                </tr>
+                    </tr>
 
-            </thead>
-
-
-            <tbody>
-
-                {% for row in top_content_performance %}
-
-                <tr>
-
-                    <td>
-
-                        <div class="performance-listing-title">
-
-                            <a
-                                href="{{ url_for(
-                                    'listing_detail',
-                                    item_id=row.id
-                                ) }}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {{ row.title }}
-                            </a>
-
-                            <small>
-
-                                {{
-                                    row.category
-                                    | replace("-", " ")
-                                    | replace("_", " ")
-                                    | title
-                                }}
-
-                            </small>
-
-                        </div>
-
-                    </td>
+                </thead>
 
 
-                    <td>
-                        {{ row.views }}
-                    </td>
+                <tbody>
+
+                    {% for row in top_content_performance %}
+
+                    <tr>
+
+                        <td>
+
+                            <div class="analytics-table-title">
+
+                                <strong>
+
+                                    <a
+                                        class="analytics-link"
+                                        href="{{ url_for(
+                                            'listing_detail',
+                                            item_id=row.id
+                                        ) }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {{ row.title }}
+                                    </a>
+
+                                </strong>
+
+                                <small>
+
+                                    {{
+                                        row.category
+                                        | replace("-", " ")
+                                        | replace("_", " ")
+                                        | title
+                                    }}
+
+                                </small>
+
+                            </div>
+
+                        </td>
 
 
-                    <td>
-                        {{ row.whatsapp }}
-                    </td>
+                        <td class="analytics-number">
+                            {{ row.views }}
+                        </td>
 
 
-                    <td>
-                        {{ row.calls }}
-                    </td>
+                        <td>
+                            {{ row.whatsapp }}
+                        </td>
 
 
-                    <td>
-                        {{ row.directions }}
-                    </td>
+                        <td>
+                            {{ row.calls }}
+                        </td>
 
 
-                    <td>
-                        {{ row.shares }}
-                    </td>
+                        <td>
+                            {{ row.directions }}
+                        </td>
 
 
-                    <td>
+                        <td>
+                            {{ row.shares }}
+                        </td>
 
-                        <strong>
+
+                        <td class="analytics-number">
                             {{ row.useful_actions }}
-                        </strong>
-
-                    </td>
+                        </td>
 
 
-                    <td>
+                        <td>
 
-                        {{ row.actions_per_100_views }}%
+                            <strong>
+                                {{ row.actions_per_100_views }}
+                            </strong>
 
-                    </td>
+                        </td>
 
-                </tr>
+                    </tr>
 
-                {% endfor %}
+                    {% endfor %}
 
-            </tbody>
+                </tbody>
 
-          </table>
+            </table>
 
         </div>
 
-
         {% else %}
 
-        <p class="muted">
-          No listing engagement data yet.
+        <p class="analytics-empty">
+            No listing engagement data yet.
         </p>
 
         {% endif %}
@@ -467,287 +635,8 @@
     </section>
 
 
-    <section class="admin-two-column">
-
-
-    <!-- =====================================
-         MOST VIEWED
-    ====================================== -->
-
-      <div class="admin-panel">
-
-        <div class="analytics-panel-heading">
-
-            <div>
-
-                <p class="admin-eyebrow">
-                    ATTENTION
-                </p>
-
-                <h2>
-                    Most Viewed Listings
-                </h2>
-
-            </div>
-
-        </div>
-
-
-        {% if most_viewed_listings %}
-
-            {% for row in most_viewed_listings %}
-
-            <div class="content-performance-row">
-
-                <div>
-
-                    <strong>
-                        {{ row.title }}
-                    </strong>
-
-                    <small>
-
-                        {{
-                            row.category
-                            | replace("-", " ")
-                            | replace("_", " ")
-                            | title
-                        }}
-
-                    </small>
-
-                </div>
-
-
-                <div class="content-performance-number">
-
-                    <strong>
-                        {{ row.views }}
-                    </strong>
-
-                    <span>
-                        views
-                    </span>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-
-        {% else %}
-
-            <p class="muted">
-                No listing views yet.
-            </p>
-
-        {% endif %}
-
-      </div>
-
-
-
-    <!-- =====================================
-         HIGH INTEREST / LOW ACTION
-    ====================================== -->
-
-      <div class="admin-panel">
-
-        <div class="analytics-panel-heading">
-
-            <div>
-
-                <p class="admin-eyebrow">
-                    OPPORTUNITY
-                </p>
-
-                <h2>
-                    Viewed But No Action
-                </h2>
-
-            </div>
-
-        </div>
-
-
-        {% if high_interest_low_action %}
-
-            {% for row in high_interest_low_action %}
-
-            <div class="content-performance-row">
-
-                <div>
-
-                    <strong>
-                        {{ row.title }}
-                    </strong>
-
-                    <small>
-
-                        {{
-                            row.category
-                            | replace("-", " ")
-                            | replace("_", " ")
-                            | title
-                        }}
-
-                    </small>
-
-                </div>
-
-
-                <div class="content-performance-number">
-
-                    <strong>
-                        {{ row.views }}
-                    </strong>
-
-                    <span>
-                        views
-                    </span>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-
-        {% else %}
-
-            <p class="muted">
-                No high-interest listings without actions.
-            </p>
-
-        {% endif %}
-
-      </div>
-
-
-    </section>
-
     <!-- =========================================
-     ENGAGEMENT
-========================================== -->
-
-    <section class="admin-panel analytics-full-panel">
-
-      <div class="analytics-panel-heading">
-
-        <div>
-
-            <p class="admin-eyebrow">
-                USER ACTIONS
-            </p>
-
-            <h2>
-                Listing Engagement
-            </h2>
-
-        </div>
-
-
-        <span class="analytics-period">
-
-            {{
-                listing_action_rate
-            }}%
-            action rate
-
-        </span>
-
-      </div>
-
-
-      <section class="analytics-v2-grid">
-
-
-        <div class="metric-card">
-
-            <span>
-                Listing Views
-            </span>
-
-            <strong>
-                {{ total_listing_views }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                WhatsApp Clicks
-            </span>
-
-            <strong>
-                {{ total_whatsapp_clicks }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Calls
-            </span>
-
-            <strong>
-                {{ total_call_clicks }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Shares
-            </span>
-
-            <strong>
-                {{ total_share_clicks }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Directions
-            </span>
-
-            <strong>
-                {{ total_directions_clicks }}
-            </strong>
-
-        </div>
-
-
-        <div class="metric-card">
-
-            <span>
-                Useful Actions
-            </span>
-
-            <strong>
-                {{ total_useful_actions }}
-            </strong>
-
-        </div>
-
-
-      </section>
-
-    </section>
-
-
-    <!-- =========================================
-         DAILY TREND
+         ENGAGEMENT ACTIONS
     ========================================== -->
 
     <section class="admin-panel analytics-full-panel">
@@ -757,226 +646,165 @@
             <div>
 
                 <p class="admin-eyebrow">
-                    NETWORK TREND
+                    USER ACTIONS
                 </p>
 
                 <h2>
-                    Daily QR Scans
+                    Engagement Summary
                 </h2>
 
-            </div>
+                <p class="analytics-section-note">
+                    Actions users take after viewing
+                    a local listing.
+                </p>
 
+            </div>
 
             <span class="analytics-period">
-                Last 14 days
+                {{ listing_action_rate }}
+                actions / 100 views
             </span>
 
         </div>
 
 
-        <div class="daily-trend-chart">
+        <div class="analytics-table-wrap">
 
-            {% for day in daily_scan_trend %}
+            <table class="analytics-table">
 
-            <div class="trend-row">
+                <thead>
 
-                <span class="trend-date">
-                    {{ day.label }}
-                </span>
+                    <tr>
+
+                        <th>
+                            Behaviour
+                        </th>
+
+                        <th>
+                            Count
+                        </th>
+
+                        <th>
+                            Meaning
+                        </th>
+
+                    </tr>
+
+                </thead>
 
 
-                <div class="trend-track">
+                <tbody>
 
-                    <div
-                        class="trend-bar"
-                        style="
-                            width:
-                            {{ day.bar_percentage }}%;
-                        "
-                    ></div>
+                    <tr>
 
-                </div>
+                        <td>
+                            Listing Views
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ total_listing_views }}
+                        </td>
+
+                        <td>
+                            People opened individual listings
+                        </td>
+
+                    </tr>
 
 
-                <strong class="trend-count">
-                    {{ day.count }}
-                </strong>
+                    <tr>
 
-            </div>
+                        <td>
+                            WhatsApp Clicks
+                        </td>
 
-            {% endfor %}
+                        <td class="analytics-number">
+                            {{ total_whatsapp_clicks }}
+                        </td>
+
+                        <td>
+                            Strong contact intent
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Phone Calls
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ total_call_clicks }}
+                        </td>
+
+                        <td>
+                            Direct communication intent
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Directions
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ total_directions_clicks }}
+                        </td>
+
+                        <td>
+                            Possible physical visit intent
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            Shares
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ total_share_clicks }}
+                        </td>
+
+                        <td>
+                            Content distributed to others
+                        </td>
+
+                    </tr>
+
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                Total Useful Actions
+                            </strong>
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ total_useful_actions }}
+                        </td>
+
+                        <td>
+                            WhatsApp + calls + directions + shares
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
 
         </div>
 
     </section>
-
-
-    <!-- =========================================
-         CATEGORY + ZONE
-    ========================================== -->
-
-    <div class="admin-two-column">
-
-
-        <!-- CATEGORY DEMAND -->
-
-        <section class="admin-panel">
-
-            <div class="analytics-panel-heading">
-
-                <div>
-
-                    <p class="admin-eyebrow">
-                        LOCAL DEMAND
-                    </p>
-
-                    <h2>
-                        Category Interest
-                    </h2>
-
-                </div>
-
-
-                <strong>
-                    {{ total_category_views }}
-                </strong>
-
-            </div>
-
-
-            {% if category_activity %}
-
-                {% for item in category_activity %}
-
-                <div class="analytics-demand-row">
-
-                    <div class="analytics-demand-info">
-
-                        <strong>
-
-                            {% if item.icon %}
-                                {{ item.icon }}
-                            {% endif %}
-
-                            {{ item.name }}
-
-                        </strong>
-
-                        <span>
-                            {{ item.percentage }}%
-                            of category views
-                        </span>
-
-                    </div>
-
-
-                    <div class="analytics-small-track">
-
-                        <div
-                            class="analytics-small-bar"
-                            style="
-                                width:
-                                {{ item.percentage }}%;
-                            "
-                        ></div>
-
-                    </div>
-
-
-                    <strong>
-                        {{ item.views }}
-                    </strong>
-
-                </div>
-
-                {% endfor %}
-
-
-            {% else %}
-
-                <p class="muted">
-                    No category activity yet.
-                </p>
-
-            {% endif %}
-
-        </section>
-
-
-        <!-- ZONE PERFORMANCE -->
-
-        <section class="admin-panel">
-
-            <div class="analytics-panel-heading">
-
-                <div>
-
-                    <p class="admin-eyebrow">
-                        GEOGRAPHY
-                    </p>
-
-                    <h2>
-                        Zone Performance
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            {% if zone_activity %}
-
-                {% for zone in zone_activity %}
-
-                <div class="analytics-demand-row">
-
-                    <div class="analytics-demand-info">
-
-                        <strong>
-                            📍 {{ zone.name }}
-                        </strong>
-
-                        <span>
-                            {{ zone.percentage }}%
-                            of network scans
-                        </span>
-
-                    </div>
-
-
-                    <div class="analytics-small-track">
-
-                        <div
-                            class="analytics-small-bar"
-                            style="
-                                width:
-                                {{ zone.percentage }}%;
-                            "
-                        ></div>
-
-                    </div>
-
-
-                    <strong>
-                        {{ zone.scan_count }}
-                    </strong>
-
-                </div>
-
-                {% endfor %}
-
-
-            {% else %}
-
-                <p class="muted">
-                    No zone activity yet.
-                </p>
-
-            {% endif %}
-
-        </section>
-
-    </div>
 
 
     <!-- =========================================
@@ -990,91 +818,139 @@
             <div>
 
                 <p class="admin-eyebrow">
-                    PHYSICAL DISTRIBUTION
+                    PHYSICAL NETWORK
                 </p>
 
                 <h2>
-                    Top Access Points
+                    Access Point Performance
                 </h2>
+
+                <p class="analytics-section-note">
+                    Compare physical QR locations by
+                    reach and downstream engagement.
+                </p>
 
             </div>
 
         </div>
 
 
-        {% if top_locations %}
+        {% if access_point_performance %}
 
-            {% for point in top_locations %}
+        <div class="analytics-table-wrap">
 
-            <div class="access-performance-row">
+            <table class="analytics-table">
 
-                <div>
+                <thead>
 
-                    <strong>
-                        {{ point.name }}
-                    </strong>
+                    <tr>
 
-                    <span>
-                        📍 {{ point.zone_name }}
-                    </span>
+                        <th>
+                            Access Point
+                        </th>
 
-                    <span>
-                        {{ point.code }}
-                    </span>
+                        <th>
+                            Zone
+                        </th>
 
-                </div>
+                        <th>
+                            Type
+                        </th>
 
+                        <th>
+                            Scans
+                        </th>
 
-                <div>
+                        <th>
+                            Listing Views
+                        </th>
 
-                    <span>
+                        <th>
+                            Useful Actions
+                        </th>
 
-                        {{
-                            point.location_type
-                            |replace("_", " ")
-                            |title
-                        }}
+                        <th>
+                            Actions / 100 Views
+                        </th>
 
-                    </span>
+                    </tr>
 
-                </div>
-
-
-                <div>
-
-                    <span>
-                        Network share
-                    </span>
-
-                    <strong>
-                        {{ point.share }}%
-                    </strong>
-
-                </div>
+                </thead>
 
 
-                <div>
+                <tbody>
 
-                    <span>
-                        Scans
-                    </span>
+                    {% for point in access_point_performance %}
 
-                    <strong>
-                        {{ point.scan_count }}
-                    </strong>
+                    <tr>
 
-                </div>
+                        <td>
 
-            </div>
+                            <div class="analytics-table-title">
 
-            {% endfor %}
+                                <strong>
+                                    {{ point.name }}
+                                </strong>
 
+                                <small class="analytics-table-code">
+                                    {{ point.code }}
+                                </small>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+                            📍 {{ point.zone_name }}
+                        </td>
+
+
+                        <td>
+
+                            {{
+                                point.location_type
+                                | replace("_", " ")
+                                | title
+                            }}
+
+                        </td>
+
+
+                        <td class="analytics-number">
+                            {{ point.scan_count }}
+                        </td>
+
+
+                        <td>
+                            {{ point.listing_views }}
+                        </td>
+
+
+                        <td class="analytics-number">
+                            {{ point.useful_actions }}
+                        </td>
+
+
+                        <td>
+                            {{ point.actions_per_100_views }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
 
         {% else %}
 
-            <p class="muted">
-                No access-point scans yet.
-            </p>
+        <p class="analytics-empty">
+            No access-point activity yet.
+        </p>
 
         {% endif %}
 
@@ -1082,7 +958,581 @@
 
 
     <!-- =========================================
-         LOW-PERFORMING ACCESS POINTS
+         CATEGORY PERFORMANCE
+    ========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    LOCAL DEMAND
+                </p>
+
+                <h2>
+                    Category Performance
+                </h2>
+
+                <p class="analytics-section-note">
+                    See which types of local information
+                    attract attention and useful actions.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if category_performance %}
+
+        <div class="analytics-table-wrap">
+
+            <table class="analytics-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Category
+                        </th>
+
+                        <th>
+                            Category Views
+                        </th>
+
+                        <th>
+                            Listing Views
+                        </th>
+
+                        <th>
+                            WhatsApp
+                        </th>
+
+                        <th>
+                            Calls
+                        </th>
+
+                        <th>
+                            Directions
+                        </th>
+
+                        <th>
+                            Shares
+                        </th>
+
+                        <th>
+                            Useful Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in category_performance %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong>
+
+                                {% if item.icon %}
+                                    {{ item.icon }}
+                                {% endif %}
+
+                                {{ item.name }}
+
+                            </strong>
+
+                        </td>
+
+
+                        <td class="analytics-number">
+                            {{ item.category_views }}
+                        </td>
+
+
+                        <td>
+                            {{ item.listing_views }}
+                        </td>
+
+
+                        <td>
+                            {{ item.whatsapp }}
+                        </td>
+
+
+                        <td>
+                            {{ item.calls }}
+                        </td>
+
+
+                        <td>
+                            {{ item.directions }}
+                        </td>
+
+
+                        <td>
+                            {{ item.shares }}
+                        </td>
+
+
+                        <td class="analytics-number">
+                            {{ item.useful_actions }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <p class="analytics-empty">
+            No category engagement data yet.
+        </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================
+         ZONE PERFORMANCE
+    ========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    GEOGRAPHY
+                </p>
+
+                <h2>
+                    Zone Performance
+                </h2>
+
+                <p class="analytics-section-note">
+                    Compare activity across LaC operating zones.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if zone_performance %}
+
+        <div class="analytics-table-wrap">
+
+            <table class="analytics-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Zone
+                        </th>
+
+                        <th>
+                            QR Scans
+                        </th>
+
+                        <th>
+                            Listing Views
+                        </th>
+
+                        <th>
+                            Useful Actions
+                        </th>
+
+                        <th>
+                            Network Share
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for zone in zone_performance %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                📍 {{ zone.name }}
+                            </strong>
+                        </td>
+
+
+                        <td class="analytics-number">
+                            {{ zone.scan_count }}
+                        </td>
+
+
+                        <td>
+                            {{ zone.listing_views }}
+                        </td>
+
+
+                        <td class="analytics-number">
+                            {{ zone.useful_actions }}
+                        </td>
+
+
+                        <td>
+                            {{ zone.percentage }}%
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <p class="analytics-empty">
+            No zone activity yet.
+        </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================
+         DAILY NETWORK ACTIVITY
+    ========================================== -->
+
+    <section class="admin-panel analytics-full-panel">
+
+        <div class="analytics-panel-heading">
+
+            <div>
+
+                <p class="admin-eyebrow">
+                    NETWORK TREND
+                </p>
+
+                <h2>
+                    Daily Activity
+                </h2>
+
+                <p class="analytics-section-note">
+                    Daily scans, listing interest and useful actions.
+                </p>
+
+            </div>
+
+            <span class="analytics-period">
+                Last 14 Days
+            </span>
+
+        </div>
+
+
+        {% if daily_activity %}
+
+        <div class="analytics-table-wrap">
+
+            <table class="analytics-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            QR Scans
+                        </th>
+
+                        <th>
+                            Listing Views
+                        </th>
+
+                        <th>
+                            Useful Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for day in daily_activity %}
+
+                    <tr>
+
+                        <td>
+                            {{ day.label }}
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ day.scans }}
+                        </td>
+
+                        <td>
+                            {{ day.listing_views }}
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ day.useful_actions }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================
+         MOST VIEWED + OPPORTUNITIES
+    ========================================== -->
+
+    <div class="admin-two-column">
+
+
+        <section class="admin-panel">
+
+            <div class="analytics-panel-heading">
+
+                <div>
+
+                    <p class="admin-eyebrow">
+                        ATTENTION
+                    </p>
+
+                    <h2>
+                        Most Viewed Listings
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            {% if most_viewed_listings %}
+
+            <div class="analytics-table-wrap">
+
+                <table class="analytics-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Listing
+                            </th>
+
+                            <th>
+                                Views
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in most_viewed_listings %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="analytics-table-title">
+
+                                    <strong>
+                                        {{ row.title }}
+                                    </strong>
+
+                                    <small>
+
+                                        {{
+                                            row.category
+                                            | replace("-", " ")
+                                            | title
+                                        }}
+
+                                    </small>
+
+                                </div>
+
+                            </td>
+
+                            <td class="analytics-number">
+                                {{ row.views }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <p class="analytics-empty">
+                No listing views yet.
+            </p>
+
+            {% endif %}
+
+        </section>
+
+
+        <section class="admin-panel">
+
+            <div class="analytics-panel-heading">
+
+                <div>
+
+                    <p class="admin-eyebrow">
+                        OPPORTUNITY
+                    </p>
+
+                    <h2>
+                        Viewed But No Action
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            {% if high_interest_low_action %}
+
+            <div class="analytics-table-wrap">
+
+                <table class="analytics-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Listing
+                            </th>
+
+                            <th>
+                                Views
+                            </th>
+
+                            <th>
+                                Signal
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in high_interest_low_action %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="analytics-table-title">
+
+                                    <strong>
+                                        {{ row.title }}
+                                    </strong>
+
+                                    <small>
+
+                                        {{
+                                            row.category
+                                            | replace("-", " ")
+                                            | title
+                                        }}
+
+                                    </small>
+
+                                </div>
+
+                            </td>
+
+                            <td class="analytics-number">
+                                {{ row.views }}
+                            </td>
+
+                            <td>
+
+                                <span class="analytics-status analytics-status-low">
+                                    No action
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <p class="analytics-empty">
+                No viewed listings without actions.
+            </p>
+
+            {% endif %}
+
+        </section>
+
+    </div>
+
+
+    <!-- =========================================
+         NETWORK HEALTH
     ========================================== -->
 
     <section class="admin-panel analytics-full-panel">
@@ -1101,7 +1551,6 @@
 
             </div>
 
-
             <span class="analytics-period">
                 ≤ 5 scans in 30 days
             </span>
@@ -1111,44 +1560,86 @@
 
         {% if low_performing_points %}
 
-            {% for point in low_performing_points %}
+        <div class="analytics-table-wrap">
 
-            <div class="analytics-row">
+            <table class="analytics-table">
 
-                <div>
+                <thead>
 
-                    <strong>
-                        {{ point.name }}
-                    </strong>
+                    <tr>
 
-                    <span>
-                        📍 {{ point.zone }}
-                        ·
-                        {{ point.code }}
-                    </span>
+                        <th>
+                            Access Point
+                        </th>
 
-                </div>
+                        <th>
+                            Zone
+                        </th>
 
+                        <th>
+                            Code
+                        </th>
 
-                <strong>
-                    {{ point.scan_count }}
-                    scans
-                </strong>
+                        <th>
+                            30-Day Scans
+                        </th>
 
-            </div>
+                        <th>
+                            Status
+                        </th>
 
-            {% endfor %}
+                    </tr>
 
+                </thead>
+
+                <tbody>
+
+                    {% for point in low_performing_points %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ point.name }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            📍 {{ point.zone }}
+                        </td>
+
+                        <td class="analytics-table-code">
+                            {{ point.code }}
+                        </td>
+
+                        <td class="analytics-number">
+                            {{ point.scan_count }}
+                        </td>
+
+                        <td>
+
+                            <span class="analytics-status analytics-status-low">
+                                Needs attention
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
 
         {% else %}
 
-            <p class="muted">
-
-                All active access points
-                have more than five scans
-                in the last 30 days.
-
-            </p>
+        <p class="analytics-empty">
+            All active access points have more
+            than five scans in the last 30 days.
+        </p>
 
         {% endif %}
 
@@ -1156,7 +1647,7 @@
 
 
     <!-- =========================================
-         RECENT ACTIVITY
+         RECENT QR ACTIVITY
     ========================================== -->
 
     <section class="admin-panel analytics-full-panel">
@@ -1180,44 +1671,89 @@
 
         {% if recent_scans %}
 
-            {% for scan in recent_scans %}
+        <div class="analytics-table-wrap">
 
-            <div class="analytics-row">
+            <table class="analytics-table">
 
-                <div>
+                <thead>
 
-                    <strong>
-                        {{ scan.access_point.name }}
-                    </strong>
+                    <tr>
 
-                    <span>
-                        📍
-                        {{ scan.access_point.zone.name }}
-                    </span>
+                        <th>
+                            Access Point
+                        </th>
 
-                </div>
+                        <th>
+                            Zone
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Time
+                        </th>
+
+                    </tr>
+
+                </thead>
 
 
-                <span>
+                <tbody>
 
-                    {{
-                        scan.scanned_at.strftime(
-                            "%d %b %Y %H:%M"
-                        )
-                    }}
+                    {% for scan in recent_scans %}
 
-                </span>
+                    <tr>
 
-            </div>
+                        <td>
+                            <strong>
+                                {{ scan.access_point.name }}
+                            </strong>
+                        </td>
 
-            {% endfor %}
 
+                        <td>
+                            📍 {{ scan.access_point.zone.name }}
+                        </td>
+
+
+                        <td>
+
+                            {{
+                                scan.scanned_at.strftime(
+                                    "%d %b %Y"
+                                )
+                            }}
+
+                        </td>
+
+
+                        <td>
+
+                            {{
+                                scan.scanned_at.strftime(
+                                    "%H:%M"
+                                )
+                            }}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
 
         {% else %}
 
-            <p class="muted">
-                No scans recorded yet.
-            </p>
+        <p class="analytics-empty">
+            No scans recorded yet.
+        </p>
 
         {% endif %}
 
