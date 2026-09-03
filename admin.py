@@ -2047,6 +2047,38 @@ def analytics():
         ),
 
         listing_action_rate=(
+            listing_action_rate
+        ),
+
+        top_content_performance=(
+            top_content_performance
+        ),
+
+        most_viewed_listings=(
+            most_viewed_listings
+        ),
+
+        high_interest_low_action=(
+            high_interest_low_action
+        ),
+
+        access_point_performance=(
+            access_point_performance
+        ),
+
+        zone_performance=(
+            zone_performance
+        ),
+
+        category_performance=(
+            category_performance
+        ),
+
+        daily_activity=(
+            daily_activity
+        ),
+
+        listing_action_rate=(
           listing_action_rate
         ),
         top_content_performance=top_content_performance,
