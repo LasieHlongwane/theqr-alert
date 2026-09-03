@@ -2077,9 +2077,6 @@ def analytics():
         daily_activity=(
             daily_activity
         ),
-        top_content_performance=top_content_performance,
-        most_viewed_listings=most_viewed_listings,
-        high_interest_low_action=high_interest_low_action,
     
     )
 
