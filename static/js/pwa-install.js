@@ -14,8 +14,6 @@
 // 6. Allow the user to dismiss the QUICK ACCESS card.
 //
 // =========================================================
-
-
 // =========================================================
 // ELEMENTS
 // =========================================================
@@ -81,23 +79,71 @@ function isRunningStandalone() {
 
 
 // =========================================================
+// CHECK WHETHER WE PREVIOUSLY INSTALLED LaC
+// =========================================================
+
+function wasLaCInstalled() {
+
+    return (
+        localStorage.getItem(
+            "lac_pwa_installed"
+        ) === "true"
+    );
+
+}
+
+
+// =========================================================
+// CHECK WHETHER INSTALL CARD SHOULD DISAPPEAR
+// =========================================================
+
+function shouldHideInstallCard() {
+
+    return (
+        isRunningStandalone()
+        ||
+        wasLaCInstalled()
+        ||
+        installCardDismissed
+    );
+
+}
+
+
+// =========================================================
+// HIDE QUICK ACCESS CARD
+// =========================================================
+
+function hideInstallSection() {
+
+    if (!lacInstallSection) {
+        return;
+    }
+
+
+    lacInstallSection.style.display =
+        "none";
+
+}
+
+
+// =========================================================
 // UPDATE INSTALL UI
 // =========================================================
 
 function updateInstallUI() {
 
     // -----------------------------------------------------
-    // USER DISMISSED THE QUICK ACCESS CARD
+    // INSTALLED OR DISMISSED
+    //
+    // Hide the ENTIRE Quick Access card.
     // -----------------------------------------------------
 
-    if (installCardDismissed) {
+    if (
+        shouldHideInstallCard()
+    ) {
 
-        if (lacInstallSection) {
-
-            lacInstallSection.style.display =
-                "none";
-
-        }
+        hideInstallSection();
 
         return;
 
@@ -105,7 +151,9 @@ function updateInstallUI() {
 
 
     // -----------------------------------------------------
-    // KEEP QUICK ACCESS CARD VISIBLE
+    // NOT INSTALLED
+    //
+    // Quick Access card may be displayed.
     // -----------------------------------------------------
 
     if (lacInstallSection) {
@@ -116,37 +164,14 @@ function updateInstallUI() {
     }
 
 
-    // -----------------------------------------------------
-    // LaC IS RUNNING AS AN INSTALLED PWA
-    // -----------------------------------------------------
+    // We no longer need to show an
+    // "installed" message because the entire
+    // card disappears after installation.
 
-    if (isRunningStandalone()) {
+    if (lacInstalledMessage) {
 
-        if (lacInstallButton) {
-
-            lacInstallButton.style.display =
-                "none";
-
-        }
-
-
-        if (lacInstalledMessage) {
-
-            lacInstalledMessage.style.display =
-                "block";
-
-        }
-
-
-        if (lacInstallHelp) {
-
-            lacInstallHelp.style.display =
-                "none";
-
-        }
-
-
-        return;
+        lacInstalledMessage.style.display =
+            "none";
 
     }
 
@@ -168,14 +193,6 @@ function updateInstallUI() {
         }
 
 
-        if (lacInstalledMessage) {
-
-            lacInstalledMessage.style.display =
-                "none";
-
-        }
-
-
         if (lacInstallHelp) {
 
             lacInstallHelp.style.display =
@@ -191,22 +208,11 @@ function updateInstallUI() {
 
     // -----------------------------------------------------
     // INSTALL PROMPT NOT AVAILABLE YET
-    //
-    // Keep the card visible.
-    // Hide only the install button.
     // -----------------------------------------------------
 
     if (lacInstallButton) {
 
         lacInstallButton.style.display =
-            "none";
-
-    }
-
-
-    if (lacInstalledMessage) {
-
-        lacInstalledMessage.style.display =
             "none";
 
     }
@@ -241,12 +247,7 @@ if (lacInstallClose) {
                 true;
 
 
-            if (lacInstallSection) {
-
-                lacInstallSection.style.display =
-                    "none";
-
-            }
+            hideInstallSection();
 
 
             console.log(
@@ -305,14 +306,6 @@ if (
 // =========================================================
 // CAPTURE INSTALL PROMPT
 // =========================================================
-//
-// Chrome / Edge / Chromium browsers may fire this event
-// when LaC satisfies PWA installation requirements.
-//
-// We store the event and use it when the user presses
-// our own install button.
-//
-// =========================================================
 
 window.addEventListener(
     "beforeinstallprompt",
@@ -351,10 +344,9 @@ if (lacInstallButton) {
             event.stopPropagation();
 
 
-            // Browser has not provided
-            // an installation prompt yet.
-
-            if (!deferredInstallPrompt) {
+            if (
+                !deferredInstallPrompt
+            ) {
 
                 console.log(
                     "[LaC PWA] Install prompt not available."
@@ -371,7 +363,8 @@ if (lacInstallButton) {
 
             try {
 
-                // Show browser installation dialog.
+                // Show the browser's
+                // installation dialog.
 
                 deferredInstallPrompt.prompt();
 
@@ -392,9 +385,23 @@ if (lacInstallButton) {
                     "accepted"
                 ) {
 
+                    // Remember the installation
+                    // for normal browser visits.
+
+                    localStorage.setItem(
+                        "lac_pwa_installed",
+                        "true"
+                    );
+
+
                     console.log(
                         "[LaC PWA] User accepted installation."
                     );
+
+
+                    // Hide Quick Access immediately.
+
+                    hideInstallSection();
 
                 } else {
 
@@ -403,6 +410,7 @@ if (lacInstallButton) {
                     );
 
                 }
+
 
             } catch (error) {
 
@@ -446,40 +454,24 @@ window.addEventListener(
         );
 
 
+        // Remember installation even when
+        // the user later visits LaC through
+        // their normal browser.
+
+        localStorage.setItem(
+            "lac_pwa_installed",
+            "true"
+        );
+
+
         deferredInstallPrompt =
             null;
 
 
-        if (lacInstallSection) {
+        // IMPORTANT:
+        // Hide the ENTIRE Quick Access card.
 
-            lacInstallSection.style.display =
-                "block";
-
-        }
-
-
-        if (lacInstallButton) {
-
-            lacInstallButton.style.display =
-                "none";
-
-        }
-
-
-        if (lacInstalledMessage) {
-
-            lacInstalledMessage.style.display =
-                "block";
-
-        }
-
-
-        if (lacInstallHelp) {
-
-            lacInstallHelp.style.display =
-                "none";
-
-        }
+        hideInstallSection();
 
     }
 );
@@ -516,13 +508,6 @@ if (
 
 // =========================================================
 // INITIAL PAGE LOAD
-// =========================================================
-//
-// QUICK ACCESS is visible immediately.
-//
-// The install button stays hidden until the browser
-// supplies beforeinstallprompt.
-//
 // =========================================================
 
 updateInstallUI();
