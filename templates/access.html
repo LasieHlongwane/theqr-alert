@@ -92,1662 +92,273 @@
 
     <!-- =========================================
          ACCESS PAGE REDESIGN
-
-         Kept here temporarily so this page can be
-         deployed without changing other LaC pages.
     ========================================== -->
 
-<style>
-
-    /* =========================================
-       PAGE
-    ========================================== */
-
-    .access-container {
-        width: 100%;
-        max-width: 680px;
-        margin: 0 auto;
-        padding-left: 16px;
-        padding-right: 16px;
-        box-sizing: border-box;
-    }
-
-
-    /* =========================================
-       LOCATION
-    ========================================== */
-
-    .location-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-
-        margin-bottom: 20px;
-
-        padding: 8px 12px;
-
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-
-        background: rgba(255, 255, 255, 0.035);
-
-        color: rgba(255, 255, 255, 0.82);
-
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-
-    .location-icon {
-        font-size: 13px;
-    }
-
-
-    /* =========================================
-       CATEGORY SECTION
-    ========================================== */
-
-    .category-section {
-        margin-bottom: 34px;
-    }
-
-
-    .category-section-heading {
-        margin-bottom: 16px;
-    }
-
-
-    .category-section-eyebrow {
-        max-width: 560px;
-
-        margin: 0 0 8px;
-
-        color: rgba(255, 255, 255, 0.43);
-
-        font-size: 9px;
-        font-weight: 700;
-
-        line-height: 1.55;
-
-        letter-spacing: 1px;
-    }
-
-
-    .category-section-heading h2 {
-        margin: 0;
-
-        color: #ffffff;
-
-        font-size: clamp(22px, 6vw, 30px);
-        font-weight: 800;
-
-        line-height: 1.1;
-
-        letter-spacing: -0.5px;
-    }
-
-
-    /* =========================================
-       CATEGORY DIRECTORY
-    ========================================== */
-
-    .lac-category-list {
-        width: 100%;
-
-        display: flex;
-        flex-direction: column;
-
-        gap: 11px;
-    }
-
-
-    .lac-category-row {
-        position: relative;
-
-        width: 100%;
-        min-height: 104px;
-
-        display: flex;
-        align-items: center;
-
-        gap: 15px;
-
-        padding: 10px;
-
-        box-sizing: border-box;
-
-        border: 1px solid rgba(0, 0, 0, 0.07);
-
-        border-radius: 16px;
-
-        /* Creamy white */
-        background: #fffaf0;
-
-        color: #171717;
-
-        text-decoration: none;
-
-        overflow: hidden;
-
-        box-shadow:
-            0 4px 14px
-            rgba(0, 0, 0, 0.12);
-
-        -webkit-tap-highlight-color: transparent;
-
-        transition:
-            transform 0.16s ease,
-            background 0.16s ease,
-            border-color 0.16s ease,
-            box-shadow 0.16s ease;
-    }
-
-
-    .lac-category-row:hover {
-        background: #fff6e6;
-
-        border-color: rgba(0, 0, 0, 0.11);
-
-        box-shadow:
-            0 6px 18px
-            rgba(0, 0, 0, 0.15);
-    }
-
-
-    .lac-category-row:active {
-        transform: scale(0.985);
-
-        background: #fff1dc;
-    }
-
-
-    /* =========================================
-       CATEGORY THUMBNAIL
-    ========================================== */
-
-    .lac-category-thumb {
-        width: 84px;
-        height: 84px;
-
-        flex: 0 0 84px;
-
-        overflow: hidden;
-
-        border-radius: 13px;
-
-        background: #f1eadf;
-
-        box-shadow:
-            0 2px 8px
-            rgba(0, 0, 0, 0.14);
-    }
-
-
-    .lac-category-thumb img {
-        display: block;
-
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-    }
-
-
-    .lac-category-fallback {
-        width: 100%;
-        height: 100%;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        background:
-            linear-gradient(
-                145deg,
-                #fffaf0,
-                #eee5d6
-            );
-
-        font-size: 28px;
-    }
-
-
-    /* =========================================
-       CATEGORY TEXT
-    ========================================== */
-
-    .lac-category-info {
-        min-width: 0;
-
-        flex: 1;
-
-        display: flex;
-        flex-direction: column;
-
-        justify-content: center;
-
-        gap: 6px;
-    }
-
-
-    .lac-category-title {
-        color: #181818;
-
-        font-size: 16px;
-        font-weight: 800;
-
-        line-height: 1.25;
-    }
-
-
-    .lac-category-meta {
-        color: rgba(0, 0, 0, 0.55);
-
-        font-size: 11px;
-        font-weight: 650;
-
-        line-height: 1.25;
-    }
-
-
-    /* =========================================
-       CATEGORY ARROW
-    ========================================== */
-
-    .lac-category-chevron {
-        width: 34px;
-        height: 34px;
-
-        flex: 0 0 34px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border: 1px solid rgba(0, 0, 0, 0.08);
-
-        border-radius: 50%;
-
-        background: rgba(0, 0, 0, 0.055);
-
-        color: #1a1a1a;
-
-        font-size: 23px;
-        font-weight: 400;
-
-        line-height: 1;
-
-        transition:
-            transform 0.16s ease,
-            background 0.16s ease;
-    }
-
-
-    .lac-category-row:hover
-    .lac-category-chevron {
-        transform: translateX(2px);
-
-        background: rgba(0, 0, 0, 0.10);
-    }
-
-
-    /* =========================================
-       SHARED SECTION CARD
-    ========================================== */
-
-    .lac-install-card,
-    .public-network-note,
-    .public-notification-link,
-    .public-website-link {
-        box-sizing: border-box;
-    }
-
-
-    /* =========================================
-       QUICK ACCESS
-    ========================================== */
-
-    .lac-install-section {
-        margin-top: 32px;
-        margin-bottom: 14px;
-    }
-
-
-    .lac-install-card {
-        position: relative;
-
-        display: flex;
-        align-items: flex-start;
-
-        gap: 13px;
-
-        padding: 18px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.08);
-
-        border-radius: 18px;
-
-        background:
-            linear-gradient(
-                145deg,
-                rgba(255, 255, 255, 0.06),
-                rgba(255, 255, 255, 0.025)
-            );
-    }
-
-
-    .lac-install-icon {
-        width: 42px;
-        height: 42px;
-
-        flex: 0 0 42px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 12px;
-
-        background:
-            rgba(255, 255, 255, 0.07);
-
-        font-size: 20px;
-    }
-
-
-    .lac-install-content {
-        min-width: 0;
-        flex: 1;
-    }
-
-
-    .lac-install-eyebrow,
-    .notification-eyebrow {
-        display: block;
-
-        margin: 0 0 7px;
-
-        color:
-            rgba(255, 255, 255, 0.42);
-
-        font-size: 9px;
-        font-weight: 800;
-
-        letter-spacing: 1.3px;
-    }
-
-
-    .lac-install-content h2 {
-        margin: 0 32px 7px 0;
-
-        color: #ffffff;
-
-        font-size: 17px;
-        font-weight: 750;
-
-        line-height: 1.25;
-    }
-
-
-    .lac-install-content > p {
-        margin: 0 0 14px;
-
-        color:
-            rgba(255, 255, 255, 0.56);
-
-        font-size: 12px;
-
-        line-height: 1.55;
-    }
-
-
-    .lac-install-close {
-        position: absolute;
-
-        top: 11px;
-        right: 11px;
-
-        width: 30px;
-        height: 30px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        padding: 0;
-
-        border: 0;
-        border-radius: 50%;
-
-        background:
-            rgba(255, 255, 255, 0.06);
-
-        color:
-            rgba(255, 255, 255, 0.62);
-
-        font-size: 20px;
-
-        cursor: pointer;
-    }
-
-
-    /* =========================================
-       PRIMARY BUTTONS
-    ========================================== */
-
-    .lac-install-button,
-    .public-notification-button,
-    .public-website-button {
-        min-height: 44px;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        gap: 8px;
-
-        box-sizing: border-box;
-
-        padding: 0 17px;
-
-        border: 0;
-        border-radius: 12px;
-
-        background: #f5f5f5;
-
-        color: #101114;
-
-        font-family: inherit;
-
-        font-size: 12px;
-        font-weight: 800;
-
-        line-height: 1;
-
-        text-decoration: none;
-
-        cursor: pointer;
-
-        box-shadow:
-            0 5px 18px
-            rgba(0, 0, 0, 0.16);
-
-        transition:
-            transform 0.16s ease,
-            opacity 0.16s ease;
-    }
-
-
-    .lac-install-button:hover,
-    .public-notification-button:hover,
-    .public-website-button:hover {
-        opacity: 0.92;
-    }
-
-
-    .lac-install-button:active,
-    .public-notification-button:active,
-    .public-website-button:active {
-        transform: scale(0.98);
-    }
-
-
-    .lac-installed-message {
-        margin-top: 10px !important;
-
-        color: #ffffff !important;
-
-        font-size: 11px !important;
-        font-weight: 700;
-    }
-
-
-    .lac-install-help {
-        margin-top: 10px !important;
-        margin-bottom: 0 !important;
-
-        color:
-            rgba(255, 255, 255, 0.36)
-            !important;
-
-        font-size: 10px !important;
-    }
-
-
-    /* =========================================
-       NETWORK NOTE
-    ========================================== */
-
-    .public-network-note {
-        display: flex;
-        align-items: flex-start;
-
-        gap: 12px;
-
-        margin: 14px 0;
-
-        padding: 15px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.065);
-
-        border-radius: 16px;
-
-        background:
-            rgba(255, 255, 255, 0.025);
-    }
-
-
-    .network-note-icon {
-        width: 32px;
-        height: 32px;
-
-        flex: 0 0 32px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 9px;
-
-        background:
-            rgba(255, 255, 255, 0.06);
-
-        font-size: 13px;
-    }
-
-
-    .public-network-note strong {
-        display: block;
-
-        margin-bottom: 4px;
-
-        color: #f5f5f5;
-
-        font-size: 11px;
-        font-weight: 800;
-
-        letter-spacing: 0.3px;
-    }
-
-
-    .public-network-note p {
-        margin: 0;
-
-        color:
-            rgba(255, 255, 255, 0.48);
-
-        font-size: 11px;
-
-        line-height: 1.45;
-    }
-
-
-    /* =========================================
-       NOTIFICATIONS
-    ========================================== */
-
-    .public-notification-link {
-        margin: 14px 0;
-
-        padding: 20px 17px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.08);
-
-        border-radius: 18px;
-
-        background:
-            rgba(255, 255, 255, 0.035);
-    }
-
-
-    .public-notification-link h3 {
-        margin: 0 0 7px;
-
-        color: #ffffff;
-
-        font-size: 18px;
-        font-weight: 750;
-    }
-
-
-    .public-notification-link > p:not(
-        .notification-eyebrow
-    ):not(
-        .lac-notification-status
-    ) {
-        margin: 0 0 16px;
-
-        color:
-            rgba(255, 255, 255, 0.52);
-
-        font-size: 12px;
-
-        line-height: 1.5;
-    }
-
-
-    .public-notification-button {
-        width: 100%;
-    }
-
-
-    .lac-notification-status {
-        margin: 10px 0 0;
-
-        color:
-            rgba(255, 255, 255, 0.4);
-
-        font-size: 10px;
-
-        text-align: center;
-
-        line-height: 1.4;
-    }
-
-
-    /* =========================================
-       NOTIFICATION PREFERENCES
-    ========================================== */
-
-    .lac-notification-preferences {
-        margin-top: 22px;
-        padding-top: 20px;
-
-        border-top:
-            1px solid
-            rgba(255, 255, 255, 0.07);
-    }
-
-
-    .notification-preference-heading h4 {
-        margin: 0 0 6px;
-
-        color: #ffffff;
-
-        font-size: 16px;
-        font-weight: 750;
-    }
-
-
-    .notification-preference-heading > p:last-child {
-        margin: 0 0 14px;
-
-        color:
-            rgba(255, 255, 255, 0.45);
-
-        font-size: 11px;
-
-        line-height: 1.45;
-    }
-
-
-    .notification-category-list {
-        display: flex;
-        flex-direction: column;
-
-        gap: 7px;
-    }
-
-
-    .notification-category-option {
-        min-height: 48px;
-
-        display: flex;
-        align-items: center;
-
-        gap: 10px;
-
-        padding: 8px 11px;
-
-        box-sizing: border-box;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.06);
-
-        border-radius: 12px;
-
-        background:
-            rgba(255, 255, 255, 0.025);
-
-        cursor: pointer;
-    }
-
-
-    .notification-category-option input {
-        width: 17px;
-        height: 17px;
-
-        flex: 0 0 17px;
-
-        accent-color: #ffffff;
-    }
-
-
-    .notification-category-icon {
-        width: 27px;
-        height: 27px;
-
-        flex: 0 0 27px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 8px;
-
-        background:
-            rgba(255, 255, 255, 0.05);
-
-        font-size: 14px;
-    }
-
-
-    .notification-category-name {
-        min-width: 0;
-
-        color:
-            rgba(255, 255, 255, 0.84);
-
-        font-size: 12px;
-        font-weight: 650;
-
-        line-height: 1.25;
-    }
-
-
-    /* =========================================
-       PREFERENCE BUTTONS
-    ========================================== */
-
-    .notification-preference-actions {
-        display: flex;
-
-        gap: 8px;
-
-        margin-top: 14px;
-    }
-
-
-    .notification-secondary-button {
-        min-height: 44px;
-
-        flex: 0 0 auto;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        padding: 0 15px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.12);
-
-        border-radius: 12px;
-
-        background:
-            rgba(255, 255, 255, 0.045);
-
-        color:
-            rgba(255, 255, 255, 0.82);
-
-        font-family: inherit;
-
-        font-size: 11px;
-        font-weight: 750;
-
-        cursor: pointer;
-    }
-
-
-    .notification-preference-actions
-    .public-notification-button {
-        flex: 1;
-
-        width: auto;
-    }
-
-
-    /* =========================================
-       MAIN WEBSITE
-    ========================================== */
-
-    .public-website-link {
-        margin: 14px 0 32px;
-
-        padding: 18px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.06);
-
-        border-radius: 16px;
-
-        background:
-            rgba(255, 255, 255, 0.02);
-
-        text-align: center;
-    }
-
-
-    .public-website-link p {
-        margin: 0 0 12px;
-
-        color:
-            rgba(255, 255, 255, 0.48);
-
-        font-size: 11px;
-    }
-
-
-    .public-website-button {
-        min-height: 42px;
-
-        background:
-            rgba(255, 255, 255, 0.07);
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.1);
-
-        color: #ffffff;
-
-        box-shadow: none;
-    }
-
-
-    /* =========================================
-       MOBILE
-    ========================================== */
-
-    @media (max-width: 480px) {
+    <style>
+
+        /* =========================================
+           PAGE
+        ========================================== */
 
         .access-container {
-            padding-left: 13px;
-            padding-right: 13px;
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+
+            padding-left: 16px;
+            padding-right: 16px;
+
+            box-sizing: border-box;
+        }
+
+
+        /* =========================================
+           LOCATION
+        ========================================== */
+
+        .location-label {
+            display: inline-flex;
+            align-items: center;
+
+            gap: 7px;
+
+            margin-bottom: 20px;
+
+            padding: 8px 12px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            border-radius: 999px;
+
+            background:
+                rgba(255, 255, 255, 0.035);
+
+            color:
+                rgba(255, 255, 255, 0.82);
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+
+        .location-icon {
+            font-size: 13px;
+        }
+
+
+        /* =========================================
+           CATEGORY SECTION
+        ========================================== */
+
+        .category-section {
+            margin-bottom: 34px;
+        }
+
+
+        .category-section-heading {
+            margin-bottom: 16px;
         }
 
 
         .category-section-eyebrow {
-            font-size: 8px;
-            line-height: 1.5;
+            max-width: 560px;
+
+            margin: 0 0 8px;
+
+            color:
+                rgba(255, 255, 255, 0.43);
+
+            font-size: 9px;
+            font-weight: 700;
+
+            line-height: 1.55;
+
+            letter-spacing: 1px;
         }
 
 
+        .category-section-heading h2 {
+            margin: 0;
+
+            color: #ffffff;
+
+            font-size:
+                clamp(
+                    22px,
+                    6vw,
+                    30px
+                );
+
+            font-weight: 800;
+
+            line-height: 1.1;
+
+            letter-spacing: -0.5px;
+        }
+
+
+        /* =========================================
+           CATEGORY DIRECTORY
+        ========================================== */
+
+        .lac-category-list {
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 12px;
+        }
+
+
+        /* =========================================
+           CATEGORY BACKGROUND CARD
+        ========================================== */
+
         .lac-category-row {
-            min-height: 102px;
+            position: relative;
+
+            width: 100%;
+            min-height: 155px;
+
+            display: flex;
+            align-items: flex-end;
 
             gap: 14px;
 
-            padding: 10px 10px 10px 9px;
+            padding: 18px;
 
-            border-radius: 15px;
-        }
+            box-sizing: border-box;
 
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
 
-        .lac-category-thumb {
-            width: 82px;
-            height: 82px;
+            border-radius: 19px;
 
-            flex: 0 0 82px;
+            background-color: #24262a;
 
-            border-radius: 12px;
-        }
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
 
+            color: #ffffff;
 
-        .lac-category-title {
-            font-size: 15px;
-        }
-
-
-        .lac-category-meta {
-            font-size: 10px;
-        }
-
-
-        .lac-category-chevron {
-            width: 31px;
-            height: 31px;
-
-            flex: 0 0 31px;
-
-            font-size: 21px;
-        }
-
-
-        .lac-install-card {
-            padding: 15px;
-
-            gap: 11px;
-        }
-
-
-        .lac-install-icon {
-            width: 36px;
-            height: 36px;
-
-            flex-basis: 36px;
-
-            border-radius: 10px;
-
-            font-size: 17px;
-        }
-
-
-        .lac-install-content h2 {
-            font-size: 15px;
-        }
-
-
-        .notification-preference-actions {
-            flex-direction: column;
-        }
-
-
-        .notification-secondary-button,
-        .notification-preference-actions
-        .public-notification-button {
-            width: 100%;
-        }
-
-    }
-
-
-    /* =========================================
-       VERY SMALL DEVICES
-    ========================================== */
-
-    @media (max-width: 360px) {
-
-        .lac-category-row {
-            min-height: 94px;
-
-            gap: 11px;
-
-            padding: 8px;
-
-            border-radius: 14px;
-        }
-
-
-        .lac-category-thumb {
-            width: 74px;
-            height: 74px;
-
-            flex: 0 0 74px;
-
-            border-radius: 11px;
-        }
-
-
-        .lac-category-title {
-            font-size: 14px;
-        }
-
-
-        .lac-category-meta {
-            font-size: 9px;
-        }
-
-
-        .lac-category-chevron {
-            width: 28px;
-            height: 28px;
-
-            flex: 0 0 28px;
-
-            font-size: 19px;
-        }
-
-    }
-
-
-    /* =========================================
-       DESKTOP
-    ========================================== */
-
-    @media (min-width: 700px) {
-
-        .lac-category-row {
-            min-height: 116px;
-
-            padding: 11px;
-
-            gap: 17px;
-        }
-
-
-        .lac-category-thumb {
-            width: 94px;
-            height: 94px;
-
-            flex: 0 0 94px;
-
-            border-radius: 14px;
-        }
-
-
-        .lac-category-title {
-            font-size: 17px;
-        }
-
-
-        .lac-category-meta {
-            font-size: 11px;
-        }
-
-    }
-
-</style>
-
-</head>
-
-
-<body class="lac-public-body">
-
-
-<div class="lac-page">
-
-
-    <!-- =========================================
-         PUBLIC HEADER
-    ========================================== -->
-
-    <header class="access-header">
-
-        <div class="public-brand-wrap">
-
-            <div class="lac-brand">
-                LaC
-            </div>
-
-            <div class="lac-tagline">
-                LOCAL ACCESS. DELIVERED.
-            </div>
-
-        </div>
-
-    </header>
-
-
-    <!-- =========================================
-         MAIN EXPERIENCE
-    ========================================== -->
-
-    <main class="access-container">
-
-
-        <!-- =========================================
-             LOCATION
-        ========================================== -->
-
-        <div class="location-label">
-
-            <span class="location-icon">
-                📍
-            </span>
-
-            <span>
-                {{ zone.name }}
-            </span>
-
-        </div>
-
-
-        <!-- =========================================
-             CATEGORY SECTION
-        ========================================== -->
-
-        <section class="category-section">
-
-            <div class="category-section-heading">
-
-                <div>
-
-                    <p class="category-section-eyebrow">
-                        STORE DEALS, SPECIAL EVENTS, LOCAL SERVICES,
-                        USEFUL INFORMATION, ENTLEK ALLES. — ALL IN ONE PLACE
-                    </p>
-
-                    <h2>
-                        EXPLORE {{ zone.name | upper }}
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <!-- =====================================
-                 MOBILE-FIRST CATEGORY DIRECTORY
-            ====================================== -->
-
-            <div class="lac-category-list">
-
-                {% for category in categories %}
-
-                    <a
-                        class="lac-category-row"
-                        href="{{ url_for(
-                            'qr_category',
-                            code=access_point.code,
-                            category=category.slug
-                        ) }}"
-                    >
-
-                        <!-- CATEGORY IMAGE -->
-
-                        <div class="lac-category-thumb">
-
-                            {% if category.image_url %}
-
-                                <img
-                                    src="{{ category.image_url }}"
-                                    alt="{{ category.name }}"
-                                    loading="lazy"
-                                >
-
-                            {% else %}
-
-                                <div class="lac-category-fallback">
-
-                                    {% if category.icon %}
-                                        {{ category.icon }}
-                                    {% else %}
-                                        📌
-                                    {% endif %}
-
-                                </div>
-
-                            {% endif %}
-
-                        </div>
-
-
-                        <!-- CATEGORY INFORMATION -->
-
-                        <div class="lac-category-info">
-
-                            <div class="lac-category-title">
-                                {{ category.name }}
-                            </div>
-
-                            <div class="lac-category-meta">
-                                Explore {{ zone.name }}
-                            </div>
-
-                        </div>
-
-
-                        <!-- ARROW -->
-
-                        <div
-                            class="lac-category-chevron"
-                            aria-hidden="true"
-                        >
-                            ›
-                        </div>
-
-                    </a>
-
-                {% endfor %}
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================================
-             QUICK ACCESS / ADD TO HOME SCREEN
-        ========================================== -->
-
-        <section
-            id="lac-install-section"
-            class="lac-install-section"
-        >
-
-            <div class="lac-install-card">
-
-                <button
-                    type="button"
-                    id="lac-install-close"
-                    class="lac-install-close"
-                    aria-label="Close Quick Access"
-                >
-                    ×
-                </button>
-
-
-                <div class="lac-install-icon">
-                    📲
-                </div>
-
-
-                <div class="lac-install-content">
-
-                    <span class="lac-install-eyebrow">
-                        QUICK ACCESS
-                    </span>
-
-
-                    <h2>
-                        Add LaC to your Home Screen
-                    </h2>
-
-
-                    <p>
-                        Access {{ zone.name }} events,
-                        deals, jobs, services and useful
-                        local information without scanning
-                        the QR code every time.
-                    </p>
-
-
-                    <button
-                        type="button"
-                        id="lac-install-button"
-                        class="lac-install-button"
-                        style="display: none;"
-                    >
-                        Add LaC to Home Screen
-                    </button>
-
-
-                    <p
-                        id="lac-installed-message"
-                        class="lac-installed-message"
-                        style="display: none;"
-                    >
-                        ✓ LaC is installed on this device.
-                    </p>
-
-
-                    <p
-                        id="lac-install-help"
-                        class="lac-install-help"
-                    >
-                        Add LaC for faster access to
-                        {{ zone.name }}.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================================
-             TRUST / CONTEXT
-        ========================================== -->
-
-        <section class="public-network-note">
-
-            <div class="network-note-icon">
-                ✦
-            </div>
-
-
-            <div>
-
-                <strong>
-                    WHY FIND OUT AFTER IT'S OVER?
-                </strong>
-
-                <p>
-                    Stay ahead of {{ zone.name }}'s
-                    premier events and promos.
-                </p>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================================
-             LOCAL NOTIFICATION PREFERENCES
-        ========================================== -->
-
-        <section
-            class="public-notification-link"
-            id="lac-notification-section"
-        >
-
-            <p class="notification-eyebrow">
-                STAY UPDATED
-            </p>
-
-
-            <h3>
-                Get Local Notifications
-            </h3>
-
-
-            <p>
-                Choose the {{ zone.name }} updates
-                you want LaC to send to your phone.
-            </p>
-
-
-            <!-- =====================================
-                 ENABLE BUTTON
-            ====================================== -->
-
-            <button
-                type="button"
-                id="lac-enable-notifications"
-                class="public-notification-button"
-            >
-                🔔 Enable Local Notifications
-            </button>
-
-
-            <p
-                id="lac-notification-status"
-                class="lac-notification-status"
-            >
-                Free. No account required.
-            </p>
-
-
-            <!-- =====================================
-                 CATEGORY PREFERENCES
-            ====================================== -->
-
-            <div
-                id="lac-notification-preferences"
-                class="lac-notification-preferences"
-                hidden
-            >
-
-                <div class="notification-preference-heading">
-
-                    <p class="notification-eyebrow">
-                        YOUR INTERESTS
-                    </p>
-
-
-                    <h4>
-                        What would you like to hear about?
-                    </h4>
-
-
-                    <p>
-                        Select one or more categories.
-                        You can change these later.
-                    </p>
-
-                </div>
-
-
-                <div class="notification-category-list">
-
-                    {% for category in categories %}
-
-                        <label
-                            class="notification-category-option"
-                        >
-
-                            <input
-                                type="checkbox"
-                                name="lac_notification_category"
-                                value="{{ category.slug }}"
-                            >
-
-
-                            <span
-                                class="notification-category-icon"
-                            >
-
-                                {% if category.icon %}
-                                    {{ category.icon }}
-                                {% else %}
-                                    🔔
-                                {% endif %}
-
-                            </span>
-
-
-                            <span
-                                class="notification-category-name"
-                            >
-                                {{ category.name }}
-                            </span>
-
-                        </label>
-
-                    {% endfor %}
-
-                </div>
-
-
-                <div
-                    class="notification-preference-actions"
-                >
-
-                    <button
-                        type="button"
-                        id="lac-select-all-categories"
-                        class="notification-secondary-button"
-                    >
-                        Select All
-                    </button>
-
-
-                    <button
-                        type="button"
-                        id="lac-save-notification-preferences"
-                        class="public-notification-button"
-                    >
-                        Save My Preferences
-                    </button>
-
-                </div>
-
-
-                <p
-                    id="lac-preference-status"
-                    class="lac-notification-status"
-                ></p>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================================
-             MAIN LAC WEBSITE
-        ========================================== -->
-
-        <section class="public-website-link">
-
-            <p>
-                Want to learn more about LaC?
-            </p>
-
-
-            <a
-                href="https://lac-acess-delivered.onrender.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="public-website-button"
-            >
-                Visit Our Website
-            </a>
-
-        </section>
-
-
-    </main>
-
-
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
-    <footer class="public-footer">
-
-        <div class="footer-brand">
-            LaC
-        </div>
-
-
-        <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
-        </div>
-
-
-        <div class="footer-zone">
-            📍 {{ zone.name }}
-        </div>
-
-    </footer>
-
-
-</div>
-
-
-<!-- =========================================
-     STORE CURRENT QR ACCESS POINT
-========================================== -->
-
-<script>
-
-    const lacCurrentAccessCode =
-        "{{ access_point.code }}";
-
-    const lacCurrentAccessPointId =
-        {{ access_point.id | tojson }};
-
-
-    if (lacCurrentAccessCode) {
-
-        localStorage.setItem(
-            "lac_access_code",
-            lacCurrentAccessCode
-        );
-
-    }
-
-
-    if (lacCurrentAccessPointId) {
-
-        localStorage.setItem(
-            "lac_access_point_id",
-            String(
-                lacCurrentAccessPointId
-            )
-        );
-
-    }
-
-</script>
-
-
-<!-- =========================================
-     PUSH NOTIFICATION CONFIG
-========================================== -->
-
-<script>
-
-    window.LAC_PUSH_CONFIG = {
-
-        zoneId:
-            {{ zone.id | tojson }}
-
-    };
-
-</script>
-
-
-<!-- =========================================
-     PWA INSTALL SCRIPT
-========================================== -->
-
-<script
-    src="{{ url_for(
-        'static',
-        filename='js/pwa-install.js'
-    ) }}"
-></script>
-
-
-<!-- =========================================
-     PUSH NOTIFICATION SCRIPT
-========================================== -->
-
-<script
-    src="{{ url_for(
-        'static',
-        filename='js/push-notifications.js'
-    ) }}"
-></script>
-
-
-</body>
-
-</html>
-
-
-        /* =========================================
-           CATEGORY THUMBNAIL
-        ========================================== */
-
-        .lac-category-thumb {
-            width: 62px;
-            height: 62px;
-
-            flex: 0 0 62px;
+            text-decoration: none;
 
             overflow: hidden;
 
-            border-radius: 12px;
+            isolation: isolate;
 
-            background: #17191d;
+            box-shadow:
+                0 5px 18px
+                rgba(0, 0, 0, 0.22);
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                border-color 0.18s ease;
         }
 
 
-        .lac-category-thumb img {
-            display: block;
+        /*
+         * Extra bottom gradient makes the text
+         * readable even when the uploaded photo
+         * is very bright.
+         */
 
-            width: 100%;
-            height: 100%;
+        .lac-category-row::after {
+            content: "";
 
-            object-fit: cover;
-        }
+            position: absolute;
 
+            z-index: 0;
 
-        .lac-category-fallback {
-            width: 100%;
-            height: 100%;
+            left: 0;
+            right: 0;
+            bottom: 0;
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 72%;
+
+            pointer-events: none;
 
             background:
                 linear-gradient(
-                    145deg,
-                    #1c1f24,
-                    #121417
+                    to top,
+                    rgba(0, 0, 0, 0.56) 0%,
+                    rgba(0, 0, 0, 0.22) 55%,
+                    rgba(0, 0, 0, 0) 100%
                 );
+        }
 
-            font-size: 24px;
+
+        .lac-category-row:hover {
+            transform:
+                translateY(-2px);
+
+            border-color:
+                rgba(255, 255, 255, 0.18);
+
+            box-shadow:
+                0 8px 24px
+                rgba(0, 0, 0, 0.28);
+        }
+
+
+        .lac-category-row:active {
+            transform: scale(0.985);
         }
 
 
         /* =========================================
-           CATEGORY TEXT
+           CATEGORY FALLBACK
+
+           Used when no category image exists.
+        ========================================== */
+
+        .lac-category-row.no-category-image {
+            background:
+                linear-gradient(
+                    145deg,
+                    #35383d,
+                    #1c1e22
+                );
+        }
+
+
+        .lac-category-fallback-large {
+            position: absolute;
+
+            z-index: 0;
+
+            top: 50%;
+            left: 50%;
+
+            transform:
+                translate(-50%, -50%);
+
+            font-size: 48px;
+
+            opacity: 0.28;
+
+            pointer-events: none;
+        }
+
+
+        /* =========================================
+           CATEGORY INFORMATION
         ========================================== */
 
         .lac-category-info {
+            position: relative;
+
+            z-index: 2;
+
             min-width: 0;
 
             flex: 1;
@@ -1755,29 +366,42 @@
             display: flex;
             flex-direction: column;
 
-            justify-content: center;
+            justify-content: flex-end;
 
             gap: 5px;
         }
 
 
         .lac-category-title {
-            color: #f7f7f8;
+            color: #ffffff;
 
-            font-size: 14px;
-            font-weight: 750;
+            font-size: 18px;
+            font-weight: 800;
 
-            line-height: 1.25;
+            line-height: 1.2;
+
+            letter-spacing: -0.2px;
+
+            text-shadow:
+                0 2px 8px
+                rgba(0, 0, 0, 0.65);
         }
 
 
         .lac-category-meta {
-            color: rgba(255, 255, 255, 0.4);
+            color:
+                rgba(255, 255, 255, 0.78);
 
-            font-size: 10px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 650;
 
-            line-height: 1.2;
+            line-height: 1.25;
+
+            letter-spacing: 0.15px;
+
+            text-shadow:
+                0 1px 5px
+                rgba(0, 0, 0, 0.55);
         }
 
 
@@ -1786,10 +410,14 @@
         ========================================== */
 
         .lac-category-chevron {
-            width: 30px;
-            height: 30px;
+            position: relative;
 
-            flex: 0 0 30px;
+            z-index: 2;
+
+            width: 36px;
+            height: 36px;
+
+            flex: 0 0 36px;
 
             display: flex;
             align-items: center;
@@ -1797,20 +425,26 @@
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.08);
+                rgba(255, 255, 255, 0.22);
 
             border-radius: 50%;
 
             background:
-                rgba(255, 255, 255, 0.045);
+                rgba(0, 0, 0, 0.32);
 
-            color:
-                rgba(255, 255, 255, 0.72);
+            color: #ffffff;
 
-            font-size: 21px;
-            font-weight: 300;
+            font-size: 23px;
+            font-weight: 400;
 
             line-height: 1;
+
+            box-shadow:
+                0 2px 8px
+                rgba(0, 0, 0, 0.16);
+
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
 
             transition:
                 transform 0.16s ease,
@@ -1820,10 +454,11 @@
 
         .lac-category-row:hover
         .lac-category-chevron {
-            transform: translateX(2px);
+            transform:
+                translateX(2px);
 
             background:
-                rgba(255, 255, 255, 0.09);
+                rgba(0, 0, 0, 0.48);
         }
 
 
@@ -1895,6 +530,7 @@
 
         .lac-install-content {
             min-width: 0;
+
             flex: 1;
         }
 
@@ -1916,7 +552,11 @@
 
 
         .lac-install-content h2 {
-            margin: 0 32px 7px 0;
+            margin:
+                0
+                32px
+                7px
+                0;
 
             color: #ffffff;
 
@@ -2211,7 +851,8 @@
         }
 
 
-        .notification-preference-heading > p:last-child {
+        .notification-preference-heading
+        > p:last-child {
             margin: 0 0 14px;
 
             color:
@@ -2418,44 +1059,44 @@
             }
 
 
-            .lac-category-row {
-                min-height: 95px;
+            /*
+             * Full background images get enough
+             * vertical space to be clearly visible.
+             */
 
-                gap: 16px;
-
-                padding: 10px 12px 10px 10px;
-
-                border-radius: 14px;
+            .lac-category-list {
+                gap: 11px;
             }
 
 
-            .lac-category-thumb {
-                width: 75px;
-                height: 75px;
+            .lac-category-row {
+                min-height: 145px;
 
-                flex: 0 0 75px;
+                padding: 16px;
 
-                border-radius: 13px;
+                gap: 12px;
+
+                border-radius: 17px;
             }
 
 
             .lac-category-title {
-                font-size: 13px;
+                font-size: 17px;
             }
 
 
             .lac-category-meta {
-                font-size: 9px;
+                font-size: 10px;
             }
 
 
             .lac-category-chevron {
-                width: 28px;
-                height: 28px;
+                width: 34px;
+                height: 34px;
 
-                flex-basis: 28px;
+                flex: 0 0 34px;
 
-                font-size: 20px;
+                font-size: 22px;
             }
 
 
@@ -2503,26 +1144,32 @@
 
         @media (max-width: 360px) {
 
-            .lac-category-thumb {
-                width: 52px;
-                height: 52px;
-
-                flex-basis: 52px;
-            }
-
-
             .lac-category-row {
-                min-height: 66px;
+                min-height: 132px;
+
+                padding: 14px;
+
+                border-radius: 15px;
             }
 
 
             .lac-category-title {
-                font-size: 12px;
+                font-size: 16px;
             }
 
 
             .lac-category-meta {
-                font-size: 8px;
+                font-size: 9px;
+            }
+
+
+            .lac-category-chevron {
+                width: 31px;
+                height: 31px;
+
+                flex: 0 0 31px;
+
+                font-size: 20px;
             }
 
         }
@@ -2534,30 +1181,27 @@
 
         @media (min-width: 700px) {
 
-            .lac-category-row {
-                min-height: 84px;
-
-                padding: 9px;
-
+            .lac-category-list {
                 gap: 14px;
             }
 
 
-            .lac-category-thumb {
-                width: 66px;
-                height: 66px;
+            .lac-category-row {
+                min-height: 180px;
 
-                flex-basis: 66px;
+                padding: 22px;
+
+                border-radius: 20px;
             }
 
 
             .lac-category-title {
-                font-size: 15px;
+                font-size: 20px;
             }
 
 
             .lac-category-meta {
-                font-size: 10px;
+                font-size: 11px;
             }
 
         }
@@ -2643,7 +1287,7 @@
 
 
             <!-- =====================================
-                 MOBILE-FIRST CATEGORY DIRECTORY
+                 IMAGE BACKGROUND CATEGORY DIRECTORY
             ====================================== -->
 
             <div class="lac-category-list">
@@ -2651,44 +1295,63 @@
                 {% for category in categories %}
 
                     <a
-                        class="lac-category-row"
+                        class="
+                            lac-category-row
+                            {% if not category.image_url %}
+                                no-category-image
+                            {% endif %}
+                        "
                         href="{{ url_for(
                             'qr_category',
                             code=access_point.code,
                             category=category.slug
                         ) }}"
+
+                        {% if category.image_url %}
+
+                            style="
+                                background-image:
+                                    linear-gradient(
+                                        90deg,
+                                        rgba(0, 0, 0, 0.62) 0%,
+                                        rgba(0, 0, 0, 0.36) 48%,
+                                        rgba(0, 0, 0, 0.16) 100%
+                                    ),
+                                    url('{{ category.image_url }}');
+                            "
+
+                        {% endif %}
                     >
 
-                        <!-- CATEGORY IMAGE -->
 
-                        <div class="lac-category-thumb">
+                        <!-- =================================
+                             FALLBACK ICON
 
-                            {% if category.image_url %}
+                             Only shown if no category image
+                             has been uploaded.
+                        ================================== -->
 
-                                <img
-                                    src="{{ category.image_url }}"
-                                    alt="{{ category.name }}"
-                                    loading="lazy"
-                                >
+                        {% if not category.image_url %}
 
-                            {% else %}
+                            <div
+                                class="lac-category-fallback-large"
+                                aria-hidden="true"
+                            >
 
-                                <div class="lac-category-fallback">
+                                {% if category.icon %}
+                                    {{ category.icon }}
+                                {% else %}
+                                    📌
+                                {% endif %}
 
-                                    {% if category.icon %}
-                                        {{ category.icon }}
-                                    {% else %}
-                                        📌
-                                    {% endif %}
+                            </div>
 
-                                </div>
-
-                            {% endif %}
-
-                        </div>
+                        {% endif %}
 
 
-                        <!-- CATEGORY INFORMATION -->
+                        <!-- =================================
+                             CATEGORY INFORMATION
+                        ================================== -->
 
                         <div class="lac-category-info">
 
@@ -2703,7 +1366,9 @@
                         </div>
 
 
-                        <!-- ARROW -->
+                        <!-- =================================
+                             ARROW
+                        ================================== -->
 
                         <div
                             class="lac-category-chevron"
