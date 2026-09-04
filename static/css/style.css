@@ -7774,3 +7774,245 @@ main.listing-detail-page,
     font-size: 0.72rem;
     opacity: 0.55;
 }
+
+/* =========================================================
+   LAC CATEGORY IMAGE CARDS
+========================================================= */
+
+.category-card {
+    position: relative;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   CARDS WITH CATEGORY IMAGES
+========================================================= */
+
+.category-card.category-card-has-image {
+    position: relative;
+
+    min-height: 190px;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border-radius: 18px;
+
+    background: #17191d;
+
+    text-decoration: none;
+
+    isolation: isolate;
+}
+
+
+/* =========================================================
+   CATEGORY IMAGE
+========================================================= */
+
+.category-card-image {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.35s ease,
+        filter 0.35s ease;
+}
+
+
+.category-card.category-card-has-image:hover
+.category-card-image {
+    transform: scale(1.04);
+}
+
+
+/* =========================================================
+   DARK IMAGE OVERLAY
+========================================================= */
+
+.category-card-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.08) 0%,
+            rgba(0, 0, 0, 0.18) 38%,
+            rgba(0, 0, 0, 0.88) 100%
+        );
+}
+
+
+/* =========================================================
+   CONTENT ABOVE IMAGE
+========================================================= */
+
+.category-image-content {
+    position: relative;
+
+    z-index: 2;
+
+    min-height: 190px;
+
+    padding: 16px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+}
+
+
+/* =========================================================
+   TOP ROW
+========================================================= */
+
+.category-image-top {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
+
+.category-image-icon {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 38px;
+    height: 38px;
+
+    padding: 0 8px;
+
+    border-radius: 12px;
+
+    background: rgba(0, 0, 0, 0.42);
+
+    backdrop-filter: blur(5px);
+
+    -webkit-backdrop-filter: blur(5px);
+
+    font-size: 20px;
+}
+
+
+.category-card-has-image .category-arrow {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    color: #111;
+
+    font-size: 20px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   BOTTOM CONTENT
+========================================================= */
+
+.category-image-bottom {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 5px;
+}
+
+
+.category-card-has-image .category-name {
+    color: #ffffff;
+
+    font-size: 17px;
+
+    font-weight: 800;
+
+    line-height: 1.15;
+
+    text-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+
+.category-card-has-image .category-discover {
+    color: rgba(255, 255, 255, 0.78);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+
+    .category-card.category-card-has-image {
+        min-height: 165px;
+        border-radius: 16px;
+    }
+
+
+    .category-image-content {
+        min-height: 165px;
+        padding: 13px;
+    }
+
+
+    .category-card-has-image .category-name {
+        font-size: 15px;
+    }
+
+
+    .category-image-icon {
+        min-width: 34px;
+        height: 34px;
+
+        font-size: 18px;
+    }
+
+
+    .category-card-has-image .category-arrow {
+        width: 34px;
+        height: 34px;
+
+        font-size: 18px;
+    }
+
+}
