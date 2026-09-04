@@ -169,60 +169,127 @@
 
             <div class="category-grid">
 
-                {% for category in categories %}
+              {% for category in categories %}
 
-                    <a
-                        class="category-card"
-                        href="{{ url_for(
-                            'qr_category',
-                            code=access_point.code,
-                            category=category.slug
-                        ) }}"
-                    >
+               <a
+                 class="
+                   category-card
+                   {% if category.image_url %}
+                    category-card-has-image
+                   {% endif %}
+                 "
+                 href="{{ url_for(
+                   'qr_category',
+                   code=access_point.code,
+                   category=category.slug
+                 ) }}"
+               >
 
-                        <div class="category-card-top">
+                 {% if category.image_url %}
 
-                            <div class="category-icon-wrap">
+                <!-- =====================================
+                     CATEGORY IMAGE
+                ====================================== -->
 
-                                <span class="category-icon">
-
-                                    {% if category.icon %}
-
-                                        {{ category.icon }}
-
-                                    {% else %}
-
-                                        📌
-
-                                    {% endif %}
-
-                                </span>
-
-                            </div>
+                   <img
+                    class="category-card-image"
+                    src="{{ category.image_url }}"
+                    alt="{{ category.name }}"
+                    loading="lazy"
+                   >
 
 
-                            <span class="category-arrow">
-                                →
-                            </span>
+                <!-- Dark gradient for readable text -->
 
-                        </div>
+                   <div class="category-card-overlay"></div>
 
 
-                        <div class="category-card-bottom">
+                <!-- =====================================
+                     IMAGE CARD CONTENT
+                ====================================== -->
 
-                            <span class="category-name">
-                                {{ category.name }}
-                            </span>
+                   <div class="category-image-content">
 
-                            <span class="category-discover">
-                                OPEN
-                            </span>
+                    <div class="category-image-top">
 
-                        </div>
+                        <span class="category-image-icon">
 
-                    </a>
+                            {% if category.icon %}
+                                {{ category.icon }}
+                            {% endif %}
 
-                {% endfor %}
+                        </span>
+
+
+                        <span class="category-arrow">
+                            →
+                        </span>
+
+                    </div>
+
+
+                    <div class="category-image-bottom">
+
+                        <span class="category-name">
+                            {{ category.name }}
+                        </span>
+
+                        <span class="category-discover">
+                            OPEN
+                        </span>
+
+                    </div>
+
+                   </div>
+
+
+                 {% else %}
+
+                <!-- =====================================
+                     FALLBACK: EXISTING EMOJI CARD
+                ====================================== -->
+
+                   <div class="category-card-top">
+
+                    <div class="category-icon-wrap">
+
+                        <span class="category-icon">
+
+                            {% if category.icon %}
+                                {{ category.icon }}
+                            {% else %}
+                                📌
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <span class="category-arrow">
+                        →
+                    </span>
+
+                   </div>
+
+
+                   <div class="category-card-bottom">
+
+                    <span class="category-name">
+                        {{ category.name }}
+                    </span>
+
+                    <span class="category-discover">
+                        OPEN
+                    </span>
+
+                   </div>
+
+                 {% endif %}
+
+               </a>
+
+              {% endfor %}
 
             </div>
 
