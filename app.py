@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 from flask import (
     Flask,
     abort,
-    current_app,
     flash,
+    current_app,
     jsonify,
     redirect,
     session,
@@ -25,6 +25,10 @@ from flask import (
 from flask_migrate import Migrate
 from sqlalchemy import or_
 
+from image_utils import (
+    upload_lac_image,
+    allowed_image_file,
+)
 from models import (
     db,
     Zone,
@@ -36,7 +40,6 @@ from models import (
     Category,
     PushSubscriber,
     EngagementEvent,
-    PushSubscriberPreference,
 )
 import json
 from admin import admin_bp
@@ -201,35 +204,6 @@ def allowed_image_file(filename):
     )
 
 
-def upload_lac_image(
-    image_file,
-    folder="lac/submissions",
-):
-
-    if (
-        not image_file
-        or not image_file.filename
-    ):
-        return None
-
-    if not allowed_image_file(
-        image_file.filename
-    ):
-        raise ValueError(
-            "Only PNG, JPG, JPEG and WEBP images are allowed."
-        )
-
-    result = cloudinary.uploader.upload(
-        image_file,
-        folder=folder,
-        resource_type="image",
-    )
-
-    return result[
-        "secure_url"
-    ]
-    
-
 # =========================================================
 # SECRET KEY
 # =========================================================
@@ -344,7 +318,7 @@ def home():
             })
 
     return render_template(
-        "qr_entry.html",
+        "entry_qr.html",
         zone_access_points=zone_access_points,
     )
 
@@ -932,6 +906,9 @@ def push_public_key():
 # =========================================================
 # PUSH SUBSCRIBE
 # =========================================================
+# =========================================================
+# PUSH SUBSCRIBE
+# =========================================================
 @app.route(
     "/push/subscribe",
     methods=["POST"],
@@ -1090,6 +1067,7 @@ def push_subscribe():
         category.slug
         for category in active_categories
     }
+
 
     cleaned_categories = [
 
