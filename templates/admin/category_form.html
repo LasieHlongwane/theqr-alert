@@ -70,8 +70,13 @@
 
         <form
             method="POST"
+            enctype="multipart/form-data"
             class="admin-form"
         >
+
+            <!-- ============================================= -->
+            <!-- CATEGORY NAME -->
+            <!-- ============================================= -->
 
             <label>
 
@@ -92,6 +97,10 @@
             </label>
 
 
+            <!-- ============================================= -->
+            <!-- SLUG -->
+            <!-- ============================================= -->
+
             <label>
 
                 Slug
@@ -111,6 +120,10 @@
             </label>
 
 
+            <!-- ============================================= -->
+            <!-- ICON -->
+            <!-- ============================================= -->
+
             <label>
 
                 Icon
@@ -126,8 +139,87 @@
                     }}"
                 >
 
+                <small>
+                    Used as a fallback when no category image
+                    has been uploaded.
+                </small>
+
             </label>
 
+
+            <!-- ============================================= -->
+            <!-- CATEGORY IMAGE -->
+            <!-- ============================================= -->
+
+            <label>
+
+                Category Image
+
+                <input
+                    type="file"
+                    name="category_image"
+                    id="category-image-input"
+                    accept="image/jpeg,image/png,image/webp"
+                >
+
+                <small>
+                    Recommended: landscape JPG, PNG or WebP.
+                    The image will appear on the public
+                    category card.
+                </small>
+
+            </label>
+
+
+            <!-- ============================================= -->
+            <!-- CURRENT / NEW IMAGE PREVIEW -->
+            <!-- ============================================= -->
+
+            <div
+                id="category-image-preview-container"
+                style="
+                    {% if not category or not category.image_url %}
+                        display: none;
+                    {% endif %}
+                    margin-top: 6px;
+                    margin-bottom: 18px;
+                "
+            >
+
+                <p
+                    style="
+                        margin-bottom: 8px;
+                        font-size: 13px;
+                        opacity: 0.75;
+                    "
+                >
+                    Image Preview
+                </p>
+
+                <img
+                    id="category-image-preview"
+                    src="{{
+                        category.image_url
+                        if category and category.image_url
+                        else ''
+                    }}"
+                    alt="Category image preview"
+                    style="
+                        display: block;
+                        width: 100%;
+                        max-width: 420px;
+                        height: 190px;
+                        object-fit: cover;
+                        border-radius: 14px;
+                    "
+                >
+
+            </div>
+
+
+            <!-- ============================================= -->
+            <!-- DISPLAY ORDER -->
+            <!-- ============================================= -->
 
             <label>
 
@@ -146,6 +238,10 @@
             </label>
 
 
+            <!-- ============================================= -->
+            <!-- ACTIVE -->
+            <!-- ============================================= -->
+
             <label class="checkbox-label">
 
                 <input
@@ -162,6 +258,10 @@
             </label>
 
 
+            <!-- ============================================= -->
+            <!-- SUBMIT -->
+            <!-- ============================================= -->
+
             <button type="submit">
 
                 {% if category %}
@@ -177,6 +277,85 @@
     </section>
 
 </div>
+
+
+<!-- ======================================================== -->
+<!-- LOCAL IMAGE PREVIEW -->
+<!-- ======================================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const imageInput =
+            document.getElementById(
+                "category-image-input"
+            );
+
+        const previewContainer =
+            document.getElementById(
+                "category-image-preview-container"
+            );
+
+        const preview =
+            document.getElementById(
+                "category-image-preview"
+            );
+
+
+        if (!imageInput) {
+            return;
+        }
+
+
+        imageInput.addEventListener(
+            "change",
+            function () {
+
+                const file =
+                    imageInput.files &&
+                    imageInput.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                if (
+                    !file.type.startsWith("image/")
+                ) {
+                    return;
+                }
+
+
+                const objectUrl =
+                    URL.createObjectURL(file);
+
+
+                preview.src = objectUrl;
+
+                previewContainer.style.display =
+                    "block";
+
+
+                preview.onload = function () {
+
+                    URL.revokeObjectURL(
+                        objectUrl
+                    );
+
+                };
+
+            }
+        );
+
+    }
+);
+
+</script>
 
 </body>
 
