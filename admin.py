@@ -1,12 +1,15 @@
 import os
 import io
 
+from image_utils import (
+    upload_lac_image,
+)
 from datetime import date, datetime, timedelta
 from push_service import (
     send_zone_push_notification,
 )
 import qrcode
-
+from app import upload_lac_image
 from flask import (
     Blueprint,
     flash,
@@ -1320,8 +1323,9 @@ def analytics():
     high_interest_low_action = (
       high_interest_low_action[:5]
     )
-
-        # =========================================================
+    
+    
+       # =========================================================
     # ACCESS POINT PERFORMANCE
     # =========================================================
 
@@ -2045,7 +2049,7 @@ def analytics():
         total_useful_actions=(
           total_useful_actions
         ),
-
+        
         listing_action_rate=(
             listing_action_rate
         ),
@@ -2077,7 +2081,7 @@ def analytics():
         daily_activity=(
             daily_activity
         ),
-    
+  
     )
 
 
@@ -2862,104 +2866,410 @@ def delete_zone(zone_id):
     )
 
 
+
 @admin_bp.route("/categories")
 def categories():
     auth = require_admin()
     if auth:
         return auth
-    return render_template("admin/categories.html", categories=get_categories(active_only=False))
+
+    return render_template(
+        "admin/categories.html",
+        categories=get_categories(
+            active_only=False
+        ),
+    )
 
 
-@admin_bp.route("/categories/new", methods=["GET", "POST"])
+# =========================================================
+# CREATE CATEGORY
+# =========================================================
+
+@admin_bp.route(
+    "/categories/new",
+    methods=["GET", "POST"],
+)
 def create_category():
+
     auth = require_admin()
     if auth:
         return auth
 
+
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        slug = clean_slug(request.form.get("slug", ""))
-        icon = request.form.get("icon", "").strip() or None
-        display_order = request.form.get("display_order", type=int)
-        display_order = 0 if display_order is None else display_order
-        active = request.form.get("active") == "on"
+
+        name = (
+            request.form
+            .get("name", "")
+            .strip()
+        )
+
+        slug = clean_slug(
+            request.form.get(
+                "slug",
+                ""
+            )
+        )
+
+        icon = (
+            request.form
+            .get("icon", "")
+            .strip()
+            or None
+        )
+
+        display_order = (
+            request.form.get(
+                "display_order",
+                type=int,
+            )
+        )
+
+        display_order = (
+            0
+            if display_order is None
+            else display_order
+        )
+
+        active = (
+            request.form.get("active")
+            == "on"
+        )
+
+
+        # =============================================
+        # VALIDATION
+        # =============================================
 
         if not name or not slug:
-            flash("Name and slug are required.", "error")
-            return render_template("admin/category_form.html", category=None)
 
-        if Category.query.filter_by(slug=slug).first():
-            flash("That category slug already exists.", "error")
-            return render_template("admin/category_form.html", category=None)
+            flash(
+                "Name and slug are required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/category_form.html",
+                category=None,
+            )
+
+
+        if Category.query.filter_by(
+            slug=slug
+        ).first():
+
+            flash(
+                "That category slug already exists.",
+                "error",
+            )
+
+            return render_template(
+                "admin/category_form.html",
+                category=None,
+            )
+
+
+        # =============================================
+        # IMAGE UPLOAD
+        # =============================================
+
+        image_file = request.files.get(
+            "category_image"
+        )
+
+        image_url = None
+
+        try:
+
+            if (
+                image_file
+                and image_file.filename
+            ):
+
+                image_url = upload_lac_image(
+                    image_file,
+                    folder="lac/categories",
+                )
+
+        except ValueError as error:
+
+            flash(
+                str(error),
+                "error",
+            )
+
+            return render_template(
+                "admin/category_form.html",
+                category=None,
+            )
+
+
+        # =============================================
+        # CREATE CATEGORY
+        # =============================================
 
         category = Category(
+
             name=name,
+
             slug=slug,
+
             icon=icon,
+
+            image_url=image_url,
+
             display_order=display_order,
+
             active=active,
+
         )
+
+
         db.session.add(category)
+
         db.session.commit()
-        flash("Category created.", "success")
-        return redirect(url_for("admin.categories"))
-
-    return render_template("admin/category_form.html", category=None)
 
 
-@admin_bp.route("/categories/<int:category_id>/edit", methods=["GET", "POST"])
+        flash(
+            "Category created successfully.",
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "admin.categories"
+            )
+        )
+
+
+    return render_template(
+        "admin/category_form.html",
+        category=None,
+    )
+
+
+# =========================================================
+# EDIT CATEGORY
+# =========================================================
+
+@admin_bp.route(
+    "/categories/<int:category_id>/edit",
+    methods=["GET", "POST"],
+)
 def edit_category(category_id):
+
     auth = require_admin()
     if auth:
         return auth
 
-    category = Category.query.get_or_404(category_id)
+
+    category = Category.query.get_or_404(
+        category_id
+    )
+
 
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        new_slug = clean_slug(request.form.get("slug", ""))
-        icon = request.form.get("icon", "").strip() or None
-        display_order = request.form.get("display_order", type=int)
-        display_order = 0 if display_order is None else display_order
+
+        name = (
+            request.form
+            .get("name", "")
+            .strip()
+        )
+
+        new_slug = clean_slug(
+            request.form.get(
+                "slug",
+                ""
+            )
+        )
+
+        icon = (
+            request.form
+            .get("icon", "")
+            .strip()
+            or None
+        )
+
+        display_order = (
+            request.form.get(
+                "display_order",
+                type=int,
+            )
+        )
+
+        display_order = (
+            0
+            if display_order is None
+            else display_order
+        )
+
+        active = (
+            request.form.get("active")
+            == "on"
+        )
+
+
+        # =============================================
+        # VALIDATION
+        # =============================================
 
         if not name or not new_slug:
-            flash("Name and slug are required.", "error")
-            return render_template("admin/category_form.html", category=category)
+
+            flash(
+                "Name and slug are required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/category_form.html",
+                category=category,
+            )
+
 
         duplicate = Category.query.filter(
+
             Category.slug == new_slug,
+
             Category.id != category.id,
+
         ).first()
+
+
         if duplicate:
-            flash("Another category already uses that slug.", "error")
-            return render_template("admin/category_form.html", category=category)
+
+            flash(
+                "Another category already uses that slug.",
+                "error",
+            )
+
+            return render_template(
+                "admin/category_form.html",
+                category=category,
+            )
+
+
+        # =============================================
+        # UPDATE IMAGE ONLY IF NEW IMAGE SELECTED
+        # =============================================
+
+        image_file = request.files.get(
+            "category_image"
+        )
+
+
+        try:
+
+            if (
+                image_file
+                and image_file.filename
+            ):
+
+                category.image_url = upload_lac_image(
+                    image_file,
+                    folder="lac/categories",
+                )
+
+        except ValueError as error:
+
+            flash(
+                str(error),
+                "error",
+            )
+
+            return render_template(
+                "admin/category_form.html",
+                category=category,
+            )
+
+
+        # =============================================
+        # PRESERVE EXISTING SLUG RELATIONSHIPS
+        # =============================================
 
         old_slug = category.slug
+
+
         if new_slug != old_slug:
-            ContentItem.query.filter(ContentItem.category == old_slug).update(
-                {ContentItem.category: new_slug}, synchronize_session=False
+
+            ContentItem.query.filter(
+                ContentItem.category == old_slug
+            ).update(
+                {
+                    ContentItem.category:
+                    new_slug
+                },
+                synchronize_session=False,
             )
-            AccessPoint.query.filter(AccessPoint.default_category == old_slug).update(
-                {AccessPoint.default_category: new_slug}, synchronize_session=False
+
+
+            AccessPoint.query.filter(
+                AccessPoint.default_category == old_slug
+            ).update(
+                {
+                    AccessPoint.default_category:
+                    new_slug
+                },
+                synchronize_session=False,
             )
-            PendingSubmission.query.filter(PendingSubmission.category == old_slug).update(
-                {PendingSubmission.category: new_slug}, synchronize_session=False
+
+
+            PendingSubmission.query.filter(
+                PendingSubmission.category == old_slug
+            ).update(
+                {
+                    PendingSubmission.category:
+                    new_slug
+                },
+                synchronize_session=False,
             )
-            QRScan.query.filter(QRScan.category_selected == old_slug).update(
-                {QRScan.category_selected: new_slug}, synchronize_session=False
+
+
+            QRScan.query.filter(
+                QRScan.category_selected == old_slug
+            ).update(
+                {
+                    QRScan.category_selected:
+                    new_slug
+                },
+                synchronize_session=False,
             )
+
+
+        # =============================================
+        # UPDATE CATEGORY
+        # =============================================
 
         category.name = name
+
         category.slug = new_slug
+
         category.icon = icon
+
         category.display_order = display_order
-        category.active = request.form.get("active") == "on"
+
+        category.active = active
+
+
         db.session.commit()
-        flash("Category updated.", "success")
-        return redirect(url_for("admin.categories"))
 
-    return render_template("admin/category_form.html", category=category)
 
+        flash(
+            "Category updated successfully.",
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.categories"
+            )
+        )
+
+
+    return render_template(
+        "admin/category_form.html",
+        category=category,
+    )
 
 @admin_bp.route("/categories/<int:category_id>/toggle", methods=["POST"])
 def toggle_category(category_id):
