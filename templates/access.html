@@ -197,7 +197,7 @@
         display: flex;
         flex-direction: column;
 
-        gap: 10px;
+        gap: 11px;
     }
 
 
@@ -205,23 +205,23 @@
         position: relative;
 
         width: 100%;
-        min-height: 90px;
+        min-height: 104px;
 
         display: flex;
         align-items: center;
 
-        gap: 14px;
+        gap: 15px;
 
-        padding: 8px 11px 8px 8px;
+        padding: 10px;
 
         box-sizing: border-box;
 
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.07);
 
-        border-radius: 15px;
+        border-radius: 16px;
 
-        /* Very light warm yellow */
-        background: #fff4c2;
+        /* Creamy white */
+        background: #fffaf0;
 
         color: #171717;
 
@@ -230,8 +230,8 @@
         overflow: hidden;
 
         box-shadow:
-            0 3px 12px
-            rgba(0, 0, 0, 0.10);
+            0 4px 14px
+            rgba(0, 0, 0, 0.12);
 
         -webkit-tap-highlight-color: transparent;
 
@@ -244,20 +244,20 @@
 
 
     .lac-category-row:hover {
-        background: #ffefad;
+        background: #fff6e6;
 
-        border-color: rgba(0, 0, 0, 0.12);
+        border-color: rgba(0, 0, 0, 0.11);
 
         box-shadow:
-            0 5px 16px
-            rgba(0, 0, 0, 0.14);
+            0 6px 18px
+            rgba(0, 0, 0, 0.15);
     }
 
 
     .lac-category-row:active {
         transform: scale(0.985);
 
-        background: #ffe99a;
+        background: #fff1dc;
     }
 
 
@@ -266,20 +266,20 @@
     ========================================== */
 
     .lac-category-thumb {
-        width: 72px;
-        height: 72px;
+        width: 84px;
+        height: 84px;
 
-        flex: 0 0 72px;
+        flex: 0 0 84px;
 
         overflow: hidden;
 
-        border-radius: 11px;
+        border-radius: 13px;
 
-        background: #e9dfae;
+        background: #f1eadf;
 
         box-shadow:
-            0 2px 7px
-            rgba(0, 0, 0, 0.13);
+            0 2px 8px
+            rgba(0, 0, 0, 0.14);
     }
 
 
@@ -304,11 +304,11 @@
         background:
             linear-gradient(
                 145deg,
-                #f1e6b7,
-                #ddd19c
+                #fffaf0,
+                #eee5d6
             );
 
-        font-size: 26px;
+        font-size: 28px;
     }
 
 
@@ -326,14 +326,14 @@
 
         justify-content: center;
 
-        gap: 5px;
+        gap: 6px;
     }
 
 
     .lac-category-title {
-        color: #171717;
+        color: #181818;
 
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 800;
 
         line-height: 1.25;
@@ -343,10 +343,10 @@
     .lac-category-meta {
         color: rgba(0, 0, 0, 0.55);
 
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 650;
 
-        line-height: 1.2;
+        line-height: 1.25;
     }
 
 
@@ -355,10 +355,10 @@
     ========================================== */
 
     .lac-category-chevron {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
 
-        flex: 0 0 32px;
+        flex: 0 0 34px;
 
         display: flex;
         align-items: center;
@@ -368,11 +368,11 @@
 
         border-radius: 50%;
 
-        background: rgba(0, 0, 0, 0.07);
+        background: rgba(0, 0, 0, 0.055);
 
-        color: #171717;
+        color: #1a1a1a;
 
-        font-size: 22px;
+        font-size: 23px;
         font-weight: 400;
 
         line-height: 1;
@@ -387,7 +387,7 @@
     .lac-category-chevron {
         transform: translateX(2px);
 
-        background: rgba(0, 0, 0, 0.11);
+        background: rgba(0, 0, 0, 0.10);
     }
 
 
@@ -981,35 +981,29 @@
         }
 
 
-        /*
-         * Larger than the previous mobile version.
-         * Gives category photography enough space
-         * without turning the interface into a gallery.
-         */
-
         .lac-category-row {
-            min-height: 88px;
+            min-height: 102px;
 
-            gap: 13px;
+            gap: 14px;
 
-            padding: 8px 10px 8px 8px;
+            padding: 10px 10px 10px 9px;
 
-            border-radius: 14px;
+            border-radius: 15px;
         }
 
 
         .lac-category-thumb {
-            width: 72px;
-            height: 72px;
+            width: 82px;
+            height: 82px;
 
-            flex: 0 0 72px;
+            flex: 0 0 82px;
 
-            border-radius: 11px;
+            border-radius: 12px;
         }
 
 
         .lac-category-title {
-            font-size: 14px;
+            font-size: 15px;
         }
 
 
@@ -1019,10 +1013,10 @@
 
 
         .lac-category-chevron {
-            width: 30px;
-            height: 30px;
+            width: 31px;
+            height: 31px;
 
-            flex: 0 0 30px;
+            flex: 0 0 31px;
 
             font-size: 21px;
         }
@@ -1073,28 +1067,28 @@
     @media (max-width: 360px) {
 
         .lac-category-row {
-            min-height: 80px;
+            min-height: 94px;
 
-            gap: 10px;
+            gap: 11px;
 
-            padding: 7px;
+            padding: 8px;
 
-            border-radius: 13px;
+            border-radius: 14px;
         }
 
 
         .lac-category-thumb {
-            width: 64px;
-            height: 64px;
+            width: 74px;
+            height: 74px;
 
-            flex: 0 0 64px;
+            flex: 0 0 74px;
 
-            border-radius: 10px;
+            border-radius: 11px;
         }
 
 
         .lac-category-title {
-            font-size: 13px;
+            font-size: 14px;
         }
 
 
@@ -1104,10 +1098,10 @@
 
 
         .lac-category-chevron {
-            width: 27px;
-            height: 27px;
+            width: 28px;
+            height: 28px;
 
-            flex: 0 0 27px;
+            flex: 0 0 28px;
 
             font-size: 19px;
         }
@@ -1122,26 +1116,26 @@
     @media (min-width: 700px) {
 
         .lac-category-row {
-            min-height: 96px;
+            min-height: 116px;
 
-            padding: 9px;
+            padding: 11px;
 
-            gap: 15px;
+            gap: 17px;
         }
 
 
         .lac-category-thumb {
-            width: 78px;
-            height: 78px;
+            width: 94px;
+            height: 94px;
 
-            flex: 0 0 78px;
+            flex: 0 0 94px;
 
-            border-radius: 12px;
+            border-radius: 14px;
         }
 
 
         .lac-category-title {
-            font-size: 16px;
+            font-size: 17px;
         }
 
 
