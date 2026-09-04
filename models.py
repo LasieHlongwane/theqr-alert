@@ -38,6 +38,17 @@ class Category(db.Model):
         nullable=True,
     )
 
+    # --------------------------------------------------------
+    # CATEGORY IMAGE
+    # Used on public category cards.
+    # If no image is available, the existing icon can be shown.
+    # --------------------------------------------------------
+
+    image_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
     display_order = db.Column(
         db.Integer,
         nullable=False,
@@ -61,7 +72,6 @@ class Category(db.Model):
             f"<Category "
             f"{self.slug}>"
         )
-
 
 # ============================================================
 # ZONE
