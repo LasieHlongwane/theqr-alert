@@ -318,7 +318,7 @@ def home():
             })
 
     return render_template(
-        "entry_qr.html",
+        "qr_entry.html",
         zone_access_points=zone_access_points,
     )
 
