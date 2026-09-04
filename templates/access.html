@@ -167,122 +167,81 @@
             </div>
 
 
-            <div class="category-grid">
+            <div class="category-list">
 
-              {% for category in categories %}
+             {% for category in categories %}
 
-               <a
-                 class="
-                   category-card
-                   {% if category.image_url %}
-                    category-card-has-image
-                   {% endif %}
-                 "
-                 href="{{ url_for(
-                   'qr_category',
-                   code=access_point.code,
-                   category=category.slug
-                 ) }}"
-               >
+              <a
+               class="category-list-card"
+               href="{{ url_for(
+                'qr_category',
+                code=access_point.code,
+                category=category.slug
+               ) }}"
+              >
 
-                 {% if category.image_url %}
+            <!-- =====================================
+                 CATEGORY VISUAL
+            ====================================== -->
 
-                <!-- =====================================
-                     CATEGORY IMAGE
-                ====================================== -->
+               <div class="category-list-visual">
 
-                   <img
-                    class="category-card-image"
-                    src="{{ category.image_url }}"
-                    alt="{{ category.name }}"
-                    loading="lazy"
-                   >
+                {% if category.image_url %}
 
+                    <img
+                        src="{{ category.image_url }}"
+                        alt="{{ category.name }}"
+                        class="category-list-image"
+                        loading="lazy"
+                    >
 
-                <!-- Dark gradient for readable text -->
+                {% else %}
 
-                   <div class="category-card-overlay"></div>
+                    <div class="category-list-icon">
 
-
-                <!-- =====================================
-                     IMAGE CARD CONTENT
-                ====================================== -->
-
-                   <div class="category-image-content">
-
-                        <div class="category-image-top">
-
-                          <span class="category-arrow">
-                            →
-                          </span>
-
-                        </div>
-
-
-                    <div class="category-image-bottom">
-
-                        <span class="category-name">
-                            {{ category.name }}
-                        </span>
-
-                        <span class="category-discover">
-                            OPEN
-                        </span>
+                        {% if category.icon %}
+                            {{ category.icon }}
+                        {% else %}
+                            📌
+                        {% endif %}
 
                     </div>
 
-                   </div>
+                {% endif %}
+
+               </div>
 
 
-                 {% else %}
+            <!-- =====================================
+                 CATEGORY INFORMATION
+            ====================================== -->
 
-                <!-- =====================================
-                     FALLBACK: EXISTING EMOJI CARD
-                ====================================== -->
+               <div class="category-list-content">
 
-                   <div class="category-card-top">
+                <span class="category-list-name">
+                    {{ category.name }}
+                </span>
 
-                    <div class="category-icon-wrap">
+                <span class="category-list-action">
+                    EXPLORE
+                </span>
 
-                        <span class="category-icon">
-
-                            {% if category.icon %}
-                                {{ category.icon }}
-                            {% else %}
-                                📌
-                            {% endif %}
-
-                        </span>
-
-                    </div>
+               </div>
 
 
-                    <span class="category-arrow">
-                        →
-                    </span>
+            <!-- =====================================
+                 ARROW
+            ====================================== -->
 
-                   </div>
+               <div class="category-list-arrow">
+                 →
+               </div>
 
+              </a>
 
-                   <div class="category-card-bottom">
+             {% endfor %}
 
-                    <span class="category-name">
-                        {{ category.name }}
-                    </span>
-
-                    <span class="category-discover">
-                        OPEN
-                    </span>
-
-                   </div>
-
-                 {% endif %}
-
-               </a>
-
-              {% endfor %}
-
-            </div>
+            </div>  
 
         </section>
 
