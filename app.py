@@ -1,7 +1,11 @@
 import os
 import re
 import uuid
-from datetime import date, datetime
+from datetime import (
+    date,
+    datetime,
+    timedelta,
+)
 from push_service import (
     send_push_notification,
     send_zone_push_notification,
@@ -484,6 +488,9 @@ def content_is_expired(
 # =========================================================
 # QR ACCESS POINT
 # =========================================================
+# =========================================================
+# QR ACCESS POINT
+# =========================================================
 
 @app.route("/q/<access_code>")
 def qr_access(access_code):
@@ -500,7 +507,6 @@ def qr_access(access_code):
         )
         .first_or_404()
     )
-
 
     zone = access_point.zone
 
@@ -520,16 +526,10 @@ def qr_access(access_code):
             ),
         )
 
-
         db.session.add(scan)
-
         db.session.commit()
 
-
     except Exception as exc:
-
-        # Do not prevent the public QR page from loading
-        # just because analytics recording failed.
 
         db.session.rollback()
 
@@ -552,18 +552,14 @@ def qr_access(access_code):
             .lower()
         )
 
-
         category_record = (
             get_active_category_by_slug(
                 category_slug
             )
         )
 
-
         if not category_record:
-
             abort(404)
-
 
         return redirect(
             url_for(
@@ -578,12 +574,239 @@ def qr_access(access_code):
     # GENERAL QR
     # -----------------------------------------------------
 
-    categories = (
-        get_active_categories()
+    categories = get_active_categories()
+
+    today = date.today()
+
+
+    # =====================================================
+    # CATEGORY STATUS BADGES
+    # =====================================================
+    #
+    # We intentionally use get_active_content() here so
+    # the category counts follow the same visibility rules
+    # as the actual category pages.
+    #
+    # category_stats example:
+    #
+    # {
+    #     "events": {
+    #         "count": 5,
+    #         "new_count": 2,
+    #         "label": "UPCOMING",
+    #         "icon": "📅",
+    #     }
+    # }
+    #
+    # =====================================================
+
+    category_stats = {}
+
+
+    # -----------------------------------------------------
+    # NEW LISTING CUTOFF
+    #
+    # A listing is considered NEW when created during
+    # the last 7 days.
+    # -----------------------------------------------------
+
+    from datetime import timedelta
+
+    new_cutoff = (
+        datetime.utcnow()
+        - timedelta(days=7)
     )
 
 
+    for category in categories:
+
+        try:
+
+            active_items = get_active_content(
+                zone_id=zone.id,
+                category_slug=category.slug,
+            )
+
+        except Exception as exc:
+
+            app.logger.exception(
+                "Unable to calculate category stats. "
+                "zone=%s category=%s error=%s",
+                zone.id,
+                category.slug,
+                exc,
+            )
+
+            active_items = []
+
+
+        # -------------------------------------------------
+        # TOTAL ACTIVE ITEMS
+        # -------------------------------------------------
+
+        item_count = len(
+            active_items
+        )
+
+
+        # -------------------------------------------------
+        # NEW ITEMS
+        # -------------------------------------------------
+
+        new_count = 0
+
+
+        for item in active_items:
+
+            created_at = getattr(
+                item,
+                "created_at",
+                None,
+            )
+
+            if (
+                created_at
+                and created_at >= new_cutoff
+            ):
+
+                new_count += 1
+
+
+        # -------------------------------------------------
+        # BADGE WORDING
+        # -------------------------------------------------
+
+        if category.slug == "events":
+
+            badge_icon = "📅"
+            badge_label = "UPCOMING"
+
+
+        elif category.slug == "property":
+
+            badge_icon = "🏠"
+            badge_label = "AVAILABLE"
+
+
+        else:
+
+            badge_icon = "🔥"
+            badge_label = "LIVE"
+
+
+        category_stats[
+            category.slug
+        ] = {
+
+            "count":
+                item_count,
+
+            "new_count":
+                new_count,
+
+            "label":
+                badge_label,
+
+            "icon":
+                badge_icon,
+        }
+
+
+    # =====================================================
+    # NEW NEAR YOU
+    # =====================================================
+    #
+    # Gather active listings from all categories.
+    #
+    # We use the same get_active_content() helper so
+    # expired / archived / inactive content is excluded.
+    #
+    # =====================================================
+
+    new_items_pool = []
+
+
+    for category in categories:
+
+        try:
+
+            category_items = (
+                get_active_content(
+                    zone_id=zone.id,
+                    category_slug=category.slug,
+                )
+            )
+
+        except Exception as exc:
+
+            app.logger.exception(
+                "Unable to load New Near You items. "
+                "zone=%s category=%s error=%s",
+                zone.id,
+                category.slug,
+                exc,
+            )
+
+            continue
+
+
+        for item in category_items:
+
+            new_items_pool.append(
+                item
+            )
+
+
+    # -----------------------------------------------------
+    # SORT NEWEST FIRST
+    # -----------------------------------------------------
+
+    new_items_pool.sort(
+
+        key=lambda item: (
+            item.created_at
+            or datetime.min
+        ),
+
+        reverse=True,
+    )
+
+
+    # -----------------------------------------------------
+    # LIMIT HOME RAIL
+    #
+    # Eight listings keeps the horizontal rail useful
+    # without making the initial page unnecessarily heavy.
+    # -----------------------------------------------------
+
+    new_items = (
+        new_items_pool[:8]
+    )
+
+
+    # -----------------------------------------------------
+    # CATEGORY LOOKUP
+    #
+    # Allows access.html to display the friendly category
+    # name instead of only the slug.
+    # -----------------------------------------------------
+
+    category_lookup = {
+
+        category.slug:
+            category
+
+        for category
+        in categories
+    }
+
+
+    # =====================================================
+    # RENDER ACCESS PAGE
+    # =====================================================
+
     return render_template(
+
         "access.html",
 
         zone=zone,
@@ -591,6 +814,12 @@ def qr_access(access_code):
         access_point=access_point,
 
         categories=categories,
+
+        category_stats=category_stats,
+
+        new_items=new_items,
+
+        category_lookup=category_lookup,
     )
 # =========================================================
 # CATEGORY PAGE
