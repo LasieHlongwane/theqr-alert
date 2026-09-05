@@ -2198,35 +2198,12 @@ body {
                          Existing image_url remains
                          Image 1.
                     ================================== -->
-
-                    {% set category_images = [] %}
-
-
-                    {% if category.image_url %}
-
-                        {% set _ = category_images.append(
-                            category.image_url
-                        ) %}
-
-                    {% endif %}
-
-
-                    {% if category.image_url_2 %}
-
-                        {% set _ = category_images.append(
-                            category.image_url_2
-                        ) %}
-
-                    {% endif %}
-
-
-                    {% if category.image_url_3 %}
-
-                        {% set _ = category_images.append(
-                            category.image_url_3
-                        ) %}
-
-                    {% endif %}
+                    {% set category_images = (
+                     category_background_images.get(
+                      category.id,
+                      []
+                     )
+                    ) %}
 
 
                     <!-- =================================
