@@ -3,17 +3,16 @@
 // Powered by LaC
 // =========================================================
 //
-// Responsibilities:
+// RULES:
 //
-// 1. Register the Kalxa service worker.
-// 2. Prevent the QUICK ACCESS card from flashing on load.
-// 3. Hide the card when Kalxa is running as an installed app.
-// 4. Show the install button when the browser confirms
-//    installation is available.
-// 5. Recover if Kalxa was previously installed and later
-//    uninstalled.
-// 6. Handle the browser installation prompt.
-// 7. Allow the user to dismiss the card for the current page.
+// 1. Never flash the install card during page load.
+// 2. Hide the card when Kalxa is running as an installed PWA.
+// 3. Show the card in a normal browser.
+// 4. ALWAYS show the "Add Kalxa to Home Screen" button
+//    whenever the card is visible.
+// 5. Use the native install prompt when available.
+// 6. Otherwise show manual installation instructions.
+// 7. Allow the user to dismiss the card for this page.
 //
 // =========================================================
 
@@ -49,18 +48,16 @@ const lacInstallClose =
 
 
 // =========================================================
-// INSTALL STATE
+// STATE
 // =========================================================
 
 let deferredInstallPrompt = null;
 
 let installCardDismissed = false;
 
-let installStateResolved = false;
-
 
 // =========================================================
-// LOCAL STORAGE KEY
+// LOCAL STORAGE
 // =========================================================
 
 const KALXA_INSTALLED_KEY =
@@ -68,7 +65,7 @@ const KALXA_INSTALLED_KEY =
 
 
 // =========================================================
-// CHECK WHETHER KALXA IS RUNNING AS INSTALLED APP
+// STANDALONE CHECK
 // =========================================================
 
 function isRunningStandalone() {
@@ -93,47 +90,7 @@ function isRunningStandalone() {
 
 
 // =========================================================
-// PREVIOUS INSTALL MARKER
-// =========================================================
-//
-// This is only a historical hint.
-//
-// IMPORTANT:
-//
-// We do NOT use this value by itself to permanently hide
-// the install card.
-//
-// A user can install Kalxa, later uninstall it, and still
-// have this localStorage value left behind.
-//
-// =========================================================
-
-function wasKalxaPreviouslyInstalled() {
-
-    try {
-
-        return (
-            localStorage.getItem(
-                KALXA_INSTALLED_KEY
-            ) === "true"
-        );
-
-    } catch (error) {
-
-        console.warn(
-            "[Kalxa PWA] Could not read install state:",
-            error
-        );
-
-        return false;
-
-    }
-
-}
-
-
-// =========================================================
-// SAVE INSTALL MARKER
+// REMEMBER INSTALL
 // =========================================================
 
 function rememberKalxaInstalled() {
@@ -158,10 +115,10 @@ function rememberKalxaInstalled() {
 
 
 // =========================================================
-// CLEAR STALE INSTALL MARKER
+// CLEAR OLD INSTALL MARKER
 // =========================================================
 
-function clearStaleInstallMarker() {
+function clearOldInstallMarker() {
 
     try {
 
@@ -172,7 +129,7 @@ function clearStaleInstallMarker() {
     } catch (error) {
 
         console.warn(
-            "[Kalxa PWA] Could not clear stale install state:",
+            "[Kalxa PWA] Could not clear install state:",
             error
         );
 
@@ -182,7 +139,7 @@ function clearStaleInstallMarker() {
 
 
 // =========================================================
-// HIDE QUICK ACCESS CARD
+// HIDE CARD
 // =========================================================
 
 function hideInstallSection() {
@@ -199,7 +156,7 @@ function hideInstallSection() {
 
 
 // =========================================================
-// SHOW QUICK ACCESS CARD
+// SHOW CARD
 // =========================================================
 
 function showInstallSection() {
@@ -216,35 +173,17 @@ function showInstallSection() {
 
 
 // =========================================================
-// HIDE INSTALL BUTTON
-// =========================================================
-
-function hideInstallButton() {
-
-    if (!lacInstallButton) {
-        return;
-    }
-
-
-    // Keep the button available in normal browser mode.
-    //
-    // If beforeinstallprompt is available, clicking it
-    // launches the native installer.
-    //
-    // Otherwise clicking it displays manual installation
-    // instructions.
-
-    lacInstallButton.style.display =
-        "inline-flex";
-
-    lacInstallButton.disabled =
-        false;
-
-}
-
-
-// =========================================================
 // SHOW INSTALL BUTTON
+// =========================================================
+//
+// IMPORTANT:
+//
+// The button is ALWAYS visible whenever the Quick Access
+// card is visible.
+//
+// Native installation availability determines what happens
+// when the button is clicked — NOT whether the button exists.
+//
 // =========================================================
 
 function showInstallButton() {
@@ -264,13 +203,89 @@ function showInstallButton() {
 
 
 // =========================================================
-// UPDATE INSTALL UI
+// DEFAULT HELP TEXT
+// =========================================================
+
+function showDefaultHelp() {
+
+    if (!lacInstallHelp) {
+        return;
+    }
+
+
+    lacInstallHelp.textContent =
+        "Add Kalxa for faster access to your local area.";
+
+    lacInstallHelp.style.display =
+        "block";
+
+}
+
+
+// =========================================================
+// MANUAL INSTALL HELP
+// =========================================================
+
+function showManualInstallHelp() {
+
+    if (!lacInstallHelp) {
+        return;
+    }
+
+
+    const userAgent =
+        navigator.userAgent || "";
+
+
+    // -----------------------------------------------------
+    // IOS / IPADOS
+    // -----------------------------------------------------
+
+    const isIOS =
+        /iPhone|iPad|iPod/i.test(
+            userAgent
+        );
+
+
+    if (isIOS) {
+
+        lacInstallHelp.innerHTML =
+            "<strong>Install Kalxa:</strong><br>" +
+            "Tap the Share button in Safari, then choose " +
+            "<strong>Add to Home Screen</strong>.";
+
+        lacInstallHelp.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    // -----------------------------------------------------
+    // CHROME / EDGE / ANDROID
+    // -----------------------------------------------------
+
+    lacInstallHelp.innerHTML =
+        "<strong>Install Kalxa:</strong><br>" +
+        "Open your browser menu (⋮), then choose " +
+        "<strong>Add to Home screen</strong> " +
+        "or <strong>Install app</strong>.";
+
+    lacInstallHelp.style.display =
+        "block";
+
+}
+
+
+// =========================================================
+// UPDATE UI
 // =========================================================
 
 function updateInstallUI() {
 
     // -----------------------------------------------------
-    // KALXA IS CURRENTLY RUNNING AS AN INSTALLED PWA
+    // INSTALLED PWA
     // -----------------------------------------------------
 
     if (
@@ -281,16 +296,13 @@ function updateInstallUI() {
 
         hideInstallSection();
 
-        installStateResolved =
-            true;
-
         return;
 
     }
 
 
     // -----------------------------------------------------
-    // USER CLOSED THE CARD DURING THIS PAGE SESSION
+    // USER DISMISSED CARD
     // -----------------------------------------------------
 
     if (
@@ -299,180 +311,26 @@ function updateInstallUI() {
 
         hideInstallSection();
 
-        installStateResolved =
-            true;
-
         return;
 
     }
 
 
     // -----------------------------------------------------
-    // BROWSER CONFIRMED KALXA CAN CURRENTLY BE INSTALLED
-    //
-    // This is important for uninstall recovery.
-    //
-    // If we previously stored "installed = true", but the
-    // browser is now offering installation again, that old
-    // marker is stale.
+    // NORMAL BROWSER
     // -----------------------------------------------------
-
-    if (
-        deferredInstallPrompt
-    ) {
-
-        if (
-            wasKalxaPreviouslyInstalled()
-        ) {
-
-            clearStaleInstallMarker();
-
-            console.log(
-                "[Kalxa PWA] Previous install marker was stale and has been cleared."
-            );
-
-        }
-
-
-        showInstallSection();
-
-        showInstallButton();
-
-
-        if (lacInstalledMessage) {
-
-            lacInstalledMessage.style.display =
-                "none";
-
-        }
-
-
-        if (lacInstallHelp) {
-
-            lacInstallHelp.style.display =
-                "block";
-
-        }
-
-
-        installStateResolved =
-            true;
-
-        return;
-
-    }
-
-
-    // -----------------------------------------------------
-    // INSTALL PROMPT HAS NOT ARRIVED YET
     //
-    // Do not immediately show the card.
+    // Always show both:
     //
-    // This prevents:
+    // Quick Access card
+    // +
+    // Add Kalxa button
     //
-    // Card appears
-    //      ↓
-    // JS checks state
-    //      ↓
-    // Card disappears
-    //
-    // Instead, we wait briefly for the browser to tell us
-    // whether installation is available.
-    // -----------------------------------------------------
-
-    hideInstallButton();
-
-
-    if (lacInstalledMessage) {
-
-        lacInstalledMessage.style.display =
-            "none";
-
-    }
-
-
-    if (lacInstallHelp) {
-
-        lacInstallHelp.style.display =
-            "block";
-
-    }
-
-}
-
-
-// =========================================================
-// RESOLVE INITIAL INSTALL STATE
-// =========================================================
-//
-// Chromium may dispatch beforeinstallprompt shortly after
-// the page JavaScript begins.
-//
-// We therefore give the browser a short period to provide
-// that event before deciding what to do with the card.
-//
-// =========================================================
-
-function resolveInitialInstallState() {
-
-    if (
-        installStateResolved
-    ) {
-
-        return;
-
-    }
-
-
-    // Installed PWA:
-    // definitely hide the card.
-
-    if (
-        isRunningStandalone()
-    ) {
-
-        rememberKalxaInstalled();
-
-        hideInstallSection();
-
-        installStateResolved =
-            true;
-
-        return;
-
-    }
-
-
-    // Browser already told us installation is possible.
-
-    if (
-        deferredInstallPrompt
-    ) {
-
-        updateInstallUI();
-
-        return;
-
-    }
-
-
-    // -----------------------------------------------------
-    // NORMAL BROWSER MODE
-    //
-    // We cannot reliably prove that an app is installed
-    // merely from an old localStorage marker.
-    //
-    // Therefore the old marker does NOT permanently hide
-    // the card.
-    //
-    // Show the Quick Access information card, but keep the
-    // install button hidden until beforeinstallprompt is
-    // actually available.
     // -----------------------------------------------------
 
     showInstallSection();
 
-    hideInstallButton();
+    showInstallButton();
 
 
     if (lacInstalledMessage) {
@@ -483,22 +341,13 @@ function resolveInitialInstallState() {
     }
 
 
-    if (lacInstallHelp) {
-
-        lacInstallHelp.style.display =
-            "block";
-
-    }
-
-
-    installStateResolved =
-        true;
+    showDefaultHelp();
 
 }
 
 
 // =========================================================
-// CLOSE QUICK ACCESS CARD
+// CLOSE CARD
 // =========================================================
 
 if (lacInstallClose) {
@@ -511,12 +360,6 @@ if (lacInstallClose) {
 
             event.stopPropagation();
 
-
-            // Dismiss only for this page/session.
-            //
-            // We intentionally do not save this to
-            // localStorage so the user can see the
-            // Quick Access option again later.
 
             installCardDismissed =
                 true;
@@ -579,15 +422,12 @@ if (
 
 
 // =========================================================
-// CAPTURE INSTALL PROMPT
+// CAPTURE NATIVE INSTALL PROMPT
 // =========================================================
 
 window.addEventListener(
     "beforeinstallprompt",
     function(event) {
-
-        // Prevent Chrome/Edge from immediately showing
-        // their own mini-infobar.
 
         event.preventDefault();
 
@@ -596,30 +436,16 @@ window.addEventListener(
             event;
 
 
+        // If the browser is offering installation,
+        // an old "installed" localStorage marker
+        // cannot be trusted.
+
+        clearOldInstallMarker();
+
+
         console.log(
-            "[Kalxa PWA] Install prompt is available."
+            "[Kalxa PWA] Native install prompt available."
         );
-
-
-        // If localStorage says Kalxa was installed before,
-        // but the browser is offering installation again,
-        // Kalxa was likely removed.
-
-        if (
-            wasKalxaPreviouslyInstalled()
-        ) {
-
-            clearStaleInstallMarker();
-
-            console.log(
-                "[Kalxa PWA] Kalxa appears installable again. Stale installation state cleared."
-            );
-
-        }
-
-
-        installStateResolved =
-            true;
 
 
         updateInstallUI();
@@ -643,140 +469,113 @@ if (lacInstallButton) {
             event.stopPropagation();
 
 
+            // -------------------------------------------------
+            // NATIVE INSTALL PROMPT AVAILABLE
+            // -------------------------------------------------
+
             if (
-                !deferredInstallPrompt
+                deferredInstallPrompt
             ) {
 
-                console.log(
-                    "[Kalxa PWA] Install prompt is not currently available."
-                );
+                lacInstallButton.disabled =
+                    true;
 
-                if (lacInstallHelp) {
 
-                     lacInstallHelp.innerHTML =
-                         "<strong>Install Kalxa:</strong><br>" +
-                         "Open your browser menu (⋮) and choose " +
-                         "<strong>Add to Home screen</strong> " +
-                         "or <strong>Install app</strong>.";
+                try {
 
-                     lacInstallHelp.style.display =
-                         "block";
+                    deferredInstallPrompt.prompt();
+
+
+                    const result =
+                        await deferredInstallPrompt
+                            .userChoice;
+
+
+                    console.log(
+                        "[Kalxa PWA] Install choice:",
+                        result.outcome
+                    );
+
+
+                    if (
+                        result.outcome ===
+                        "accepted"
+                    ) {
+
+                        rememberKalxaInstalled();
+
+                        hideInstallSection();
+
+
+                        console.log(
+                            "[Kalxa PWA] Installation accepted."
+                        );
+
+                    } else {
+
+                        console.log(
+                            "[Kalxa PWA] Installation dismissed."
+                        );
+
+                    }
+
+
+                } catch (error) {
+
+                    console.error(
+                        "[Kalxa PWA] Install error:",
+                        error
+                    );
 
                 }
+
+
+                // The captured prompt can only be used once.
+
+                deferredInstallPrompt =
+                    null;
+
+
+                lacInstallButton.disabled =
+                    false;
+
+
+                // If Kalxa is not actually running
+                // standalone, keep the Quick Access
+                // interface available.
+
+                if (
+                    !isRunningStandalone()
+                ) {
+
+                    updateInstallUI();
+
+                }
+
 
                 return;
 
             }
 
 
-            lacInstallButton.disabled =
-                true;
-
-
-            try {
-
-                // -------------------------------------------------
-                // SHOW BROWSER INSTALL DIALOG
-                // -------------------------------------------------
-
-                deferredInstallPrompt.prompt();
-
-
-                const result =
-                    await deferredInstallPrompt
-                        .userChoice;
-
-
-                console.log(
-                    "[Kalxa PWA] Install choice:",
-                    result.outcome
-                );
-
-
-                // -------------------------------------------------
-                // USER ACCEPTED INSTALLATION
-                // -------------------------------------------------
-
-                if (
-                    result.outcome ===
-                    "accepted"
-                ) {
-
-                    rememberKalxaInstalled();
-
-
-                    console.log(
-                        "[Kalxa PWA] User accepted Kalxa installation."
-                    );
-
-
-                    // Hide immediately.
-                    //
-                    // The appinstalled event will also confirm
-                    // installation when supported.
-
-                    hideInstallSection();
-
-                }
-
-
-                // -------------------------------------------------
-                // USER DISMISSED BROWSER INSTALL DIALOG
-                // -------------------------------------------------
-
-                else {
-
-                    console.log(
-                        "[Kalxa PWA] User dismissed the installation dialog."
-                    );
-
-                }
-
-
-            } catch (error) {
-
-                console.error(
-                    "[Kalxa PWA] Install error:",
-                    error
-                );
-
-            }
-
-
             // -------------------------------------------------
-            // A beforeinstallprompt event can only be consumed
-            // once.
+            // NO NATIVE PROMPT
             // -------------------------------------------------
-
-            deferredInstallPrompt =
-                null;
-
-
-            lacInstallButton.disabled =
-                false;
-
-
-            // If installation was accepted, the card remains
-            // hidden.
             //
-            // If dismissed, the informational Quick Access
-            // card can remain visible while the install button
-            // disappears until the browser offers installation
-            // again.
+            // Chrome/another browser has not supplied
+            // beforeinstallprompt.
+            //
+            // Do NOT hide the button.
+            //
+            // Give the user manual installation instructions.
+            // -------------------------------------------------
 
-            if (
-                wasKalxaPreviouslyInstalled()
-            ) {
+            console.log(
+                "[Kalxa PWA] Native install prompt unavailable. Showing manual instructions."
+            );
 
-                hideInstallSection();
 
-            } else {
-
-                showInstallSection();
-
-                hideInstallButton();
-
-            }
+            showManualInstallHelp();
 
         }
     );
@@ -785,7 +584,7 @@ if (lacInstallButton) {
 
 
 // =========================================================
-// APP INSTALLED EVENT
+// APP INSTALLED
 // =========================================================
 
 window.addEventListener(
@@ -811,7 +610,7 @@ window.addEventListener(
 
 
 // =========================================================
-// WATCH FOR STANDALONE DISPLAY MODE
+// WATCH STANDALONE MODE
 // =========================================================
 
 const standaloneMediaQuery =
@@ -841,19 +640,7 @@ if (
 
             } else {
 
-                // The page has left standalone mode.
-                //
-                // Re-evaluate rather than trusting the old
-                // localStorage marker.
-
-                installStateResolved =
-                    false;
-
-
-                window.setTimeout(
-                    resolveInitialInstallState,
-                    250
-                );
+                updateInstallUI();
 
             }
 
@@ -867,30 +654,32 @@ if (
 // INITIAL PAGE LOAD
 // =========================================================
 //
-// IMPORTANT:
+// access.html / qr_entry.html should start the section with:
 //
-// access.html should contain:
+// <section
+//     id="lac-install-section"
+//     class="lac-install-section"
+//     hidden
+// >
 //
-//     <section
-//         id="lac-install-section"
-//         class="lac-install-section"
-//         hidden
-//     >
-//
-// The card therefore starts invisible BEFORE JavaScript
-// executes.
-//
-// This eliminates the visual flash.
+// This prevents the browser from painting the wrong state
+// before JavaScript runs.
 //
 // =========================================================
 
 hideInstallSection();
 
 
-// Give Chromium a brief opportunity to fire
-// beforeinstallprompt before resolving the fallback UI.
+// Wait until DOM/script initialization has completed,
+// then reveal the correct state.
+//
+// requestAnimationFrame avoids the previous competing
+// timer-based UI changes.
 
-window.setTimeout(
-    resolveInitialInstallState,
-    350
+window.requestAnimationFrame(
+    function() {
+
+        updateInstallUI();
+
+    }
 );
