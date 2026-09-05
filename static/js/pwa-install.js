@@ -226,8 +226,19 @@ function hideInstallButton() {
     }
 
 
+    // Keep the button available in normal browser mode.
+    //
+    // If beforeinstallprompt is available, clicking it
+    // launches the native installer.
+    //
+    // Otherwise clicking it displays manual installation
+    // instructions.
+
     lacInstallButton.style.display =
-        "none";
+        "inline-flex";
+
+    lacInstallButton.disabled =
+        false;
 
 }
 
@@ -639,6 +650,19 @@ if (lacInstallButton) {
                 console.log(
                     "[Kalxa PWA] Install prompt is not currently available."
                 );
+
+                if (lacInstallHelp) {
+
+                     lacInstallHelp.innerHTML =
+                         "<strong>Install Kalxa:</strong><br>" +
+                         "Open your browser menu (⋮) and choose " +
+                         "<strong>Add to Home screen</strong> " +
+                         "or <strong>Install app</strong>.";
+
+                     lacInstallHelp.style.display =
+                         "block";
+
+                }
 
                 return;
 
