@@ -202,475 +202,432 @@
         /* =========================================
            CATEGORY DIRECTORY
         ========================================== */
+
+        .lac-category-list {
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 16px;
+        }
+
+
         /* =========================================
-   CATEGORY DIRECTORY
-========================================== */
+           CATEGORY CARD
+        ========================================== */
 
-.lac-category-list {
-    width: 100%;
+        .lac-category-row {
+            position: relative;
 
-    display: flex;
-    flex-direction: column;
+            width: 100%;
+            min-height: 210px;
 
-    gap: 16px;
-}
+            display: flex;
+            align-items: flex-end;
 
+            gap: 15px;
 
-/* =========================================
-   LARGE CATEGORY BACKGROUND CARD
-========================================== */
+            padding: 22px;
 
-.lac-category-row {
-    position: relative;
+            box-sizing: border-box;
 
-    width: 100%;
-    min-height: 210px;
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.18);
 
-    display: flex;
-    align-items: flex-end;
+            border-radius: 22px;
 
-    gap: 15px;
+            background-color: #f5f1e8;
 
-    padding: 22px;
+            color: #ffffff;
 
-    box-sizing: border-box;
+            text-decoration: none;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.18);
+            overflow: hidden;
 
-    border-radius: 22px;
+            isolation: isolate;
 
-    background-color: #f3f0ea;
+            box-shadow:
+                0 6px 22px
+                rgba(0, 0, 0, 0.18);
 
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+            -webkit-tap-highlight-color: transparent;
 
-    color: #ffffff;
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                border-color 0.18s ease;
+        }
 
-    text-decoration: none;
 
-    overflow: hidden;
+        .lac-category-row:hover {
+            transform: translateY(-3px);
 
-    isolation: isolate;
+            border-color:
+                rgba(255, 255, 255, 0.30);
 
-    box-shadow:
-        0 6px 22px
-        rgba(0, 0, 0, 0.18);
+            box-shadow:
+                0 10px 28px
+                rgba(0, 0, 0, 0.23);
+        }
 
-    -webkit-tap-highlight-color: transparent;
 
-    transition:
-        transform 0.18s ease,
-        box-shadow 0.18s ease,
-        border-color 0.18s ease;
-}
+        .lac-category-row:active {
+            transform: scale(0.985);
+        }
 
 
-.lac-category-row:hover {
-    transform: translateY(-3px);
+        /* =========================================
+           SLIDESHOW BACKGROUND
 
-    border-color:
-        rgba(255, 255, 255, 0.30);
+           Two layers allow one image to fade
+           smoothly into the next image.
+        ========================================== */
 
-    box-shadow:
-        0 10px 28px
-        rgba(0, 0, 0, 0.23);
-}
+        .lac-category-background {
+            position: absolute;
 
+            z-index: 0;
 
-.lac-category-row:active {
-    transform: scale(0.985);
-}
+            inset: 0;
 
-/* =========================================
-   CATEGORY SLIDESHOW
-========================================== */
+            width: 100%;
+            height: 100%;
 
-.lac-category-row {
-    position: relative;
-    isolation: isolate;
+            border-radius: inherit;
 
-    background-color: #f5f1e8;
-}
+            background-position: center;
+            background-repeat: no-repeat;
 
+            /*
+             * CONTAIN shows the entire image.
+             * Nothing is cropped or zoomed.
+             */
+            background-size: contain;
 
-/*
- * Two image layers are used so one image can
- * fade into another smoothly.
- */
+            opacity: 0;
 
-.lac-category-background {
-    position: absolute;
+            transition:
+                opacity 0.9s ease-in-out;
 
-    z-index: 0;
+            pointer-events: none;
 
-    inset: 0;
+            will-change: opacity;
+        }
 
-    width: 100%;
-    height: 100%;
 
-    background-position: center;
-    background-repeat: no-repeat;
+        .lac-category-background.is-visible {
+            opacity: 1;
+        }
 
-    /*
-     * Show the COMPLETE image without
-     * cropping/zooming.
-     */
-    background-size: contain;
 
-    opacity: 0;
+        /* =========================================
+           LIGHT GRADIENT
 
-    transition:
-        opacity 0.8s ease;
+           This replaces the old ::after gradient.
+           There should only be ONE overlay.
+        ========================================== */
 
-    pointer-events: none;
-}
+        .lac-category-light-overlay {
+            position: absolute;
 
+            z-index: 1;
 
-.lac-category-background.is-visible {
-    opacity: 1;
-}
+            inset: 0;
 
+            border-radius: inherit;
 
-/*
- * Light overlay above image layers.
- */
+            pointer-events: none;
 
-.lac-category-light-overlay {
-    position: absolute;
+            background:
+                linear-gradient(
+                    to top,
+                    rgba(255, 255, 255, 0.42) 0%,
+                    rgba(255, 255, 255, 0.17) 34%,
+                    rgba(255, 255, 255, 0.04) 58%,
+                    rgba(255, 255, 255, 0.00) 76%
+                );
+        }
 
-    z-index: 1;
 
-    inset: 0;
+        /* =========================================
+           CATEGORY FALLBACK
+        ========================================== */
 
-    pointer-events: none;
+        .lac-category-row.no-category-image {
+            background:
+                linear-gradient(
+                    145deg,
+                    #f5f1e9,
+                    #ddd7ce
+                );
+        }
 
-    background:
-        linear-gradient(
-            to top,
-            rgba(255, 255, 255, 0.36) 0%,
-            rgba(255, 255, 255, 0.12) 38%,
-            rgba(255, 255, 255, 0.00) 68%
-        );
-}
 
+        .lac-category-fallback-large {
+            position: absolute;
 
-/*
- * Text must sit above the image/overlay.
- */
+            z-index: 1;
 
-.lac-category-info {
-    position: relative;
-    z-index: 2;
-}
+            top: 50%;
+            left: 50%;
 
+            transform:
+                translate(
+                    -50%,
+                    -50%
+                );
 
-.lac-category-chevron {
-    position: relative;
-    z-index: 2;
-}
+            font-size: 58px;
 
+            opacity: 0.32;
 
-/*
- * Fallback icon also sits correctly.
- */
+            pointer-events: none;
+        }
 
-.lac-category-fallback-large {
-    z-index: 1;
-}
-/* =========================================
-   LIGHT BOTTOM GRADIENT
-========================================== */
 
-.lac-category-row::after {
-    content: "";
+        /* =========================================
+           CATEGORY INFORMATION
+        ========================================== */
 
-    position: absolute;
+        .lac-category-info {
+            position: relative;
 
-    z-index: 0;
+            z-index: 2;
 
-    left: 0;
-    right: 0;
-    bottom: 0;
+            min-width: 0;
 
-    height: 60%;
+            flex: 1;
 
-    pointer-events: none;
+            display: flex;
+            flex-direction: column;
 
-    background:
-        linear-gradient(
-            to top,
-            rgba(255, 255, 255, 0.58) 0%,
-            rgba(255, 255, 255, 0.24) 48%,
-            rgba(255, 255, 255, 0) 100%
-        );
-}
+            justify-content: flex-end;
 
+            gap: 6px;
+        }
 
-/* =========================================
-   CATEGORY FALLBACK
-========================================== */
 
-.lac-category-row.no-category-image {
-    background:
-        linear-gradient(
-            145deg,
-            #f5f1e9,
-            #ddd7ce
-        );
-}
+        .lac-category-title {
+            color: #3f4348;
 
+            font-size: 21px;
+            font-weight: 800;
 
-.lac-category-fallback-large {
-    position: absolute;
+            line-height: 1.18;
 
-    z-index: 0;
+            letter-spacing: -0.3px;
 
-    top: 50%;
-    left: 50%;
+            text-shadow:
+                0 1px 3px
+                rgba(255, 255, 255, 0.70);
+        }
 
-    transform: translate(-50%, -50%);
 
-    font-size: 58px;
+        .lac-category-meta {
+            color:
+                rgba(
+                    55,
+                    58,
+                    62,
+                    0.76
+                );
 
-    opacity: 0.32;
+            font-size: 11px;
+            font-weight: 700;
 
-    pointer-events: none;
-}
+            line-height: 1.25;
 
+            letter-spacing: 0.2px;
 
-/* =========================================
-   CATEGORY INFORMATION
-========================================== */
+            text-shadow:
+                0 1px 2px
+                rgba(255, 255, 255, 0.60);
+        }
 
-.lac-category-info {
-    position: relative;
 
-    z-index: 2;
+        /* =========================================
+           CATEGORY ARROW
+        ========================================== */
 
-    min-width: 0;
+        .lac-category-chevron {
+            position: relative;
 
-    flex: 1;
+            z-index: 2;
 
-    display: flex;
-    flex-direction: column;
+            width: 40px;
+            height: 40px;
 
-    justify-content: flex-end;
+            flex: 0 0 40px;
 
-    gap: 6px;
-}
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.55);
 
-.lac-category-title {
-    color: #3f4348;
+            border-radius: 50%;
 
-    font-size: 21px;
-    font-weight: 800;
+            background:
+                rgba(255, 255, 255, 0.72);
 
-    line-height: 1.18;
+            color: #55595f;
 
-    letter-spacing: -0.3px;
+            font-size: 25px;
+            font-weight: 400;
 
-    text-shadow:
-        0 1px 3px
-        rgba(255, 255, 255, 0.55);
-}
+            line-height: 1;
 
+            box-shadow:
+                0 3px 10px
+                rgba(0, 0, 0, 0.12);
 
-.lac-category-meta {
-    color: rgba(55, 58, 62, 0.72);
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
 
-    font-size: 11px;
-    font-weight: 700;
+            transition:
+                transform 0.16s ease,
+                background 0.16s ease;
+        }
 
-    line-height: 1.25;
 
-    letter-spacing: 0.2px;
+        .lac-category-row:hover
+        .lac-category-chevron {
+            transform:
+                translateX(3px);
 
-    text-shadow:
-        0 1px 2px
-        rgba(255, 255, 255, 0.5);
-}
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.90
+                );
+        }
 
 
-/* =========================================
-   CATEGORY ARROW
-========================================== */
+        /* =========================================
+           MOBILE
+        ========================================== */
 
-.lac-category-chevron {
-    position: relative;
+        @media (max-width: 480px) {
 
-    z-index: 2;
+            .lac-category-list {
+                gap: 15px;
+            }
 
-    width: 40px;
-    height: 40px;
 
-    flex: 0 0 40px;
+            .lac-category-row {
+                min-height: 195px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+                padding: 19px;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.55);
+                gap: 13px;
 
-    border-radius: 50%;
+                border-radius: 20px;
+            }
 
-    background:
-        rgba(255, 255, 255, 0.72);
 
-    color: #55595f;
+            .lac-category-title {
+                font-size: 19px;
+            }
 
-    font-size: 25px;
-    font-weight: 400;
 
-    line-height: 1;
+            .lac-category-meta {
+                font-size: 10px;
+            }
 
-    box-shadow:
-        0 3px 10px
-        rgba(0, 0, 0, 0.12);
 
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
+            .lac-category-chevron {
+                width: 37px;
+                height: 37px;
 
-    transition:
-        transform 0.16s ease,
-        background 0.16s ease;
-}
+                flex: 0 0 37px;
 
+                font-size: 23px;
+            }
 
-.lac-category-row:hover
-.lac-category-chevron {
-    transform: translateX(3px);
+        }
 
-    background:
-        rgba(255, 255, 255, 0.90);
-}
 
+        /* =========================================
+           VERY SMALL DEVICES
+        ========================================== */
 
-/* =========================================
-   MOBILE
-========================================== */
+        @media (max-width: 360px) {
 
-@media (max-width: 480px) {
+            .lac-category-row {
+                min-height: 175px;
 
-    .lac-category-list {
-        gap: 15px;
-    }
+                padding: 17px;
 
+                border-radius: 18px;
+            }
 
-    .lac-category-row {
-        min-height: 195px;
 
-        padding: 19px;
+            .lac-category-title {
+                font-size: 17px;
+            }
 
-        gap: 13px;
 
-        border-radius: 20px;
-    }
+            .lac-category-meta {
+                font-size: 9px;
+            }
 
 
-    .lac-category-title {
-        font-size: 19px;
-    }
+            .lac-category-chevron {
+                width: 34px;
+                height: 34px;
 
+                flex: 0 0 34px;
 
-    .lac-category-meta {
-        font-size: 10px;
-    }
+                font-size: 21px;
+            }
 
+        }
 
-    .lac-category-chevron {
-        width: 37px;
-        height: 37px;
 
-        flex: 0 0 37px;
+        /* =========================================
+           DESKTOP
+        ========================================== */
 
-        font-size: 23px;
-    }
+        @media (min-width: 700px) {
 
-}
+            .lac-category-list {
+                gap: 18px;
+            }
 
 
-/* =========================================
-   VERY SMALL DEVICES
-========================================== */
+            .lac-category-row {
+                min-height: 250px;
 
-@media (max-width: 360px) {
+                padding: 26px;
 
-    .lac-category-row {
-        min-height: 175px;
+                border-radius: 24px;
+            }
 
-        padding: 17px;
 
-        border-radius: 18px;
-    }
+            .lac-category-title {
+                font-size: 24px;
+            }
 
 
-    .lac-category-title {
-        font-size: 17px;
-    }
+            .lac-category-meta {
+                font-size: 12px;
+            }
 
 
-    .lac-category-meta {
-        font-size: 9px;
-    }
+            .lac-category-chevron {
+                width: 42px;
+                height: 42px;
 
+                flex: 0 0 42px;
+            }
 
-    .lac-category-chevron {
-        width: 34px;
-        height: 34px;
-
-        flex: 0 0 34px;
-
-        font-size: 21px;
-    }
-
-}
-
-
-/* =========================================
-   DESKTOP
-========================================== */
-
-@media (min-width: 700px) {
-
-    .lac-category-list {
-        gap: 18px;
-    }
-
-
-    .lac-category-row {
-        min-height: 250px;
-
-        padding: 26px;
-
-        border-radius: 24px;
-    }
-
-
-    .lac-category-title {
-        font-size: 24px;
-    }
-
-
-    .lac-category-meta {
-        font-size: 12px;
-    }
-
-
-    .lac-category-chevron {
-        width: 42px;
-        height: 42px;
-
-        flex: 0 0 42px;
-    }
-
-}
-
+        }
 
     </style>
 
@@ -753,152 +710,177 @@
 
 
             <!-- =====================================
-                 IMAGE BACKGROUND CATEGORY DIRECTORY
+                 CATEGORY DIRECTORY / SLIDESHOW
             ====================================== -->
 
             <div class="lac-category-list">
 
-             {% for category in categories %}
-
-              {% set category_images = [] %}
+                {% for category in categories %}
 
 
-               {% if category.image_url %}
+                    <!-- =================================
+                         BUILD IMAGE LIST
 
-                 {% set _ = category_images.append(
-                   category.image_url
-                 ) %}
+                         Existing image_url remains
+                         Image 1.
+                    ================================== -->
 
-               {% endif %}
-
-
-               {% if category.image_url_2 %}
-
-                 {% set _ = category_images.append(
-                   category.image_url_2
-                 ) %}
-
-               {% endif %}
+                    {% set category_images = [] %}
 
 
-               {% if category.image_url_3 %}
+                    {% if category.image_url %}
 
-                {% set _ = category_images.append(
-                  category.image_url_3
-                ) %}
+                        {% set _ = category_images.append(
+                            category.image_url
+                        ) %}
 
-               {% endif %}
-
-
-               <a
-                 class="
-                   lac-category-row
-                   {% if not category_images %}
-                     no-category-image
-                   {% endif %}
-                 "
-
-                 href="{{ url_for(
-                  'qr_category',
-                  code=access_point.code,
-                  category=category.slug
-                 ) }}"
-
-                 data-category-images='{{ category_images | tojson }}'
-               >
+                    {% endif %}
 
 
-            <!-- =================================
-                 BACKGROUND LAYER 1
-            ================================== -->
+                    {% if category.image_url_2 %}
 
-                 {% if category_images %}
+                        {% set _ = category_images.append(
+                            category.image_url_2
+                        ) %}
 
-                   <div
-                     class="
-                        lac-category-background
-                        lac-category-background-a
-                        is-visible
-                     "
-                     style="
-                        background-image:
-                            url('{{ category_images[0] }}');
-                     "
-                   ></div>
+                    {% endif %}
 
 
-                <!-- =================================
-                     BACKGROUND LAYER 2
+                    {% if category.image_url_3 %}
 
-                     JavaScript loads the next image
-                     into this layer.
-                ================================== -->
+                        {% set _ = category_images.append(
+                            category.image_url_3
+                        ) %}
 
-                   <div
-                     class="
-                        lac-category-background
-                        lac-category-background-b
-                     "
-                   ></div>
+                    {% endif %}
 
 
-                   <div
-                     class="lac-category-light-overlay"
-                   ></div>
+                    <!-- =================================
+                         CATEGORY CARD
+                    ================================== -->
 
+                    <a
+                        class="
+                            lac-category-row
+                            {% if not category_images %}
+                                no-category-image
+                            {% endif %}
+                        "
 
-                 {% else %}
+                        href="{{ url_for(
+                            'qr_category',
+                            code=access_point.code,
+                            category=category.slug
+                        ) }}"
 
-
-                    <div
-                     class="lac-category-fallback-large"
-                     aria-hidden="true"
+                        data-category-images='{{ category_images | tojson | forceescape }}'
                     >
 
-                     {% if category.icon %}
-                        {{ category.icon }}
-                     {% else %}
-                        📌
-                     {% endif %}
 
-                    </div>
+                        {% if category_images %}
 
 
-                 {% endif %}
+                            <!-- =================================
+                                 BACKGROUND LAYER A
+
+                                 First image is visible
+                                 immediately.
+                            ================================== -->
+
+                            <div
+                                class="
+                                    lac-category-background
+                                    lac-category-background-a
+                                    is-visible
+                                "
+                                style="
+                                    background-image:
+                                        url('{{ category_images[0] | e }}');
+                                "
+                            ></div>
 
 
-            <!-- =================================
-                 CATEGORY TEXT
-            ================================== -->
+                            <!-- =================================
+                                 BACKGROUND LAYER B
 
-                 <div class="lac-category-info">
+                                 JavaScript loads the next
+                                 slideshow image here.
+                            ================================== -->
 
-                   <div class="lac-category-title">
-                    {{ category.name }}
-                   </div>
-
-                   <div class="lac-category-meta">
-                    Explore {{ zone.name }}
-                   </div>
-
-                 </div>
+                            <div
+                                class="
+                                    lac-category-background
+                                    lac-category-background-b
+                                "
+                            ></div>
 
 
-            <!-- =================================
-                 ARROW
-            ================================== -->
+                            <!-- =================================
+                                 LIGHT OVERLAY
+                            ================================== -->
 
-                 <div
-                  class="lac-category-chevron"
-                  aria-hidden="true"
-                 >
-                  ›
-                 </div>
+                            <div
+                                class="lac-category-light-overlay"
+                            ></div>
 
 
-               </a>
+                        {% else %}
 
-             {% endfor %}
+
+                            <!-- =================================
+                                 NO IMAGE FALLBACK
+                            ================================== -->
+
+                            <div
+                                class="lac-category-fallback-large"
+                                aria-hidden="true"
+                            >
+
+                                {% if category.icon %}
+                                    {{ category.icon }}
+                                {% else %}
+                                    📌
+                                {% endif %}
+
+                            </div>
+
+
+                        {% endif %}
+
+
+                        <!-- =================================
+                             CATEGORY TEXT
+                        ================================== -->
+
+                        <div class="lac-category-info">
+
+                            <div class="lac-category-title">
+                                {{ category.name }}
+                            </div>
+
+                            <div class="lac-category-meta">
+                                Explore {{ zone.name }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================
+                             ARROW
+                        ================================== -->
+
+                        <div
+                            class="lac-category-chevron"
+                            aria-hidden="true"
+                        >
+                            ›
+                        </div>
+
+
+                    </a>
+
+
+                {% endfor %}
 
             </div>
 
@@ -1292,11 +1274,11 @@
 ></script>
 
 
-<script>
+<!-- =========================================
+     CATEGORY BACKGROUND SLIDESHOW
+========================================== -->
 
-/* =========================================
-   LAC CATEGORY BACKGROUND SLIDESHOW
-========================================== */
+<script>
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -1314,10 +1296,10 @@ document.addEventListener(
                 let images = [];
 
 
-                /*
-                 * Read image URLs supplied
-                 * by Jinja.
-                 */
+                /* =====================================
+                   READ CATEGORY IMAGE URLS
+                ====================================== */
+
                 try {
 
                     images = JSON.parse(
@@ -1328,8 +1310,8 @@ document.addEventListener(
                 } catch (error) {
 
                     console.error(
-                        "LaC category slideshow:"
-                        + " invalid image data.",
+                        "LaC category slideshow: "
+                        + "invalid category image data.",
                         error
                     );
 
@@ -1337,12 +1319,17 @@ document.addEventListener(
                 }
 
 
-                /*
-                 * No image.
-                 * Leave fallback design alone.
-                 */
-                if (images.length === 0) {
+                /* =====================================
+                   NO IMAGE
+                ====================================== */
+
+                if (
+                    !Array.isArray(images)
+                    || images.length === 0
+                ) {
+
                     return;
+
                 }
 
 
@@ -1351,56 +1338,70 @@ document.addEventListener(
                         ".lac-category-background-a"
                     );
 
+
                 const layerB =
                     card.querySelector(
                         ".lac-category-background-b"
                     );
 
 
-                if (!layerA || !layerB) {
+                if (
+                    !layerA
+                    || !layerB
+                ) {
+
                     return;
+
                 }
 
 
-                /*
-                 * ONE IMAGE ONLY
-                 *
-                 * Nothing else needs to happen.
-                 */
+                /* =====================================
+                   ONE IMAGE
+
+                   Keep Image 1 permanently.
+                   No timer is created.
+                ====================================== */
+
                 if (images.length === 1) {
+
                     return;
+
                 }
 
 
                 let currentIndex = 0;
 
-                let visibleLayer = layerA;
+                let visibleLayer =
+                    layerA;
 
-                let hiddenLayer = layerB;
-
-
-                /*
-                 * Preload remaining images so
-                 * transitions are smoother.
-                 */
-                images.slice(1).forEach(
-                    function (imageUrl) {
-
-                        const preloadImage =
-                            new Image();
-
-                        preloadImage.src =
-                            imageUrl;
-
-                    }
-                );
+                let hiddenLayer =
+                    layerB;
 
 
-                /*
-                 * Change background every
-                 * four seconds.
-                 */
-                setInterval(
+                /* =====================================
+                   PRELOAD IMAGES 2 + 3
+                ====================================== */
+
+                images
+                    .slice(1)
+                    .forEach(
+                        function (imageUrl) {
+
+                            const image =
+                                new Image();
+
+                            image.src =
+                                imageUrl;
+
+                        }
+                    );
+
+
+                /* =====================================
+                   ROTATE EVERY 4 SECONDS
+                ====================================== */
+
+                window.setInterval(
                     function () {
 
                         currentIndex =
@@ -1415,9 +1416,10 @@ document.addEventListener(
 
 
                         /*
-                         * Load next image into the
-                         * currently hidden layer.
+                         * Put the next image into
+                         * the currently hidden layer.
                          */
+
                         hiddenLayer.style.backgroundImage =
                             'url("' +
                             nextImage +
@@ -1425,8 +1427,9 @@ document.addEventListener(
 
 
                         /*
-                         * Fade new layer in.
+                         * Start crossfade.
                          */
+
                         hiddenLayer.classList.add(
                             "is-visible"
                         );
@@ -1438,18 +1441,23 @@ document.addEventListener(
 
 
                         /*
-                         * Swap references.
+                         * Swap the two layer references
+                         * for the next transition.
                          */
-                        const oldVisibleLayer =
+
+                        const previousVisibleLayer =
                             visibleLayer;
+
 
                         visibleLayer =
                             hiddenLayer;
 
+
                         hiddenLayer =
-                            oldVisibleLayer;
+                            previousVisibleLayer;
 
                     },
+
                     4000
                 );
 
