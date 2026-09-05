@@ -1448,6 +1448,107 @@
         transform: none;
     }
 }
+
+
+	/* =========================================================
+   #5 LAC IMAGE LOADING SKELETONS
+========================================================= */
+
+/*
+   Skeleton background used while an image is loading.
+*/
+.lac-image-loading {
+    position: relative;
+    overflow: hidden;
+
+    background: #eeeae2 !important;
+}
+
+
+/*
+   Soft shimmer layer.
+*/
+.lac-image-loading::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.35) 45%,
+        rgba(255, 255, 255, 0.65) 50%,
+        rgba(255, 255, 255, 0.35) 55%,
+        transparent 100%
+    );
+
+    transform: translateX(-100%);
+
+    animation:
+        lacSkeletonShimmer 1.5s ease-in-out infinite;
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+
+/*
+   Images start slightly transparent.
+*/
+.lac-image-loading img {
+    opacity: 0;
+
+    transition:
+        opacity 0.35s ease;
+}
+
+
+/*
+   Image has successfully loaded.
+*/
+.lac-image-loaded {
+    background: transparent;
+}
+
+
+.lac-image-loaded::after {
+    display: none;
+}
+
+
+.lac-image-loaded img {
+    opacity: 1;
+}
+
+
+/*
+   Shimmer movement.
+*/
+@keyframes lacSkeletonShimmer {
+
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+
+}
+
+
+/*
+   Respect reduced-motion preference.
+*/
+@media (prefers-reduced-motion: reduce) {
+
+    .lac-image-loading::after {
+        animation: none;
+    }
+
+}
         
 
     </style>
