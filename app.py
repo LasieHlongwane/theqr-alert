@@ -41,6 +41,7 @@ from models import (
     QRScan,
     PendingSubmission,
     PendingSubmissionImage,
+    ZoneCategoryAppearance,
     Category,
     PushSubscriber,
     EngagementEvent,
@@ -488,7 +489,6 @@ def content_is_expired(
 # =========================================================
 # QR ACCESS POINT
 # =========================================================
-
 @app.route("/q/<access_code>")
 def qr_access(access_code):
 
@@ -577,24 +577,144 @@ def qr_access(access_code):
 
 
     # =====================================================
-    # CATEGORY STATUS BADGES
+    # ZONE-SPECIFIC CATEGORY APPEARANCES
     # =====================================================
     #
-    # We intentionally use get_active_content() here so
-    # the category counts follow the same visibility rules
-    # as the actual category pages.
+    # Load all custom category appearances belonging
+    # to the current zone.
     #
-    # category_stats example:
+    # Example:
     #
-    # {
-    #     "events": {
-    #         "count": 5,
-    #         "new_count": 2,
-    #         "label": "UPCOMING",
-    #         "icon": "📅",
-    #     }
-    # }
+    # KwaMhlanga + Events
+    # KwaMhlanga + Property
     #
+    # =====================================================
+
+    zone_category_appearances = (
+        ZoneCategoryAppearance.query
+        .filter_by(
+            zone_id=zone.id,
+        )
+        .all()
+    )
+
+
+    # -----------------------------------------------------
+    # APPEARANCE LOOKUP
+    #
+    # Key:
+    #     category_id
+    #
+    # Value:
+    #     ZoneCategoryAppearance
+    # -----------------------------------------------------
+
+    zone_category_appearance_lookup = {
+
+        appearance.category_id:
+            appearance
+
+        for appearance
+        in zone_category_appearances
+    }
+
+
+    # =====================================================
+    # RESOLVE CATEGORY BACKGROUND IMAGES
+    # =====================================================
+    #
+    # Priority per image position:
+    #
+    # 1. Zone-specific image
+    # 2. Default Category image
+    #
+    # This means a zone can replace only one image and
+    # continue using the global defaults for the others.
+    #
+    # =====================================================
+
+    category_background_images = {}
+
+
+    for category in categories:
+
+        appearance = (
+            zone_category_appearance_lookup.get(
+                category.id
+            )
+        )
+
+
+        # -------------------------------------------------
+        # IMAGE 1
+        # -------------------------------------------------
+
+        image_1 = (
+            appearance.image_url
+
+            if (
+                appearance
+                and appearance.image_url
+            )
+
+            else category.image_url
+        )
+
+
+        # -------------------------------------------------
+        # IMAGE 2
+        # -------------------------------------------------
+
+        image_2 = (
+            appearance.image_url_2
+
+            if (
+                appearance
+                and appearance.image_url_2
+            )
+
+            else category.image_url_2
+        )
+
+
+        # -------------------------------------------------
+        # IMAGE 3
+        # -------------------------------------------------
+
+        image_3 = (
+            appearance.image_url_3
+
+            if (
+                appearance
+                and appearance.image_url_3
+            )
+
+            else category.image_url_3
+        )
+
+
+        # -------------------------------------------------
+        # REMOVE EMPTY IMAGE POSITIONS
+        # -------------------------------------------------
+
+        category_background_images[
+            category.id
+        ] = [
+
+            image
+
+            for image in [
+                image_1,
+                image_2,
+                image_3,
+            ]
+
+            if image
+        ]
+
+
+    # =====================================================
+    # CATEGORY STATS
     # =====================================================
 
     category_stats = {}
@@ -606,8 +726,6 @@ def qr_access(access_code):
     # A listing is considered NEW when created during
     # the last 7 days.
     # -----------------------------------------------------
-
-    from datetime import timedelta
 
     new_cutoff = (
         datetime.utcnow()
@@ -771,9 +889,6 @@ def qr_access(access_code):
 
     # -----------------------------------------------------
     # LIMIT HOME RAIL
-    #
-    # Eight listings keeps the horizontal rail useful
-    # without making the initial page unnecessarily heavy.
     # -----------------------------------------------------
 
     new_items = (
@@ -781,12 +896,14 @@ def qr_access(access_code):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CATEGORY LOOKUP
+    # =====================================================
     #
     # Allows access.html to display the friendly category
-    # name instead of only the slug.
-    # -----------------------------------------------------
+    # name/icon from a listing's category slug.
+    #
+    # =====================================================
 
     category_lookup = {
 
@@ -797,38 +914,69 @@ def qr_access(access_code):
         in categories
     }
 
-    # ============================================================
+
+    # =====================================================
     # FEATURED LOCAL CONTENT
-# ============================================================
+    # =====================================================
 
     featured_items_pool = []
 
+
     for category in categories:
 
-     category_items = get_active_content(
-        zone.id,
-        category.slug,
-     )
+        try:
 
-     for item in category_items:
+            category_items = (
+                get_active_content(
+                    zone_id=zone.id,
+                    category_slug=category.slug,
+                )
+            )
 
-        if item.featured:
-            featured_items_pool.append(item)
+        except Exception as exc:
+
+            app.logger.exception(
+                "Unable to load featured items. "
+                "zone=%s category=%s error=%s",
+                zone.id,
+                category.slug,
+                exc,
+            )
+
+            continue
 
 
-# Newest featured content first
+        for item in category_items:
+
+            if item.featured:
+
+                featured_items_pool.append(
+                    item
+                )
+
+
+    # -----------------------------------------------------
+    # NEWEST FEATURED CONTENT FIRST
+    # -----------------------------------------------------
+
     featured_items_pool.sort(
-     key=lambda item: (
-        item.created_at
-        if item.created_at
-        else datetime.min
-     ),
-     reverse=True,
+
+        key=lambda item: (
+            item.created_at
+            or datetime.min
+        ),
+
+        reverse=True,
     )
 
 
-# Keep homepage carousel small and focused
-    featured_items = featured_items_pool[:6]
+    # -----------------------------------------------------
+    # LIMIT FEATURED CAROUSEL
+    # -----------------------------------------------------
+
+    featured_items = (
+        featured_items_pool[:6]
+    )
 
 
     # =====================================================
@@ -850,8 +998,16 @@ def qr_access(access_code):
         new_items=new_items,
 
         category_lookup=category_lookup,
-        
+
         featured_items=featured_items,
+
+        # -----------------------------------------------
+        # ZONE-SPECIFIC CATEGORY BACKGROUND IMAGES
+        # -----------------------------------------------
+
+        category_background_images=(
+            category_background_images
+        ),
     )
 # =========================================================
 # CATEGORY PAGE
