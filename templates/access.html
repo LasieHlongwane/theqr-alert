@@ -1280,6 +1280,13 @@
 
 <script>
 
+/* =========================================
+   LAC CATEGORY BACKGROUND SLIDESHOW
+
+   Each category gets its own starting time
+   so all cards do NOT change together.
+========================================== */
+
 document.addEventListener(
     "DOMContentLoaded",
     function () {
@@ -1291,13 +1298,13 @@ document.addEventListener(
 
 
         categoryCards.forEach(
-            function (card) {
+            function (card, cardIndex) {
 
                 let images = [];
 
 
                 /* =====================================
-                   READ CATEGORY IMAGE URLS
+                   READ CATEGORY IMAGES
                 ====================================== */
 
                 try {
@@ -1311,7 +1318,7 @@ document.addEventListener(
 
                     console.error(
                         "LaC category slideshow: "
-                        + "invalid category image data.",
+                        + "invalid image data.",
                         error
                     );
 
@@ -1320,12 +1327,14 @@ document.addEventListener(
 
 
                 /* =====================================
-                   NO IMAGE
+                   NO IMAGE / ONE IMAGE
+
+                   No slideshow required.
                 ====================================== */
 
                 if (
                     !Array.isArray(images)
-                    || images.length === 0
+                    || images.length <= 1
                 ) {
 
                     return;
@@ -1355,20 +1364,6 @@ document.addEventListener(
                 }
 
 
-                /* =====================================
-                   ONE IMAGE
-
-                   Keep Image 1 permanently.
-                   No timer is created.
-                ====================================== */
-
-                if (images.length === 1) {
-
-                    return;
-
-                }
-
-
                 let currentIndex = 0;
 
                 let visibleLayer =
@@ -1379,7 +1374,7 @@ document.addEventListener(
 
 
                 /* =====================================
-                   PRELOAD IMAGES 2 + 3
+                   PRELOAD IMAGES
                 ====================================== */
 
                 images
@@ -1398,67 +1393,114 @@ document.addEventListener(
 
 
                 /* =====================================
-                   ROTATE EVERY 4 SECONDS
+                   CHANGE IMAGE FUNCTION
                 ====================================== */
 
-                window.setInterval(
+                function changeCategoryImage() {
+
+                    currentIndex =
+                        (
+                            currentIndex + 1
+                        )
+                        % images.length;
+
+
+                    const nextImage =
+                        images[currentIndex];
+
+
+                    /*
+                     * Load next image into
+                     * hidden background layer.
+                     */
+
+                    hiddenLayer.style.backgroundImage =
+                        'url("' +
+                        nextImage +
+                        '")';
+
+
+                    /*
+                     * Fade new image in.
+                     */
+
+                    hiddenLayer.classList.add(
+                        "is-visible"
+                    );
+
+
+                    /*
+                     * Fade old image out.
+                     */
+
+                    visibleLayer.classList.remove(
+                        "is-visible"
+                    );
+
+
+                    /*
+                     * Swap layers.
+                     */
+
+                    const oldVisibleLayer =
+                        visibleLayer;
+
+
+                    visibleLayer =
+                        hiddenLayer;
+
+
+                    hiddenLayer =
+                        oldVisibleLayer;
+
+                }
+
+
+                /* =====================================
+                   UNIQUE START TIME PER CATEGORY
+
+                   Category 1 → 4.0 seconds
+                   Category 2 → 4.8 seconds
+                   Category 3 → 5.6 seconds
+                   Category 4 → 6.4 seconds
+                   etc.
+                ====================================== */
+
+                const initialDelay =
+                    4000
+                    + (
+                        cardIndex * 800
+                    );
+
+
+                /*
+                 * Wait for this category's unique
+                 * starting time.
+                 */
+
+                window.setTimeout(
                     function () {
 
-                        currentIndex =
-                            (
-                                currentIndex + 1
-                            )
-                            % images.length;
+                        /*
+                         * Perform first image change.
+                         */
 
-
-                        const nextImage =
-                            images[currentIndex];
+                        changeCategoryImage();
 
 
                         /*
-                         * Put the next image into
-                         * the currently hidden layer.
+                         * Then continue this category's
+                         * own slideshow every 4 seconds.
                          */
 
-                        hiddenLayer.style.backgroundImage =
-                            'url("' +
-                            nextImage +
-                            '")';
-
-
-                        /*
-                         * Start crossfade.
-                         */
-
-                        hiddenLayer.classList.add(
-                            "is-visible"
+                        window.setInterval(
+                            changeCategoryImage,
+                            4000
                         );
-
-
-                        visibleLayer.classList.remove(
-                            "is-visible"
-                        );
-
-
-                        /*
-                         * Swap the two layer references
-                         * for the next transition.
-                         */
-
-                        const previousVisibleLayer =
-                            visibleLayer;
-
-
-                        visibleLayer =
-                            hiddenLayer;
-
-
-                        hiddenLayer =
-                            previousVisibleLayer;
 
                     },
 
-                    4000
+                    initialDelay
                 );
 
             }
@@ -1468,7 +1510,6 @@ document.addEventListener(
 );
 
 </script>
-
 
 </body>
 
