@@ -2184,6 +2184,13 @@ body {
 
                 {% for category in categories %}
 
+				     {% set category_images =
+                      category_background_images.get(
+                        category.id,
+                        []
+                      )
+                     %}
+
 
                     <!-- =================================
                          BUILD IMAGE LIST
