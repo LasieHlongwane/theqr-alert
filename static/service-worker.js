@@ -282,7 +282,7 @@ self.addEventListener(
         let notificationData = {
 
             title:
-                "LaC Local Alert",
+                "Kalxa Local Alert",
 
             body:
                 "Something new is happening near you.",
@@ -297,7 +297,7 @@ self.addEventListener(
                 "/static/icons/lac-192.png",
 
             tag:
-                "lac-local-alert"
+                "kalxa-local-alert"
 
         };
 
