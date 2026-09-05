@@ -1326,6 +1326,128 @@
 
 }
 
+
+
+
+    /* =========================================================
+   #4 CARD PRESS / TAP FEEDBACK
+   Gives clickable LaC cards a physical touch response
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   CATEGORY CARDS
+--------------------------------------------------------- */
+
+.lac-category-card {
+    transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        opacity 0.16s ease;
+
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.lac-category-card:active {
+    transform: scale(0.975);
+
+    box-shadow:
+        0 4px 14px
+        rgba(0, 0, 0, 0.14);
+
+    opacity: 0.96;
+}
+
+
+/* ---------------------------------------------------------
+   FEATURED NEAR YOU CARDS
+--------------------------------------------------------- */
+
+.lac-featured-card {
+    transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        opacity 0.16s ease;
+
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.lac-featured-card:active {
+    transform: scale(0.975);
+
+    box-shadow:
+        0 5px 16px
+        rgba(0, 0, 0, 0.14);
+
+    opacity: 0.96;
+}
+
+
+/* ---------------------------------------------------------
+   NEW NEAR YOU CARDS
+--------------------------------------------------------- */
+
+.lac-new-card {
+    transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        opacity 0.16s ease;
+
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.lac-new-card:active {
+    transform: scale(0.965);
+
+    box-shadow:
+        0 4px 12px
+        rgba(0, 0, 0, 0.12);
+
+    opacity: 0.95;
+}
+
+
+/* ---------------------------------------------------------
+   OPTIONAL DESKTOP HOVER
+   Only applies to devices that actually support hover.
+--------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+
+    .lac-category-card:hover,
+    .lac-featured-card:hover,
+    .lac-new-card:hover {
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 10px 26px
+            rgba(0, 0, 0, 0.13);
+    }
+}
+
+
+/* ---------------------------------------------------------
+   ACCESSIBILITY
+   Reduce movement when the user's device requests it.
+--------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .lac-category-card,
+    .lac-featured-card,
+    .lac-new-card {
+        transition: none;
+    }
+
+    .lac-category-card:active,
+    .lac-featured-card:active,
+    .lac-new-card:active {
+        transform: none;
+    }
+}
         
 
     </style>
