@@ -3135,6 +3135,139 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </nav>
 
+
+
+<script>
+
+window.addEventListener(
+    "load",
+    async function () {
+
+        console.log(
+            "========== KALXA PWA DEBUG =========="
+        );
+
+
+        console.log(
+            "Browser:",
+            navigator.userAgent
+        );
+
+
+        console.log(
+            "Standalone:",
+            window.matchMedia(
+                "(display-mode: standalone)"
+            ).matches
+        );
+
+
+        console.log(
+            "beforeinstallprompt supported:",
+            "BeforeInstallPromptEvent" in window
+        );
+
+
+        console.log(
+            "Install event captured:",
+            !!window.kalxaInstallPrompt
+        );
+
+
+        console.log(
+            "Service worker supported:",
+            "serviceWorker" in navigator
+        );
+
+
+        if (
+            "serviceWorker" in navigator
+        ) {
+
+            try {
+
+                const registration =
+                    await navigator.serviceWorker
+                        .getRegistration();
+
+
+                console.log(
+                    "Service worker registration:",
+                    registration
+                );
+
+
+                console.log(
+                    "Service worker controller:",
+                    navigator.serviceWorker.controller
+                );
+
+
+                console.log(
+                    "Service worker scope:",
+                    registration
+                        ? registration.scope
+                        : "NONE"
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Service worker check failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        try {
+
+            const manifestResponse =
+                await fetch(
+                    "/static/manifest.json",
+                    {
+                        cache: "no-store"
+                    }
+                );
+
+
+            console.log(
+                "Manifest HTTP status:",
+                manifestResponse.status
+            );
+
+
+            const manifest =
+                await manifestResponse.json();
+
+
+            console.log(
+                "Manifest:",
+                manifest
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Manifest check failed:",
+                error
+            );
+
+        }
+
+
+        console.log(
+            "====================================="
+        );
+
+    }
+);
+
+</script>
 	
 </body>
 
