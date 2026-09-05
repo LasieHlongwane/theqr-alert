@@ -2970,16 +2970,36 @@ def create_category():
 
 
         # =============================================
-        # IMAGE UPLOAD
+        # CATEGORY IMAGE UPLOADS
+        #
+        # Image 1 = category_image
+        # Image 2 = category_image_2
+        # Image 3 = category_image_3
         # =============================================
 
         image_file = request.files.get(
             "category_image"
         )
 
+        image_file_2 = request.files.get(
+            "category_image_2"
+        )
+
+        image_file_3 = request.files.get(
+            "category_image_3"
+        )
+
+
         image_url = None
+        image_url_2 = None
+        image_url_3 = None
+
 
         try:
+
+            # -----------------------------------------
+            # IMAGE 1
+            # -----------------------------------------
 
             if (
                 image_file
@@ -2990,6 +3010,37 @@ def create_category():
                     image_file,
                     folder="lac/categories",
                 )
+
+
+            # -----------------------------------------
+            # IMAGE 2
+            # -----------------------------------------
+
+            if (
+                image_file_2
+                and image_file_2.filename
+            ):
+
+                image_url_2 = upload_lac_image(
+                    image_file_2,
+                    folder="lac/categories",
+                )
+
+
+            # -----------------------------------------
+            # IMAGE 3
+            # -----------------------------------------
+
+            if (
+                image_file_3
+                and image_file_3.filename
+            ):
+
+                image_url_3 = upload_lac_image(
+                    image_file_3,
+                    folder="lac/categories",
+                )
+
 
         except ValueError as error:
 
@@ -3018,6 +3069,10 @@ def create_category():
 
             image_url=image_url,
 
+            image_url_2=image_url_2,
+
+            image_url_3=image_url_3,
+
             display_order=display_order,
 
             active=active,
@@ -3034,6 +3089,7 @@ def create_category():
             "Category created successfully.",
             "success",
         )
+
 
         return redirect(
             url_for(
@@ -3149,25 +3205,78 @@ def edit_category(category_id):
 
 
         # =============================================
-        # UPDATE IMAGE ONLY IF NEW IMAGE SELECTED
+        # CATEGORY IMAGE UPLOADS
+        #
+        # IMPORTANT:
+        # Existing images are preserved unless the
+        # admin selects a new file for that position.
         # =============================================
 
         image_file = request.files.get(
             "category_image"
         )
 
+        image_file_2 = request.files.get(
+            "category_image_2"
+        )
+
+        image_file_3 = request.files.get(
+            "category_image_3"
+        )
+
 
         try:
+
+            # -----------------------------------------
+            # REPLACE IMAGE 1
+            # -----------------------------------------
 
             if (
                 image_file
                 and image_file.filename
             ):
 
-                category.image_url = upload_lac_image(
-                    image_file,
-                    folder="lac/categories",
+                category.image_url = (
+                    upload_lac_image(
+                        image_file,
+                        folder="lac/categories",
+                    )
                 )
+
+
+            # -----------------------------------------
+            # REPLACE IMAGE 2
+            # -----------------------------------------
+
+            if (
+                image_file_2
+                and image_file_2.filename
+            ):
+
+                category.image_url_2 = (
+                    upload_lac_image(
+                        image_file_2,
+                        folder="lac/categories",
+                    )
+                )
+
+
+            # -----------------------------------------
+            # REPLACE IMAGE 3
+            # -----------------------------------------
+
+            if (
+                image_file_3
+                and image_file_3.filename
+            ):
+
+                category.image_url_3 = (
+                    upload_lac_image(
+                        image_file_3,
+                        folder="lac/categories",
+                    )
+                )
+
 
         except ValueError as error:
 
@@ -3191,6 +3300,10 @@ def edit_category(category_id):
 
         if new_slug != old_slug:
 
+            # -----------------------------------------
+            # CONTENT ITEMS
+            # -----------------------------------------
+
             ContentItem.query.filter(
                 ContentItem.category == old_slug
             ).update(
@@ -3202,8 +3315,13 @@ def edit_category(category_id):
             )
 
 
+            # -----------------------------------------
+            # ACCESS POINT DEFAULT CATEGORY
+            # -----------------------------------------
+
             AccessPoint.query.filter(
-                AccessPoint.default_category == old_slug
+                AccessPoint.default_category
+                == old_slug
             ).update(
                 {
                     AccessPoint.default_category:
@@ -3213,8 +3331,13 @@ def edit_category(category_id):
             )
 
 
+            # -----------------------------------------
+            # PENDING SUBMISSIONS
+            # -----------------------------------------
+
             PendingSubmission.query.filter(
-                PendingSubmission.category == old_slug
+                PendingSubmission.category
+                == old_slug
             ).update(
                 {
                     PendingSubmission.category:
@@ -3224,8 +3347,13 @@ def edit_category(category_id):
             )
 
 
+            # -----------------------------------------
+            # HISTORICAL QR SCAN CATEGORY
+            # -----------------------------------------
+
             QRScan.query.filter(
-                QRScan.category_selected == old_slug
+                QRScan.category_selected
+                == old_slug
             ).update(
                 {
                     QRScan.category_selected:
