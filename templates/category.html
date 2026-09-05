@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -80,6 +79,126 @@
             filename='css/style.css'
         ) }}"
     >
+
+
+    <!-- =========================================
+         DATE DISPLAY
+
+         Kept local to category.html so it does not
+         affect other LaC pages.
+    ========================================== -->
+
+    <style>
+
+        .listing-date-strip {
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+
+            margin: 14px 0 4px;
+
+            padding: 12px 14px;
+
+            box-sizing: border-box;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.09);
+
+            border-radius: 13px;
+
+            background:
+                rgba(255, 255, 255, 0.055);
+        }
+
+
+        .listing-date-strip-icon {
+            width: 34px;
+            height: 34px;
+
+            flex: 0 0 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
+            font-size: 16px;
+        }
+
+
+        .listing-date-strip-content {
+            min-width: 0;
+
+            flex: 1;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 3px;
+        }
+
+
+        .listing-date-strip-label {
+            color:
+                rgba(255, 255, 255, 0.45);
+
+            font-size: 9px;
+            font-weight: 800;
+
+            line-height: 1.2;
+
+            letter-spacing: 0.8px;
+
+            text-transform: uppercase;
+        }
+
+
+        .listing-date-strip-value {
+            color: #f4f4f4;
+
+            font-size: 13px;
+            font-weight: 750;
+
+            line-height: 1.35;
+        }
+
+
+        @media (max-width: 480px) {
+
+            .listing-date-strip {
+                margin-top: 12px;
+
+                padding: 11px 12px;
+
+                gap: 10px;
+
+                border-radius: 12px;
+            }
+
+
+            .listing-date-strip-icon {
+                width: 32px;
+                height: 32px;
+
+                flex-basis: 32px;
+
+                font-size: 15px;
+            }
+
+
+            .listing-date-strip-value {
+                font-size: 12px;
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -217,7 +336,6 @@
 
         </div>
 
-
         <div
             id="category-search-result-count"
             class="category-search-result-count"
@@ -340,8 +458,10 @@
                         {% endif %}
 
 
+                        <!-- NON-EVENT UPCOMING -->
+
                         {% if
-                            category.slug != "events"
+                            category.slug not in ["local-events", "events"]
                             and item.start_date
                             and item.start_date > today
                         %}
@@ -353,8 +473,10 @@
                         {% endif %}
 
 
+                        <!-- EVENT UPCOMING -->
+
                         {% if
-                            category.slug == "events"
+                            category.slug in ["local-events", "events"]
                             and item.event_date
                             and item.event_date > today
                         %}
@@ -400,122 +522,148 @@
 
 
                     <!-- =================================
+                         PROMINENT DATE / AVAILABILITY
+
+                         EVENTS:
+                         event_date → event_end_date
+
+                         OTHER TIME-SPECIFIC CONTENT:
+                         start_date → end_date
+                    ================================== -->
+
+
+                    {% if category.slug in ["local-events", "events"] %}
+
+
+                        {% if item.event_date %}
+
+                        <div class="listing-date-strip">
+
+                            <div class="listing-date-strip-icon">
+                                📅
+                            </div>
+
+
+                            <div class="listing-date-strip-content">
+
+                                <span class="listing-date-strip-label">
+
+                                    {% if
+                                        item.event_end_date
+                                        and item.event_end_date != item.event_date
+                                    %}
+                                        Event Dates
+                                    {% else %}
+                                        Event Date
+                                    {% endif %}
+
+                                </span>
+
+
+                                <strong class="listing-date-strip-value">
+
+                                    {{ item.event_date.strftime("%d %b %Y") }}
+
+                                    {% if
+                                        item.event_end_date
+                                        and item.event_end_date != item.event_date
+                                    %}
+
+                                        —
+                                        {{ item.event_end_date.strftime("%d %b %Y") }}
+
+                                    {% endif %}
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+
+                    {% else %}
+
+
+                        {% if item.start_date or item.end_date %}
+
+                        <div class="listing-date-strip">
+
+                            <div class="listing-date-strip-icon">
+                                📅
+                            </div>
+
+
+                            <div class="listing-date-strip-content">
+
+                                <span class="listing-date-strip-label">
+
+                                    {% if item.start_date and item.end_date %}
+                                        Available
+                                    {% elif item.start_date %}
+                                        Starts
+                                    {% else %}
+                                        Available Until
+                                    {% endif %}
+
+                                </span>
+
+
+                                <strong class="listing-date-strip-value">
+
+                                    {% if
+                                        item.start_date
+                                        and item.end_date
+                                    %}
+
+                                        {% if item.start_date == item.end_date %}
+
+                                            {{ item.start_date.strftime("%d %b %Y") }}
+
+                                        {% else %}
+
+                                            {{ item.start_date.strftime("%d %b %Y") }}
+                                            —
+                                            {{ item.end_date.strftime("%d %b %Y") }}
+
+                                        {% endif %}
+
+
+                                    {% elif item.start_date %}
+
+                                        {{ item.start_date.strftime("%d %b %Y") }}
+
+
+                                    {% elif item.end_date %}
+
+                                        Until
+                                        {{ item.end_date.strftime("%d %b %Y") }}
+
+                                    {% endif %}
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+
+                    {% endif %}
+
+
+                    <!-- =================================
                          KEY DETAILS
                     ================================== -->
 
                     <div class="listing-detail-grid">
 
 
-                        {% if category.slug == "events" %}
-
-                            {% if item.event_date %}
-
-                            <div class="listing-detail-card">
-
-                                <span class="listing-detail-icon">
-                                    📅
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Event Date
-                                    </span>
-
-                                    <strong>
-                                        {{ item.event_date.strftime("%d %b %Y") }}
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-                            {% endif %}
-
-
-                            {% if
-                                item.event_end_date
-                                and item.event_end_date != item.event_date
-                            %}
-
-                            <div class="listing-detail-card">
-
-                                <span class="listing-detail-icon">
-                                    🕒
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Ends
-                                    </span>
-
-                                    <strong>
-                                        {{ item.event_end_date.strftime("%d %b %Y") }}
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-                            {% endif %}
-
-
-                        {% else %}
-
-
-                            {% if item.start_date %}
-
-                            <div class="listing-detail-card">
-
-                                <span class="listing-detail-icon">
-                                    📅
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Starts
-                                    </span>
-
-                                    <strong>
-                                        {{ item.start_date.strftime("%d %b %Y") }}
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-                            {% endif %}
-
-
-                            {% if item.end_date %}
-
-                            <div class="listing-detail-card">
-
-                                <span class="listing-detail-icon">
-                                    ⏳
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Available Until
-                                    </span>
-
-                                    <strong>
-                                        {{ item.end_date.strftime("%d %b %Y") }}
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-                            {% endif %}
-
-
-                        {% endif %}
-
+                        <!-- =================================
+                             LOCATION
+                        ================================== -->
 
                         {% if item.venue %}
 
@@ -542,9 +690,14 @@
                         {% endif %}
 
 
+                        <!-- =================================
+                             PRICE
+                        ================================== -->
+
                         {% if item.price %}
 
                         <div class="listing-detail-card listing-price-card">
+
 
                             {% if category.slug == "property" %}
 
@@ -565,7 +718,7 @@
                                 </div>
 
 
-                            {% elif category.slug == "events" %}
+                            {% elif category.slug in ["local-events", "events"] %}
 
                                 <span class="listing-detail-icon">
                                     🎟️
@@ -607,6 +760,7 @@
                         </div>
 
                         {% endif %}
+
 
                     </div>
 
@@ -693,6 +847,10 @@
 
             {% else %}
 
+
+                <!-- =================================
+                     EMPTY STATE
+                ================================== -->
 
                 <div class="empty-state public-empty-state">
 
@@ -1132,6 +1290,11 @@
 
 </script>
 
+
+<!-- =========================================
+     ENGAGEMENT CONFIG
+========================================== -->
+
 <script>
 
 window.LAC_ENGAGEMENT_CONFIG = {
@@ -1151,6 +1314,7 @@ window.LAC_ENGAGEMENT_CONFIG = {
 };
 
 </script>
+
 
 <script
     src="{{ url_for(
@@ -1178,8 +1342,8 @@ document.addEventListener(
 );
 
 </script>
+
+
 </body>
 
 </html>
-
-
