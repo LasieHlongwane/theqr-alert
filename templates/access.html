@@ -2851,8 +2851,10 @@ body {
     src="{{ url_for(
         'static',
         filename='js/pwa-install.js'
-    ) }}"
+    ) }}?v=9"
 ></script>
+
+
 
 
 <!-- =========================================
@@ -2870,230 +2872,106 @@ body {
 <!-- =========================================
      CATEGORY BACKGROUND SLIDESHOW
 ========================================== -->
+<!-- =========================================
+     IMAGE LOADING SKELETONS
+========================================== -->
 
 <script>
-
-/* =========================================
-   LAC CATEGORY BACKGROUND SLIDESHOW
-
-   Each category gets its own starting time
-   so all cards do NOT change together.
-========================================== */
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        const categoryCards =
+        const imageContainers =
             document.querySelectorAll(
-                ".lac-category-row"
+                ".lac-image-loading"
             );
 
 
-        categoryCards.forEach(
-            function (card, cardIndex) {
+        imageContainers.forEach(
+            function (container) {
 
-                let images = [];
-
-
-                /* =====================================
-                   READ CATEGORY IMAGES
-                ====================================== */
-
-                try {
-
-                    images = JSON.parse(
-                        card.dataset.categoryImages
-                        || "[]"
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        "LaC category slideshow: "
-                        + "invalid image data.",
-                        error
-                    );
-
-                    return;
-                }
-
-
-                /* =====================================
-                   NO IMAGE / ONE IMAGE
-
-                   No slideshow required.
-                ====================================== */
-
-                if (
-                    !Array.isArray(images)
-                    || images.length <= 1
-                ) {
-
-                    return;
-
-                }
-
-
-                const layerA =
-                    card.querySelector(
-                        ".lac-category-background-a"
-                    );
-
-
-                const layerB =
-                    card.querySelector(
-                        ".lac-category-background-b"
-                    );
-
-
-                if (
-                    !layerA
-                    || !layerB
-                ) {
-
-                    return;
-
-                }
-
-
-                let currentIndex = 0;
-
-                let visibleLayer =
-                    layerA;
-
-                let hiddenLayer =
-                    layerB;
-
-
-                /* =====================================
-                   PRELOAD IMAGES
-                ====================================== */
-
-                images
-                    .slice(1)
-                    .forEach(
-                        function (imageUrl) {
-
-                            const image =
-                                new Image();
-
-                            image.src =
-                                imageUrl;
-
-                        }
-                    );
-
-
-                /* =====================================
-                   CHANGE IMAGE FUNCTION
-                ====================================== */
-
-                function changeCategoryImage() {
-
-                    currentIndex =
-                        (
-                            currentIndex + 1
-                        )
-                        % images.length;
-
-
-                    const nextImage =
-                        images[currentIndex];
-
-
-                    /*
-                     * Load next image into
-                     * hidden background layer.
-                     */
-
-                    hiddenLayer.style.backgroundImage =
-                        'url("' +
-                        nextImage +
-                        '")';
-
-
-                    /*
-                     * Fade new image in.
-                     */
-
-                    hiddenLayer.classList.add(
-                        "is-visible"
-                    );
-
-
-                    /*
-                     * Fade old image out.
-                     */
-
-                    visibleLayer.classList.remove(
-                        "is-visible"
-                    );
-
-
-                    /*
-                     * Swap layers.
-                     */
-
-                    const oldVisibleLayer =
-                        visibleLayer;
-
-
-                    visibleLayer =
-                        hiddenLayer;
-
-
-                    hiddenLayer =
-                        oldVisibleLayer;
-
-                }
-
-
-                /* =====================================
-                   UNIQUE START TIME PER CATEGORY
-
-                   Category 1 → 4.0 seconds
-                   Category 2 → 4.8 seconds
-                   Category 3 → 5.6 seconds
-                   Category 4 → 6.4 seconds
-                   etc.
-                ====================================== */
-
-                const initialDelay =
-                    4000
-                    + (
-                        cardIndex * 800
+                const image =
+                    container.querySelector(
+                        "img"
                     );
 
 
                 /*
-                 * Wait for this category's unique
-                 * starting time.
+                 * No actual image.
+                 * Stop the skeleton immediately.
                  */
+                if (!image) {
 
-                window.setTimeout(
+                    container.classList.remove(
+                        "lac-image-loading"
+                    );
+
+                    container.classList.add(
+                        "lac-image-loaded"
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * Browser may already have
+                 * the image cached.
+                 */
+                if (
+                    image.complete
+                    &&
+                    image.naturalWidth > 0
+                ) {
+
+                    container.classList.remove(
+                        "lac-image-loading"
+                    );
+
+                    container.classList.add(
+                        "lac-image-loaded"
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * Image successfully loaded.
+                 */
+                image.addEventListener(
+                    "load",
                     function () {
 
-                        /*
-                         * Perform first image change.
-                         */
-
-                        changeCategoryImage();
-
-
-                        /*
-                         * Then continue this category's
-                         * own slideshow every 4 seconds.
-                         */
-
-                        window.setInterval(
-                            changeCategoryImage,
-                            4000
+                        container.classList.remove(
+                            "lac-image-loading"
                         );
 
-                    },
+                        container.classList.add(
+                            "lac-image-loaded"
+                        );
 
-                    initialDelay
+                    }
+                );
+
+
+                /*
+                 * Image failed.
+                 */
+                image.addEventListener(
+                    "error",
+                    function () {
+
+                        container.classList.remove(
+                            "lac-image-loading"
+                        );
+
+                        container.classList.add(
+                            "lac-image-loaded"
+                        );
+
+                    }
                 );
 
             }
@@ -3140,11 +3018,11 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-
-        /*
-         * Browser may already have the image cached.
-         */
-        if (image.complete && image.naturalWidth > 0) {
+        if (
+			image.complete
+			&&
+			image.naturalWidth > 0
+		) {
 
             container.classList.remove(
                 "lac-image-loading"
