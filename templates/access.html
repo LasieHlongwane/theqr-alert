@@ -782,35 +782,38 @@
 /* =========================================
    NEW LABEL
 ========================================== */
-
 .lac-new-card-badge {
     position: absolute;
 
     top: 10px;
-    left: 10px;
+    right: 10px;
+    left: auto;
 
-    padding: 6px 8px;
+    padding: 6px 9px;
 
     border-radius: 999px;
 
-    background:
-        rgba(10, 11, 13, 0.82);
+    /* WHITE BACKGROUND */
+    background: #ffffff !important;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.15);
+    border: 1px solid
+        rgba(0, 0, 0, 0.08);
 
-    color: #ffffff;
+    /* DARK TEXT */
+    color: #3f4348 !important;
 
     font-size: 9px;
     font-weight: 800;
 
     letter-spacing: 0.7px;
 
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, 0.14);
+
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
-
 
 /* =========================================
    NEW CARD CONTENT
