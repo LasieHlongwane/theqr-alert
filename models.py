@@ -83,6 +83,151 @@ class Category(db.Model):
             f"{self.slug}>"
         )
 
+        
+ # ============================================================
+# ZONE CATEGORY APPEARANCE
+# ============================================================
+
+class ZoneCategoryAppearance(db.Model):
+    """
+    Stores zone-specific visual settings for a category.
+
+    Example:
+        KwaMhlanga + Events
+        Mamelodi + Events
+
+    Each zone/category combination may have its own background
+    images.
+
+    If no ZoneCategoryAppearance exists, the application can
+    fall back to the default images stored on Category.
+    """
+
+    __tablename__ = "zone_category_appearances"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    # --------------------------------------------------------
+    # ZONE
+    # --------------------------------------------------------
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey("zones.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # CATEGORY
+    # --------------------------------------------------------
+
+    category_id = db.Column(
+        db.Integer,
+        db.ForeignKey("categories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # ZONE-SPECIFIC CATEGORY IMAGES
+    # --------------------------------------------------------
+
+    image_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    image_url_2 = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    image_url_3 = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # TIMESTAMPS
+    # --------------------------------------------------------
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    # --------------------------------------------------------
+    # RELATIONSHIPS
+    # --------------------------------------------------------
+
+    zone = db.relationship(
+        "Zone",
+        backref=db.backref(
+            "category_appearances",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    category = db.relationship(
+        "Category",
+        backref=db.backref(
+            "zone_appearances",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    # --------------------------------------------------------
+    # CONSTRAINTS
+    # --------------------------------------------------------
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "zone_id",
+            "category_id",
+            name="uq_zone_category_appearance",
+        ),
+    )
+
+    # --------------------------------------------------------
+    # HELPERS
+    # --------------------------------------------------------
+
+    @property
+    def images(self):
+        """
+        Return only configured zone-specific images.
+        """
+
+        return [
+            image
+            for image in [
+                self.image_url,
+                self.image_url_2,
+                self.image_url_3,
+            ]
+            if image
+        ]
+
+    def __repr__(self):
+        return (
+            f"<ZoneCategoryAppearance "
+            f"zone_id={self.zone_id} "
+            f"category_id={self.category_id}>"
+        )
 # ============================================================
 # ZONE
 # ============================================================
