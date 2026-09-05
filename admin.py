@@ -30,6 +30,7 @@ from models import (
     db,
     Zone,
     Category,
+    ZoneCategoryAppearance,
     AccessPoint,
     QRScan,
     ContentItem,
@@ -3398,6 +3399,337 @@ def edit_category(category_id):
         "admin/category_form.html",
         category=category,
     )
+
+
+# =========================================================
+# ZONE CATEGORY APPEARANCE
+# =========================================================
+
+@admin_bp.route(
+    "/zone-category-appearance",
+    methods=["GET", "POST"],
+)
+def zone_category_appearance():
+
+    auth = require_admin()
+    if auth:
+        return auth
+
+
+    # =====================================================
+    # LOAD ZONES + CATEGORIES
+    # =====================================================
+
+    zones = (
+        Zone.query
+        .order_by(Zone.name.asc())
+        .all()
+    )
+
+    categories = (
+        Category.query
+        .order_by(
+            Category.display_order.asc(),
+            Category.name.asc(),
+        )
+        .all()
+    )
+
+
+    # =====================================================
+    # POST — SAVE APPEARANCE
+    # =====================================================
+
+    if request.method == "POST":
+
+        zone_id = request.form.get(
+            "zone_id",
+            type=int,
+        )
+
+        category_id = request.form.get(
+            "category_id",
+            type=int,
+        )
+
+
+        # -------------------------------------------------
+        # VALIDATION
+        # -------------------------------------------------
+
+        if not zone_id or not category_id:
+
+            flash(
+                "Please select both a zone and a category.",
+                "error",
+            )
+
+            return render_template(
+                "admin/zone_category_appearance.html",
+                zones=zones,
+                categories=categories,
+                appearance=None,
+                selected_zone_id=zone_id,
+                selected_category_id=category_id,
+            )
+
+
+        zone = db.session.get(
+            Zone,
+            zone_id,
+        )
+
+        category = db.session.get(
+            Category,
+            category_id,
+        )
+
+
+        if not zone or not category:
+
+            flash(
+                "The selected zone or category could not be found.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.zone_category_appearance"
+                )
+            )
+
+
+        # =================================================
+        # FIND EXISTING ZONE + CATEGORY CONFIGURATION
+        # =================================================
+
+        appearance = (
+            ZoneCategoryAppearance.query
+            .filter_by(
+                zone_id=zone.id,
+                category_id=category.id,
+            )
+            .first()
+        )
+
+
+        # =================================================
+        # CREATE IF IT DOES NOT EXIST
+        # =================================================
+
+        if appearance is None:
+
+            appearance = ZoneCategoryAppearance(
+                zone_id=zone.id,
+                category_id=category.id,
+            )
+
+            db.session.add(
+                appearance
+            )
+
+
+        # =================================================
+        # GET UPLOADED FILES
+        # =================================================
+
+        image_file = request.files.get(
+            "zone_category_image"
+        )
+
+        image_file_2 = request.files.get(
+            "zone_category_image_2"
+        )
+
+        image_file_3 = request.files.get(
+            "zone_category_image_3"
+        )
+
+
+        # =================================================
+        # UPLOAD IMAGES
+        #
+        # Existing images remain unchanged if the admin
+        # does not select a replacement file.
+        # =================================================
+
+        try:
+
+            # ---------------------------------------------
+            # IMAGE 1
+            # ---------------------------------------------
+
+            if (
+                image_file
+                and image_file.filename
+            ):
+
+                appearance.image_url = (
+                    upload_lac_image(
+                        image_file,
+                        folder=(
+                            "lac/zone-categories/"
+                            f"{zone.id}/"
+                            f"{category.slug}"
+                        ),
+                    )
+                )
+
+
+            # ---------------------------------------------
+            # IMAGE 2
+            # ---------------------------------------------
+
+            if (
+                image_file_2
+                and image_file_2.filename
+            ):
+
+                appearance.image_url_2 = (
+                    upload_lac_image(
+                        image_file_2,
+                        folder=(
+                            "lac/zone-categories/"
+                            f"{zone.id}/"
+                            f"{category.slug}"
+                        ),
+                    )
+                )
+
+
+            # ---------------------------------------------
+            # IMAGE 3
+            # ---------------------------------------------
+
+            if (
+                image_file_3
+                and image_file_3.filename
+            ):
+
+                appearance.image_url_3 = (
+                    upload_lac_image(
+                        image_file_3,
+                        folder=(
+                            "lac/zone-categories/"
+                            f"{zone.id}/"
+                            f"{category.slug}"
+                        ),
+                    )
+                )
+
+
+        except ValueError as error:
+
+            db.session.rollback()
+
+            flash(
+                str(error),
+                "error",
+            )
+
+            return render_template(
+                "admin/zone_category_appearance.html",
+                zones=zones,
+                categories=categories,
+                appearance=appearance,
+                selected_zone_id=zone.id,
+                selected_category_id=category.id,
+            )
+
+
+        # =================================================
+        # SAVE DATABASE RECORD
+        # =================================================
+
+        try:
+
+            db.session.commit()
+
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                "Failed to save zone category appearance."
+            )
+
+            flash(
+                "The zone category appearance could not be saved.",
+                "error",
+            )
+
+            return render_template(
+                "admin/zone_category_appearance.html",
+                zones=zones,
+                categories=categories,
+                appearance=appearance,
+                selected_zone_id=zone.id,
+                selected_category_id=category.id,
+            )
+
+
+        flash(
+            (
+                f"{category.name} appearance for "
+                f"{zone.name} saved successfully."
+            ),
+            "success",
+        )
+
+
+        # Redirect back with the selection in the URL
+        # so the admin immediately sees the saved images.
+
+        return redirect(
+            url_for(
+                "admin.zone_category_appearance",
+                zone_id=zone.id,
+                category_id=category.id,
+            )
+        )
+
+
+    # =====================================================
+    # GET — LOAD SELECTED APPEARANCE
+    # =====================================================
+
+    selected_zone_id = request.args.get(
+        "zone_id",
+        type=int,
+    )
+
+    selected_category_id = request.args.get(
+        "category_id",
+        type=int,
+    )
+
+    appearance = None
+
+
+    if (
+        selected_zone_id
+        and selected_category_id
+    ):
+
+        appearance = (
+            ZoneCategoryAppearance.query
+            .filter_by(
+                zone_id=selected_zone_id,
+                category_id=selected_category_id,
+            )
+            .first()
+        )
+
+
+    return render_template(
+        "admin/zone_category_appearance.html",
+        zones=zones,
+        categories=categories,
+        appearance=appearance,
+        selected_zone_id=selected_zone_id,
+        selected_category_id=selected_category_id,
+    )
+
 
 @admin_bp.route("/categories/<int:category_id>/toggle", methods=["POST"])
 def toggle_category(category_id):
