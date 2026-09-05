@@ -26,11 +26,241 @@
         ) }}"
     >
 
+
+    <!-- =============================================
+         CATEGORY IMAGE GALLERY STYLES
+    ============================================== -->
+
+    <style>
+
+        .category-image-section {
+            margin-top: 4px;
+            margin-bottom: 20px;
+        }
+
+
+        .category-image-heading {
+            margin-bottom: 6px;
+        }
+
+
+        .category-image-heading strong {
+            display: block;
+
+            margin-bottom: 4px;
+
+            font-size: 15px;
+        }
+
+
+        .category-image-heading p {
+            margin: 0;
+
+            font-size: 12px;
+            line-height: 1.5;
+
+            opacity: 0.68;
+        }
+
+
+        .category-image-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 14px;
+
+            margin-top: 15px;
+        }
+
+
+        .category-image-slot {
+            min-width: 0;
+
+            padding: 12px;
+
+            box-sizing: border-box;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 14px;
+
+            background:
+                rgba(255, 255, 255, 0.035);
+        }
+
+
+        .category-image-slot-title {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 8px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .category-image-slot-title strong {
+            font-size: 13px;
+        }
+
+
+        .category-image-status {
+            padding: 4px 7px;
+
+            border-radius: 999px;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            font-size: 9px;
+            font-weight: 800;
+
+            letter-spacing: 0.5px;
+
+            opacity: 0.72;
+        }
+
+
+        .category-image-preview-container {
+            width: 100%;
+
+            margin-bottom: 11px;
+
+            border-radius: 11px;
+
+            overflow: hidden;
+
+            background:
+                rgba(255, 255, 255, 0.035);
+        }
+
+
+        .category-image-preview {
+            display: block;
+
+            width: 100%;
+            height: 130px;
+
+            object-fit: contain;
+
+            background: #f5f1e8;
+        }
+
+
+        .category-image-placeholder {
+            width: 100%;
+            height: 130px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            box-sizing: border-box;
+
+            border:
+                1px dashed
+                rgba(255, 255, 255, 0.12);
+
+            border-radius: 11px;
+
+            margin-bottom: 11px;
+
+            color:
+                rgba(255, 255, 255, 0.38);
+
+            font-size: 11px;
+            font-weight: 700;
+
+            text-align: center;
+        }
+
+
+        .category-image-file-label {
+            display: block;
+
+            margin: 0;
+        }
+
+
+        .category-image-file-label input {
+            width: 100%;
+
+            box-sizing: border-box;
+
+            margin-top: 6px;
+        }
+
+
+        .category-image-help {
+            display: block;
+
+            margin-top: 7px;
+
+            font-size: 10px;
+            line-height: 1.45;
+
+            opacity: 0.58;
+        }
+
+
+        .category-slideshow-note {
+            display: flex;
+
+            gap: 9px;
+
+            margin-top: 14px;
+
+            padding: 11px 12px;
+
+            border-radius: 11px;
+
+            background:
+                rgba(255, 255, 255, 0.04);
+
+            font-size: 11px;
+            line-height: 1.5;
+
+            opacity: 0.75;
+        }
+
+
+        @media (max-width: 720px) {
+
+            .category-image-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .category-image-preview,
+            .category-image-placeholder {
+                height: 190px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body class="lac-admin-body">
 
+
 <div class="admin-shell">
+
+
+    <!-- =============================================
+         ADMIN NAVIGATION
+    ============================================== -->
 
     <nav class="admin-nav">
 
@@ -50,6 +280,10 @@
 
     </nav>
 
+
+    <!-- =============================================
+         FORM CONTAINER
+    ============================================== -->
 
     <section class="admin-form-container">
 
@@ -74,9 +308,10 @@
             class="admin-form"
         >
 
-            <!-- ============================================= -->
-            <!-- CATEGORY NAME -->
-            <!-- ============================================= -->
+
+            <!-- =============================================
+                 CATEGORY NAME
+            ============================================== -->
 
             <label>
 
@@ -97,9 +332,9 @@
             </label>
 
 
-            <!-- ============================================= -->
-            <!-- SLUG -->
-            <!-- ============================================= -->
+            <!-- =============================================
+                 SLUG
+            ============================================== -->
 
             <label>
 
@@ -120,9 +355,9 @@
             </label>
 
 
-            <!-- ============================================= -->
-            <!-- ICON -->
-            <!-- ============================================= -->
+            <!-- =============================================
+                 ICON
+            ============================================== -->
 
             <label>
 
@@ -140,86 +375,398 @@
                 >
 
                 <small>
-                    Used as a fallback when no category image
-                    has been uploaded.
+                    Used as a fallback when no category
+                    background image has been uploaded.
                 </small>
 
             </label>
 
 
-            <!-- ============================================= -->
-            <!-- CATEGORY IMAGE -->
-            <!-- ============================================= -->
+            <!-- =============================================
+                 CATEGORY BACKGROUND IMAGE GALLERY
+            ============================================== -->
 
-            <label>
-
-                Category Image
-
-                <input
-                    type="file"
-                    name="category_image"
-                    id="category-image-input"
-                    accept="image/jpeg,image/png,image/webp"
-                >
-
-                <small>
-                    Recommended: landscape JPG, PNG or WebP.
-                    The image will appear on the public
-                    category card.
-                </small>
-
-            </label>
+            <div class="category-image-section">
 
 
-            <!-- ============================================= -->
-            <!-- CURRENT / NEW IMAGE PREVIEW -->
-            <!-- ============================================= -->
+                <div class="category-image-heading">
 
-            <div
-                id="category-image-preview-container"
-                style="
-                    {% if not category or not category.image_url %}
-                        display: none;
-                    {% endif %}
-                    margin-top: 6px;
-                    margin-bottom: 18px;
-                "
-            >
+                    <strong>
+                        Category Background Images
+                    </strong>
 
-                <p
-                    style="
-                        margin-bottom: 8px;
-                        font-size: 13px;
-                        opacity: 0.75;
-                    "
-                >
-                    Image Preview
-                </p>
+                    <p>
+                        Upload up to 3 images for this category.
+                        If there is more than one image, LaC will
+                        rotate them automatically every 4 seconds.
+                    </p>
 
-                <img
-                    id="category-image-preview"
-                    src="{{
-                        category.image_url
-                        if category and category.image_url
-                        else ''
-                    }}"
-                    alt="Category image preview"
-                    style="
-                        display: block;
-                        width: 100%;
-                        max-width: 420px;
-                        height: 190px;
-                        object-fit: cover;
-                        border-radius: 14px;
-                    "
-                >
+                </div>
+
+
+                <div class="category-image-grid">
+
+
+                    <!-- =====================================
+                         IMAGE 1
+                    ====================================== -->
+
+                    <div class="category-image-slot">
+
+                        <div class="category-image-slot-title">
+
+                            <strong>
+                                Image 1
+                            </strong>
+
+                            <span
+                                class="category-image-status"
+                                id="category-image-status-1"
+                            >
+                                {% if
+                                    category
+                                    and category.image_url
+                                %}
+                                    CURRENT
+                                {% else %}
+                                    EMPTY
+                                {% endif %}
+                            </span>
+
+                        </div>
+
+
+                        <!-- IMAGE PREVIEW -->
+
+                        <div
+                            id="category-image-preview-container-1"
+                            class="category-image-preview-container"
+                            {% if
+                                not category
+                                or not category.image_url
+                            %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+
+                            <img
+                                id="category-image-preview-1"
+                                class="category-image-preview"
+                                src="{{
+                                    category.image_url
+                                    if category
+                                    and category.image_url
+                                    else ''
+                                }}"
+                                alt="Category image 1 preview"
+                            >
+
+                        </div>
+
+
+                        <!-- EMPTY PLACEHOLDER -->
+
+                        <div
+                            id="category-image-placeholder-1"
+                            class="category-image-placeholder"
+                            {% if
+                                category
+                                and category.image_url
+                            %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+                            No Image 1
+                        </div>
+
+
+                        <!-- FILE INPUT -->
+
+                        <label
+                            class="category-image-file-label"
+                        >
+
+                            {% if
+                                category
+                                and category.image_url
+                            %}
+                                Replace Image 1
+                            {% else %}
+                                Upload Image 1
+                            {% endif %}
+
+                            <input
+                                type="file"
+                                name="category_image"
+                                id="category-image-input-1"
+                                accept="image/jpeg,image/png,image/webp"
+                            >
+
+                        </label>
+
+
+                        <small class="category-image-help">
+
+                            This is the primary category
+                            background image.
+
+                        </small>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         IMAGE 2
+                    ====================================== -->
+
+                    <div class="category-image-slot">
+
+                        <div class="category-image-slot-title">
+
+                            <strong>
+                                Image 2
+                            </strong>
+
+                            <span
+                                class="category-image-status"
+                                id="category-image-status-2"
+                            >
+                                {% if
+                                    category
+                                    and category.image_url_2
+                                %}
+                                    CURRENT
+                                {% else %}
+                                    EMPTY
+                                {% endif %}
+                            </span>
+
+                        </div>
+
+
+                        <!-- IMAGE PREVIEW -->
+
+                        <div
+                            id="category-image-preview-container-2"
+                            class="category-image-preview-container"
+                            {% if
+                                not category
+                                or not category.image_url_2
+                            %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+
+                            <img
+                                id="category-image-preview-2"
+                                class="category-image-preview"
+                                src="{{
+                                    category.image_url_2
+                                    if category
+                                    and category.image_url_2
+                                    else ''
+                                }}"
+                                alt="Category image 2 preview"
+                            >
+
+                        </div>
+
+
+                        <!-- EMPTY PLACEHOLDER -->
+
+                        <div
+                            id="category-image-placeholder-2"
+                            class="category-image-placeholder"
+                            {% if
+                                category
+                                and category.image_url_2
+                            %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+                            No Image 2
+                        </div>
+
+
+                        <!-- FILE INPUT -->
+
+                        <label
+                            class="category-image-file-label"
+                        >
+
+                            {% if
+                                category
+                                and category.image_url_2
+                            %}
+                                Replace Image 2
+                            {% else %}
+                                Upload Image 2
+                            {% endif %}
+
+                            <input
+                                type="file"
+                                name="category_image_2"
+                                id="category-image-input-2"
+                                accept="image/jpeg,image/png,image/webp"
+                            >
+
+                        </label>
+
+
+                        <small class="category-image-help">
+
+                            Optional. Added to the
+                            4-second slideshow.
+
+                        </small>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         IMAGE 3
+                    ====================================== -->
+
+                    <div class="category-image-slot">
+
+                        <div class="category-image-slot-title">
+
+                            <strong>
+                                Image 3
+                            </strong>
+
+                            <span
+                                class="category-image-status"
+                                id="category-image-status-3"
+                            >
+                                {% if
+                                    category
+                                    and category.image_url_3
+                                %}
+                                    CURRENT
+                                {% else %}
+                                    EMPTY
+                                {% endif %}
+                            </span>
+
+                        </div>
+
+
+                        <!-- IMAGE PREVIEW -->
+
+                        <div
+                            id="category-image-preview-container-3"
+                            class="category-image-preview-container"
+                            {% if
+                                not category
+                                or not category.image_url_3
+                            %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+
+                            <img
+                                id="category-image-preview-3"
+                                class="category-image-preview"
+                                src="{{
+                                    category.image_url_3
+                                    if category
+                                    and category.image_url_3
+                                    else ''
+                                }}"
+                                alt="Category image 3 preview"
+                            >
+
+                        </div>
+
+
+                        <!-- EMPTY PLACEHOLDER -->
+
+                        <div
+                            id="category-image-placeholder-3"
+                            class="category-image-placeholder"
+                            {% if
+                                category
+                                and category.image_url_3
+                            %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+                            No Image 3
+                        </div>
+
+
+                        <!-- FILE INPUT -->
+
+                        <label
+                            class="category-image-file-label"
+                        >
+
+                            {% if
+                                category
+                                and category.image_url_3
+                            %}
+                                Replace Image 3
+                            {% else %}
+                                Upload Image 3
+                            {% endif %}
+
+                            <input
+                                type="file"
+                                name="category_image_3"
+                                id="category-image-input-3"
+                                accept="image/jpeg,image/png,image/webp"
+                            >
+
+                        </label>
+
+
+                        <small class="category-image-help">
+
+                            Optional. Added to the
+                            4-second slideshow.
+
+                        </small>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =====================================
+                     SLIDESHOW INFORMATION
+                ====================================== -->
+
+                <div class="category-slideshow-note">
+
+                    <span>
+                        💡
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Public category card behaviour
+                        </strong>
+
+                        <br>
+
+                        1 image stays permanently.
+                        2 or 3 images rotate automatically
+                        every 4 seconds.
+
+                    </div>
+
+                </div>
+
 
             </div>
 
 
-            <!-- ============================================= -->
-            <!-- DISPLAY ORDER -->
-            <!-- ============================================= -->
+            <!-- =============================================
+                 DISPLAY ORDER
+            ============================================== -->
 
             <label>
 
@@ -238,17 +785,19 @@
             </label>
 
 
-            <!-- ============================================= -->
-            <!-- ACTIVE -->
-            <!-- ============================================= -->
+            <!-- =============================================
+                 ACTIVE
+            ============================================== -->
 
             <label class="checkbox-label">
 
                 <input
                     type="checkbox"
                     name="active"
-                    {% if not category
-                        or category.active %}
+                    {% if
+                        not category
+                        or category.active
+                    %}
                         checked
                     {% endif %}
                 >
@@ -258,9 +807,9 @@
             </label>
 
 
-            <!-- ============================================= -->
-            <!-- SUBMIT -->
-            <!-- ============================================= -->
+            <!-- =============================================
+                 SUBMIT
+            ============================================== -->
 
             <button type="submit">
 
@@ -272,6 +821,7 @@
 
             </button>
 
+
         </form>
 
     </section>
@@ -279,9 +829,9 @@
 </div>
 
 
-<!-- ======================================================== -->
-<!-- LOCAL IMAGE PREVIEW -->
-<!-- ======================================================== -->
+<!-- ========================================================
+     LOCAL IMAGE PREVIEWS
+======================================================== -->
 
 <script>
 
@@ -289,73 +839,185 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        const imageInput =
-            document.getElementById(
-                "category-image-input"
+
+        /*
+         * Set up one independent preview handler
+         * for each of the three image slots.
+         */
+
+        function setupImagePreview(
+            inputId,
+            previewContainerId,
+            previewId,
+            placeholderId,
+            statusId
+        ) {
+
+            const imageInput =
+                document.getElementById(
+                    inputId
+                );
+
+
+            const previewContainer =
+                document.getElementById(
+                    previewContainerId
+                );
+
+
+            const preview =
+                document.getElementById(
+                    previewId
+                );
+
+
+            const placeholder =
+                document.getElementById(
+                    placeholderId
+                );
+
+
+            const status =
+                document.getElementById(
+                    statusId
+                );
+
+
+            if (
+                !imageInput
+                || !previewContainer
+                || !preview
+            ) {
+
+                return;
+
+            }
+
+
+            imageInput.addEventListener(
+                "change",
+                function () {
+
+
+                    const file =
+                        imageInput.files
+                        && imageInput.files[0];
+
+
+                    if (!file) {
+                        return;
+                    }
+
+
+                    /*
+                     * Only preview image files.
+                     */
+
+                    if (
+                        !file.type.startsWith(
+                            "image/"
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const objectUrl =
+                        URL.createObjectURL(
+                            file
+                        );
+
+
+                    preview.src =
+                        objectUrl;
+
+
+                    previewContainer.style.display =
+                        "block";
+
+
+                    if (placeholder) {
+
+                        placeholder.style.display =
+                            "none";
+
+                    }
+
+
+                    if (status) {
+
+                        status.textContent =
+                            "NEW";
+
+                    }
+
+
+                    /*
+                     * Release temporary browser
+                     * memory after preview loads.
+                     */
+
+                    preview.onload =
+                        function () {
+
+                            URL.revokeObjectURL(
+                                objectUrl
+                            );
+
+                        };
+
+                }
             );
 
-        const previewContainer =
-            document.getElementById(
-                "category-image-preview-container"
-            );
-
-        const preview =
-            document.getElementById(
-                "category-image-preview"
-            );
-
-
-        if (!imageInput) {
-            return;
         }
 
 
-        imageInput.addEventListener(
-            "change",
-            function () {
+        /* =========================================
+           IMAGE 1
+        ========================================== */
 
-                const file =
-                    imageInput.files &&
-                    imageInput.files[0];
-
-
-                if (!file) {
-                    return;
-                }
-
-
-                if (
-                    !file.type.startsWith("image/")
-                ) {
-                    return;
-                }
-
-
-                const objectUrl =
-                    URL.createObjectURL(file);
-
-
-                preview.src = objectUrl;
-
-                previewContainer.style.display =
-                    "block";
-
-
-                preview.onload = function () {
-
-                    URL.revokeObjectURL(
-                        objectUrl
-                    );
-
-                };
-
-            }
+        setupImagePreview(
+            "category-image-input-1",
+            "category-image-preview-container-1",
+            "category-image-preview-1",
+            "category-image-placeholder-1",
+            "category-image-status-1"
         );
+
+
+        /* =========================================
+           IMAGE 2
+        ========================================== */
+
+        setupImagePreview(
+            "category-image-input-2",
+            "category-image-preview-container-2",
+            "category-image-preview-2",
+            "category-image-placeholder-2",
+            "category-image-status-2"
+        );
+
+
+        /* =========================================
+           IMAGE 3
+        ========================================== */
+
+        setupImagePreview(
+            "category-image-input-3",
+            "category-image-preview-container-3",
+            "category-image-preview-3",
+            "category-image-placeholder-3",
+            "category-image-status-3"
+        );
+
 
     }
 );
 
 </script>
+
 
 </body>
 
