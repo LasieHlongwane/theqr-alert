@@ -197,6 +197,314 @@
             }
 
         }
+		
+		
+		/* =========================================================
+   #10 BETTER EMPTY STATES
+========================================================= */
+
+.lac-empty-state {
+    width: 100%;
+    max-width: 460px;
+
+    margin: 32px auto 50px;
+    padding: 34px 24px;
+
+    box-sizing: border-box;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border: 1px solid
+        rgba(0, 0, 0, 0.07);
+
+    border-radius: 24px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.07);
+}
+
+
+/* CATEGORY ICON */
+
+.lac-empty-icon-wrap {
+    width: 84px;
+    height: 84px;
+
+    margin: 0 auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f1e8;
+
+    border: 1px solid
+        rgba(0, 0, 0, 0.05);
+
+    border-radius: 50%;
+}
+
+
+.lac-empty-icon {
+    display: block;
+
+    font-size: 38px;
+    line-height: 1;
+}
+
+
+/* NOTHING HERE YET */
+
+.lac-empty-eyebrow {
+    margin-bottom: 8px;
+
+    color:
+        rgba(63, 67, 72, 0.52);
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 1.4px;
+}
+
+
+/* MAIN TITLE */
+
+.lac-empty-title {
+    max-width: 340px;
+
+    margin:
+        0
+        auto
+        10px;
+
+    color: #3f4348;
+
+    font-size: 21px;
+    font-weight: 850;
+
+    line-height: 1.25;
+}
+
+
+/* DESCRIPTION */
+
+.lac-empty-message {
+    max-width: 350px;
+
+    margin:
+        0
+        auto
+        23px;
+
+    color:
+        rgba(63, 67, 72, 0.70);
+
+    font-size: 13px;
+    font-weight: 500;
+
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   PRIMARY — GET ALERTS
+========================================================= */
+
+.lac-empty-primary {
+    width: 100%;
+    max-width: 280px;
+
+    min-height: 48px;
+
+    margin: 0 auto;
+
+    box-sizing: border-box;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 12px 18px;
+
+    background: #3f4348;
+
+    border-radius: 14px;
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+
+.lac-empty-primary:active {
+    transform: scale(0.97);
+    opacity: 0.86;
+}
+
+
+/* =========================================================
+   ADD A LISTING
+========================================================= */
+
+.lac-empty-contribute {
+    margin-top: 24px;
+    padding-top: 20px;
+
+    border-top: 1px solid
+        rgba(0, 0, 0, 0.07);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 7px;
+}
+
+
+.lac-empty-contribute-text {
+    color:
+        rgba(63, 67, 72, 0.62);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    line-height: 1.4;
+}
+
+
+.lac-empty-secondary {
+    display: inline-block;
+
+    padding: 5px 8px;
+
+    color: #3f4348;
+
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 850;
+
+    border-bottom: 1px solid
+        rgba(63, 67, 72, 0.28);
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.lac-empty-secondary:active {
+    opacity: 0.60;
+}
+
+
+/* =========================================================
+   EXPLORE OTHER CATEGORIES
+========================================================= */
+
+.lac-empty-explore {
+    display: inline-block;
+
+    margin-top: 22px;
+
+    color:
+        rgba(63, 67, 72, 0.62);
+
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+.lac-empty-explore:active {
+    opacity: 0.55;
+}
+
+
+/* DESKTOP */
+
+@media (hover: hover) and (pointer: fine) {
+
+    .lac-empty-primary:hover {
+        opacity: 0.88;
+    }
+
+    .lac-empty-secondary:hover,
+    .lac-empty-explore:hover {
+        opacity: 0.65;
+    }
+
+}
+
+
+/* SMALL MOBILE */
+
+@media (max-width: 420px) {
+
+    .lac-empty-state {
+        margin-top: 24px;
+
+        padding:
+            28px
+            18px;
+
+        border-radius: 20px;
+    }
+
+
+    .lac-empty-icon-wrap {
+        width: 74px;
+        height: 74px;
+    }
+
+
+    .lac-empty-icon {
+        font-size: 34px;
+    }
+
+
+    .lac-empty-title {
+        font-size: 19px;
+    }
+
+
+    .lac-empty-message {
+        font-size: 12px;
+    }
+
+}
+
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .lac-empty-primary {
+        transition: none;
+    }
+
+
+    .lac-empty-primary:active {
+        transform: none;
+    }
+
+}
 
     </style>
 
@@ -847,48 +1155,292 @@
 
             {% else %}
 
-
                 <!-- =================================
-                     EMPTY STATE
+                     #10 BETTER EMPTY STATE
                 ================================== -->
 
-                <div class="empty-state public-empty-state">
+                <div class="lac-empty-state">
 
-                    <div class="empty-state-icon">
 
-                        {% if category.icon %}
-                            {{ category.icon }}
-                        {% else %}
-                            📌
-                        {% endif %}
+                    <!-- CATEGORY ILLUSTRATION -->
+
+                    <div class="lac-empty-icon-wrap">
+
+                        <span class="lac-empty-icon">
+
+                            {% if category.icon %}
+
+                                {{ category.icon }}
+
+                            {% elif category.slug in ["local-events", "events"] %}
+
+                                🎵
+
+                            {% elif category.slug == "discount-deals" %}
+
+                                🛒
+
+                            {% elif category.slug == "jobs" %}
+
+                                💼
+
+                            {% elif category.slug == "property" %}
+
+                                🏠
+
+                            {% elif category.slug == "local-restaurants" %}
+
+                                🍔
+
+                            {% elif category.slug == "services" %}
+
+                                🛠️
+
+                            {% elif category.slug == "beauty-salon" %}
+
+                                ✂️
+
+                            {% else %}
+
+                                📍
+
+                            {% endif %}
+
+                        </span>
 
                     </div>
 
 
-                    <h2>
-                        Nothing listed yet.
+                    <!-- SMALL LABEL -->
+
+                    <div class="lac-empty-eyebrow">
+                        NOTHING HERE YET
+                    </div>
+
+
+                    <!-- =================================
+                         CATEGORY-SPECIFIC TITLE
+                    ================================== -->
+
+                    <h2 class="lac-empty-title">
+
+                        {% if category.slug in ["local-events", "events"] %}
+
+                            No upcoming events right now
+
+                        {% elif category.slug == "discount-deals" %}
+
+                            No local specials right now
+
+                        {% elif category.slug == "jobs" %}
+
+                            No opportunities listed right now
+
+                        {% elif category.slug == "property" %}
+
+                            No properties available right now
+
+                        {% elif category.slug == "local-restaurants" %}
+
+                            No restaurants listed here yet
+
+                        {% elif category.slug == "services" %}
+
+                            No local services listed yet
+
+                        {% elif category.slug == "beauty-salon" %}
+
+                            No beauty listings here yet
+
+                        {% else %}
+
+                            No listings available right now
+
+                        {% endif %}
+
                     </h2>
 
 
-                    <p>
+                    <!-- =================================
+                         CATEGORY-SPECIFIC MESSAGE
+                    ================================== -->
 
-                        There are currently no
-                        {{ category.name|lower }}
-                        listings available in
-                        {{ zone.name }}.
+                    <p class="lac-empty-message">
+
+                        {% if category.slug in ["local-events", "events"] %}
+
+                            New events around {{ zone.name }}
+                            will appear here when they are added.
+
+                        {% elif category.slug == "discount-deals" %}
+
+                            New deals and local specials around
+                            {{ zone.name }} will appear here.
+
+                        {% elif category.slug == "jobs" %}
+
+                            New jobs and local opportunities around
+                            {{ zone.name }} will appear here.
+
+                        {% elif category.slug == "property" %}
+
+                            New rooms, houses and property listings
+                            around {{ zone.name }} will appear here.
+
+                        {% elif category.slug == "local-restaurants" %}
+
+                            Local restaurants and food businesses around
+                            {{ zone.name }} will appear here.
+
+                        {% elif category.slug == "services" %}
+
+                            Local service providers around
+                            {{ zone.name }} will appear here.
+
+                        {% elif category.slug == "beauty-salon" %}
+
+                            Salons, barbers and beauty services around
+                            {{ zone.name }} will appear here.
+
+                        {% else %}
+
+                            New {{ category.name|lower }} listings around
+                            {{ zone.name }} will appear here.
+
+                        {% endif %}
 
                     </p>
 
+
+                    <!-- =================================
+                         PRIMARY CTA — ALERTS
+                    ================================== -->
+
+                    <a
+                        href="{{ url_for(
+                            'qr_access',
+                            access_code=access_point.code
+                        ) }}#lac-alerts"
+                        class="lac-empty-primary"
+                    >
+
+                        <span>
+                            🔔
+                        </span>
+
+
+                        <span>
+
+                            {% if category.slug in ["local-events", "events"] %}
+
+                                Get Event Alerts
+
+                            {% elif category.slug == "discount-deals" %}
+
+                                Get Deal Alerts
+
+                            {% elif category.slug == "jobs" %}
+
+                                Get Job Alerts
+
+                            {% elif category.slug == "property" %}
+
+                                Get Property Alerts
+
+                            {% elif category.slug == "local-restaurants" %}
+
+                                Get Food Alerts
+
+                            {% elif category.slug == "services" %}
+
+                                Get Service Alerts
+
+                            {% elif category.slug == "beauty-salon" %}
+
+                                Get Beauty Alerts
+
+                            {% else %}
+
+                                Get Local Alerts
+
+                            {% endif %}
+
+                        </span>
+
+                    </a>
+
+
+                    <!-- =================================
+                         SECONDARY CTA — CONTRIBUTE
+                    ================================== -->
+
+                    <div class="lac-empty-contribute">
+
+
+                        <span class="lac-empty-contribute-text">
+
+                            {% if category.slug in ["local-events", "events"] %}
+
+                                Hosting an event?
+
+                            {% elif category.slug == "discount-deals" %}
+
+                                Have a local special?
+
+                            {% elif category.slug == "jobs" %}
+
+                                Have an opportunity to share?
+
+                            {% elif category.slug == "property" %}
+
+                                Have a property available?
+
+                            {% elif category.slug == "local-restaurants" %}
+
+                                Own a local food business?
+
+                            {% elif category.slug == "services" %}
+
+                                Offer a local service?
+
+                            {% elif category.slug == "beauty-salon" %}
+
+                                Own a salon or barbershop?
+
+                            {% else %}
+
+                                Have something local to share?
+
+                            {% endif %}
+
+                        </span>
+
+
+                        <a
+                            href="/submit"
+                            class="lac-empty-secondary"
+                        >
+                            + Add a listing
+                        </a>
+
+
+                    </div>
+
+
+                    <!-- =================================
+                         BACK TO CATEGORIES
+                    ================================== -->
 
                     <a
                         href="{{ url_for(
                             'qr_access',
                             access_code=access_point.code
                         ) }}"
-                        class="empty-state-button"
+                        class="lac-empty-explore"
                     >
-                        Explore Other Categories
+                        ← Explore other categories
                     </a>
+
 
                 </div>
 
