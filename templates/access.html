@@ -1784,31 +1784,43 @@ body {
        display: none !important;
     }
 
+
+     #lac-install-button {
+    display: inline-flex;
+}
+
+#lac-install-button[hidden] {
+    display: none !important;
+}
+
+#lac-installed-message[hidden] {
+    display: none !important;
+}
+
     </style>
 
 
-	<!-- =========================================
+<!-- =========================================
      KALXA EARLY PWA INSTALL CAPTURE
 ========================================== -->
 
 <script>
 
     /*
-     * Capture Chrome / Edge installation eligibility
-     * as early as possible.
+     * The main PWA installation script loads near
+     * the end of the document.
      *
-     * pwa-install.js loads later after the page UI,
-     * so we preserve the event here until that script
-     * is ready to use it.
+     * Capture beforeinstallprompt here so that
+     * Chromium cannot fire it before our main
+     * installation code is ready.
      */
 
-    window.kalxaInstallPrompt =
-        null;
+    window.kalxaInstallPrompt = null;
 
 
     window.addEventListener(
         "beforeinstallprompt",
-        function(event) {
+        function (event) {
 
             event.preventDefault();
 
@@ -1818,13 +1830,9 @@ body {
 
 
             console.log(
-                "[Kalxa PWA] Early install prompt captured."
+                "[Kalxa PWA] Early native install prompt captured."
             );
 
-
-            /*
-             * Tell pwa-install.js if it has already loaded.
-             */
 
             window.dispatchEvent(
                 new CustomEvent(
@@ -2531,7 +2539,7 @@ body {
                     <p
                         id="lac-installed-message"
                         class="lac-installed-message"
-                        style="display: none;"
+                        hidden
                     >
                         ✓ Kalxa is installed on this device.
                     </p>
