@@ -2872,9 +2872,6 @@ body {
 <!-- =========================================
      CATEGORY BACKGROUND SLIDESHOW
 ========================================== -->
-<!-- =========================================
-     IMAGE LOADING SKELETONS
-========================================== -->
 
 <script>
 
@@ -2882,96 +2879,217 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        const imageContainers =
+        console.log(
+            "[Kalxa] Category slideshow starting."
+        );
+
+
+        const categoryCards =
             document.querySelectorAll(
-                ".lac-image-loading"
+                ".lac-category-row"
             );
 
 
-        imageContainers.forEach(
-            function (container) {
+        categoryCards.forEach(
+            function (card, cardIndex) {
 
-                const image =
-                    container.querySelector(
-                        "img"
-                    );
+                let images = [];
 
 
-                /*
-                 * No actual image.
-                 * Stop the skeleton immediately.
-                 */
-                if (!image) {
+                /* =====================================
+                   READ IMAGE LIST
+                ====================================== */
 
-                    container.classList.remove(
-                        "lac-image-loading"
-                    );
+                try {
 
-                    container.classList.add(
-                        "lac-image-loaded"
+                    images =
+                        JSON.parse(
+                            card.dataset.categoryImages
+                            || "[]"
+                        );
+
+                } catch (error) {
+
+                    console.error(
+                        "[Kalxa] Invalid category images:",
+                        error
                     );
 
                     return;
                 }
 
 
+                console.log(
+                    "[Kalxa] Category images:",
+                    images
+                );
+
+
                 /*
-                 * Browser may already have
-                 * the image cached.
+                 * Zero images:
+                 * nothing to display.
+                 *
+                 * One image:
+                 * first background layer already
+                 * displays it, so no slideshow needed.
                  */
+
                 if (
-                    image.complete
-                    &&
-                    image.naturalWidth > 0
+                    !Array.isArray(images)
+                    ||
+                    images.length <= 1
                 ) {
 
-                    container.classList.remove(
-                        "lac-image-loading"
+                    return;
+                }
+
+
+                /* =====================================
+                   GET TWO BACKGROUND LAYERS
+                ====================================== */
+
+                const layerA =
+                    card.querySelector(
+                        ".lac-category-background-a"
                     );
 
-                    container.classList.add(
-                        "lac-image-loaded"
+
+                const layerB =
+                    card.querySelector(
+                        ".lac-category-background-b"
+                    );
+
+
+                if (
+                    !layerA
+                    ||
+                    !layerB
+                ) {
+
+                    console.warn(
+                        "[Kalxa] Slideshow layers missing."
                     );
 
                     return;
                 }
 
 
-                /*
-                 * Image successfully loaded.
-                 */
-                image.addEventListener(
-                    "load",
-                    function () {
+                /* =====================================
+                   SLIDESHOW STATE
+                ====================================== */
 
-                        container.classList.remove(
-                            "lac-image-loading"
-                        );
+                let currentIndex = 0;
 
-                        container.classList.add(
-                            "lac-image-loaded"
-                        );
+                let visibleLayer =
+                    layerA;
+
+                let hiddenLayer =
+                    layerB;
+
+
+                /* =====================================
+                   PRELOAD IMAGES
+                ====================================== */
+
+                images.forEach(
+                    function (imageUrl) {
+
+                        const preloadImage =
+                            new Image();
+
+                        preloadImage.src =
+                            imageUrl;
 
                     }
                 );
 
 
-                /*
-                 * Image failed.
-                 */
-                image.addEventListener(
-                    "error",
+                /* =====================================
+                   CHANGE BACKGROUND
+                ====================================== */
+
+                function changeCategoryImage() {
+
+                    currentIndex =
+                        (
+                            currentIndex + 1
+                        )
+                        % images.length;
+
+
+                    const nextImage =
+                        images[currentIndex];
+
+
+                    hiddenLayer.style.backgroundImage =
+                        'url("' +
+                        nextImage +
+                        '")';
+
+
+                    /*
+                     * Force the browser to know the new
+                     * background before beginning fade.
+                     */
+
+                    hiddenLayer.classList.add(
+                        "is-visible"
+                    );
+
+
+                    visibleLayer.classList.remove(
+                        "is-visible"
+                    );
+
+
+                    /*
+                     * Swap layer references.
+                     */
+
+                    const previousVisibleLayer =
+                        visibleLayer;
+
+
+                    visibleLayer =
+                        hiddenLayer;
+
+
+                    hiddenLayer =
+                        previousVisibleLayer;
+
+                }
+
+
+                /* =====================================
+                   STAGGER EACH CATEGORY
+
+                   First card: 4.0 sec
+                   Second:     4.8 sec
+                   Third:      5.6 sec
+                   etc.
+                ====================================== */
+
+                const initialDelay =
+                    4000
+                    +
+                    (
+                        cardIndex * 800
+                    );
+
+
+                window.setTimeout(
                     function () {
 
-                        container.classList.remove(
-                            "lac-image-loading"
+                        changeCategoryImage();
+
+
+                        window.setInterval(
+                            changeCategoryImage,
+                            4000
                         );
 
-                        container.classList.add(
-                            "lac-image-loaded"
-                        );
-
-                    }
+                    },
+                    initialDelay
                 );
 
             }
