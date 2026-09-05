@@ -488,9 +488,6 @@ def content_is_expired(
 # =========================================================
 # QR ACCESS POINT
 # =========================================================
-# =========================================================
-# QR ACCESS POINT
-# =========================================================
 
 @app.route("/q/<access_code>")
 def qr_access(access_code):
@@ -800,6 +797,39 @@ def qr_access(access_code):
         in categories
     }
 
+    # ============================================================
+    # FEATURED LOCAL CONTENT
+# ============================================================
+
+    featured_items_pool = []
+
+    for category in categories:
+
+     category_items = get_active_content(
+        zone.id,
+        category.slug,
+     )
+
+     for item in category_items:
+
+        if item.featured:
+            featured_items_pool.append(item)
+
+
+# Newest featured content first
+    featured_items_pool.sort(
+     key=lambda item: (
+        item.created_at
+        if item.created_at
+        else datetime.min
+     ),
+     reverse=True,
+    )
+
+
+# Keep homepage carousel small and focused
+    featured_items = featured_items_pool[:6]
+
 
     # =====================================================
     # RENDER ACCESS PAGE
@@ -820,6 +850,8 @@ def qr_access(access_code):
         new_items=new_items,
 
         category_lookup=category_lookup,
+        
+        featured_items=featured_items,
     )
 # =========================================================
 # CATEGORY PAGE
