@@ -121,8 +121,8 @@ function hideInstallSection() {
     }
 
 
-    lacInstallSection.style.display =
-        "none";
+    lacInstallSection.hidden =
+        true;
 
 }
 
@@ -158,8 +158,8 @@ function updateInstallUI() {
 
     if (lacInstallSection) {
 
-        lacInstallSection.style.display =
-            "block";
+        lacInstallSection.hidden =
+            false;
 
     }
 
