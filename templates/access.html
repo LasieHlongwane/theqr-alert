@@ -94,7 +94,7 @@
          ACCESS PAGE REDESIGN
     ========================================== -->
 
-    <style>
+      <style>
 
         /* =========================================
            PAGE
@@ -1038,7 +1038,293 @@
     opacity: 1 !important;
 }
 
+    
+	
+	
+	
+	/* =========================================================
+   FEATURED LOCAL CONTENT
+========================================================= */
 
+.lac-featured-section {
+    margin-top: 28px;
+    margin-bottom: 30px;
+}
+
+
+/* HEADER */
+
+.lac-featured-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 14px;
+}
+
+
+.lac-featured-eyebrow {
+    margin-bottom: 5px;
+
+    color: rgba(63, 67, 72, 0.68);
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 1.2px;
+}
+
+
+.lac-featured-title {
+    margin: 0;
+
+    color: #3f4348;
+
+    font-size: 22px;
+    font-weight: 800;
+
+    line-height: 1.1;
+}
+
+
+.lac-featured-hint {
+    flex-shrink: 0;
+
+    color: rgba(63, 67, 72, 0.58);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* HORIZONTAL CAROUSEL */
+
+.lac-featured-rail {
+    display: flex;
+
+    gap: 14px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    padding: 2px 2px 12px;
+
+    scroll-snap-type: x mandatory;
+
+    scrollbar-width: none;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+
+.lac-featured-rail::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* CARD */
+
+.lac-featured-card {
+    position: relative;
+
+    flex: 0 0 88%;
+
+    max-width: 390px;
+
+    overflow: hidden;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid
+        rgba(0, 0, 0, 0.08);
+
+    color: #3f4348;
+
+    text-decoration: none;
+
+    scroll-snap-align: start;
+
+    box-shadow:
+        0 8px 24px
+        rgba(0, 0, 0, 0.10);
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.lac-featured-card:active {
+    transform: scale(0.985);
+}
+
+
+/* IMAGE */
+
+.lac-featured-image {
+    position: relative;
+
+    width: 100%;
+    height: 210px;
+
+    overflow: hidden;
+
+    background: #ece8df;
+}
+
+
+.lac-featured-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+.lac-featured-image-fallback {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f1e8;
+
+    font-size: 64px;
+}
+
+
+/* FEATURED BADGE */
+
+.lac-featured-badge {
+    position: absolute;
+
+    top: 12px;
+    right: 12px;
+
+    padding: 7px 10px;
+
+    border-radius: 999px;
+
+    background: #ffffff !important;
+
+    border: 1px solid
+        rgba(0, 0, 0, 0.08);
+
+    color: #3f4348 !important;
+
+    font-size: 9px;
+    font-weight: 900;
+
+    line-height: 1;
+
+    letter-spacing: 0.7px;
+
+    box-shadow:
+        0 3px 10px
+        rgba(0, 0, 0, 0.14);
+
+    z-index: 3;
+}
+
+
+/* CARD INFORMATION */
+
+.lac-featured-content {
+    padding: 17px;
+}
+
+
+.lac-featured-category {
+    margin-bottom: 6px;
+
+    color: rgba(63, 67, 72, 0.62);
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 0.9px;
+
+    text-transform: uppercase;
+}
+
+
+.lac-featured-item-title {
+    margin-bottom: 8px;
+
+    color: #3f4348;
+
+    font-size: 19px;
+    font-weight: 850;
+
+    line-height: 1.2;
+}
+
+
+.lac-featured-meta {
+    margin-top: 5px;
+
+    color: rgba(63, 67, 72, 0.72);
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.lac-featured-price {
+    display: inline-block;
+
+    margin-top: 10px;
+
+    padding: 6px 9px;
+
+    border-radius: 8px;
+
+    background: #f5f1e8;
+
+    color: #3f4348;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* VIEW DETAILS */
+
+.lac-featured-view {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 15px;
+    padding-top: 13px;
+
+    border-top: 1px solid
+        rgba(0, 0, 0, 0.07);
+
+    color: #3f4348;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* DESKTOP */
+
+@media (min-width: 768px) {
+
+    .lac-featured-card {
+        flex-basis: 360px;
+    }
+
+}
 
         
 
@@ -1096,6 +1382,159 @@
             </span>
 
         </div>
+		
+		
+		
+		<!-- =========================================================
+     FEATURED LOCAL CONTENT
+========================================================= -->
+
+        {% if featured_items %}
+
+        <section class="lac-featured-section">
+
+         <div class="lac-featured-header">
+
+          <div>
+            <div class="lac-featured-eyebrow">
+                ⭐ FEATURED NEAR YOU
+            </div>
+
+            <h2 class="lac-featured-title">
+                Local highlights
+            </h2>
+          </div>
+
+          <div class="lac-featured-hint">
+            Swipe →
+         </div>
+
+         </div>
+
+
+         <div class="lac-featured-rail">
+
+          {% for item in featured_items %}
+
+            {% set item_category =
+                category_lookup.get(item.category)
+            %}
+
+            <a
+                href="{{ url_for(
+                    'listing_detail',
+                    item_id=item.id
+                ) }}"
+                class="lac-featured-card"
+            >
+
+                <!-- IMAGE -->
+
+                <div class="lac-featured-image">
+
+                    {% if item.image_url %}
+
+                        <img
+                            src="{{ item.image_url }}"
+                            alt="{{ item.title }}"
+                            loading="lazy"
+                        >
+
+                    {% else %}
+
+                        <div class="lac-featured-image-fallback">
+
+                            {% if item_category %}
+                                {{ item_category.icon }}
+                            {% else %}
+                                📍
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- FEATURED BADGE -->
+
+                    <div class="lac-featured-badge">
+                        ⭐ FEATURED
+                    </div>
+
+                </div>
+
+
+                <!-- CONTENT -->
+
+                <div class="lac-featured-content">
+
+                    <div class="lac-featured-category">
+
+                        {% if item_category %}
+
+                            {{ item_category.name }}
+
+                        {% else %}
+
+                            {{ item.category }}
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="lac-featured-item-title">
+                        {{ item.title }}
+                    </div>
+
+
+                    {% if item.business_name %}
+
+                        <div class="lac-featured-meta">
+                            📍 {{ item.business_name }}
+                        </div>
+
+                    {% elif item.venue %}
+
+                        <div class="lac-featured-meta">
+                            📍 {{ item.venue }}
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if item.price %}
+
+                        <div class="lac-featured-price">
+                            {{ item.price }}
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="lac-featured-view">
+
+                        <span>
+                            View details
+                        </span>
+
+                        <span>
+                            →
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+          {% endfor %}
+
+         </div>
+
+        </section>
+
+        {% endif %}
 
         <!-- =========================================
      NEW NEAR YOU
