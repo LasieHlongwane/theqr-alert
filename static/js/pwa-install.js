@@ -113,16 +113,14 @@ function shouldHideInstallCard() {
 // =========================================================
 // HIDE QUICK ACCESS CARD
 // =========================================================
-
 function hideInstallSection() {
 
     if (!lacInstallSection) {
         return;
     }
 
-
-    lacInstallSection.hidden =
-        true;
+    lacInstallSection.style.display =
+        "none";
 
 }
 
@@ -158,8 +156,8 @@ function updateInstallUI() {
 
     if (lacInstallSection) {
 
-        lacInstallSection.hidden =
-            false;
+      lacInstallSection.style.display =
+        "block";
 
     }
 
