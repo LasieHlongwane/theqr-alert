@@ -2828,6 +2828,103 @@ document.addEventListener(
 
 </script>
 
+
+<script>
+/* =========================================================
+   #5 LAC IMAGE LOADING SKELETONS
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const imageContainers =
+        document.querySelectorAll(".lac-image-loading");
+
+
+    imageContainers.forEach(function (container) {
+
+        const image =
+            container.querySelector("img");
+
+
+        /*
+         * No real image exists.
+         * Remove skeleton immediately so fallback icons
+         * remain visible.
+         */
+        if (!image) {
+
+            container.classList.remove(
+                "lac-image-loading"
+            );
+
+            container.classList.add(
+                "lac-image-loaded"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Browser may already have the image cached.
+         */
+        if (image.complete && image.naturalWidth > 0) {
+
+            container.classList.remove(
+                "lac-image-loading"
+            );
+
+            container.classList.add(
+                "lac-image-loaded"
+            );
+
+            return;
+        }
+
+
+        /*
+         * Image successfully loaded.
+         */
+        image.addEventListener(
+            "load",
+            function () {
+
+                container.classList.remove(
+                    "lac-image-loading"
+                );
+
+                container.classList.add(
+                    "lac-image-loaded"
+                );
+
+            }
+        );
+
+
+        /*
+         * Image failed.
+         * Stop skeleton so it does not shimmer forever.
+         */
+        image.addEventListener(
+            "error",
+            function () {
+
+                container.classList.remove(
+                    "lac-image-loading"
+                );
+
+                container.classList.add(
+                    "lac-image-loaded"
+                );
+
+            }
+        );
+
+    });
+
+});
+</script>
+
 </body>
 
 </html>
