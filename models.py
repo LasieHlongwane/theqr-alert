@@ -49,6 +49,16 @@ class Category(db.Model):
         nullable=True,
     )
 
+    image_url_2 = db.Column(
+       db.String(500),
+       nullable=True,
+    )
+
+    image_url_3 = db.Column(
+       db.String(500),
+       nullable=True,
+    )
+
     display_order = db.Column(
         db.Integer,
         nullable=False,
