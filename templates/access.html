@@ -509,6 +509,371 @@
         }
 
 
+
+        /* =========================================
+   CATEGORY STATUS BADGES
+========================================== */
+
+.lac-category-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 2px;
+}
+
+
+.lac-status-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(255, 255, 255, 0.82);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.70);
+
+    color: #36393d;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    line-height: 1;
+
+    letter-spacing: 0.25px;
+
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, 0.10);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+
+.lac-status-badge-new {
+    background:
+        rgba(15, 16, 18, 0.82);
+
+    border-color:
+        rgba(255, 255, 255, 0.18);
+
+    color: #ffffff;
+}
+
+
+/* =========================================
+   NEW NEAR YOU
+========================================== */
+
+.lac-new-nearby {
+    margin-bottom: 34px;
+}
+
+
+.lac-new-nearby-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 14px;
+}
+
+
+.lac-new-nearby-heading {
+    min-width: 0;
+}
+
+
+.lac-new-nearby-eyebrow {
+    margin:
+        0
+        0
+        5px;
+
+    color:
+        rgba(255, 255, 255, 0.43);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+
+.lac-new-nearby-title {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 21px;
+    font-weight: 800;
+
+    line-height: 1.15;
+
+    letter-spacing: -0.3px;
+}
+
+
+.lac-new-nearby-hint {
+    flex: 0 0 auto;
+
+    color:
+        rgba(255, 255, 255, 0.52);
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   HORIZONTAL RAIL
+========================================== */
+
+.lac-new-rail {
+    width:
+        calc(
+            100% + 16px
+        );
+
+    display: flex;
+
+    gap: 12px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    margin-right: -16px;
+
+    padding:
+        2px
+        16px
+        12px
+        0;
+
+    box-sizing: border-box;
+
+    scroll-snap-type:
+        x mandatory;
+
+    scrollbar-width: none;
+
+    -webkit-overflow-scrolling:
+        touch;
+}
+
+
+.lac-new-rail::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =========================================
+   NEW LISTING CARD
+========================================== */
+
+.lac-new-card {
+    position: relative;
+
+    width: 210px;
+    min-width: 210px;
+
+    border-radius: 18px;
+
+    background: #17191c;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.09);
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    overflow: hidden;
+
+    scroll-snap-align: start;
+
+    box-shadow:
+        0 5px 18px
+        rgba(0, 0, 0, 0.20);
+
+    -webkit-tap-highlight-color:
+        transparent;
+
+    transition:
+        transform 0.16s ease,
+        border-color 0.16s ease;
+}
+
+
+.lac-new-card:active {
+    transform:
+        scale(0.975);
+}
+
+
+.lac-new-card:hover {
+    border-color:
+        rgba(255, 255, 255, 0.22);
+}
+
+
+/* =========================================
+   NEW CARD IMAGE
+========================================== */
+
+.lac-new-card-image {
+    position: relative;
+
+    width: 100%;
+    height: 125px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #282b30,
+            #15171a
+        );
+
+    overflow: hidden;
+}
+
+
+.lac-new-card-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+.lac-new-card-image-fallback {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 38px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #272a2e,
+            #17191c
+        );
+}
+
+
+/* =========================================
+   NEW LABEL
+========================================== */
+
+.lac-new-card-badge {
+    position: absolute;
+
+    top: 10px;
+    left: 10px;
+
+    padding: 6px 8px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(10, 11, 13, 0.82);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.15);
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.7px;
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+
+/* =========================================
+   NEW CARD CONTENT
+========================================== */
+
+.lac-new-card-content {
+    padding:
+        13px
+        13px
+        14px;
+}
+
+
+.lac-new-card-category {
+    margin-bottom: 5px;
+
+    color:
+        rgba(255, 255, 255, 0.48);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.8px;
+}
+
+
+.lac-new-card-title {
+    display:
+        -webkit-box;
+
+    overflow: hidden;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    line-height: 1.3;
+}
+
+
+.lac-new-card-business {
+    margin-top: 7px;
+
+    overflow: hidden;
+
+    color:
+        rgba(255, 255, 255, 0.60);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
         /* =========================================
            MOBILE
         ========================================== */
@@ -684,7 +1049,174 @@
 
         </div>
 
+        <!-- =========================================
+     NEW NEAR YOU
+========================================== -->
 
+        {% if new_items %}
+
+        <section class="lac-new-nearby">
+
+         <div class="lac-new-nearby-header">
+
+          <div class="lac-new-nearby-heading">
+
+            <p class="lac-new-nearby-eyebrow">
+                JUST ADDED
+            </p>
+
+            <h2 class="lac-new-nearby-title">
+                ✨ New Near You
+            </h2>
+
+          </div>
+
+
+          <div class="lac-new-nearby-hint">
+            Swipe →
+          </div>
+
+         </div>
+
+
+         <div class="lac-new-rail">
+
+
+          {% for item in new_items %}
+
+
+            {% set item_category =
+                category_lookup.get(
+                    item.category
+                )
+            %}
+
+
+            <a
+                href="{{ url_for(
+                    'listing_detail',
+                    item_id=item.id
+                ) }}"
+                class="lac-new-card"
+            >
+
+
+                <!-- =============================
+                     IMAGE
+                ============================== -->
+
+                <div class="lac-new-card-image">
+
+
+                    {% if item.image_url %}
+
+                        <img
+                            src="{{ item.image_url }}"
+                            alt="{{ item.title }}"
+                            loading="lazy"
+                        >
+
+                    {% else %}
+
+                        <div
+                            class="
+                                lac-new-card-image-fallback
+                            "
+                        >
+
+                            {% if (
+                                item_category
+                                and
+                                item_category.icon
+                            ) %}
+
+                                {{ item_category.icon }}
+
+                            {% else %}
+
+                                📍
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="lac-new-card-badge">
+                        NEW
+                    </div>
+
+                </div>
+
+
+                <!-- =============================
+                     CONTENT
+                ============================== -->
+
+                <div class="lac-new-card-content">
+
+
+                    <div class="lac-new-card-category">
+
+                        {% if item_category %}
+
+                            {{ item_category.name }}
+
+                        {% else %}
+
+                            {{
+                                item.category
+                                | replace("-", " ")
+                                | title
+                            }}
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="lac-new-card-title">
+                        {{ item.title }}
+                    </div>
+
+
+                    {% if item.business_name %}
+
+                        <div
+                            class="
+                                lac-new-card-business
+                            "
+                        >
+                            {{ item.business_name }}
+                        </div>
+
+                    {% elif item.venue %}
+
+                        <div
+                            class="
+                                lac-new-card-business
+                            "
+                        >
+                            📍 {{ item.venue }}
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+            </a>
+
+
+          {% endfor %}
+
+
+         </div>
+
+        </section>
+
+        {% endif %}
         <!-- =========================================
              CATEGORY SECTION
         ========================================== -->
@@ -854,13 +1386,88 @@
 
                         <div class="lac-category-info">
 
-                            <div class="lac-category-title">
-                                {{ category.name }}
-                            </div>
 
-                            <div class="lac-category-meta">
-                                Explore {{ zone.name }}
-                            </div>
+    <!-- =================================
+         CATEGORY NAME
+    ================================== -->
+
+                         <div class="lac-category-title">
+                          {{ category.name }}
+                         </div>
+
+
+    <!-- =================================
+         STATUS BADGES
+    ================================== -->
+
+                         {% set stats =
+                          category_stats.get(
+                           category.slug,
+                           {}
+                          )
+                         %}
+
+
+                         <div class="lac-category-status">
+
+
+                          {% if stats.get("count", 0) > 0 %}
+
+                           <span class="lac-status-badge">
+
+                            <span>
+                             {{ stats.get("icon", "🔥") }}
+                            </span>
+
+                            <span>
+                             {{ stats.get("count", 0) }}
+                             {{ stats.get("label", "LIVE") }}
+                            </span>
+
+                           </span>
+
+                          {% else %}
+
+                           <span class="lac-status-badge">
+
+                            <span>
+                              📍
+                            </span>
+
+                            <span>
+                              EXPLORE
+                            </span>
+
+                           </span>
+
+                          {% endif %}
+
+
+                          {% if stats.get("new_count", 0) > 0 %}
+
+                           <span
+                             class="
+                               lac-status-badge
+                               lac-status-badge-new
+                             "
+                           >
+
+                             ✨
+                             {{ stats.get("new_count") }}
+                             NEW
+
+                           </span>
+
+                          {% endif %}
+
+
+                         </div>
+
+
+                         <div class="lac-category-meta">
+                           Explore {{ zone.name }}
+                         </div>
+
 
                         </div>
 
