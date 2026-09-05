@@ -1,0 +1,845 @@
+{% extends "admin/base.html" %}
+
+
+{% block content %}
+
+<div class="zone-category-page">
+
+
+    <!-- =============================================
+         HEADER
+    ============================================== -->
+
+    <div class="zone-category-header">
+
+        <div class="zone-category-eyebrow">
+            LAC NETWORK CONTROL CENTRE
+        </div>
+
+        <h1>
+            Zone Category Appearance
+        </h1>
+
+        <p>
+            Give each category its own local visual identity
+            for a specific LaC zone.
+        </p>
+
+    </div>
+
+
+    <!-- =============================================
+         SELECT ZONE + CATEGORY
+    ============================================== -->
+
+    <section class="zone-category-panel">
+
+        <div class="zone-category-panel-heading">
+
+            <span class="zone-category-step">
+                01
+            </span>
+
+            <div>
+                <h2>
+                    Select Local Experience
+                </h2>
+
+                <p>
+                    Choose the zone and category you want
+                    to customize.
+                </p>
+            </div>
+
+        </div>
+
+
+        <form
+            method="GET"
+            action="{{ url_for('admin.zone_category_appearance') }}"
+            class="zone-category-selector"
+        >
+
+            <div class="zone-category-field">
+
+                <label for="zone_id">
+                    Zone
+                </label>
+
+                <select
+                    name="zone_id"
+                    id="zone_id"
+                    required
+                >
+
+                    <option value="">
+                        Select zone
+                    </option>
+
+                    {% for zone in zones %}
+
+                        <option
+                            value="{{ zone.id }}"
+                            {% if selected_zone_id == zone.id %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ zone.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="zone-category-field">
+
+                <label for="category_id">
+                    Category
+                </label>
+
+                <select
+                    name="category_id"
+                    id="category_id"
+                    required
+                >
+
+                    <option value="">
+                        Select category
+                    </option>
+
+                    {% for category in categories %}
+
+                        <option
+                            value="{{ category.id }}"
+                            {% if selected_category_id == category.id %}
+                                selected
+                            {% endif %}
+                        >
+                            {% if category.icon %}
+                                {{ category.icon }}
+                            {% endif %}
+
+                            {{ category.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="zone-category-load-button"
+            >
+                Load Appearance →
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <!-- =============================================
+         EDIT APPEARANCE
+    ============================================== -->
+
+    {% if selected_zone_id and selected_category_id %}
+
+    <section class="zone-category-panel">
+
+        <div class="zone-category-panel-heading">
+
+            <span class="zone-category-step">
+                02
+            </span>
+
+            <div>
+
+                <h2>
+                    Category Background Images
+                </h2>
+
+                <p>
+                    Upload up to three images. Existing images
+                    stay unchanged unless you replace them.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('admin.zone_category_appearance') }}"
+            enctype="multipart/form-data"
+            class="zone-category-upload-form"
+        >
+
+            <input
+                type="hidden"
+                name="zone_id"
+                value="{{ selected_zone_id }}"
+            >
+
+            <input
+                type="hidden"
+                name="category_id"
+                value="{{ selected_category_id }}"
+            >
+
+
+            <div class="zone-category-image-grid">
+
+
+                <!-- =====================================
+                     IMAGE 1
+                ====================================== -->
+
+                <div class="zone-category-image-card">
+
+                    <div class="zone-category-image-label">
+                        IMAGE 1
+                    </div>
+
+                    <div class="zone-category-image-title">
+                        Primary Background
+                    </div>
+
+
+                    <div class="zone-category-preview">
+
+                        {% if appearance and appearance.image_url %}
+
+                            <img
+                                src="{{ appearance.image_url }}"
+                                alt="Current primary category image"
+                            >
+
+                        {% else %}
+
+                            <div class="zone-category-empty-preview">
+                                <span>🖼️</span>
+                                <small>
+                                    No zone-specific image
+                                </small>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <label class="zone-category-file-button">
+
+                        <span>
+                            Choose Image
+                        </span>
+
+                        <input
+                            type="file"
+                            name="zone_category_image"
+                            accept="image/*"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <!-- =====================================
+                     IMAGE 2
+                ====================================== -->
+
+                <div class="zone-category-image-card">
+
+                    <div class="zone-category-image-label">
+                        IMAGE 2
+                    </div>
+
+                    <div class="zone-category-image-title">
+                        Slideshow Image
+                    </div>
+
+
+                    <div class="zone-category-preview">
+
+                        {% if appearance and appearance.image_url_2 %}
+
+                            <img
+                                src="{{ appearance.image_url_2 }}"
+                                alt="Current second category image"
+                            >
+
+                        {% else %}
+
+                            <div class="zone-category-empty-preview">
+                                <span>🖼️</span>
+                                <small>
+                                    No zone-specific image
+                                </small>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <label class="zone-category-file-button">
+
+                        <span>
+                            Choose Image
+                        </span>
+
+                        <input
+                            type="file"
+                            name="zone_category_image_2"
+                            accept="image/*"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <!-- =====================================
+                     IMAGE 3
+                ====================================== -->
+
+                <div class="zone-category-image-card">
+
+                    <div class="zone-category-image-label">
+                        IMAGE 3
+                    </div>
+
+                    <div class="zone-category-image-title">
+                        Slideshow Image
+                    </div>
+
+
+                    <div class="zone-category-preview">
+
+                        {% if appearance and appearance.image_url_3 %}
+
+                            <img
+                                src="{{ appearance.image_url_3 }}"
+                                alt="Current third category image"
+                            >
+
+                        {% else %}
+
+                            <div class="zone-category-empty-preview">
+                                <span>🖼️</span>
+                                <small>
+                                    No zone-specific image
+                                </small>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <label class="zone-category-file-button">
+
+                        <span>
+                            Choose Image
+                        </span>
+
+                        <input
+                            type="file"
+                            name="zone_category_image_3"
+                            accept="image/*"
+                        >
+
+                    </label>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =========================================
+                 FALLBACK INFORMATION
+            ========================================== -->
+
+            <div class="zone-category-fallback-note">
+
+                <span class="zone-category-fallback-icon">
+                    ℹ️
+                </span>
+
+                <div>
+
+                    <strong>
+                        Default images remain available
+                    </strong>
+
+                    <p>
+                        If this zone does not have custom images,
+                        LaC can continue using the default images
+                        configured on the Category.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 SAVE
+            ========================================== -->
+
+            <div class="zone-category-save-row">
+
+                <button
+                    type="submit"
+                    class="zone-category-save-button"
+                >
+                    Save Zone Appearance
+                </button>
+
+            </div>
+
+
+        </form>
+
+    </section>
+
+    {% endif %}
+
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   ZONE CATEGORY APPEARANCE
+========================================================= */
+
+.zone-category-page {
+    width: 100%;
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 10px 0 50px;
+}
+
+
+/* HEADER */
+
+.zone-category-header {
+    margin-bottom: 26px;
+}
+
+.zone-category-eyebrow {
+    margin-bottom: 7px;
+
+    color: rgba(63, 67, 72, 0.55);
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 1.6px;
+}
+
+.zone-category-header h1 {
+    margin: 0 0 8px;
+
+    color: #3f4348;
+
+    font-size: 30px;
+    font-weight: 850;
+}
+
+.zone-category-header p {
+    max-width: 600px;
+
+    margin: 0;
+
+    color: rgba(63, 67, 72, 0.68);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* PANEL */
+
+.zone-category-panel {
+    margin-bottom: 24px;
+    padding: 24px;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 20px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+
+/* PANEL HEADER */
+
+.zone-category-panel-heading {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 13px;
+
+    margin-bottom: 22px;
+}
+
+.zone-category-step {
+    width: 34px;
+    height: 34px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f1e8;
+
+    border-radius: 10px;
+
+    color: #3f4348;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.zone-category-panel-heading h2 {
+    margin: 0 0 4px;
+
+    color: #3f4348;
+
+    font-size: 18px;
+}
+
+.zone-category-panel-heading p {
+    margin: 0;
+
+    color: rgba(63, 67, 72, 0.62);
+
+    font-size: 12px;
+}
+
+
+/* SELECTOR */
+
+.zone-category-selector {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        auto;
+
+    gap: 14px;
+
+    align-items: end;
+}
+
+.zone-category-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.zone-category-field label {
+    color: #3f4348;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.zone-category-field select {
+    width: 100%;
+    min-height: 46px;
+
+    padding: 0 12px;
+
+    background: #f8f6f1;
+
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 12px;
+
+    color: #3f4348;
+
+    font-size: 12px;
+
+    outline: none;
+}
+
+.zone-category-load-button {
+    min-height: 46px;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: #3f4348;
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+
+/* IMAGE GRID */
+
+.zone-category-image-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+
+/* IMAGE CARD */
+
+.zone-category-image-card {
+    padding: 14px;
+
+    background: #f8f6f1;
+
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+}
+
+.zone-category-image-label {
+    margin-bottom: 4px;
+
+    color: rgba(63, 67, 72, 0.52);
+
+    font-size: 8px;
+    font-weight: 900;
+
+    letter-spacing: 1.1px;
+}
+
+.zone-category-image-title {
+    margin-bottom: 11px;
+
+    color: #3f4348;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* PREVIEW */
+
+.zone-category-preview {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+
+    margin-bottom: 12px;
+
+    overflow: hidden;
+
+    background: #eeeae2;
+
+    border-radius: 12px;
+}
+
+.zone-category-preview img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+.zone-category-empty-preview {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    color: rgba(63, 67, 72, 0.52);
+}
+
+.zone-category-empty-preview span {
+    font-size: 27px;
+}
+
+.zone-category-empty-preview small {
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* FILE BUTTON */
+
+.zone-category-file-button {
+    width: 100%;
+    min-height: 40px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 12px;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 10px;
+
+    color: #3f4348;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.zone-category-file-button input {
+    display: none;
+}
+
+
+/* FALLBACK */
+
+.zone-category-fallback-note {
+    margin-top: 20px;
+    padding: 14px;
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    background: #f5f1e8;
+
+    border-radius: 13px;
+}
+
+.zone-category-fallback-icon {
+    flex-shrink: 0;
+}
+
+.zone-category-fallback-note strong {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #3f4348;
+
+    font-size: 11px;
+}
+
+.zone-category-fallback-note p {
+    margin: 0;
+
+    color: rgba(63, 67, 72, 0.67);
+
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+
+/* SAVE */
+
+.zone-category-save-row {
+    margin-top: 20px;
+
+    display: flex;
+    justify-content: flex-end;
+}
+
+.zone-category-save-button {
+    min-height: 48px;
+
+    padding: 0 24px;
+
+    border: 0;
+    border-radius: 13px;
+
+    background: #3f4348;
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 850;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.zone-category-save-button:active {
+    transform: scale(0.97);
+}
+
+
+/* MOBILE */
+
+@media (max-width: 760px) {
+
+    .zone-category-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .zone-category-image-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .zone-category-panel {
+        padding: 18px;
+    }
+
+    .zone-category-save-button {
+        width: 100%;
+    }
+
+}
+
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .zone-category-save-button {
+        transition: none;
+    }
+
+    .zone-category-save-button:active {
+        transform: none;
+    }
+
+}
+
+</style>
+
+
+{% endblock %}
