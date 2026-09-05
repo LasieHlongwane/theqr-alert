@@ -1786,6 +1786,57 @@ body {
 
     </style>
 
+
+	<!-- =========================================
+     KALXA EARLY PWA INSTALL CAPTURE
+========================================== -->
+
+<script>
+
+    /*
+     * Capture Chrome / Edge installation eligibility
+     * as early as possible.
+     *
+     * pwa-install.js loads later after the page UI,
+     * so we preserve the event here until that script
+     * is ready to use it.
+     */
+
+    window.kalxaInstallPrompt =
+        null;
+
+
+    window.addEventListener(
+        "beforeinstallprompt",
+        function(event) {
+
+            event.preventDefault();
+
+
+            window.kalxaInstallPrompt =
+                event;
+
+
+            console.log(
+                "[Kalxa PWA] Early install prompt captured."
+            );
+
+
+            /*
+             * Tell pwa-install.js if it has already loaded.
+             */
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "kalxainstallpromptready"
+                )
+            );
+
+        }
+    );
+
+</script>
+	
 </head>
 
 
