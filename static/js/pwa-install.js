@@ -13,6 +13,7 @@
 // 5. Use the native install prompt when available.
 // 6. Otherwise show manual installation instructions.
 // 7. Allow the user to dismiss the card for this page.
+// 8. Support the early install-event capture from <head>.
 //
 // =========================================================
 
@@ -50,10 +51,21 @@ const lacInstallClose =
 // =========================================================
 // STATE
 // =========================================================
+//
+// If Chrome fired beforeinstallprompt while <head> was
+// loading, the early capture script stored the event in:
+//
+// window.kalxaInstallPrompt
+//
+// Pick it up immediately.
+//
+// =========================================================
 
-let deferredInstallPrompt = null;
+let deferredInstallPrompt =
+    window.kalxaInstallPrompt || null;
 
-let installCardDismissed = false;
+let installCardDismissed =
+    false;
 
 
 // =========================================================
@@ -178,11 +190,11 @@ function showInstallSection() {
 //
 // IMPORTANT:
 //
-// The button is ALWAYS visible whenever the Quick Access
-// card is visible.
+// Whenever the Quick Access card is visible, the button
+// remains visible.
 //
-// Native installation availability determines what happens
-// when the button is clicked — NOT whether the button exists.
+// Whether Chrome supplied beforeinstallprompt determines
+// what happens after the button is clicked.
 //
 // =========================================================
 
@@ -263,17 +275,49 @@ function showManualInstallHelp() {
 
 
     // -----------------------------------------------------
-    // CHROME / EDGE / ANDROID
+    // CHROME / EDGE / ANDROID FALLBACK
     // -----------------------------------------------------
 
     lacInstallHelp.innerHTML =
         "<strong>Install Kalxa:</strong><br>" +
         "Open your browser menu (⋮), then choose " +
-        "<strong>Add to Home screen</strong> " +
-        "or <strong>Install app</strong>.";
+        "<strong>Install app</strong> or " +
+        "<strong>Add to Home screen</strong>.";
 
     lacInstallHelp.style.display =
         "block";
+
+}
+
+
+// =========================================================
+// SYNC EARLY INSTALL PROMPT
+// =========================================================
+//
+// This is important.
+//
+// If the <head> script captured Chrome's event before this
+// file loaded, copy that event into our local variable.
+//
+// =========================================================
+
+function syncEarlyInstallPrompt() {
+
+    if (
+        !deferredInstallPrompt
+        &&
+        window.kalxaInstallPrompt
+    ) {
+
+        deferredInstallPrompt =
+            window.kalxaInstallPrompt;
+
+
+        console.log(
+            "[Kalxa PWA] Saved early install prompt loaded."
+        );
+
+    }
 
 }
 
@@ -283,6 +327,13 @@ function showManualInstallHelp() {
 // =========================================================
 
 function updateInstallUI() {
+
+    // -----------------------------------------------------
+    // FIRST CHECK FOR EARLY CHROME EVENT
+    // -----------------------------------------------------
+
+    syncEarlyInstallPrompt();
+
 
     // -----------------------------------------------------
     // INSTALLED PWA
@@ -318,14 +369,6 @@ function updateInstallUI() {
 
     // -----------------------------------------------------
     // NORMAL BROWSER
-    // -----------------------------------------------------
-    //
-    // Always show both:
-    //
-    // Quick Access card
-    // +
-    // Add Kalxa button
-    //
     // -----------------------------------------------------
 
     showInstallSection();
@@ -422,7 +465,52 @@ if (
 
 
 // =========================================================
-// CAPTURE NATIVE INSTALL PROMPT
+// RECEIVE EARLY INSTALL PROMPT
+// =========================================================
+//
+// access.html <head> dispatches this event immediately
+// after it captures beforeinstallprompt.
+//
+// =========================================================
+
+window.addEventListener(
+    "kalxainstallpromptready",
+    function() {
+
+        if (
+            window.kalxaInstallPrompt
+        ) {
+
+            deferredInstallPrompt =
+                window.kalxaInstallPrompt;
+
+
+            clearOldInstallMarker();
+
+
+            console.log(
+                "[Kalxa PWA] Early install prompt received."
+            );
+
+
+            updateInstallUI();
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// FALLBACK NATIVE INSTALL PROMPT CAPTURE
+// =========================================================
+//
+// Keep this listener.
+//
+// It protects pages that do not yet have the early
+// <head> capture script and also gives us another chance
+// to receive the browser event.
+//
 // =========================================================
 
 window.addEventListener(
@@ -436,15 +524,15 @@ window.addEventListener(
             event;
 
 
-        // If the browser is offering installation,
-        // an old "installed" localStorage marker
-        // cannot be trusted.
+        window.kalxaInstallPrompt =
+            event;
+
 
         clearOldInstallMarker();
 
 
         console.log(
-            "[Kalxa PWA] Native install prompt available."
+            "[Kalxa PWA] Native install prompt captured."
         );
 
 
@@ -470,6 +558,20 @@ if (lacInstallButton) {
 
 
             // -------------------------------------------------
+            // CHECK EARLY CAPTURE ONE MORE TIME
+            // -------------------------------------------------
+            //
+            // This is deliberately done at click time.
+            //
+            // If Chrome supplied the event before the main
+            // script was ready, we still use it.
+            //
+            // -------------------------------------------------
+
+            syncEarlyInstallPrompt();
+
+
+            // -------------------------------------------------
             // NATIVE INSTALL PROMPT AVAILABLE
             // -------------------------------------------------
 
@@ -482,6 +584,11 @@ if (lacInstallButton) {
 
 
                 try {
+
+                    console.log(
+                        "[Kalxa PWA] Opening native install prompt."
+                    );
+
 
                     deferredInstallPrompt.prompt();
 
@@ -497,12 +604,17 @@ if (lacInstallButton) {
                     );
 
 
+                    // -----------------------------------------
+                    // ACCEPTED
+                    // -----------------------------------------
+
                     if (
                         result.outcome ===
                         "accepted"
                     ) {
 
                         rememberKalxaInstalled();
+
 
                         hideInstallSection();
 
@@ -511,7 +623,14 @@ if (lacInstallButton) {
                             "[Kalxa PWA] Installation accepted."
                         );
 
-                    } else {
+                    }
+
+
+                    // -----------------------------------------
+                    // DISMISSED
+                    // -----------------------------------------
+
+                    else {
 
                         console.log(
                             "[Kalxa PWA] Installation dismissed."
@@ -530,9 +649,15 @@ if (lacInstallButton) {
                 }
 
 
-                // The captured prompt can only be used once.
+                // ---------------------------------------------
+                // PROMPT CAN ONLY BE USED ONCE
+                // ---------------------------------------------
 
                 deferredInstallPrompt =
+                    null;
+
+
+                window.kalxaInstallPrompt =
                     null;
 
 
@@ -540,9 +665,9 @@ if (lacInstallButton) {
                     false;
 
 
-                // If Kalxa is not actually running
-                // standalone, keep the Quick Access
-                // interface available.
+                // ---------------------------------------------
+                // KEEP CARD AVAILABLE IF USER CANCELLED
+                // ---------------------------------------------
 
                 if (
                     !isRunningStandalone()
@@ -562,16 +687,19 @@ if (lacInstallButton) {
             // NO NATIVE PROMPT
             // -------------------------------------------------
             //
-            // Chrome/another browser has not supplied
+            // Chrome / browser did not provide
             // beforeinstallprompt.
             //
-            // Do NOT hide the button.
+            // JavaScript cannot manufacture the browser's
+            // native installation event.
             //
-            // Give the user manual installation instructions.
+            // Keep the button/card visible and provide
+            // fallback instructions.
+            //
             // -------------------------------------------------
 
             console.log(
-                "[Kalxa PWA] Native install prompt unavailable. Showing manual instructions."
+                "[Kalxa PWA] Native install prompt unavailable."
             );
 
 
@@ -600,6 +728,10 @@ window.addEventListener(
 
 
         deferredInstallPrompt =
+            null;
+
+
+        window.kalxaInstallPrompt =
             null;
 
 
@@ -636,6 +768,15 @@ if (
 
                 rememberKalxaInstalled();
 
+
+                deferredInstallPrompt =
+                    null;
+
+
+                window.kalxaInstallPrompt =
+                    null;
+
+
                 hideInstallSection();
 
             } else {
@@ -654,7 +795,7 @@ if (
 // INITIAL PAGE LOAD
 // =========================================================
 //
-// access.html / qr_entry.html should start the section with:
+// access.html / qr_entry.html should begin with:
 //
 // <section
 //     id="lac-install-section"
@@ -662,19 +803,26 @@ if (
 //     hidden
 // >
 //
-// This prevents the browser from painting the wrong state
-// before JavaScript runs.
-//
 // =========================================================
 
 hideInstallSection();
 
 
-// Wait until DOM/script initialization has completed,
-// then reveal the correct state.
+// =========================================================
+// INITIAL EARLY-PROMPT CHECK
+// =========================================================
 //
-// requestAnimationFrame avoids the previous competing
-// timer-based UI changes.
+// The early event may already have been captured before this
+// script loaded.
+//
+// =========================================================
+
+syncEarlyInstallPrompt();
+
+
+// =========================================================
+// DISPLAY CORRECT INITIAL STATE
+// =========================================================
 
 window.requestAnimationFrame(
     function() {
