@@ -663,94 +663,147 @@
 
             <div class="lac-category-list">
 
-                {% for category in categories %}
+             {% for category in categories %}
 
-                    <a
-                        class="
-                            lac-category-row
-                            {% if not category.image_url %}
-                                no-category-image
-                            {% endif %}
-                        "
-                        href="{{ url_for(
-                            'qr_category',
-                            code=access_point.code,
-                            category=category.slug
-                        ) }}"
+              {% set category_images = [] %}
 
-                        {% if category.image_url %}
 
-                            style="
-                                background-image:
-                                    linear-gradient(
-                                        90deg,
-                                        rgba(0, 0, 0, 0.62) 0%,
-                                        rgba(0, 0, 0, 0.36) 48%,
-                                        rgba(0, 0, 0, 0.16) 100%
-                                    ),
-                                    url('{{ category.image_url }}');
-                            "
+               {% if category.image_url %}
 
-                        {% endif %}
+                 {% set _ = category_images.append(
+                   category.image_url
+                 ) %}
+
+               {% endif %}
+
+
+               {% if category.image_url_2 %}
+
+                 {% set _ = category_images.append(
+                   category.image_url_2
+                 ) %}
+
+               {% endif %}
+
+
+               {% if category.image_url_3 %}
+
+                {% set _ = category_images.append(
+                  category.image_url_3
+                ) %}
+
+               {% endif %}
+
+
+               <a
+                 class="
+                   lac-category-row
+                   {% if not category_images %}
+                     no-category-image
+                   {% endif %}
+                 "
+
+                 href="{{ url_for(
+                  'qr_category',
+                  code=access_point.code,
+                  category=category.slug
+                 ) }}"
+
+                 data-category-images='{{ category_images | tojson }}'
+               >
+
+
+            <!-- =================================
+                 BACKGROUND LAYER 1
+            ================================== -->
+
+                 {% if category_images %}
+
+                   <div
+                     class="
+                        lac-category-background
+                        lac-category-background-a
+                        is-visible
+                     "
+                     style="
+                        background-image:
+                            url('{{ category_images[0] }}');
+                     "
+                   ></div>
+
+
+                <!-- =================================
+                     BACKGROUND LAYER 2
+
+                     JavaScript loads the next image
+                     into this layer.
+                ================================== -->
+
+                   <div
+                     class="
+                        lac-category-background
+                        lac-category-background-b
+                     "
+                   ></div>
+
+
+                   <div
+                     class="lac-category-light-overlay"
+                   ></div>
+
+
+                 {% else %}
+
+
+                    <div
+                     class="lac-category-fallback-large"
+                     aria-hidden="true"
                     >
 
+                     {% if category.icon %}
+                        {{ category.icon }}
+                     {% else %}
+                        📌
+                     {% endif %}
 
-                        <!-- =================================
-                             FALLBACK ICON
-
-                             Only shown if no category image
-                             has been uploaded.
-                        ================================== -->
-
-                        {% if not category.image_url %}
-
-                            <div
-                                class="lac-category-fallback-large"
-                                aria-hidden="true"
-                            >
-
-                                {% if category.icon %}
-                                    {{ category.icon }}
-                                {% else %}
-                                    📌
-                                {% endif %}
-
-                            </div>
-
-                        {% endif %}
+                    </div>
 
 
-                        <!-- =================================
-                             CATEGORY INFORMATION
-                        ================================== -->
-
-                        <div class="lac-category-info">
-
-                            <div class="lac-category-title">
-                                {{ category.name }}
-                            </div>
-
-                            <div class="lac-category-meta">
-                                Explore {{ zone.name }}
-                            </div>
-
-                        </div>
+                 {% endif %}
 
 
-                        <!-- =================================
-                             ARROW
-                        ================================== -->
+            <!-- =================================
+                 CATEGORY TEXT
+            ================================== -->
 
-                        <div
-                            class="lac-category-chevron"
-                            aria-hidden="true"
-                        >
-                            ›
-                        </div>
+                 <div class="lac-category-info">
 
-                    </a>
+                   <div class="lac-category-title">
+                    {{ category.name }}
+                   </div>
 
-                {% endfor %}
+                   <div class="lac-category-meta">
+                    Explore {{ zone.name }}
+                   </div>
+
+                 </div>
+
+
+            <!-- =================================
+                 ARROW
+            ================================== -->
+
+                 <div
+                  class="lac-category-chevron"
+                  aria-hidden="true"
+                 >
+                  ›
+                 </div>
+
+
+               </a>
+
+             {% endfor %}
 
             </div>
 
@@ -1142,6 +1195,176 @@
         filename='js/push-notifications.js'
     ) }}"
 ></script>
+
+
+<script>
+
+/* =========================================
+   LAC CATEGORY BACKGROUND SLIDESHOW
+========================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const categoryCards =
+            document.querySelectorAll(
+                ".lac-category-row"
+            );
+
+
+        categoryCards.forEach(
+            function (card) {
+
+                let images = [];
+
+
+                /*
+                 * Read image URLs supplied
+                 * by Jinja.
+                 */
+                try {
+
+                    images = JSON.parse(
+                        card.dataset.categoryImages
+                        || "[]"
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "LaC category slideshow:"
+                        + " invalid image data.",
+                        error
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * No image.
+                 * Leave fallback design alone.
+                 */
+                if (images.length === 0) {
+                    return;
+                }
+
+
+                const layerA =
+                    card.querySelector(
+                        ".lac-category-background-a"
+                    );
+
+                const layerB =
+                    card.querySelector(
+                        ".lac-category-background-b"
+                    );
+
+
+                if (!layerA || !layerB) {
+                    return;
+                }
+
+
+                /*
+                 * ONE IMAGE ONLY
+                 *
+                 * Nothing else needs to happen.
+                 */
+                if (images.length === 1) {
+                    return;
+                }
+
+
+                let currentIndex = 0;
+
+                let visibleLayer = layerA;
+
+                let hiddenLayer = layerB;
+
+
+                /*
+                 * Preload remaining images so
+                 * transitions are smoother.
+                 */
+                images.slice(1).forEach(
+                    function (imageUrl) {
+
+                        const preloadImage =
+                            new Image();
+
+                        preloadImage.src =
+                            imageUrl;
+
+                    }
+                );
+
+
+                /*
+                 * Change background every
+                 * four seconds.
+                 */
+                setInterval(
+                    function () {
+
+                        currentIndex =
+                            (
+                                currentIndex + 1
+                            )
+                            % images.length;
+
+
+                        const nextImage =
+                            images[currentIndex];
+
+
+                        /*
+                         * Load next image into the
+                         * currently hidden layer.
+                         */
+                        hiddenLayer.style.backgroundImage =
+                            'url("' +
+                            nextImage +
+                            '")';
+
+
+                        /*
+                         * Fade new layer in.
+                         */
+                        hiddenLayer.classList.add(
+                            "is-visible"
+                        );
+
+
+                        visibleLayer.classList.remove(
+                            "is-visible"
+                        );
+
+
+                        /*
+                         * Swap references.
+                         */
+                        const oldVisibleLayer =
+                            visibleLayer;
+
+                        visibleLayer =
+                            hiddenLayer;
+
+                        hiddenLayer =
+                            oldVisibleLayer;
+
+                    },
+                    4000
+                );
+
+            }
+        );
+
+    }
+);
+
+</script>
 
 
 </body>
