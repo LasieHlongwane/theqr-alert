@@ -350,94 +350,43 @@ class ContentItem(db.Model):
         nullable=False,
     )
 
-    # --------------------------------------------------------
-    # CATEGORY
-    #
-    # Examples:
-    # property
-    # events
-    # discount-deals
-    # local-restaurants
-    # jobs
-    # services
-    # --------------------------------------------------------
 
     category = db.Column(
         db.String(50),
         nullable=False,
     )
 
-    # --------------------------------------------------------
-    # CONTENT TYPE
-    #
-    # Describes WHAT the listing is inside its category.
-    #
-    # Examples:
-    #
-    # Property:
-    # room
-    # rental
-    # property_sale
-    # hotel
-    # accommodation_special
-    #
-    # Food:
-    # restaurant
-    # daily_special
-    # weekend_special
-    #
-    # Opportunities:
-    # job
-    # learnership
-    # internship
-    # tender
-    #
-    # Existing/legacy records may initially have NULL.
-    # --------------------------------------------------------
-
     content_type = db.Column(
         db.String(60),
         nullable=True,
         index=True,
     )
+     
+    listing_level = db.Column(
+        db.String(30),
+        nullable=False,
+        default="discovery",
+        index=True,
+    )
 
-    # --------------------------------------------------------
-    # LIFETIME TYPE
-    #
-    # Controls HOW LONG the listing should remain relevant.
-    #
-    # Supported values:
-    #
-    # time_specific
-    # until_unavailable
-    # ongoing
-    # recurring
-    #
-    # NULL is temporarily allowed for legacy records.
-    # --------------------------------------------------------
+    ownership_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="unclaimed",
+        index=True,
+    )
 
+    is_verified = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+   
     lifetime_type = db.Column(
         db.String(30),
         nullable=True,
         index=True,
     )
-
-    # --------------------------------------------------------
-    # AVAILABILITY STATUS
-    #
-    # Current lifecycle state of the listing.
-    #
-    # Common values:
-    #
-    # available
-    # taken
-    # sold
-    # filled
-    # closed
-    # expired
-    #
-    # We default NEW records to available.
-    # --------------------------------------------------------
 
     availability_status = db.Column(
         db.String(30),
@@ -446,18 +395,6 @@ class ContentItem(db.Model):
         index=True,
     )
 
-    # --------------------------------------------------------
-    # NOTIFICATION ELIGIBILITY
-    #
-    # True:
-    # This listing may later trigger category notifications.
-    #
-    # False:
-    # Normally discovery/search only.
-    #
-    # Default False is intentional while push notifications
-    # are not yet implemented.
-    # --------------------------------------------------------
 
     notification_eligible = db.Column(
         db.Boolean,
@@ -465,9 +402,6 @@ class ContentItem(db.Model):
         default=False,
     )
 
-    # --------------------------------------------------------
-    # LISTING INFORMATION
-    # --------------------------------------------------------
 
     title = db.Column(
         db.String(200),
@@ -498,6 +432,41 @@ class ContentItem(db.Model):
         db.String(100),
         nullable=True,
     )
+    
+    opening_hours = db.Column(
+        db.String(255),
+        nullable=True,
+    )
+
+    whatsapp_number = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    directions_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    menu_highlights = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    special_offer = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    image_url_2 = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    image_url_3 = db.Column(
+        db.String(500),
+        nullable=True,
+    )
 
     image_url = db.Column(
         db.String(500),
@@ -518,17 +487,6 @@ class ContentItem(db.Model):
         db.DateTime,
         nullable=True,
     )
-
-    # --------------------------------------------------------
-    # GENERAL VALIDITY WINDOW
-    #
-    # Used primarily by time-specific non-event listings.
-    #
-    # Examples:
-    # grocery specials
-    # food specials
-    # temporary promotions
-    # --------------------------------------------------------
 
     start_date = db.Column(
         db.Date,
@@ -622,7 +580,15 @@ class ContentItem(db.Model):
             self.availability_status
             == "available"
         )
+    def can_use_business_features(self):
+        return self.listing_level in {
+           "business",
+           "promotion",
+        }
 
+
+    def can_use_promotion_features(self):
+        return self.listing_level == "promotion"
 
 # ============================================================
 # PENDING SUBMISSION
