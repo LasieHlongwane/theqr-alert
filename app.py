@@ -1222,48 +1222,7 @@ def qr_category(
     )
 
 
-    # =====================================================
-    # ENFORCE KALXA LISTING LEVEL RANKING
-    # =====================================================
-    #
-    # LEVEL 1 — DISCOVERY
-    # Normal organic discovery.
-    #
-    # LEVEL 2 — BUSINESS
-    # Rich business listing, but receives no paid
-    # ranking advantage.
-    #
-    # LEVEL 3 — PROMOTION
-    # May receive featured priority, but ONLY when
-    # featured=True.
-    #
-    # This prevents an old Discovery/Business listing
-    # with featured=True from receiving paid placement.
-    #
-    # We use a stable sort so the existing ordering
-    # returned by get_active_content() is preserved
-    # inside each group.
-    #
-    # =====================================================
-
-    def promotion_priority(item):
-
-        is_promoted_featured = (
-            item.listing_level == "promotion"
-            and item.featured is True
-        )
-
-        return (
-            0
-            if is_promoted_featured
-            else 1
-        )
-
-
-    items = sorted(
-        items,
-        key=promotion_priority,
-    )
+    
 
 
     # =====================================================
