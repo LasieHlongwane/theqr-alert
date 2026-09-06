@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Listing Already Claimed | Kalxa
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #202329 0%,
+                    #111317 40%,
+                    #0b0c0e 100%
+                );
+
+            color: #fff4df;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 540px;
+
+            margin: 0 auto;
+
+            padding:
+                65px
+                18px
+                45px;
+
+            text-align: center;
+        }
+
+        .brand-name {
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .brand-tagline {
+            margin:
+                5px
+                0
+                40px;
+
+            color: #969ba2;
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.7px;
+
+            text-transform: uppercase;
+        }
+
+        .icon {
+            width: 74px;
+            height: 74px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin:
+                0
+                auto
+                22px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.12);
+
+            font-size: 29px;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size: 27px;
+            line-height: 1.15;
+        }
+
+        p {
+            max-width: 420px;
+
+            margin:
+                13px
+                auto
+                25px;
+
+            color: #b3b7bd;
+
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .listing {
+            margin-bottom: 24px;
+            padding: 18px;
+
+            background:
+                rgba(255, 255, 255, 0.055);
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.09);
+
+            border-radius: 18px;
+        }
+
+        .listing-name {
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .status {
+            display: inline-flex;
+
+            margin-top: 11px;
+
+            padding:
+                6px
+                10px;
+
+            border-radius: 999px;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            color: #c7cacf;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .button {
+            display: block;
+
+            width: 100%;
+
+            padding: 14px;
+
+            border-radius: 13px;
+
+            background: #fff4df;
+            color: #111317;
+
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .footer {
+            margin-top: 35px;
+
+            color: #6e737a;
+
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .footer strong {
+            color: #9ea2a8;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="brand-name">
+        Kalxa
+    </div>
+
+    <div class="brand-tagline">
+        Discover your local culture
+    </div>
+
+
+    <div class="icon">
+        ✓
+    </div>
+
+
+    <h1>
+        This listing cannot be claimed
+    </h1>
+
+
+    <p>
+        This listing is already business-controlled
+        or is not currently available through the
+        public claim process.
+    </p>
+
+
+    <div class="listing">
+
+        <div class="listing-name">
+            {{ item.business_name or item.title }}
+        </div>
+
+
+        {% if item.is_verified %}
+
+            <div class="status">
+                ✓ Verified business
+            </div>
+
+        {% elif item.ownership_status == "claimed" %}
+
+            <div class="status">
+                Claimed
+            </div>
+
+        {% else %}
+
+            <div class="status">
+                Not available
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <a
+        href="{{ url_for('listing_detail', item_id=item.id) }}"
+        class="button"
+    >
+        Return to listing
+    </a>
+
+
+    <div class="footer">
+        KALXA · <strong>POWERED BY LaC</strong>
+    </div>
+
+</div>
+
+</body>
+</html>
