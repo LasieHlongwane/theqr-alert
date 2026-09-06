@@ -369,13 +369,56 @@ def get_active_category_by_slug(
 # =========================================================
 # ACTIVE CONTENT HELPER
 # =========================================================
-
 def get_active_content(
     zone_id,
     category_slug,
 ):
 
     today = date.today()
+
+
+    # =====================================================
+    # PROMOTION PRIORITY
+    # =====================================================
+    #
+    # Only LEVEL 3 — PROMOTION listings that are explicitly
+    # marked featured are allowed to receive featured
+    # placement.
+    #
+    # Discovery + featured=True  -> no priority
+    # Business + featured=True   -> no priority
+    # Promotion + featured=True  -> priority
+    #
+    # CASE returns:
+    #
+    #   1 = promoted + featured
+    #   0 = everything else
+    #
+    # Sorting DESC therefore puts legitimate promoted
+    # listings first.
+    # =====================================================
+
+    promotion_priority = db.case(
+        (
+            (
+                ContentItem.listing_level
+                == "promotion"
+            )
+            &
+            (
+                ContentItem.featured.is_(
+                    True
+                )
+            ),
+            1,
+        ),
+        else_=0,
+    )
+
+
+    # =====================================================
+    # BASE QUERY
+    # =====================================================
 
     query = (
         ContentItem.query
@@ -396,57 +439,98 @@ def get_active_content(
         )
     )
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # EVENTS
-    # -----------------------------------------------------
+    # =====================================================
+    #
+    # Events:
+    #
+    # 1. Must already be allowed to publish.
+    # 2. Must not have ended.
+    # 3. Promotion + Featured comes first.
+    # 4. Earlier upcoming event dates come next.
+    # 5. Newer listings break ties.
+    #
+    # =====================================================
 
     if category_slug == "events":
 
         query = query.filter(
             or_(
-                ContentItem.publish_from.is_(None),
-                ContentItem.publish_from <= today,
+                ContentItem.publish_from.is_(
+                    None
+                ),
+                ContentItem.publish_from
+                <= today,
             ),
             or_(
-                ContentItem.event_end_date.is_(None),
-                ContentItem.event_end_date >= today,
+                ContentItem.event_end_date.is_(
+                    None
+                ),
+                ContentItem.event_end_date
+                >= today,
             ),
         )
+
 
         return (
             query
             .order_by(
-                ContentItem.featured.desc(),
-                ContentItem.event_date.asc(),
-                ContentItem.created_at.desc(),
+                promotion_priority.desc(),
+
+                ContentItem.event_date
+                .asc()
+                .nullslast(),
+
+                ContentItem.created_at
+                .desc(),
             )
             .all()
         )
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # OTHER CONTENT
-    # Show future listings immediately.
-    # Hide only after expiry.
-    # -----------------------------------------------------
+    # =====================================================
+    #
+    # Future listings are allowed to appear immediately.
+    #
+    # Listings disappear only after end_date.
+    #
+    # Ordering:
+    #
+    # 1. Promotion + Featured
+    # 2. Earliest start date
+    # 3. Newest created listing
+    #
+    # =====================================================
 
     query = query.filter(
         or_(
-            ContentItem.end_date.is_(None),
-            ContentItem.end_date >= today,
+            ContentItem.end_date.is_(
+                None
+            ),
+            ContentItem.end_date
+            >= today,
         )
     )
+
 
     return (
         query
         .order_by(
-            ContentItem.featured.desc(),
-            ContentItem.start_date.asc(),
-            ContentItem.created_at.desc(),
+            promotion_priority.desc(),
+
+            ContentItem.start_date
+            .asc()
+            .nullslast(),
+
+            ContentItem.created_at
+            .desc(),
         )
         .all()
     )
-
-
 # =========================================================
 # CONTENT EXPIRY HELPERS
 # =========================================================
