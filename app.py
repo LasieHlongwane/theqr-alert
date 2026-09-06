@@ -44,6 +44,7 @@ from models import (
     ZoneCategoryAppearance,
     Category,
     PushSubscriber,
+    ListingClaim
     EngagementEvent,
 )
 import json
@@ -2280,8 +2281,246 @@ CONTENT_WORKFLOWS = {
         },
     },
 }
+@app.route(
+    "/claim/<int:item_id>",
+    methods=["GET", "POST"],
+)
+def claim_listing(
+    item_id,
+):
+
+    # =====================================================
+    # FIND LISTING
+    # =====================================================
+
+    item = (
+        ContentItem.query
+        .filter_by(
+            id=item_id,
+            active=True,
+            archived=False,
+        )
+        .first_or_404()
+    )
 
 
+    # =====================================================
+    # CHECK WHETHER LISTING CAN BE CLAIMED
+    # =====================================================
+
+    if not item.can_be_claimed():
+
+        return render_template(
+            "claim_listing_unavailable.html",
+            item=item,
+        ), 409
+
+
+    # =====================================================
+    # CHECK FOR EXISTING PENDING CLAIM
+    # =====================================================
+
+    if item.has_pending_claim():
+
+        return render_template(
+            "claim_listing_pending.html",
+            item=item,
+        ), 409
+
+
+    # =====================================================
+    # HANDLE CLAIM SUBMISSION
+    # =====================================================
+
+    if request.method == "POST":
+
+        claimant_name = (
+            request.form.get(
+                "claimant_name",
+                "",
+            )
+            .strip()
+        )
+
+        business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+        )
+
+        phone = (
+            request.form.get(
+                "phone",
+                "",
+            )
+            .strip()
+        )
+
+        email = (
+            request.form.get(
+                "email",
+                "",
+            )
+            .strip()
+        )
+
+        proof_notes = (
+            request.form.get(
+                "proof_notes",
+                "",
+            )
+            .strip()
+        )
+
+
+        # =================================================
+        # VALIDATION
+        # =================================================
+
+        errors = []
+
+
+        if not claimant_name:
+
+            errors.append(
+                "Please enter your name."
+            )
+
+
+        if not business_name:
+
+            errors.append(
+                "Please enter the business name."
+            )
+
+
+        if not phone:
+
+            errors.append(
+                "Please enter a contact number."
+            )
+
+
+        if errors:
+
+            return render_template(
+                "claim_listing.html",
+                item=item,
+                errors=errors,
+                form_data=request.form,
+            ), 400
+
+
+        # =================================================
+        # CREATE PENDING CLAIM
+        # =================================================
+
+        claim = ListingClaim(
+            content_item_id=item.id,
+
+            claimant_name=claimant_name,
+
+            business_name=business_name,
+
+            phone=phone,
+
+            email=(
+                email
+                if email
+                else None
+            ),
+
+            proof_notes=(
+                proof_notes
+                if proof_notes
+                else None
+            ),
+
+            status="pending",
+        )
+
+
+        try:
+
+            db.session.add(
+                claim
+            )
+
+            db.session.commit()
+
+
+        except Exception as exc:
+
+            db.session.rollback()
+
+            app.logger.exception(
+                "Failed to create listing claim. "
+                "content_item_id=%s error=%s",
+                item.id,
+                exc,
+            )
+
+            errors = [
+                (
+                    "We could not submit your claim "
+                    "right now. Please try again."
+                )
+            ]
+
+            return render_template(
+                "claim_listing.html",
+                item=item,
+                errors=errors,
+                form_data=request.form,
+            ), 500
+
+
+        # =================================================
+        # SUCCESS
+        # =================================================
+
+        return redirect(
+            url_for(
+                "claim_listing_success",
+                claim_id=claim.id,
+            )
+        )
+
+
+    # =====================================================
+    # DISPLAY CLAIM FORM
+    # =====================================================
+
+    return render_template(
+        "claim_listing.html",
+        item=item,
+        errors=[],
+        form_data={},
+    )
+
+@app.route(
+    "/claim/success/<int:claim_id>"
+)
+def claim_listing_success(
+    claim_id,
+):
+
+    claim = (
+        ListingClaim.query
+        .filter_by(
+            id=claim_id,
+        )
+        .first_or_404()
+    )
+
+
+    return render_template(
+        "claim_listing_success.html",
+        claim=claim,
+        item=claim.content_item,
+    )
 # =========================================================
 # WORKFLOW HELPERS
 # =========================================================
