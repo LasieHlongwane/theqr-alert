@@ -93,1510 +93,1862 @@
     <!-- =========================================
          ACCESS PAGE REDESIGN
     ========================================== -->
+    <style>
 
-      <style>
+    /* =========================================
+       PAGE
+    ========================================== */
 
-        /* =========================================
-           PAGE
-        ========================================== */
+    .access-container {
+        width: 100%;
+        max-width: 680px;
+        margin: 0 auto;
 
-        .access-container {
-            width: 100%;
-            max-width: 680px;
-            margin: 0 auto;
+        padding-left: 16px;
+        padding-right: 16px;
 
-            padding-left: 16px;
-            padding-right: 16px;
-
-            box-sizing: border-box;
-        }
-
-
-        /* =========================================
-           LOCATION
-        ========================================== */
-
-        .location-label {
-            display: inline-flex;
-            align-items: center;
-
-            gap: 7px;
-
-            margin-bottom: 20px;
-
-            padding: 8px 12px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
-            border-radius: 999px;
-
-            background:
-                rgba(255, 255, 255, 0.035);
-
-            color:
-                rgba(255, 255, 255, 0.82);
-
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-
-        .location-icon {
-            font-size: 13px;
-        }
-
-
-        /* =========================================
-           CATEGORY SECTION
-        ========================================== */
-
-        .category-section {
-            margin-bottom: 34px;
-        }
-
-
-        .category-section-heading {
-            margin-bottom: 16px;
-        }
-
-
-        .category-section-eyebrow {
-            max-width: 560px;
-
-            margin: 0 0 8px;
-
-            color:
-                rgba(255, 255, 255, 0.43);
-
-            font-size: 9px;
-            font-weight: 700;
-
-            line-height: 1.55;
-
-            letter-spacing: 1px;
-        }
-
-
-        .category-section-heading h2 {
-            margin: 0;
-
-            color: #ffffff;
-
-            font-size:
-                clamp(
-                    22px,
-                    6vw,
-                    30px
-                );
-
-            font-weight: 800;
-
-            line-height: 1.1;
-
-            letter-spacing: -0.5px;
-        }
-
-
-        /* =========================================
-           CATEGORY DIRECTORY
-        ========================================== */
-
-        .lac-category-list {
-            width: 100%;
-
-            display: flex;
-            flex-direction: column;
-
-            gap: 16px;
-        }
-
-       /* =========================================
-   CATEGORY CARD
-========================================= */
-
-.lac-category-row {
-    position: relative;
-
-    width: 100%;
-    min-height: 210px;
-
-    display: flex;
-    align-items: flex-end;
-
-    gap: 15px;
-
-    padding: 22px;
-
-    box-sizing: border-box;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-
-    border-radius: 22px;
-
-    background-color: #f5f1e8;
-
-    color: #ffffff;
-
-    text-decoration: none;
-
-    overflow: hidden;
-
-    isolation: isolate;
-
-    box-shadow:
-        0 6px 22px
-        rgba(0, 0, 0, 0.18);
-
-    -webkit-tap-highlight-color: transparent;
-
-    transition:
-        transform 0.18s ease,
-        box-shadow 0.18s ease,
-        border-color 0.18s ease;
-}
-
-
-.lac-category-row:hover {
-    transform: translateY(-3px);
-
-    border-color:
-        rgba(255, 255, 255, 0.30);
-
-    box-shadow:
-        0 10px 28px
-        rgba(0, 0, 0, 0.23);
-}
-
-
-.lac-category-row:active {
-    transform: scale(0.985);
-}
-
-
-/* =========================================
-   SLIDESHOW BACKGROUND
-========================================= */
-
-.lac-category-background {
-    position: absolute;
-
-    z-index: 0;
-
-    inset: 0;
-
-    width: 100%;
-    height: 100%;
-
-    border-radius: inherit;
-
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-
-    opacity: 0;
-
-    transition:
-        opacity 0.9s ease-in-out;
-
-    pointer-events: none;
-
-    will-change: opacity;
-}
-
-
-.lac-category-background.is-visible {
-    opacity: 1;
-}
-
-
-/* =========================================
-   LIGHT GRADIENT
-========================================= */
-
-.lac-category-light-overlay {
-    position: absolute;
-
-    z-index: 1;
-
-    inset: 0;
-
-    border-radius: inherit;
-
-    pointer-events: none;
-
-    background:
-        linear-gradient(
-            to top,
-            rgba(0, 0, 0, 0.34) 0%,
-            rgba(0, 0, 0, 0.12) 25%,
-            rgba(255, 255, 255, 0.03) 55%,
-            rgba(255, 255, 255, 0.00) 76%
-        );
-}
-
-
-/* =========================================
-   CATEGORY FALLBACK
-========================================= */
-
-.lac-category-row.no-category-image {
-    background:
-        linear-gradient(
-            145deg,
-            #f5f1e9,
-            #ddd7ce
-        );
-}
-
-
-.lac-category-fallback-large {
-    position: absolute;
-
-    z-index: 1;
-
-    top: 50%;
-    left: 50%;
-
-    transform:
-        translate(
-            -50%,
-            -50%
-        );
-
-    font-size: 58px;
-
-    opacity: 0.32;
-
-    pointer-events: none;
-}
-
-
-/* =========================================
-   CATEGORY INFORMATION
-========================================= */
-
-.lac-category-info {
-    position: static;
-
-    z-index: 2;
-
-    min-width: 0;
-
-    flex: 1;
-}
-
-
-/* =========================================
-   CATEGORY TITLE
-   CREAMY WHITE + BOTTOM CENTER
-========================================= */
-
-.lac-category-title {
-    position: absolute;
-
-    left: 50%;
-    bottom: 4px;
-
-    transform: translateX(-50%);
-
-    z-index: 8;
-
-    width: calc(100% - 20px);
-
-    margin: 0;
-
-    padding: 0;
-
-    text-align: center;
-
-    color: #fff4df;
-
-    font-size: 1.08rem;
-    font-weight: 900;
-
-    line-height: 1.15;
-
-    letter-spacing: 0.5px;
-
-    text-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.95),
-        0 4px 10px rgba(0, 0, 0, 0.65);
-
-    pointer-events: none;
-}
-
-
-/* =========================================
-   EXPLORE / LIVE / NEW
-   TOP-RIGHT CORNER
-========================================= */
-
-.lac-category-meta {
-    position: absolute !important;
-
-    top: 6px !important;
-    right: 6px !important;
-
-    bottom: auto !important;
-    left: auto !important;
-
-    transform: none !important;
-
-    z-index: 20;
-
-    width: auto;
-
-    margin: 0;
-    padding: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-
-    gap: 5px;
-
-    color: #3f4348;
-
-    font-size: 10px;
-    font-weight: 800;
-
-    line-height: 1;
-
-    letter-spacing: 0.25px;
-
-    pointer-events: none;
-}
-
-
-/* =========================================
-   CATEGORY ARROW
-========================================= */
-
-.lac-category-chevron {
-    position: relative;
-
-    z-index: 2;
-
-    width: 40px;
-    height: 40px;
-
-    flex: 0 0 40px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.55);
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.72);
-
-    color: #55595f;
-
-    font-size: 25px;
-    font-weight: 400;
-
-    line-height: 1;
-
-    box-shadow:
-        0 3px 10px
-        rgba(0, 0, 0, 0.12);
-
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-
-    transition:
-        transform 0.16s ease,
-        background 0.16s ease;
-}
-
-
-.lac-category-row:hover
-.lac-category-chevron {
-    transform: translateX(3px);
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.90
-        );
-}
-
-
-/* =========================================
-   CATEGORY STATUS CONTAINER
-   TOP-RIGHT CORNER
-========================================= */
-
-.lac-category-status {
-    position: absolute !important;
-
-    top: 6px !important;
-    right: 6px !important;
-
-    bottom: auto !important;
-    left: auto !important;
-
-    transform: none !important;
-
-    z-index: 25;
-
-    width: auto;
-
-    margin: 0;
-    padding: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-
-    gap: 5px;
-
-    pointer-events: none;
-}
-
-
-/* =========================================
-   CATEGORY STATUS BADGES
-========================================= */
-
-.lac-status-badge {
-    position: relative !important;
-
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 4px;
-
-    margin: 0;
-
-    padding: 6px 9px;
-
-    border-radius: 999px;
-
-    background: #ffffff !important;
-
-    border:
-        1px solid
-        rgba(0, 0, 0, 0.08) !important;
-
-    color: #3f4348 !important;
-
-    font-size: 10px;
-    font-weight: 800;
-
-    line-height: 1;
-
-    letter-spacing: 0.25px;
-
-    white-space: nowrap;
-
-    box-shadow:
-        0 2px 8px
-        rgba(0, 0, 0, 0.14);
-
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-
-.lac-status-badge-new {
-    background: #ffffff !important;
-
-    color: #3f4348 !important;
-
-    border:
-        1px solid
-        rgba(0, 0, 0, 0.08) !important;
-}
-
-
-/* =========================================
-   FORCE ALL CATEGORY BADGES TO TOP-RIGHT
-========================================= */
-
-.lac-category-row .lac-category-status {
-    position: absolute !important;
-
-    top: 6px !important;
-    right: 6px !important;
-
-    bottom: auto !important;
-    left: auto !important;
-}
-
-
-.lac-category-row .lac-category-meta {
-    position: absolute !important;
-
-    top: 6px !important;
-    right: 6px !important;
-
-    bottom: auto !important;
-    left: auto !important;
-}
-
-
-/* =========================================
-   MOBILE
-========================================= */
-
-@media (max-width: 480px) {
-
-    .lac-category-row {
-        min-height: 195px;
-
-        padding: 19px;
-
-        gap: 13px;
-
-        border-radius: 20px;
+        box-sizing: border-box;
     }
 
 
-    .lac-category-title {
-        bottom: 3px;
+    /* =========================================
+       LOCATION
+    ========================================== */
 
-        font-size: 19px;
-        font-weight: 900;
+    .location-label {
+        display: inline-flex;
+        align-items: center;
+
+        gap: 7px;
+
+        margin-bottom: 20px;
+
+        padding: 8px 12px;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.08);
+
+        border-radius: 999px;
+
+        background:
+            rgba(255, 255, 255, 0.035);
+
+        color:
+            rgba(255, 255, 255, 0.82);
+
+        font-size: 12px;
+        font-weight: 700;
     }
 
 
-    .lac-category-meta,
-    .lac-category-status {
-        top: 5px !important;
-        right: 5px !important;
+    .location-icon {
+        font-size: 13px;
     }
 
 
-    .lac-status-badge {
-        padding: 5px 8px;
+    /* =========================================
+       CATEGORY SECTION
+    ========================================== */
+
+    .category-section {
+        margin-bottom: 34px;
+    }
+
+
+    .category-section-heading {
+        margin-bottom: 16px;
+    }
+
+
+    .category-section-eyebrow {
+        max-width: 560px;
+
+        margin: 0 0 8px;
+
+        color:
+            rgba(255, 255, 255, 0.43);
 
         font-size: 9px;
+        font-weight: 700;
+
+        line-height: 1.55;
+
+        letter-spacing: 1px;
     }
 
 
-    .lac-category-chevron {
-        width: 37px;
-        height: 37px;
+    .category-section-heading h2 {
+        margin: 0;
 
-        flex: 0 0 37px;
+        color: #ffffff;
 
-        font-size: 23px;
+        font-size:
+            clamp(
+                22px,
+                6vw,
+                30px
+            );
+
+        font-weight: 800;
+
+        line-height: 1.1;
+
+        letter-spacing: -0.5px;
     }
 
-}
+
+    /* =========================================
+       CATEGORY DIRECTORY
+    ========================================== */
+
+    .lac-category-list {
+        width: 100%;
+
+        display: flex;
+        flex-direction: column;
+
+        gap: 16px;
+    }
 
 
-/* =========================================
-   VERY SMALL DEVICES
-========================================= */
-
-@media (max-width: 360px) {
+    /* =========================================
+       CATEGORY CARD
+    ========================================== */
 
     .lac-category-row {
-        min-height: 175px;
+        position: relative;
 
-        padding: 17px;
+        width: 100%;
+        min-height: 210px;
 
-        border-radius: 18px;
+        display: flex;
+        align-items: flex-end;
+
+        gap: 15px;
+
+        padding: 22px;
+
+        box-sizing: border-box;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.18);
+
+        border-radius: 22px;
+
+        background-color: #f5f1e8;
+
+        color: #ffffff;
+
+        text-decoration: none;
+
+        overflow: hidden;
+
+        isolation: isolate;
+
+        box-shadow:
+            0 6px 22px
+            rgba(0, 0, 0, 0.18);
+
+        -webkit-tap-highlight-color: transparent;
+
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease,
+            border-color 0.18s ease;
     }
 
+
+    .lac-category-row:hover {
+        transform: translateY(-3px);
+
+        border-color:
+            rgba(255, 255, 255, 0.30);
+
+        box-shadow:
+            0 10px 28px
+            rgba(0, 0, 0, 0.23);
+    }
+
+
+    .lac-category-row:active {
+        transform: scale(0.985);
+    }
+
+
+    /* =========================================
+       SLIDESHOW BACKGROUND
+    ========================================== */
+
+    .lac-category-background {
+        position: absolute;
+
+        z-index: 0;
+
+        inset: 0;
+
+        width: 100%;
+        height: 100%;
+
+        border-radius: inherit;
+
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+
+        opacity: 0;
+
+        transition:
+            opacity 0.9s ease-in-out;
+
+        pointer-events: none;
+
+        will-change: opacity;
+    }
+
+
+    .lac-category-background.is-visible {
+        opacity: 1;
+    }
+
+
+    /* =========================================
+       LIGHT GRADIENT
+    ========================================== */
+
+    .lac-category-light-overlay {
+        position: absolute;
+
+        z-index: 1;
+
+        inset: 0;
+
+        border-radius: inherit;
+
+        pointer-events: none;
+
+        background:
+            linear-gradient(
+                to top,
+                rgba(255, 255, 255, 0.42) 0%,
+                rgba(255, 255, 255, 0.17) 34%,
+                rgba(255, 255, 255, 0.04) 58%,
+                rgba(255, 255, 255, 0.00) 76%
+            );
+    }
+
+
+    /* =========================================
+       CATEGORY FALLBACK
+    ========================================== */
+
+    .lac-category-row.no-category-image {
+        background:
+            linear-gradient(
+                145deg,
+                #f5f1e9,
+                #ddd7ce
+            );
+    }
+
+
+    .lac-category-fallback-large {
+        position: absolute;
+
+        z-index: 1;
+
+        top: 50%;
+        left: 50%;
+
+        transform:
+            translate(
+                -50%,
+                -50%
+            );
+
+        font-size: 58px;
+
+        opacity: 0.32;
+
+        pointer-events: none;
+    }
+
+
+    /* =========================================
+       CATEGORY INFORMATION
+    ========================================== */
+
+    .lac-category-info {
+        position: static;
+
+        z-index: 2;
+
+        min-width: 0;
+
+        flex: 1;
+    }
+
+
+    /* =========================================
+       CATEGORY TITLE
+       CREAMY WHITE + BOTTOM BASE CENTER
+    ========================================== */
 
     .lac-category-title {
-        bottom: 3px;
+        position: absolute;
 
-        font-size: 17px;
+        left: 50%;
+        bottom: 4px;
+
+        transform: translateX(-50%);
+
+        z-index: 8;
+
+        width: calc(100% - 20px);
+
+        margin: 0;
+        padding: 0;
+
+        text-align: center;
+
+        color: #fff4df;
+
+        font-size: 21px;
         font-weight: 900;
+
+        line-height: 1.15;
+
+        letter-spacing: 0.5px;
+
+        text-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.95),
+            0 4px 10px rgba(0, 0, 0, 0.65);
+
+        pointer-events: none;
     }
 
 
-    .lac-category-meta,
+    /* =========================================
+       EXPLORE TEXT
+       TOP-RIGHT CORNER
+    ========================================== */
+
+    .lac-category-meta {
+        position: absolute !important;
+
+        top: 6px !important;
+        right: 6px !important;
+
+        bottom: auto !important;
+        left: auto !important;
+
+        transform: none !important;
+
+        z-index: 20;
+
+        width: auto;
+
+        margin: 0;
+        padding: 0;
+
+        color: #3f4348;
+
+        font-size: 10px;
+        font-weight: 800;
+
+        line-height: 1;
+
+        letter-spacing: 0.25px;
+
+        text-shadow: none;
+
+        pointer-events: none;
+    }
+
+
+    /* =========================================
+       CATEGORY ARROW
+    ========================================== */
+
+    .lac-category-chevron {
+        position: relative;
+
+        z-index: 2;
+
+        width: 40px;
+        height: 40px;
+
+        flex: 0 0 40px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.55);
+
+        border-radius: 50%;
+
+        background:
+            rgba(255, 255, 255, 0.72);
+
+        color: #55595f;
+
+        font-size: 25px;
+        font-weight: 400;
+
+        line-height: 1;
+
+        box-shadow:
+            0 3px 10px
+            rgba(0, 0, 0, 0.12);
+
+        backdrop-filter: blur(7px);
+        -webkit-backdrop-filter: blur(7px);
+
+        transition:
+            transform 0.16s ease,
+            background 0.16s ease;
+    }
+
+
+    .lac-category-row:hover
+    .lac-category-chevron {
+        transform:
+            translateX(3px);
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                0.90
+            );
+    }
+
+
+    /* =========================================
+       CATEGORY STATUS
+       LIVE / NEW — TOP-RIGHT CORNER
+    ========================================== */
+
     .lac-category-status {
-        top: 4px !important;
-        right: 4px !important;
+        position: absolute !important;
+
+        top: 6px !important;
+        right: 6px !important;
+
+        bottom: auto !important;
+        left: auto !important;
+
+        transform: none !important;
+
+        z-index: 25;
+
+        width: auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+
+        gap: 5px;
+
+        margin: 0;
+        padding: 0;
+
+        pointer-events: none;
     }
 
 
     .lac-status-badge {
-        padding: 5px 7px;
+        position: relative !important;
 
-        font-size: 8px;
-    }
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
 
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
 
-    .lac-category-chevron {
-        width: 34px;
-        height: 34px;
+        gap: 5px;
 
-        flex: 0 0 34px;
+        margin: 0;
 
-        font-size: 21px;
-    }
+        padding: 6px 9px;
 
-}
+        border-radius: 999px;
 
+        background: #ffffff !important;
 
-/* =========================================
-   DESKTOP
-========================================= */
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08) !important;
 
-@media (min-width: 700px) {
+        color: #3f4348 !important;
 
-    .lac-category-row {
-        min-height: 250px;
+        font-size: 10px;
+        font-weight: 800;
 
-        padding: 26px;
+        line-height: 1;
 
-        border-radius: 24px;
-    }
+        letter-spacing: 0.25px;
 
-
-    .lac-category-title {
-        bottom: 5px;
-
-        font-size: 24px;
-        font-weight: 900;
-    }
-
-
-    .lac-category-meta,
-    .lac-category-status {
-        top: 7px !important;
-        right: 7px !important;
-    }
-
-
-    .lac-category-chevron {
-        width: 42px;
-        height: 42px;
-
-        flex: 0 0 42px;
-    }
-
-}
-
-
-        /* =========================================
-   FORCE CATEGORY BADGES WHITE
-========================================== */
-
-.lac-category-status .lac-status-badge {
-    background: #ffffff !important;
-    color: #3f4348 !important;
-
-    border: 1px solid
-        rgba(0, 0, 0, 0.08) !important;
-}
-
-
-.lac-category-status .lac-status-badge-new {
-    background: #ffffff !important;
-    color: #3f4348 !important;
-
-    border: 1px solid
-        rgba(0, 0, 0, 0.08) !important;
-}
-
-/* =========================================
-   FORCE "NEW NEAR YOU" BADGE WHITE
-========================================== */
-
-.lac-new-nearby
-.lac-new-rail
-.lac-new-card
-.lac-new-card-image
-.lac-new-card-badge {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
-    color: #3f4348 !important;
-
-    border: 1px solid
-        rgba(0, 0, 0, 0.10) !important;
-
-    box-shadow:
-        0 2px 8px
-        rgba(0, 0, 0, 0.15) !important;
-
-    opacity: 1 !important;
-}
-
-    
-	
-	
-	
-	/* =========================================================
-   FEATURED LOCAL CONTENT
-========================================================= */
-
-.lac-featured-section {
-    margin-top: 28px;
-    margin-bottom: 30px;
-}
-
-
-/* HEADER */
-
-.lac-featured-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-
-    gap: 16px;
-
-    margin-bottom: 14px;
-}
-
-
-.lac-featured-eyebrow {
-    margin-bottom: 5px;
-
-    color: rgba(63, 67, 72, 0.68);
-
-    font-size: 10px;
-    font-weight: 900;
-
-    letter-spacing: 1.2px;
-}
-
-
-.lac-featured-title {
-    margin: 0;
-
-    color: #3f4348;
-
-    font-size: 22px;
-    font-weight: 800;
-
-    line-height: 1.1;
-}
-
-
-.lac-featured-hint {
-    flex-shrink: 0;
-
-    color: rgba(63, 67, 72, 0.58);
-
-    font-size: 11px;
-    font-weight: 700;
-}
-
-
-/* HORIZONTAL CAROUSEL */
-
-.lac-featured-rail {
-    display: flex;
-
-    gap: 14px;
-
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    padding: 2px 2px 12px;
-
-    scroll-snap-type: x mandatory;
-
-    scrollbar-width: none;
-
-    -webkit-overflow-scrolling: touch;
-}
-
-
-.lac-featured-rail::-webkit-scrollbar {
-    display: none;
-}
-
-
-/* CARD */
-
-.lac-featured-card {
-    position: relative;
-
-    flex: 0 0 88%;
-
-    max-width: 390px;
-
-    overflow: hidden;
-
-    border-radius: 20px;
-
-    background: #ffffff;
-
-    border: 1px solid
-        rgba(0, 0, 0, 0.08);
-
-    color: #3f4348;
-
-    text-decoration: none;
-
-    scroll-snap-align: start;
-
-    box-shadow:
-        0 8px 24px
-        rgba(0, 0, 0, 0.10);
-
-    transition:
-        transform 0.18s ease,
-        box-shadow 0.18s ease;
-}
-
-
-.lac-featured-card:active {
-    transform: scale(0.985);
-}
-
-
-/* IMAGE */
-
-.lac-featured-image {
-    position: relative;
-
-    width: 100%;
-    height: 210px;
-
-    overflow: hidden;
-
-    background: #ece8df;
-}
-
-
-.lac-featured-image img {
-    width: 100%;
-    height: 100%;
-
-    display: block;
-
-    object-fit: cover;
-}
-
-
-.lac-featured-image-fallback {
-    width: 100%;
-    height: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #f5f1e8;
-
-    font-size: 64px;
-}
-
-
-/* FEATURED BADGE */
-
-.lac-featured-badge {
-    position: absolute;
-
-    top: 12px;
-    right: 12px;
-
-    padding: 7px 10px;
-
-    border-radius: 999px;
-
-    background: #ffffff !important;
-
-    border: 1px solid
-        rgba(0, 0, 0, 0.08);
-
-    color: #3f4348 !important;
-
-    font-size: 9px;
-    font-weight: 900;
-
-    line-height: 1;
-
-    letter-spacing: 0.7px;
-
-    box-shadow:
-        0 3px 10px
-        rgba(0, 0, 0, 0.14);
-
-    z-index: 3;
-}
-
-
-/* CARD INFORMATION */
-
-.lac-featured-content {
-    padding: 17px;
-}
-
-
-.lac-featured-category {
-    margin-bottom: 6px;
-
-    color: rgba(63, 67, 72, 0.62);
-
-    font-size: 10px;
-    font-weight: 900;
-
-    letter-spacing: 0.9px;
-
-    text-transform: uppercase;
-}
-
-
-.lac-featured-item-title {
-    margin-bottom: 8px;
-
-    color: #3f4348;
-
-    font-size: 19px;
-    font-weight: 850;
-
-    line-height: 1.2;
-}
-
-
-.lac-featured-meta {
-    margin-top: 5px;
-
-    color: rgba(63, 67, 72, 0.72);
-
-    font-size: 12px;
-    font-weight: 600;
-}
-
-
-.lac-featured-price {
-    display: inline-block;
-
-    margin-top: 10px;
-
-    padding: 6px 9px;
-
-    border-radius: 8px;
-
-    background: #f5f1e8;
-
-    color: #3f4348;
-
-    font-size: 12px;
-    font-weight: 800;
-}
-
-
-/* VIEW DETAILS */
-
-.lac-featured-view {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    margin-top: 15px;
-    padding-top: 13px;
-
-    border-top: 1px solid
-        rgba(0, 0, 0, 0.07);
-
-    color: #3f4348;
-
-    font-size: 11px;
-    font-weight: 800;
-}
-
-
-/* DESKTOP */
-
-@media (min-width: 768px) {
-
-    .lac-featured-card {
-        flex-basis: 360px;
-    }
-
-}
-
-
-
-
-    /* =========================================================
-   #4 CARD PRESS / TAP FEEDBACK
-   Gives clickable LaC cards a physical touch response
-========================================================= */
-
-
-/* ---------------------------------------------------------
-   CATEGORY CARDS
---------------------------------------------------------- */
-
-.lac-category-card {
-    transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
-        opacity 0.16s ease;
-
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-.lac-category-card:active {
-    transform: scale(0.975);
-
-    box-shadow:
-        0 4px 14px
-        rgba(0, 0, 0, 0.14);
-
-    opacity: 0.96;
-}
-
-
-/* ---------------------------------------------------------
-   FEATURED NEAR YOU CARDS
---------------------------------------------------------- */
-
-.lac-featured-card {
-    transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
-        opacity 0.16s ease;
-
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-.lac-featured-card:active {
-    transform: scale(0.975);
-
-    box-shadow:
-        0 5px 16px
-        rgba(0, 0, 0, 0.14);
-
-    opacity: 0.96;
-}
-
-
-/* ---------------------------------------------------------
-   NEW NEAR YOU CARDS
---------------------------------------------------------- */
-
-.lac-new-card {
-    transition:
-        transform 0.16s ease,
-        box-shadow 0.16s ease,
-        opacity 0.16s ease;
-
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-.lac-new-card:active {
-    transform: scale(0.965);
-
-    box-shadow:
-        0 4px 12px
-        rgba(0, 0, 0, 0.12);
-
-    opacity: 0.95;
-}
-
-
-/* ---------------------------------------------------------
-   OPTIONAL DESKTOP HOVER
-   Only applies to devices that actually support hover.
---------------------------------------------------------- */
-
-@media (hover: hover) and (pointer: fine) {
-
-    .lac-category-card:hover,
-    .lac-featured-card:hover,
-    .lac-new-card:hover {
-        transform: translateY(-2px);
+        white-space: nowrap;
 
         box-shadow:
-            0 10px 26px
-            rgba(0, 0, 0, 0.13);
+            0 2px 8px
+            rgba(0, 0, 0, 0.12);
+
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
-}
 
 
-/* ---------------------------------------------------------
-   ACCESSIBILITY
-   Reduce movement when the user's device requests it.
---------------------------------------------------------- */
+    .lac-status-badge-new {
+        background: #ffffff !important;
 
-@media (prefers-reduced-motion: reduce) {
+        border-color:
+            rgba(0, 0, 0, 0.08) !important;
 
-    .lac-category-card,
-    .lac-featured-card,
+        color: #3f4348 !important;
+    }
+
+
+    /* =========================================
+       FORCE CATEGORY POSITIONING
+    ========================================== */
+
+    .lac-category-row .lac-category-title {
+        position: absolute !important;
+
+        left: 50% !important;
+        right: auto !important;
+
+        top: auto !important;
+        bottom: 4px !important;
+
+        transform:
+            translateX(-50%) !important;
+
+        text-align: center !important;
+
+        color: #fff4df !important;
+    }
+
+
+    .lac-category-row .lac-category-meta {
+        position: absolute !important;
+
+        top: 6px !important;
+        right: 6px !important;
+
+        bottom: auto !important;
+        left: auto !important;
+
+        transform: none !important;
+    }
+
+
+    .lac-category-row .lac-category-status {
+        position: absolute !important;
+
+        top: 6px !important;
+        right: 6px !important;
+
+        bottom: auto !important;
+        left: auto !important;
+
+        transform: none !important;
+    }
+
+
+    /* =========================================
+       NEW NEAR YOU
+    ========================================== */
+
+    .lac-new-nearby {
+        margin-bottom: 34px;
+    }
+
+
+    .lac-new-nearby-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 16px;
+
+        margin-bottom: 14px;
+    }
+
+
+    .lac-new-nearby-heading {
+        min-width: 0;
+    }
+
+
+    .lac-new-nearby-eyebrow {
+        margin:
+            0
+            0
+            5px;
+
+        color:
+            rgba(255, 255, 255, 0.43);
+
+        font-size: 9px;
+        font-weight: 800;
+
+        letter-spacing: 1px;
+    }
+
+
+    .lac-new-nearby-title {
+        margin: 0;
+
+        color: #ffffff;
+
+        font-size: 21px;
+        font-weight: 800;
+
+        line-height: 1.15;
+
+        letter-spacing: -0.3px;
+    }
+
+
+    .lac-new-nearby-hint {
+        flex: 0 0 auto;
+
+        color:
+            rgba(255, 255, 255, 0.52);
+
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+
+    /* =========================================
+       HORIZONTAL RAIL
+    ========================================== */
+
+    .lac-new-rail {
+        width:
+            calc(
+                100% + 16px
+            );
+
+        display: flex;
+
+        gap: 12px;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        margin-right: -16px;
+
+        padding:
+            2px
+            16px
+            12px
+            0;
+
+        box-sizing: border-box;
+
+        scroll-snap-type:
+            x mandatory;
+
+        scrollbar-width: none;
+
+        -webkit-overflow-scrolling:
+            touch;
+    }
+
+
+    .lac-new-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    /* =========================================
+       NEW LISTING CARD
+    ========================================== */
+
     .lac-new-card {
-        transition: none;
+        position: relative;
+
+        width: 210px;
+        min-width: 210px;
+
+        border-radius: 18px;
+
+        background: #f5f1e8;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.09);
+
+        color: #3f4348;
+
+        text-decoration: none;
+
+        overflow: hidden;
+
+        scroll-snap-align: start;
+
+        box-shadow:
+            0 5px 18px
+            rgba(0, 0, 0, 0.20);
+
+        -webkit-tap-highlight-color:
+            transparent;
+
+        transition:
+            transform 0.16s ease,
+            border-color 0.16s ease;
     }
 
-    .lac-category-card:active,
-    .lac-featured-card:active,
+
     .lac-new-card:active {
-        transform: none;
-    }
-}
-
-
-	/* =========================================================
-   #5 LAC IMAGE LOADING SKELETONS
-========================================================= */
-
-/*
-   Skeleton background used while an image is loading.
-*/
-.lac-image-loading {
-    position: relative;
-    overflow: hidden;
-
-    background: #eeeae2 !important;
-}
-
-
-/*
-   Soft shimmer layer.
-*/
-.lac-image-loading::after {
-    content: "";
-
-    position: absolute;
-    inset: 0;
-
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.35) 45%,
-        rgba(255, 255, 255, 0.65) 50%,
-        rgba(255, 255, 255, 0.35) 55%,
-        transparent 100%
-    );
-
-    transform: translateX(-100%);
-
-    animation:
-        lacSkeletonShimmer 1.5s ease-in-out infinite;
-
-    pointer-events: none;
-
-    z-index: 2;
-}
-
-
-/*
-   Images start slightly transparent.
-*/
-.lac-image-loading img {
-    opacity: 0;
-
-    transition:
-        opacity 0.35s ease;
-}
-
-
-/*
-   Image has successfully loaded.
-*/
-.lac-image-loaded {
-    background: transparent;
-}
-
-
-.lac-image-loaded::after {
-    display: none;
-}
-
-
-.lac-image-loaded img {
-    opacity: 1;
-}
-
-
-/*
-   Shimmer movement.
-*/
-@keyframes lacSkeletonShimmer {
-
-    0% {
-        transform: translateX(-100%);
+        transform:
+            scale(0.975);
     }
 
-    100% {
-        transform: translateX(100%);
+
+    .lac-new-card:hover {
+        border-color:
+            rgba(255, 255, 255, 0.22);
     }
 
-}
 
+    /* =========================================
+       NEW CARD IMAGE
+    ========================================== */
 
-/*
-   Respect reduced-motion preference.
-*/
-@media (prefers-reduced-motion: reduce) {
+    .lac-new-card-image {
+        position: relative;
 
-    .lac-image-loading::after {
-        animation: none;
+        width: 100%;
+        height: 125px;
+
+        background:
+            linear-gradient(
+                145deg,
+                #282b30,
+                #15171a
+            );
+
+        overflow: hidden;
     }
 
-}
 
+    .lac-new-card-image img {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+    }
+
+
+    .lac-new-card-image-fallback {
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 38px;
+
+        background:
+            linear-gradient(
+                145deg,
+                #272a2e,
+                #17191c
+            );
+    }
+
+
+    /* =========================================
+       NEW LABEL
+    ========================================== */
+
+    .lac-new-card-badge {
+        position: absolute;
+
+        top: 10px;
+        right: 10px;
+        left: auto;
+
+        padding: 6px 9px;
+
+        border-radius: 999px;
+
+        background: #ffffff !important;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08);
+
+        color: #3f4348 !important;
+
+        font-size: 9px;
+        font-weight: 800;
+
+        letter-spacing: 0.7px;
+
+        box-shadow:
+            0 2px 8px
+            rgba(0, 0, 0, 0.14);
+
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+
+    /* =========================================
+       NEW CARD CONTENT
+    ========================================== */
+
+    .lac-new-card-content {
+        padding:
+            13px
+            13px
+            14px;
+    }
+
+
+    .lac-new-card-category {
+        margin-bottom: 5px;
+
+        color:
+            rgba(63, 67, 72, 0.62);
+
+        font-size: 9px;
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.8px;
+    }
+
+
+    .lac-new-card-title {
+        display:
+            -webkit-box;
+
+        overflow: hidden;
+
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+
+        color: #3f4348;
+
+        font-size: 14px;
+        font-weight: 800;
+
+        line-height: 1.3;
+    }
+
+
+    .lac-new-card-business {
+        margin-top: 7px;
+
+        overflow: hidden;
+
+        color:
+            rgba(63, 67, 72, 0.72);
+
+        font-size: 10px;
+        font-weight: 600;
+
+        white-space: nowrap;
+
+        text-overflow: ellipsis;
+    }
+
+
+    /* =========================================
+       MOBILE
+    ========================================== */
+
+    @media (max-width: 480px) {
+
+        .lac-category-list {
+            gap: 15px;
+        }
+
+
+        .lac-category-row {
+            min-height: 195px;
+
+            padding: 19px;
+
+            gap: 13px;
+
+            border-radius: 20px;
+        }
+
+
+        .lac-category-title,
+        .lac-category-row .lac-category-title {
+            bottom: 3px !important;
+
+            font-size: 19px;
+
+            font-weight: 900;
+        }
+
+
+        .lac-category-meta,
+        .lac-category-row .lac-category-meta {
+            top: 5px !important;
+            right: 5px !important;
+
+            bottom: auto !important;
+            left: auto !important;
+
+            font-size: 9px;
+        }
+
+
+        .lac-category-status,
+        .lac-category-row .lac-category-status {
+            top: 5px !important;
+            right: 5px !important;
+
+            bottom: auto !important;
+            left: auto !important;
+        }
+
+
+        .lac-status-badge {
+            padding: 5px 8px;
+
+            font-size: 9px;
+        }
+
+
+        .lac-category-chevron {
+            width: 37px;
+            height: 37px;
+
+            flex: 0 0 37px;
+
+            font-size: 23px;
+        }
+
+    }
+
+
+    /* =========================================
+       VERY SMALL DEVICES
+    ========================================== */
+
+    @media (max-width: 360px) {
+
+        .lac-category-row {
+            min-height: 175px;
+
+            padding: 17px;
+
+            border-radius: 18px;
+        }
+
+
+        .lac-category-title,
+        .lac-category-row .lac-category-title {
+            bottom: 3px !important;
+
+            font-size: 17px;
+
+            font-weight: 900;
+        }
+
+
+        .lac-category-meta,
+        .lac-category-row .lac-category-meta {
+            top: 4px !important;
+            right: 4px !important;
+
+            bottom: auto !important;
+            left: auto !important;
+
+            font-size: 8px;
+        }
+
+
+        .lac-category-status,
+        .lac-category-row .lac-category-status {
+            top: 4px !important;
+            right: 4px !important;
+
+            bottom: auto !important;
+            left: auto !important;
+        }
+
+
+        .lac-status-badge {
+            padding: 5px 7px;
+
+            font-size: 8px;
+        }
+
+
+        .lac-category-chevron {
+            width: 34px;
+            height: 34px;
+
+            flex: 0 0 34px;
+
+            font-size: 21px;
+        }
+
+    }
+
+
+    /* =========================================
+       DESKTOP
+    ========================================== */
+
+    @media (min-width: 700px) {
+
+        .lac-category-list {
+            gap: 18px;
+        }
+
+
+        .lac-category-row {
+            min-height: 250px;
+
+            padding: 26px;
+
+            border-radius: 24px;
+        }
+
+
+        .lac-category-title,
+        .lac-category-row .lac-category-title {
+            bottom: 5px !important;
+
+            font-size: 24px;
+
+            font-weight: 900;
+        }
+
+
+        .lac-category-meta,
+        .lac-category-row .lac-category-meta {
+            top: 7px !important;
+            right: 7px !important;
+
+            bottom: auto !important;
+            left: auto !important;
+
+            font-size: 10px;
+        }
+
+
+        .lac-category-status,
+        .lac-category-row .lac-category-status {
+            top: 7px !important;
+            right: 7px !important;
+
+            bottom: auto !important;
+            left: auto !important;
+        }
+
+
+        .lac-category-chevron {
+            width: 42px;
+            height: 42px;
+
+            flex: 0 0 42px;
+        }
+
+    }
+
+
+    /* =========================================
+       FORCE CATEGORY BADGES WHITE
+    ========================================== */
+
+    .lac-category-status .lac-status-badge {
+        background: #ffffff !important;
+
+        color: #3f4348 !important;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08) !important;
+    }
+
+
+    .lac-category-status .lac-status-badge-new {
+        background: #ffffff !important;
+
+        color: #3f4348 !important;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08) !important;
+    }
+
+
+    /* =========================================
+       FORCE "NEW NEAR YOU" BADGE WHITE
+    ========================================== */
+
+    .lac-new-nearby
+    .lac-new-rail
+    .lac-new-card
+    .lac-new-card-image
+    .lac-new-card-badge {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+
+        color: #3f4348 !important;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.10) !important;
+
+        box-shadow:
+            0 2px 8px
+            rgba(0, 0, 0, 0.15) !important;
+
+        opacity: 1 !important;
+    }
 
 
     /* =========================================================
-   #6 LAC MOBILE ACTION BAR
-   🔔 Alerts + 🌐 LaC
-========================================================= */
+       FEATURED LOCAL CONTENT
+    ========================================================= */
 
-
-/* ---------------------------------------------------------
-   FIXED BOTTOM BAR
---------------------------------------------------------- */
-
-.lac-mobile-action-bar {
-    position: fixed;
-
-    left: 50%;
-    bottom: 12px;
-
-    transform: translateX(-50%);
-
-    width: calc(100% - 24px);
-    max-width: 520px;
-
-    height: 66px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-
-    padding:
-        0
-        max(12px, env(safe-area-inset-right))
-        env(safe-area-inset-bottom)
-        max(12px, env(safe-area-inset-left));
-
-    background: transparent !important;
-
-    border: none !important;
-
-
-    
-
-    box-shadow: none !important;
-
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-
-    z-index: 1000;
-}
-
-
-/* ---------------------------------------------------------
-   BUTTON
---------------------------------------------------------- */
-
-.lac-mobile-action {
-    flex: 1;
-
-    min-width: 0;
-    height: 100%;
-
-	background: transparent !important;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    gap: 3px;
-
-    border-radius: 16px;
-
-    color: #3f4348;
-
-    text-decoration: none;
-
-    -webkit-tap-highlight-color: transparent;
-
-    touch-action: manipulation;
-
-    transition:
-        transform 0.15s ease,
-        background-color 0.15s ease;
-}
-
-
-/* ---------------------------------------------------------
-   ICON
---------------------------------------------------------- */
-
-.lac-mobile-action-icon {
-    display: block;
-
-    font-size: 21px;
-
-    line-height: 1;
-}
-
-
-/* ---------------------------------------------------------
-   TEXT
---------------------------------------------------------- */
-
-.lac-mobile-action-label {
-    display: block;
-
-    color: #3f4348;
-
-    font-size: 10px;
-    font-weight: 800;
-
-    line-height: 1;
-
-    letter-spacing: 0.25px;
-}
-
-
-/* ---------------------------------------------------------
-   CENTER DIVIDER
---------------------------------------------------------- */
-
-.lac-mobile-action-divider {
-    width: 1px;
-    height: 30px;
-
-    flex-shrink: 0;
-
-    background:
-        rgba(63, 67, 72, 0.12);
-}
-
-
-/* ---------------------------------------------------------
-   TAP FEEDBACK
---------------------------------------------------------- */
-
-.lac-mobile-action:active {
-    transform: scale(0.94);
-
-    background:
-        rgba(245, 241, 232, 0.9);
-}
-
-
-/* ---------------------------------------------------------
-   DESKTOP HOVER
---------------------------------------------------------- */
-
-@media (hover: hover) and (pointer: fine) {
-
-    .lac-mobile-action:hover {
-            background: transparent !important;
-            opacity: 0.75;
+    .lac-featured-section {
+        margin-top: 28px;
+        margin-bottom: 30px;
     }
 
-}
+
+    /* HEADER */
+
+    .lac-featured-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 16px;
+
+        margin-bottom: 14px;
+    }
 
 
-/* ---------------------------------------------------------
-   ACCESSIBILITY
---------------------------------------------------------- */
+    .lac-featured-eyebrow {
+        margin-bottom: 5px;
 
-@media (prefers-reduced-motion: reduce) {
+        color:
+            rgba(63, 67, 72, 0.68);
+
+        font-size: 10px;
+        font-weight: 900;
+
+        letter-spacing: 1.2px;
+    }
+
+
+    .lac-featured-title {
+        margin: 0;
+
+        color: #3f4348;
+
+        font-size: 22px;
+        font-weight: 800;
+
+        line-height: 1.1;
+    }
+
+
+    .lac-featured-hint {
+        flex-shrink: 0;
+
+        color:
+            rgba(63, 67, 72, 0.58);
+
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+    /* HORIZONTAL CAROUSEL */
+
+    .lac-featured-rail {
+        display: flex;
+
+        gap: 14px;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        padding: 2px 2px 12px;
+
+        scroll-snap-type: x mandatory;
+
+        scrollbar-width: none;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+
+    .lac-featured-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    /* CARD */
+
+    .lac-featured-card {
+        position: relative;
+
+        flex: 0 0 88%;
+
+        max-width: 390px;
+
+        overflow: hidden;
+
+        border-radius: 20px;
+
+        background: #ffffff;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08);
+
+        color: #3f4348;
+
+        text-decoration: none;
+
+        scroll-snap-align: start;
+
+        box-shadow:
+            0 8px 24px
+            rgba(0, 0, 0, 0.10);
+
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease;
+    }
+
+
+    .lac-featured-card:active {
+        transform: scale(0.985);
+    }
+
+
+    /* IMAGE */
+
+    .lac-featured-image {
+        position: relative;
+
+        width: 100%;
+        height: 210px;
+
+        overflow: hidden;
+
+        background: #ece8df;
+    }
+
+
+    .lac-featured-image img {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+    }
+
+
+    .lac-featured-image-fallback {
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #f5f1e8;
+
+        font-size: 64px;
+    }
+
+
+    /* FEATURED BADGE */
+
+    .lac-featured-badge {
+        position: absolute;
+
+        top: 12px;
+        right: 12px;
+
+        padding: 7px 10px;
+
+        border-radius: 999px;
+
+        background: #ffffff !important;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08);
+
+        color: #3f4348 !important;
+
+        font-size: 9px;
+        font-weight: 900;
+
+        line-height: 1;
+
+        letter-spacing: 0.7px;
+
+        box-shadow:
+            0 3px 10px
+            rgba(0, 0, 0, 0.14);
+
+        z-index: 3;
+    }
+
+
+    /* CARD INFORMATION */
+
+    .lac-featured-content {
+        padding: 17px;
+    }
+
+
+    .lac-featured-category {
+        margin-bottom: 6px;
+
+        color:
+            rgba(63, 67, 72, 0.62);
+
+        font-size: 10px;
+        font-weight: 900;
+
+        letter-spacing: 0.9px;
+
+        text-transform: uppercase;
+    }
+
+
+    .lac-featured-item-title {
+        margin-bottom: 8px;
+
+        color: #3f4348;
+
+        font-size: 19px;
+        font-weight: 850;
+
+        line-height: 1.2;
+    }
+
+
+    .lac-featured-meta {
+        margin-top: 5px;
+
+        color:
+            rgba(63, 67, 72, 0.72);
+
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+
+    .lac-featured-price {
+        display: inline-block;
+
+        margin-top: 10px;
+
+        padding: 6px 9px;
+
+        border-radius: 8px;
+
+        background: #f5f1e8;
+
+        color: #3f4348;
+
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+
+    /* VIEW DETAILS */
+
+    .lac-featured-view {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-top: 15px;
+        padding-top: 13px;
+
+        border-top:
+            1px solid
+            rgba(0, 0, 0, 0.07);
+
+        color: #3f4348;
+
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+
+    /* DESKTOP */
+
+    @media (min-width: 768px) {
+
+        .lac-featured-card {
+            flex-basis: 360px;
+        }
+
+    }
+
+
+    /* =========================================================
+       #4 CARD PRESS / TAP FEEDBACK
+    ========================================================= */
+
+
+    /* CATEGORY CARDS */
+
+    .lac-category-card {
+        transition:
+            transform 0.16s ease,
+            box-shadow 0.16s ease,
+            opacity 0.16s ease;
+
+        -webkit-tap-highlight-color: transparent;
+
+        touch-action: manipulation;
+    }
+
+
+    .lac-category-card:active {
+        transform: scale(0.975);
+
+        box-shadow:
+            0 4px 14px
+            rgba(0, 0, 0, 0.14);
+
+        opacity: 0.96;
+    }
+
+
+    /* FEATURED NEAR YOU CARDS */
+
+    .lac-featured-card {
+        transition:
+            transform 0.16s ease,
+            box-shadow 0.16s ease,
+            opacity 0.16s ease;
+
+        -webkit-tap-highlight-color: transparent;
+
+        touch-action: manipulation;
+    }
+
+
+    .lac-featured-card:active {
+        transform: scale(0.975);
+
+        box-shadow:
+            0 5px 16px
+            rgba(0, 0, 0, 0.14);
+
+        opacity: 0.96;
+    }
+
+
+    /* NEW NEAR YOU CARDS */
+
+    .lac-new-card {
+        transition:
+            transform 0.16s ease,
+            box-shadow 0.16s ease,
+            opacity 0.16s ease;
+
+        -webkit-tap-highlight-color: transparent;
+
+        touch-action: manipulation;
+    }
+
+
+    .lac-new-card:active {
+        transform: scale(0.965);
+
+        box-shadow:
+            0 4px 12px
+            rgba(0, 0, 0, 0.12);
+
+        opacity: 0.95;
+    }
+
+
+    /* DESKTOP HOVER */
+
+    @media (hover: hover) and (pointer: fine) {
+
+        .lac-category-card:hover,
+        .lac-featured-card:hover,
+        .lac-new-card:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 10px 26px
+                rgba(0, 0, 0, 0.13);
+        }
+
+    }
+
+
+    /* ACCESSIBILITY */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .lac-category-card,
+        .lac-featured-card,
+        .lac-new-card {
+            transition: none;
+        }
+
+
+        .lac-category-card:active,
+        .lac-featured-card:active,
+        .lac-new-card:active {
+            transform: none;
+        }
+
+    }
+
+
+    /* =========================================================
+       #5 LAC IMAGE LOADING SKELETONS
+    ========================================================= */
+
+    .lac-image-loading {
+        position: relative;
+
+        overflow: hidden;
+
+        background: #eeeae2 !important;
+    }
+
+
+    .lac-image-loading::after {
+        content: "";
+
+        position: absolute;
+
+        inset: 0;
+
+        background:
+            linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.35) 45%,
+                rgba(255, 255, 255, 0.65) 50%,
+                rgba(255, 255, 255, 0.35) 55%,
+                transparent 100%
+            );
+
+        transform: translateX(-100%);
+
+        animation:
+            lacSkeletonShimmer
+            1.5s
+            ease-in-out
+            infinite;
+
+        pointer-events: none;
+
+        z-index: 2;
+    }
+
+
+    .lac-image-loading img {
+        opacity: 0;
+
+        transition:
+            opacity 0.35s ease;
+    }
+
+
+    .lac-image-loaded {
+        background: transparent;
+    }
+
+
+    .lac-image-loaded::after {
+        display: none;
+    }
+
+
+    .lac-image-loaded img {
+        opacity: 1;
+    }
+
+
+    @keyframes lacSkeletonShimmer {
+
+        0% {
+            transform: translateX(-100%);
+        }
+
+        100% {
+            transform: translateX(100%);
+        }
+
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .lac-image-loading::after {
+            animation: none;
+        }
+
+    }
+
+
+    /* =========================================================
+       #6 LAC MOBILE ACTION BAR
+       Alerts + LaC
+    ========================================================= */
+
+    .lac-mobile-action-bar {
+        position: fixed;
+
+        left: 50%;
+        bottom: 12px;
+
+        transform: translateX(-50%);
+
+        width: calc(100% - 24px);
+        max-width: 520px;
+
+        height: 66px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+
+        padding:
+            0
+            max(12px, env(safe-area-inset-right))
+            env(safe-area-inset-bottom)
+            max(12px, env(safe-area-inset-left));
+
+        background: transparent !important;
+
+        border: none !important;
+
+        box-shadow: none !important;
+
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+
+        z-index: 1000;
+    }
+
+
+    /* BUTTON */
 
     .lac-mobile-action {
-        transition: none;
+        flex: 1;
+
+        min-width: 0;
+        height: 100%;
+
+        background: transparent !important;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        gap: 3px;
+
+        border-radius: 16px;
+
+        color: #3f4348;
+
+        text-decoration: none;
+
+        -webkit-tap-highlight-color: transparent;
+
+        touch-action: manipulation;
+
+        transition:
+            transform 0.15s ease,
+            background-color 0.15s ease;
     }
+
+
+    /* ICON */
+
+    .lac-mobile-action-icon {
+        display: block;
+
+        font-size: 21px;
+
+        line-height: 1;
+    }
+
+
+    /* TEXT */
+
+    .lac-mobile-action-label {
+        display: block;
+
+        color: #3f4348;
+
+        font-size: 10px;
+        font-weight: 800;
+
+        line-height: 1;
+
+        letter-spacing: 0.25px;
+    }
+
+
+    /* CENTER DIVIDER */
+
+    .lac-mobile-action-divider {
+        width: 1px;
+        height: 30px;
+
+        flex-shrink: 0;
+
+        background:
+            rgba(63, 67, 72, 0.12);
+    }
+
+
+    /* TAP FEEDBACK */
 
     .lac-mobile-action:active {
         transform: scale(0.94);
-        background: transparent !important;
-        opacity: 0.65;
+
+        background:
+            rgba(245, 241, 232, 0.9);
     }
 
-}
 
+    /* DESKTOP HOVER */
 
-	/* =========================================================
-   SPACE FOR FIXED MOBILE BAR
-========================================================= */
+    @media (hover: hover) and (pointer: fine) {
 
-body {
-    padding-bottom:
-        calc(105px + env(safe-area-inset-bottom));
-}
+        .lac-mobile-action:hover {
+            background: transparent !important;
 
+            opacity: 0.75;
+        }
 
-
-	html {
-    scroll-behavior: smooth;
-}
-
-
-#lac-alerts {
-    scroll-margin-top: 24px;
-    scroll-margin-bottom: 100px;
-}
-
-
-	#lac-alerts:target {
-    animation:
-        lacAlertsHighlight 1.2s ease;
-}
-
-
-@keyframes lacAlertsHighlight {
-
-    0% {
-        box-shadow:
-            0 0 0 0
-            rgba(63, 67, 72, 0);
     }
 
-    35% {
-        box-shadow:
-            0 0 0 5px
-            rgba(63, 67, 72, 0.08);
+
+    /* ACCESSIBILITY */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .lac-mobile-action {
+            transition: none;
+        }
+
+
+        .lac-mobile-action:active {
+            transform: scale(0.94);
+
+            background: transparent !important;
+
+            opacity: 0.65;
+        }
+
     }
 
-    100% {
-        box-shadow:
-            0 0 0 0
-            rgba(63, 67, 72, 0);
+
+    /* =========================================================
+       SPACE FOR FIXED MOBILE BAR
+    ========================================================= */
+
+    body {
+        padding-bottom:
+            calc(
+                105px
+                +
+                env(safe-area-inset-bottom)
+            );
     }
 
-}
+
+    html {
+        scroll-behavior: smooth;
+    }
 
 
+    #lac-alerts {
+        scroll-margin-top: 24px;
+        scroll-margin-bottom: 100px;
+    }
 
+
+    #lac-alerts:target {
+        animation:
+            lacAlertsHighlight
+            1.2s
+            ease;
+    }
+
+
+    @keyframes lacAlertsHighlight {
+
+        0% {
+            box-shadow:
+                0 0 0 0
+                rgba(63, 67, 72, 0);
+        }
+
+        35% {
+            box-shadow:
+                0 0 0 5px
+                rgba(63, 67, 72, 0.08);
+        }
+
+        100% {
+            box-shadow:
+                0 0 0 0
+                rgba(63, 67, 72, 0);
+        }
+
+    }
+
+
+    /* =========================================
+       PWA INSTALL SECTION
+    ========================================== */
 
     .lac-install-section[hidden] {
-       display: none !important;
+        display: none !important;
     }
 
+</style>
 
-     #lac-install-button {
-    display: inline-flex;
-}
-
-#lac-install-button[hidden] {
-    display: none !important;
-}
-
-#lac-installed-message[hidden] {
-    display: none !important;
-}
-
-    </style>
 
 
 <!-- =========================================
