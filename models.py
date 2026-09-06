@@ -721,6 +721,163 @@ class ContentItem(db.Model):
             claim.status == "pending"
             for claim in self.claims
         )
+
+class ListingClaim(db.Model):
+
+    __tablename__ = "listing_claims"
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # LISTING BEING CLAIMED
+    # ========================================================
+
+    content_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "content_items.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # CLAIMANT INFORMATION
+    # ========================================================
+
+    claimant_name = db.Column(
+        db.String(120),
+        nullable=False,
+    )
+
+    business_name = db.Column(
+        db.String(200),
+        nullable=False,
+    )
+
+    phone = db.Column(
+        db.String(50),
+        nullable=False,
+    )
+
+    email = db.Column(
+        db.String(255),
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # OWNERSHIP / VERIFICATION INFORMATION
+    # ========================================================
+    #
+    # The claimant can explain how they are connected
+    # to the business.
+    #
+    # Later we can add proof-file uploads without changing
+    # the basic claim workflow.
+    #
+    # ========================================================
+
+    proof_notes = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # REVIEW STATUS
+    # ========================================================
+    #
+    # pending
+    # approved
+    # rejected
+    #
+    # ========================================================
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+
+    # ========================================================
+    # ADMIN REVIEW
+    # ========================================================
+
+    admin_notes = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    reviewed_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIP
+    # ========================================================
+
+    content_item = db.relationship(
+        "ContentItem",
+        back_populates="claims",
+    )
+
+
+    # ========================================================
+    # STATUS HELPERS
+    # ========================================================
+
+    @property
+    def is_pending(self):
+
+        return (
+            self.status
+            == "pending"
+        )
+
+
+    @property
+    def is_approved(self):
+
+        return (
+            self.status
+            == "approved"
+        )
+
+
+    @property
+    def is_rejected(self):
+
+        return (
+            self.status
+            == "rejected"
+        )
 # ============================================================
 # PENDING SUBMISSION
 # ============================================================
