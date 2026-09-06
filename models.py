@@ -334,7 +334,6 @@ class AccessPoint(db.Model):
 # ============================================================
 # CONTENT ITEM
 # ============================================================
-
 class ContentItem(db.Model):
 
     __tablename__ = "content_items"
@@ -351,6 +350,10 @@ class ContentItem(db.Model):
     )
 
 
+    # ========================================================
+    # CATEGORY / CONTENT CLASSIFICATION
+    # ========================================================
+
     category = db.Column(
         db.String(50),
         nullable=False,
@@ -361,7 +364,25 @@ class ContentItem(db.Model):
         nullable=True,
         index=True,
     )
-     
+
+
+    # ========================================================
+    # LISTING LEVEL / OWNERSHIP
+    # ========================================================
+    #
+    # listing_level:
+    #
+    # discovery = Kalxa/publicly seeded listing
+    # business  = claimed/business-controlled listing
+    # promotion = paid/promoted listing
+    #
+    # ownership_status:
+    #
+    # unclaimed = no approved owner yet
+    # claimed   = approved business owner
+    #
+    # ========================================================
+
     listing_level = db.Column(
         db.String(30),
         nullable=False,
@@ -381,7 +402,12 @@ class ContentItem(db.Model):
         nullable=False,
         default=False,
     )
-   
+
+
+    # ========================================================
+    # LIFETIME / AVAILABILITY
+    # ========================================================
+
     lifetime_type = db.Column(
         db.String(30),
         nullable=True,
@@ -396,12 +422,20 @@ class ContentItem(db.Model):
     )
 
 
+    # ========================================================
+    # NOTIFICATION ELIGIBILITY
+    # ========================================================
+
     notification_eligible = db.Column(
         db.Boolean,
         nullable=False,
         default=False,
     )
 
+
+    # ========================================================
+    # BASIC LISTING INFORMATION
+    # ========================================================
 
     title = db.Column(
         db.String(200),
@@ -423,6 +457,11 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
+
+    # ========================================================
+    # BUSINESS FEATURES
+    # ========================================================
+
     price = db.Column(
         db.String(50),
         nullable=True,
@@ -432,7 +471,7 @@ class ContentItem(db.Model):
         db.String(100),
         nullable=True,
     )
-    
+
     opening_hours = db.Column(
         db.String(255),
         nullable=True,
@@ -458,6 +497,16 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
+
+    # ========================================================
+    # IMAGES
+    # ========================================================
+
+    image_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
     image_url_2 = db.Column(
         db.String(500),
         nullable=True,
@@ -468,14 +517,10 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-    image_url = db.Column(
-        db.String(500),
-        nullable=True,
-    )
 
-    # --------------------------------------------------------
+    # ========================================================
     # ARCHIVING
-    # --------------------------------------------------------
+    # ========================================================
 
     archived = db.Column(
         db.Boolean,
@@ -488,6 +533,11 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
+
+    # ========================================================
+    # GENERAL DATES
+    # ========================================================
+
     start_date = db.Column(
         db.Date,
         nullable=True,
@@ -498,9 +548,10 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-    # --------------------------------------------------------
+
+    # ========================================================
     # EVENT-SPECIFIC DATES
-    # --------------------------------------------------------
+    # ========================================================
 
     publish_from = db.Column(
         db.Date,
@@ -517,9 +568,10 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-    # --------------------------------------------------------
+
+    # ========================================================
     # DISPLAY / STATUS
-    # --------------------------------------------------------
+    # ========================================================
 
     featured = db.Column(
         db.Boolean,
@@ -542,54 +594,133 @@ class ContentItem(db.Model):
         default=datetime.utcnow,
     )
 
-    # --------------------------------------------------------
+
+    # ========================================================
+    # CLAIM RELATIONSHIP
+    # ========================================================
+    #
+    # One ContentItem can receive multiple claim attempts.
+    #
+    # Example:
+    #
+    # ContentItem
+    #     ↓
+    # Claim #1 — rejected
+    # Claim #2 — approved
+    #
+    # We intentionally keep claim history rather than storing
+    # only one claim on the listing.
+    #
+    # ========================================================
+
+    claims = db.relationship(
+        "ListingClaim",
+        back_populates="content_item",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+    # ========================================================
     # LIFECYCLE HELPERS
-    # --------------------------------------------------------
+    # ========================================================
 
     @property
     def is_time_specific(self):
+
         return (
             self.lifetime_type
             == "time_specific"
         )
 
+
     @property
     def is_until_unavailable(self):
+
         return (
             self.lifetime_type
             == "until_unavailable"
         )
 
+
     @property
     def is_ongoing(self):
+
         return (
             self.lifetime_type
             == "ongoing"
         )
 
+
     @property
     def is_recurring(self):
+
         return (
             self.lifetime_type
             == "recurring"
         )
 
+
     @property
     def is_available(self):
+
         return (
             self.availability_status
             == "available"
         )
+
+
+    # ========================================================
+    # LISTING LEVEL HELPERS
+    # ========================================================
+
     def can_use_business_features(self):
+
         return self.listing_level in {
-           "business",
-           "promotion",
+            "business",
+            "promotion",
         }
 
 
     def can_use_promotion_features(self):
-        return self.listing_level == "promotion"
 
+        return (
+            self.listing_level
+            == "promotion"
+        )
+
+
+    # ========================================================
+    # CLAIM HELPERS
+    # ========================================================
+
+    def can_be_claimed(self):
+        """
+        Only an unclaimed Discovery listing can enter
+        the public claim workflow.
+        """
+
+        return (
+            self.listing_level
+            == "discovery"
+            and self.ownership_status
+            == "unclaimed"
+        )
+
+
+    def has_pending_claim(self):
+        """
+        Returns True when this listing already has a
+        pending claim waiting for admin review.
+
+        This can later be used to prevent duplicate
+        claim submissions.
+        """
+
+        return any(
+            claim.status == "pending"
+            for claim in self.claims
+        )
 # ============================================================
 # PENDING SUBMISSION
 # ============================================================
