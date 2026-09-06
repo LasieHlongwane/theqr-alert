@@ -411,17 +411,26 @@
 
         .lac-category-title {
             color: #3f4348;
+            position: absolute;
+			left: 50%;
+			bottom: 14px;
+            transform: translateX(-50%);
+			z-index: 5;
+			width: calc(100% - 24px);
+		    text-align: center;
+			color: #ffffff;
+			font-size: 1rem;
+			font-weight: 800;
+			line-height: 1.2;
 
-            font-size: 21px;
-            font-weight: 800;
+			margin: 0;
 
             line-height: 1.18;
+			pointer-events: none;
 
             letter-spacing: -0.3px;
-
             text-shadow:
-                0 1px 3px
-                rgba(255, 255, 255, 0.70);
+                0 2px 5px rgba(0, 0, 0, 0.85);
         }
 
 
