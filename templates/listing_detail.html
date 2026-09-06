@@ -16,7 +16,7 @@
     >
 
     <title>
-        {{ item.title }} | LaC
+        {{ item.title }} | Kalxa
     </title>
 
 
@@ -44,7 +44,7 @@
 
     <meta
         name="application-name"
-        content="LaC"
+        content="Kalxa"
     >
 
     <meta
@@ -59,7 +59,7 @@
 
     <meta
         name="apple-mobile-web-app-title"
-        content="LaC"
+        content="Kalxa"
     >
 
     <meta
@@ -97,11 +97,11 @@
         <div class="public-brand-wrap">
 
             <div class="lac-brand">
-                LaC
+                Kalxa
             </div>
 
             <div class="lac-tagline">
-                LOCAL ACCESS. DELIVERED.
+                DISCOVER YOUR LOCAL CULTURE.
             </div>
 
         </div>
@@ -119,59 +119,130 @@
 
         <!-- =====================================
              GALLERY
+
+             DISCOVERY:
+             Maximum one image.
+
+             BUSINESS / PROMOTION:
+             Up to three images.
         ====================================== -->
 
-        {% if item.images %}
+        {% if item.can_use_business_features() %}
 
-        <div
-            class="
-                listing-detail-gallery
-                {% if item.images|length == 1 %}
-                    single
-                {% endif %}
-            "
-        >
 
-            {% for image in item.images[:3] %}
+            {% if item.images %}
 
-            <button
-                type="button"
-                data-image-url="{{ image.image_url }}"
-                data-image-alt="{{ item.title }}"
-                onclick="openImageModalFromButton(this)"
+            <div
+                class="
+                    listing-detail-gallery
+                    {% if item.images|length == 1 %}
+                        single
+                    {% endif %}
+                "
             >
 
-                <img
-                    src="{{ image.image_url }}"
-                    alt="{{ item.title }}"
+                {% for image in item.images[:3] %}
+
+                <button
+                    type="button"
+                    data-image-url="{{ image.image_url }}"
+                    data-image-alt="{{ item.title }}"
+                    onclick="openImageModalFromButton(this)"
                 >
 
-            </button>
+                    <img
+                        src="{{ image.image_url }}"
+                        alt="{{ item.title }}"
+                    >
 
-            {% endfor %}
+                </button>
 
-        </div>
+                {% endfor %}
+
+            </div>
 
 
-        {% elif item.image_url %}
+            {% elif item.image_url %}
 
-        <div class="listing-detail-gallery single">
+            <div class="listing-detail-gallery single">
 
-            <button
-                type="button"
-                data-image-url="{{ item.image_url }}"
-                data-image-alt="{{ item.title }}"
-                onclick="openImageModalFromButton(this)"
-            >
-
-                <img
-                    src="{{ item.image_url }}"
-                    alt="{{ item.title }}"
+                <button
+                    type="button"
+                    data-image-url="{{ item.image_url }}"
+                    data-image-alt="{{ item.title }}"
+                    onclick="openImageModalFromButton(this)"
                 >
 
-            </button>
+                    <img
+                        src="{{ item.image_url }}"
+                        alt="{{ item.title }}"
+                    >
 
-        </div>
+                </button>
+
+            </div>
+
+            {% endif %}
+
+
+        {% else %}
+
+
+            <!--
+                LEVEL 1 — DISCOVERY
+
+                Discovery listings may display one
+                basic discovery image only.
+            -->
+
+            {% if item.image_url %}
+
+            <div class="listing-detail-gallery single">
+
+                <button
+                    type="button"
+                    data-image-url="{{ item.image_url }}"
+                    data-image-alt="{{ item.title }}"
+                    onclick="openImageModalFromButton(this)"
+                >
+
+                    <img
+                        src="{{ item.image_url }}"
+                        alt="{{ item.title }}"
+                    >
+
+                </button>
+
+            </div>
+
+            {% elif item.images %}
+
+            {% set discovery_image = item.images|first %}
+
+            {% if discovery_image %}
+
+            <div class="listing-detail-gallery single">
+
+                <button
+                    type="button"
+                    data-image-url="{{ discovery_image.image_url }}"
+                    data-image-alt="{{ item.title }}"
+                    onclick="openImageModalFromButton(this)"
+                >
+
+                    <img
+                        src="{{ discovery_image.image_url }}"
+                        alt="{{ item.title }}"
+                    >
+
+                </button>
+
+            </div>
+
+            {% endif %}
+
+            {% endif %}
+
 
         {% endif %}
 
@@ -185,7 +256,15 @@
 
             <div class="listing-badge-row">
 
-                {% if item.featured %}
+
+                <!-- =================================
+                     LEVEL 3 — PROMOTION ONLY
+                ================================== -->
+
+                {% if
+                    item.can_use_promotion_features()
+                    and item.featured
+                %}
 
                 <span class="featured">
                     ⭐ FEATURED
@@ -237,6 +316,11 @@
             <div class="listing-detail-info-grid">
 
 
+                <!--
+                    LOCATION IS A DISCOVERY FEATURE.
+                    All levels can see it.
+                -->
+
                 {% if item.venue %}
 
                 <div>
@@ -254,7 +338,16 @@
                 {% endif %}
 
 
-                {% if item.price %}
+                <!-- =================================
+                     PRICE
+
+                     LEVEL 2 + LEVEL 3 ONLY
+                ================================== -->
+
+                {% if
+                    item.can_use_business_features()
+                    and item.price
+                %}
 
                 <div>
 
@@ -280,6 +373,12 @@
 
                 {% endif %}
 
+
+                <!-- =================================
+                     PUBLIC DATES
+
+                     Dates remain visible at all levels.
+                ================================== -->
 
                 {% if category.slug == "events" %}
 
@@ -362,10 +461,22 @@
 
 
             <!-- =================================
-                 CONTACT / USEFUL ACTIONS
+                 BUSINESS FEATURES
+
+                 LEVEL 2 — BUSINESS
+                 LEVEL 3 — PROMOTION
+
+                 Discovery listings cannot expose:
+                 - contact number
+                 - WhatsApp
+                 - phone call CTA
+                 - directions CTA
             ================================== -->
 
-            {% if item.contact or item.venue %}
+            {% if
+                item.can_use_business_features()
+                and (item.contact or item.venue)
+            %}
 
             <section class="listing-detail-contact">
 
@@ -392,13 +503,18 @@
 
                     <!-- =============================
                          WHATSAPP
+
+                         BUSINESS + PROMOTION
                     ============================== -->
 
                     {% if item.contact %}
 
                     <a
                         href="{{ item.contact|whatsapp_link }}"
-                        class="listing-action-button whatsapp-button"
+                        class="
+                            listing-action-button
+                            whatsapp-button
+                        "
                         target="_blank"
                         rel="noopener noreferrer"
                         data-lac-event="whatsapp_click"
@@ -411,13 +527,18 @@
 
                     <!-- =============================
                          PHONE CALL
+
+                         BUSINESS + PROMOTION
                     ============================== -->
 
                     {% if item.contact %}
 
                     <a
                         href="{{ item.contact|phone_link }}"
-                        class="listing-action-button call-button"
+                        class="
+                            listing-action-button
+                            call-button
+                        "
                         data-lac-event="call_click"
                     >
                         📞 Call
@@ -429,15 +550,19 @@
                     <!-- =============================
                          DIRECTIONS
 
-                         Uses the existing venue field.
-                         No directions_url DB field needed.
+                         BUSINESS + PROMOTION
+
+                         Uses existing venue field.
                     ============================== -->
 
                     {% if item.venue %}
 
                     <a
                         href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
-                        class="listing-action-button directions-button"
+                        class="
+                            listing-action-button
+                            directions-button
+                        "
                         target="_blank"
                         rel="noopener noreferrer"
                         data-lac-event="directions_click"
@@ -457,6 +582,11 @@
 
             <!-- =================================
                  SHARE
+
+                 AVAILABLE TO ALL LEVELS.
+
+                 Sharing Discovery listings helps
+                 grow Kalxa organically.
             ================================== -->
 
             <button
@@ -476,6 +606,16 @@
             ></div>
 
 
+            <!-- =================================
+                 CLAIM LISTING
+
+                 NOT ENABLED YET.
+
+                 We will add this after the
+                 /claim/<item_id> workflow exists.
+            ================================== -->
+
+
         </article>
 
     </main>
@@ -488,11 +628,11 @@
     <footer class="public-footer">
 
         <div class="footer-brand">
-            LaC
+            Kalxa
         </div>
 
         <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
+            POWERED BY LaC
         </div>
 
         <div class="footer-zone">
@@ -632,7 +772,7 @@
                 document.title,
 
             text:
-                "View this listing on LaC.",
+                "View this listing on Kalxa.",
 
             url:
                 window.location.href
