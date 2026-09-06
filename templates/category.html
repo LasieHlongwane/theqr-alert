@@ -16,7 +16,7 @@
     >
 
     <title>
-        Kalxa
+        {{ category.name }} | Kalxa
     </title>
 
 
@@ -44,7 +44,7 @@
 
     <meta
         name="application-name"
-        content="LaC"
+        content="Kalxa"
     >
 
     <meta
@@ -59,7 +59,7 @@
 
     <meta
         name="apple-mobile-web-app-title"
-        content="LaC"
+        content="Kalxa"
     >
 
     <meta
@@ -82,22 +82,21 @@
 
 
     <!-- =========================================
-         DATE DISPLAY
-
-         Kept local to category.html so it does not
-         affect other LaC pages.
+         CATEGORY PAGE LOCAL CSS
     ========================================== -->
 
     <style>
 
+        /* =========================================================
+           DATE DISPLAY
+        ========================================================= */
+
         .listing-date-strip {
             display: flex;
             align-items: center;
-
             gap: 11px;
 
             margin: 14px 0 4px;
-
             padding: 12px 14px;
 
             box-sizing: border-box;
@@ -152,7 +151,6 @@
             font-weight: 800;
 
             line-height: 1.2;
-
             letter-spacing: 0.8px;
 
             text-transform: uppercase;
@@ -197,317 +195,315 @@
             }
 
         }
-		
-		
-		/* =========================================================
-   #10 BETTER EMPTY STATES
-========================================================= */
 
-.lac-empty-state {
-    width: 100%;
-    max-width: 460px;
 
-    margin: 32px auto 50px;
-    padding: 34px 24px;
+        /* =========================================================
+           BETTER EMPTY STATES
+        ========================================================= */
 
-    box-sizing: border-box;
+        .lac-empty-state {
+            width: 100%;
+            max-width: 460px;
 
-    text-align: center;
+            margin: 32px auto 50px;
+            padding: 34px 24px;
 
-    background: #ffffff;
+            box-sizing: border-box;
 
-    border: 1px solid
-        rgba(0, 0, 0, 0.07);
+            text-align: center;
 
-    border-radius: 24px;
+            background: #ffffff;
 
-    box-shadow:
-        0 10px 30px
-        rgba(0, 0, 0, 0.07);
-}
+            border:
+                1px solid
+                rgba(0, 0, 0, 0.07);
 
+            border-radius: 24px;
 
-/* CATEGORY ICON */
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, 0.07);
+        }
 
-.lac-empty-icon-wrap {
-    width: 84px;
-    height: 84px;
 
-    margin: 0 auto 20px;
+        .lac-empty-icon-wrap {
+            width: 84px;
+            height: 84px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+            margin: 0 auto 20px;
 
-    background: #f5f1e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-    border: 1px solid
-        rgba(0, 0, 0, 0.05);
+            background: #f5f1e8;
 
-    border-radius: 50%;
-}
+            border:
+                1px solid
+                rgba(0, 0, 0, 0.05);
 
+            border-radius: 50%;
+        }
 
-.lac-empty-icon {
-    display: block;
 
-    font-size: 38px;
-    line-height: 1;
-}
+        .lac-empty-icon {
+            display: block;
 
+            font-size: 38px;
+            line-height: 1;
+        }
 
-/* NOTHING HERE YET */
 
-.lac-empty-eyebrow {
-    margin-bottom: 8px;
+        .lac-empty-eyebrow {
+            margin-bottom: 8px;
 
-    color:
-        rgba(63, 67, 72, 0.52);
+            color:
+                rgba(63, 67, 72, 0.52);
 
-    font-size: 9px;
-    font-weight: 900;
+            font-size: 9px;
+            font-weight: 900;
 
-    letter-spacing: 1.4px;
-}
+            letter-spacing: 1.4px;
+        }
 
 
-/* MAIN TITLE */
+        .lac-empty-title {
+            max-width: 340px;
 
-.lac-empty-title {
-    max-width: 340px;
+            margin:
+                0
+                auto
+                10px;
 
-    margin:
-        0
-        auto
-        10px;
+            color: #3f4348;
 
-    color: #3f4348;
+            font-size: 21px;
+            font-weight: 850;
 
-    font-size: 21px;
-    font-weight: 850;
+            line-height: 1.25;
+        }
 
-    line-height: 1.25;
-}
 
+        .lac-empty-message {
+            max-width: 350px;
 
-/* DESCRIPTION */
+            margin:
+                0
+                auto
+                23px;
 
-.lac-empty-message {
-    max-width: 350px;
+            color:
+                rgba(63, 67, 72, 0.70);
 
-    margin:
-        0
-        auto
-        23px;
+            font-size: 13px;
+            font-weight: 500;
 
-    color:
-        rgba(63, 67, 72, 0.70);
+            line-height: 1.55;
+        }
 
-    font-size: 13px;
-    font-weight: 500;
 
-    line-height: 1.55;
-}
+        /* =========================================================
+           PRIMARY — GET ALERTS
+        ========================================================= */
 
+        .lac-empty-primary {
+            width: 100%;
+            max-width: 280px;
 
-/* =========================================================
-   PRIMARY — GET ALERTS
-========================================================= */
+            min-height: 48px;
 
-.lac-empty-primary {
-    width: 100%;
-    max-width: 280px;
+            margin: 0 auto;
 
-    min-height: 48px;
+            box-sizing: border-box;
 
-    margin: 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
-    box-sizing: border-box;
+            gap: 8px;
 
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+            padding: 12px 18px;
 
-    gap: 8px;
+            background: #f5f1e8 !important;
 
-    padding: 12px 18px;
+            border:
+                1px solid
+                rgba(63, 67, 72, 0.10);
 
-    background: #f5f1e8 !important;
+            border-radius: 14px;
 
-	border: 1px solid
-      rgba(63, 67, 72, 0.10);
+            color: #3f4348 !important;
 
-    border-radius: 14px;
+            text-decoration: none;
 
-    color: #3f4348 !important;
+            font-size: 12px;
+            font-weight: 800;
 
-    text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
 
-    font-size: 12px;
-    font-weight: 800;
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease;
+        }
 
-    -webkit-tap-highlight-color: transparent;
 
-    transition:
-        transform 0.15s ease,
-        opacity 0.15s ease;
-}
+        .lac-empty-primary:active {
+            transform: scale(0.97);
+            opacity: 0.86;
+        }
 
 
-.lac-empty-primary:active {
-    transform: scale(0.97);
-    opacity: 0.86;
-}
+        /* =========================================================
+           ADD A LISTING
+        ========================================================= */
 
+        .lac-empty-contribute {
+            margin-top: 24px;
+            padding-top: 20px;
 
-/* =========================================================
-   ADD A LISTING
-========================================================= */
+            border-top:
+                1px solid
+                rgba(0, 0, 0, 0.07);
 
-.lac-empty-contribute {
-    margin-top: 24px;
-    padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
 
-    border-top: 1px solid
-        rgba(0, 0, 0, 0.07);
+            gap: 7px;
+        }
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 
-    gap: 7px;
-}
+        .lac-empty-contribute-text {
+            color:
+                rgba(63, 67, 72, 0.62);
 
+            font-size: 11px;
+            font-weight: 600;
 
-.lac-empty-contribute-text {
-    color:
-        rgba(63, 67, 72, 0.62);
+            line-height: 1.4;
+        }
 
-    font-size: 11px;
-    font-weight: 600;
 
-    line-height: 1.4;
-}
+        .lac-empty-secondary {
+            display: inline-block;
 
+            padding: 5px 8px;
 
-.lac-empty-secondary {
-    display: inline-block;
+            color: #3f4348;
 
-    padding: 5px 8px;
+            text-decoration: none;
 
-    color: #3f4348;
+            font-size: 12px;
+            font-weight: 850;
 
-    text-decoration: none;
+            border-bottom:
+                1px solid
+                rgba(63, 67, 72, 0.28);
 
-    font-size: 12px;
-    font-weight: 850;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    border-bottom: 1px solid
-        rgba(63, 67, 72, 0.28);
 
-    -webkit-tap-highlight-color: transparent;
-}
+        .lac-empty-secondary:active {
+            opacity: 0.60;
+        }
 
 
-.lac-empty-secondary:active {
-    opacity: 0.60;
-}
+        /* =========================================================
+           EXPLORE OTHER CATEGORIES
+        ========================================================= */
 
+        .lac-empty-explore {
+            display: inline-block;
 
-/* =========================================================
-   EXPLORE OTHER CATEGORIES
-========================================================= */
+            margin-top: 22px;
 
-.lac-empty-explore {
-    display: inline-block;
+            color:
+                rgba(63, 67, 72, 0.62);
 
-    margin-top: 22px;
+            text-decoration: none;
 
-    color:
-        rgba(63, 67, 72, 0.62);
+            font-size: 11px;
+            font-weight: 700;
 
-    text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    font-size: 11px;
-    font-weight: 700;
 
-    -webkit-tap-highlight-color: transparent;
-}
+        .lac-empty-explore:active {
+            opacity: 0.55;
+        }
 
 
-.lac-empty-explore:active {
-    opacity: 0.55;
-}
+        /* DESKTOP */
 
+        @media (hover: hover) and (pointer: fine) {
 
-/* DESKTOP */
+            .lac-empty-primary:hover {
+                opacity: 0.88;
+            }
 
-@media (hover: hover) and (pointer: fine) {
 
-    .lac-empty-primary:hover {
-        opacity: 0.88;
-    }
+            .lac-empty-secondary:hover,
+            .lac-empty-explore:hover {
+                opacity: 0.65;
+            }
 
-    .lac-empty-secondary:hover,
-    .lac-empty-explore:hover {
-        opacity: 0.65;
-    }
+        }
 
-}
 
+        /* SMALL MOBILE */
 
-/* SMALL MOBILE */
+        @media (max-width: 420px) {
 
-@media (max-width: 420px) {
+            .lac-empty-state {
+                margin-top: 24px;
 
-    .lac-empty-state {
-        margin-top: 24px;
+                padding:
+                    28px
+                    18px;
 
-        padding:
-            28px
-            18px;
+                border-radius: 20px;
+            }
 
-        border-radius: 20px;
-    }
 
+            .lac-empty-icon-wrap {
+                width: 74px;
+                height: 74px;
+            }
 
-    .lac-empty-icon-wrap {
-        width: 74px;
-        height: 74px;
-    }
 
+            .lac-empty-icon {
+                font-size: 34px;
+            }
 
-    .lac-empty-icon {
-        font-size: 34px;
-    }
 
+            .lac-empty-title {
+                font-size: 19px;
+            }
 
-    .lac-empty-title {
-        font-size: 19px;
-    }
 
+            .lac-empty-message {
+                font-size: 12px;
+            }
 
-    .lac-empty-message {
-        font-size: 12px;
-    }
+        }
 
-}
 
+        /* ACCESSIBILITY */
 
-/* ACCESSIBILITY */
+        @media (prefers-reduced-motion: reduce) {
 
-@media (prefers-reduced-motion: reduce) {
+            .lac-empty-primary {
+                transition: none;
+            }
 
-    .lac-empty-primary {
-        transition: none;
-    }
 
+            .lac-empty-primary:active {
+                transform: none;
+            }
 
-    .lac-empty-primary:active {
-        transform: none;
-    }
-
-}
+        }
 
     </style>
 
@@ -528,11 +524,11 @@
         <div class="public-brand-wrap">
 
             <div class="lac-brand">
-                LaC
+                Kalxa
             </div>
 
             <div class="lac-tagline">
-                LOCAL ACCESS. DELIVERED.
+                DISCOVER YOUR LOCAL CULTURE.
             </div>
 
         </div>
@@ -678,78 +674,155 @@
 
                     <!-- =================================
                          IMAGE GALLERY
+
+                         DISCOVERY:
+                         Maximum one image.
+
+                         BUSINESS / PROMOTION:
+                         Up to three images.
                     ================================== -->
 
-                    {% if item.images %}
+                    {% if item.can_use_business_features() %}
 
-                    <div
-                        class="
-                            content-gallery
-                            {% if item.images|length == 1 %}
-                                single-gallery
-                            {% elif item.images|length == 2 %}
-                                two-gallery
-                            {% endif %}
-                        "
-                    >
 
-                        {% for image in item.images[:3] %}
+                        {% if item.images %}
 
-                        <button
-                            type="button"
-                            class="gallery-image-button"
-                            data-image-url="{{ image.image_url }}"
-                            data-image-alt="{{ item.title }}"
-                            onclick="openImageModalFromButton(this)"
-                            aria-label="View {{ item.title }} image"
+                        <div
+                            class="
+                                content-gallery
+                                {% if item.images|length == 1 %}
+                                    single-gallery
+                                {% elif item.images|length == 2 %}
+                                    two-gallery
+                                {% endif %}
+                            "
                         >
 
-                            <img
-                                src="{{ image.image_url }}"
-                                alt="{{ item.title }}"
-                                loading="lazy"
+                            {% for image in item.images[:3] %}
+
+                            <button
+                                type="button"
+                                class="gallery-image-button"
+                                data-image-url="{{ image.image_url }}"
+                                data-image-alt="{{ item.title }}"
+                                onclick="openImageModalFromButton(this)"
+                                aria-label="View {{ item.title }} image"
                             >
 
-                            {% if
-                                loop.first
-                                and item.images|length > 1
-                            %}
+                                <img
+                                    src="{{ image.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
 
-                            <span class="gallery-count-badge">
-                                📷 {{ item.images|length }}
-                            </span>
+                                {% if
+                                    loop.first
+                                    and item.images|length > 1
+                                %}
 
-                            {% endif %}
+                                <span class="gallery-count-badge">
+                                    📷 {{ item.images|length }}
+                                </span>
 
-                        </button>
+                                {% endif %}
 
-                        {% endfor %}
+                            </button>
 
-                    </div>
+                            {% endfor %}
+
+                        </div>
 
 
-                    {% elif item.image_url %}
+                        {% elif item.image_url %}
 
-                    <div class="content-gallery single-gallery">
+                        <div class="content-gallery single-gallery">
 
-                        <button
-                            type="button"
-                            class="gallery-image-button"
-                            data-image-url="{{ item.image_url }}"
-                            data-image-alt="{{ item.title }}"
-                            onclick="openImageModalFromButton(this)"
-                            aria-label="View {{ item.title }} image"
-                        >
-
-                            <img
-                                src="{{ item.image_url }}"
-                                alt="{{ item.title }}"
-                                loading="lazy"
+                            <button
+                                type="button"
+                                class="gallery-image-button"
+                                data-image-url="{{ item.image_url }}"
+                                data-image-alt="{{ item.title }}"
+                                onclick="openImageModalFromButton(this)"
+                                aria-label="View {{ item.title }} image"
                             >
 
-                        </button>
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
 
-                    </div>
+                            </button>
+
+                        </div>
+
+                        {% endif %}
+
+
+                    {% else %}
+
+
+                        <!--
+                            LEVEL 1 — DISCOVERY
+
+                            Only one discovery image.
+                        -->
+
+                        {% if item.image_url %}
+
+                        <div class="content-gallery single-gallery">
+
+                            <button
+                                type="button"
+                                class="gallery-image-button"
+                                data-image-url="{{ item.image_url }}"
+                                data-image-alt="{{ item.title }}"
+                                onclick="openImageModalFromButton(this)"
+                                aria-label="View {{ item.title }} image"
+                            >
+
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
+
+                            </button>
+
+                        </div>
+
+
+                        {% elif item.images %}
+
+                        {% set discovery_image = item.images|first %}
+
+                        {% if discovery_image %}
+
+                        <div class="content-gallery single-gallery">
+
+                            <button
+                                type="button"
+                                class="gallery-image-button"
+                                data-image-url="{{ discovery_image.image_url }}"
+                                data-image-alt="{{ item.title }}"
+                                onclick="openImageModalFromButton(this)"
+                                aria-label="View {{ item.title }} image"
+                            >
+
+                                <img
+                                    src="{{ discovery_image.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
+
+                            </button>
+
+                        </div>
+
+                        {% endif %}
+
+                        {% endif %}
+
 
                     {% endif %}
 
@@ -760,7 +833,15 @@
 
                     <div class="listing-badge-row">
 
-                        {% if item.featured %}
+
+                        <!--
+                            FEATURED IS LEVEL 3 ONLY
+                        -->
+
+                        {% if
+                            item.can_use_promotion_features()
+                            and item.featured
+                        %}
 
                         <span class="featured">
                             ⭐ FEATURED
@@ -803,6 +884,9 @@
 
                     <!-- =================================
                          TITLE / BUSINESS
+
+                         DISCOVERY FEATURE:
+                         Visible at every level.
                     ================================== -->
 
                     <div class="listing-main-info">
@@ -835,11 +919,8 @@
                     <!-- =================================
                          PROMINENT DATE / AVAILABILITY
 
-                         EVENTS:
-                         event_date → event_end_date
-
-                         OTHER TIME-SPECIFIC CONTENT:
-                         start_date → end_date
+                         Dates are discovery information,
+                         so they remain visible at all levels.
                     ================================== -->
 
 
@@ -972,9 +1053,12 @@
                     <div class="listing-detail-grid">
 
 
-                        <!-- =================================
-                             LOCATION
-                        ================================== -->
+                        <!--
+                            LOCATION
+
+                            Discovery feature.
+                            Visible at every level.
+                        -->
 
                         {% if item.venue %}
 
@@ -1003,11 +1087,21 @@
 
                         <!-- =================================
                              PRICE
+
+                             LEVEL 2 + LEVEL 3 ONLY
                         ================================== -->
 
-                        {% if item.price %}
+                        {% if
+                            item.can_use_business_features()
+                            and item.price
+                        %}
 
-                        <div class="listing-detail-card listing-price-card">
+                        <div
+                            class="
+                                listing-detail-card
+                                listing-price-card
+                            "
+                        >
 
 
                             {% if category.slug == "property" %}
@@ -1078,6 +1172,11 @@
 
                     <!-- =================================
                          VIEW DETAILS
+
+                         ALL LEVELS
+
+                         Discovery listings remain useful
+                         and discoverable.
                     ================================== -->
 
                     <div class="listing-card-primary-action">
@@ -1097,9 +1196,14 @@
 
                     <!-- =================================
                          QUICK CONTACT
+
+                         LEVEL 2 + LEVEL 3 ONLY
                     ================================== -->
 
-                    {% if item.contact %}
+                    {% if
+                        item.can_use_business_features()
+                        and item.contact
+                    %}
 
                     <div class="listing-contact">
 
@@ -1126,22 +1230,38 @@
 
                         <div class="listing-actions">
 
+
+                            <!-- WHATSAPP -->
+
                             <a
                                 href="{{ item.contact|whatsapp_link }}"
-                                class="listing-action-button whatsapp-button"
+                                class="
+                                    listing-action-button
+                                    whatsapp-button
+                                "
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                data-lac-event="whatsapp_click"
+                                data-content-item-id="{{ item.id }}"
                             >
                                 💬 WhatsApp
                             </a>
 
 
+                            <!-- CALL -->
+
                             <a
                                 href="{{ item.contact|phone_link }}"
-                                class="listing-action-button call-button"
+                                class="
+                                    listing-action-button
+                                    call-button
+                                "
+                                data-lac-event="call_click"
+                                data-content-item-id="{{ item.id }}"
                             >
                                 📞 Call
                             </a>
+
 
                         </div>
 
@@ -1158,8 +1278,9 @@
 
             {% else %}
 
+
                 <!-- =================================
-                     #10 BETTER EMPTY STATE
+                     BETTER EMPTY STATE
                 ================================== -->
 
                 <div class="lac-empty-state">
@@ -1191,7 +1312,7 @@
 
                                 🏠
 
-                            {% elif category.slug == "local-restaurants" %}
+                            {% elif category.slug in ["local-restaurants", "restaurants"] %}
 
                                 🍔
 
@@ -1214,8 +1335,6 @@
                     </div>
 
 
-                    <!-- SMALL LABEL -->
-
                     <div class="lac-empty-eyebrow">
                         NOTHING HERE YET
                     </div>
@@ -1229,35 +1348,35 @@
 
                         {% if category.slug in ["local-events", "events"] %}
 
-                             Hade! No upcoming events right now
+                            Hade! No upcoming events right now
 
                         {% elif category.slug == "discount-deals" %}
 
-                             Askies! No local specials right now
+                            Askies! No local specials right now
 
                         {% elif category.slug == "jobs" %}
 
-                             askies! No opportunities listed right now
+                            Askies! No opportunities listed right now
 
                         {% elif category.slug == "property" %}
 
                             No properties available right now
 
-                        {% elif category.slug == "restaurants" %}
+                        {% elif category.slug in ["local-restaurants", "restaurants"] %}
 
                             Askies! No restaurants listed here yet
 
                         {% elif category.slug == "services" %}
 
-                             hade! No local services listed yet
+                            Hade! No local services listed yet
 
                         {% elif category.slug == "beauty-salon" %}
 
-                             Askies. No beauty listings available right now
+                            Askies. No beauty listings available right now
 
                         {% else %}
 
-                            Hade ! No listings available right now
+                            Hade! No listings available right now
 
                         {% endif %}
 
@@ -1290,7 +1409,7 @@
                             New rooms, houses and property listings
                             around {{ zone.name }} will appear here.
 
-                        {% elif category.slug == "local-restaurants" %}
+                        {% elif category.slug in ["local-restaurants", "restaurants"] %}
 
                             Local restaurants and food businesses around
                             {{ zone.name }} will appear here.
@@ -1308,7 +1427,7 @@
                         {% else %}
 
                             New {{ category.name|lower }} listings around
-                            {{ zone.name }} will appear here soon .
+                            {{ zone.name }} will appear here soon.
 
                         {% endif %}
 
@@ -1316,7 +1435,11 @@
 
 
                     <!-- =================================
-                         PRIMARY CTA — ALERTS
+                         PRIMARY CTA — USER ALERTS
+
+                         This is a USER subscription CTA.
+                         It is not a business promotional
+                         notification permission.
                     ================================== -->
 
                     <a
@@ -1350,7 +1473,7 @@
 
                                 Get Property Alerts
 
-                            {% elif category.slug == "local-restaurants" %}
+                            {% elif category.slug in ["local-restaurants", "restaurants"] %}
 
                                 Get Food Alerts
 
@@ -1398,7 +1521,7 @@
 
                                 Have a property available?
 
-                            {% elif category.slug == "local-restaurants" %}
+                            {% elif category.slug in ["local-restaurants", "restaurants"] %}
 
                                 Own a local food business?
 
@@ -1455,7 +1578,16 @@
 
 
         <!-- =========================================
-             PHONE NOTIFICATIONS
+             USER NOTIFICATIONS
+
+             Important:
+             This allows users to subscribe to Kalxa
+             updates. It does NOT mean Discovery or
+             Business listings can send promotional
+             notifications.
+
+             Business campaign sending will later be
+             restricted to Promotion level in backend.
         ========================================== -->
 
         <section class="public-notification-link">
@@ -1490,13 +1622,14 @@
 
 
         <!-- =========================================
-             MAIN LAC WEBSITE
+             MAIN LaC WEBSITE
         ========================================== -->
 
         <section class="public-website-link">
 
             <p>
-                For more information, please visit our website.
+                Learn more about LaC and the infrastructure
+                powering Kalxa.
             </p>
 
             <a
@@ -1505,7 +1638,7 @@
                 rel="noopener noreferrer"
                 class="public-website-button"
             >
-                Visit our Website
+                Visit LaC
             </a>
 
         </section>
@@ -1521,11 +1654,11 @@
     <footer class="public-footer">
 
         <div class="footer-brand">
-            KALXA || LaC
+            Kalxa
         </div>
 
         <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
+            POWERED BY LaC
         </div>
 
         <div class="footer-zone">
@@ -1533,7 +1666,6 @@
         </div>
 
     </footer>
-
 
 </div>
 
@@ -1588,6 +1720,7 @@
             imageUrl,
             altText
         );
+
     }
 
 
@@ -1630,6 +1763,7 @@
 
         document.body.style.overflow =
             "hidden";
+
     }
 
 
@@ -1662,13 +1796,16 @@
 
 
         if (image) {
+
             image.src = "";
             image.alt = "";
+
         }
 
 
         document.body.style.overflow =
             "";
+
     }
 
 
@@ -1679,7 +1816,9 @@
             if (
                 event.key === "Escape"
             ) {
+
                 closeImageModal();
+
             }
 
         }
@@ -1871,6 +2010,10 @@ window.LAC_ENGAGEMENT_CONFIG = {
 </script>
 
 
+<!-- =========================================
+     ENGAGEMENT ENGINE
+========================================== -->
+
 <script
     src="{{ url_for(
         'static',
@@ -1879,13 +2022,19 @@ window.LAC_ENGAGEMENT_CONFIG = {
 ></script>
 
 
+<!-- =========================================
+     RECORD CATEGORY VIEW
+========================================== -->
+
 <script>
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        if (window.LaCTrack) {
+        if (
+            window.LaCTrack
+        ) {
 
             window.LaCTrack(
                 "category_view"
