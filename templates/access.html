@@ -410,33 +410,35 @@
 
 
         .lac-category-title {
-    position: absolute;
+           position: absolute;
 
-    left: 50%;
-    bottom: 14px;
+           left: 50%;
+           bottom: 5px;
 
-    transform: translateX(-50%);
+           transform: translateX(-50%);
 
-    z-index: 5;
+           z-index: 5;
 
-    width: calc(100% - 24px);
+           width: calc(100% - 16px);
 
-    text-align: center;
+		   margin: 0;
+  
+           text-align: center;
 
-    color: #ffffff;
+           color: #fff4df;
 
-    font-size: 1rem;
+           font-size: 1.08rem;
 
     /* BOLD CATEGORY TEXT */
-    font-weight: 900;
+           font-weight: 900;
+           letter-spacing: 0.5px;
+           line-height: 1.2;
 
-    line-height: 1.2;
+           text-shadow:
+           0 2px 6px rgba(0, 0, 0, 0.95);
 
-    text-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.95);
-
-    pointer-events: none;
-}
+           pointer-events: none;
+         }
 
 
         .lac-category-meta {
@@ -529,15 +531,24 @@
 ========================================== */
 
 .lac-category-status {
+    position: absolute;
+
+    top: 5px;
+    right: 5px;
+
+    z-index: 10;
+
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    justify-content: flex-end;
 
-    gap: 7px;
+    gap: 4px;
 
-    margin-top: 2px;
+    margin: 0;
+    padding: 0;
+
+    pointer-events: none;
 }
-
 
 .lac-status-badge {
     display: inline-flex;
