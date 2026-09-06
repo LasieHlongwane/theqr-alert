@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Claim {{ item.business_name or item.title }} | Kalxa
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            background:
+                radial-gradient(
+                    circle at top,
+                    #202329 0%,
+                    #111317 38%,
+                    #0b0c0e 100%
+                );
+            color: #fff4df;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 620px;
+            margin: 0 auto;
+            padding:
+                24px
+                18px
+                50px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .brand-name {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .brand-tagline {
+            margin-top: 5px;
+            color: #a9adb4;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 18px;
+            color: #c8cbd0;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .hero {
+            margin-bottom: 18px;
+        }
+
+        .eyebrow {
+            margin-bottom: 7px;
+            color: #a9adb4;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1.08;
+            letter-spacing: -0.7px;
+        }
+
+        .hero p {
+            margin:
+                12px
+                0
+                0;
+            color: #b7bbc1;
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .listing-card {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+
+            margin-bottom: 18px;
+            padding: 13px;
+
+            background: rgba(255, 255, 255, 0.055);
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.09);
+
+            border-radius: 18px;
+        }
+
+        .listing-image {
+            width: 70px;
+            height: 70px;
+            flex: 0 0 70px;
+
+            object-fit: cover;
+
+            border-radius: 14px;
+
+            background: #202329;
+        }
+
+        .listing-placeholder {
+            width: 70px;
+            height: 70px;
+            flex: 0 0 70px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            background: #202329;
+
+            font-size: 26px;
+        }
+
+        .listing-info {
+            min-width: 0;
+        }
+
+        .listing-info strong {
+            display: block;
+
+            overflow: hidden;
+
+            color: #fff4df;
+
+            font-size: 15px;
+            line-height: 1.25;
+
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .listing-info span {
+            display: block;
+            margin-top: 5px;
+
+            color: #9da1a8;
+
+            font-size: 12px;
+        }
+
+        .notice {
+            margin-bottom: 18px;
+            padding: 14px 15px;
+
+            background: rgba(255, 255, 255, 0.045);
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.08);
+
+            border-radius: 15px;
+
+            color: #bfc2c7;
+
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .notice strong {
+            color: #fff4df;
+        }
+
+        .errors {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+
+            background: rgba(180, 50, 50, 0.12);
+
+            border:
+                1px
+                solid
+                rgba(255, 100, 100, 0.24);
+
+            border-radius: 15px;
+        }
+
+        .errors strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .errors ul {
+            margin: 0;
+            padding-left: 18px;
+
+            color: #e2c3c3;
+
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .form-card {
+            padding: 20px;
+
+            background: rgba(255, 255, 255, 0.055);
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.09);
+
+            border-radius: 22px;
+
+            box-shadow:
+                0
+                20px
+                50px
+                rgba(0, 0, 0, 0.22);
+        }
+
+        .field {
+            margin-bottom: 17px;
+        }
+
+        .field:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 7px;
+
+            color: #e9e0d0;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .optional {
+            color: #777d85;
+            font-weight: 600;
+        }
+
+        .field input,
+        .field textarea {
+            width: 100%;
+
+            padding:
+                13px
+                14px;
+
+            background: #101216;
+
+            border:
+                1px
+                solid
+                #30343a;
+
+            border-radius: 12px;
+
+            outline: none;
+
+            color: #fff4df;
+
+            font: inherit;
+            font-size: 14px;
+
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        .field input:focus,
+        .field textarea:focus {
+            border-color: #70757d;
+
+            box-shadow:
+                0
+                0
+                0
+                3px
+                rgba(255, 255, 255, 0.05);
+        }
+
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: #666b72;
+        }
+
+        .field textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .help {
+            margin-top: 6px;
+
+            color: #777d85;
+
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .submit-button {
+            width: 100%;
+
+            margin-top: 22px;
+            padding: 15px;
+
+            border: 0;
+            border-radius: 14px;
+
+            background: #fff4df;
+            color: #101216;
+
+            cursor: pointer;
+
+            font-size: 14px;
+            font-weight: 900;
+
+            transition:
+                transform 0.12s ease,
+                opacity 0.12s ease;
+        }
+
+        .submit-button:active {
+            transform: scale(0.985);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        .review-note {
+            margin:
+                15px
+                3px
+                0;
+
+            color: #777d85;
+
+            text-align: center;
+
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .footer {
+            margin-top: 34px;
+
+            color: #6f747c;
+
+            text-align: center;
+
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .footer strong {
+            color: #9fa3a9;
+        }
+
+        @media (max-width: 480px) {
+
+            .page {
+                padding:
+                    20px
+                    14px
+                    40px;
+            }
+
+            .hero h1 {
+                font-size: 25px;
+            }
+
+            .form-card {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="brand">
+
+        <div class="brand-name">
+            Kalxa
+        </div>
+
+        <div class="brand-tagline">
+            Discover your local culture
+        </div>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('listing_detail', item_id=item.id) }}"
+        class="back-link"
+    >
+        ← Back to listing
+    </a>
+
+
+    <section class="hero">
+
+        <div class="eyebrow">
+            Business ownership
+        </div>
+
+        <h1>
+            Claim this listing
+        </h1>
+
+        <p>
+            If you own or manage this business,
+            submit your details below.
+            Kalxa will review your claim before
+            giving you control of the listing.
+        </p>
+
+    </section>
+
+
+    <div class="listing-card">
+
+        {% if item.image_url %}
+
+            <img
+                class="listing-image"
+                src="{{ item.image_url }}"
+                alt="{{ item.business_name or item.title }}"
+            >
+
+        {% else %}
+
+            <div class="listing-placeholder">
+                📍
+            </div>
+
+        {% endif %}
+
+
+        <div class="listing-info">
+
+            <strong>
+                {{ item.business_name or item.title }}
+            </strong>
+
+            {% if item.venue %}
+
+                <span>
+                    📍 {{ item.venue }}
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <div class="notice">
+
+        <strong>
+            What happens after you submit?
+        </strong>
+
+        <br>
+
+        Your claim will be marked as pending.
+        The listing will remain unchanged until
+        Kalxa reviews and approves the request.
+
+    </div>
+
+
+    {% if errors %}
+
+        <div class="errors">
+
+            <strong>
+                Please check the following:
+            </strong>
+
+            <ul>
+
+                {% for error in errors %}
+
+                    <li>
+                        {{ error }}
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    {% endif %}
+
+
+    <form
+        method="POST"
+        class="form-card"
+        id="claim-form"
+    >
+
+        <div class="field">
+
+            <label for="claimant_name">
+                Your name
+            </label>
+
+            <input
+                type="text"
+                id="claimant_name"
+                name="claimant_name"
+                value="{{ form_data.get('claimant_name', '') }}"
+                placeholder="Your full name"
+                maxlength="120"
+                autocomplete="name"
+                required
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="business_name">
+                Business name
+            </label>
+
+            <input
+                type="text"
+                id="business_name"
+                name="business_name"
+                value="{{ form_data.get('business_name', item.business_name or item.title) }}"
+                placeholder="Business name"
+                maxlength="200"
+                required
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="phone">
+                Contact number
+            </label>
+
+            <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value="{{ form_data.get('phone', '') }}"
+                placeholder="e.g. 079 123 4567"
+                maxlength="50"
+                autocomplete="tel"
+                required
+            >
+
+            <div class="help">
+                Kalxa may use this number to verify
+                your connection to the business.
+            </div>
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="email">
+
+                Email
+
+                <span class="optional">
+                    (optional)
+                </span>
+
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ form_data.get('email', '') }}"
+                placeholder="you@example.com"
+                maxlength="255"
+                autocomplete="email"
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="proof_notes">
+
+                How are you connected to this business?
+
+                <span class="optional">
+                    (optional)
+                </span>
+
+            </label>
+
+            <textarea
+                id="proof_notes"
+                name="proof_notes"
+                placeholder="For example: I am the owner, manager or authorised representative..."
+            >{{ form_data.get('proof_notes', '') }}</textarea>
+
+            <div class="help">
+                Do not enter passwords, banking details
+                or other sensitive information.
+            </div>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="submit-button"
+            id="submit-button"
+        >
+            Submit claim
+        </button>
+
+
+        <div class="review-note">
+            Submitting a claim does not automatically
+            give control of the listing.
+        </div>
+
+    </form>
+
+
+    <div class="footer">
+        KALXA · <strong>POWERED BY LaC</strong>
+    </div>
+
+</div>
+
+
+<script>
+    const claimForm =
+        document.getElementById(
+            "claim-form"
+        );
+
+    const submitButton =
+        document.getElementById(
+            "submit-button"
+        );
+
+
+    claimForm.addEventListener(
+        "submit",
+        function () {
+
+            submitButton.disabled = true;
+
+            submitButton.textContent =
+                "Submitting...";
+
+        }
+    );
+</script>
+
+</body>
+</html>
