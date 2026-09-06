@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Claim Submitted | Kalxa
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #202329 0%,
+                    #111317 40%,
+                    #0b0c0e 100%
+                );
+
+            color: #fff4df;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 560px;
+
+            margin: 0 auto;
+
+            padding:
+                60px
+                18px
+                45px;
+
+            text-align: center;
+        }
+
+        .brand {
+            margin-bottom: 38px;
+        }
+
+        .brand-name {
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .brand-tagline {
+            margin-top: 5px;
+
+            color: #999ea5;
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.7px;
+
+            text-transform: uppercase;
+        }
+
+        .status-icon {
+            width: 74px;
+            height: 74px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin:
+                0
+                auto
+                22px;
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.14);
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            font-size: 31px;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size: 28px;
+            line-height: 1.1;
+        }
+
+        .intro {
+            max-width: 440px;
+
+            margin:
+                13px
+                auto
+                25px;
+
+            color: #b4b8be;
+
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .claim-card {
+            margin-bottom: 22px;
+            padding: 19px;
+
+            background:
+                rgba(255, 255, 255, 0.055);
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.09);
+
+            border-radius: 19px;
+
+            text-align: left;
+        }
+
+        .label {
+            color: #777d84;
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+
+            text-transform: uppercase;
+        }
+
+        .value {
+            margin-top: 5px;
+
+            color: #fff4df;
+
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            margin-top: 15px;
+
+            padding:
+                6px
+                10px;
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.1);
+
+            border-radius: 999px;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            color: #d5d7da;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .steps {
+            margin-bottom: 25px;
+            padding: 18px;
+
+            border:
+                1px
+                solid
+                rgba(255, 255, 255, 0.07);
+
+            border-radius: 17px;
+
+            color: #aeb2b8;
+
+            text-align: left;
+
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .steps strong {
+            color: #fff4df;
+        }
+
+        .button {
+            display: block;
+
+            width: 100%;
+
+            padding: 14px 16px;
+
+            border-radius: 13px;
+
+            background: #fff4df;
+            color: #111317;
+
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .footer {
+            margin-top: 35px;
+
+            color: #6e737a;
+
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .footer strong {
+            color: #9ea2a8;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="brand">
+
+        <div class="brand-name">
+            Kalxa
+        </div>
+
+        <div class="brand-tagline">
+            Discover your local culture
+        </div>
+
+    </div>
+
+
+    <div class="status-icon">
+        ✓
+    </div>
+
+
+    <h1>
+        Claim submitted
+    </h1>
+
+
+    <p class="intro">
+        Your request has been received.
+        Kalxa will review the claim before
+        any ownership changes are made to
+        this listing.
+    </p>
+
+
+    <div class="claim-card">
+
+        <div class="label">
+            Listing
+        </div>
+
+        <div class="value">
+            {{ item.business_name or item.title }}
+        </div>
+
+
+        <div class="status">
+            ● Pending review
+        </div>
+
+    </div>
+
+
+    <div class="steps">
+
+        <strong>
+            What happens next?
+        </strong>
+
+        <br><br>
+
+        Kalxa reviews the information you submitted.
+
+        <br>
+
+        If the claim is approved, the listing can
+        move from a Discovery listing to a
+        business-controlled listing.
+
+        <br>
+
+        Until then, the public listing remains unchanged.
+
+    </div>
+
+
+    <a
+        href="{{ url_for('listing_detail', item_id=item.id) }}"
+        class="button"
+    >
+        Return to listing
+    </a>
+
+
+    <div class="footer">
+        KALXA · <strong>POWERED BY LaC</strong>
+    </div>
+
+</div>
+
+</body>
+</html>
