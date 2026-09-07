@@ -34,7 +34,7 @@ from models import (
     AccessPoint,
     QRScan,
     ContentItem,
-    ListingClaim
+    ListingClaim,
     PendingSubmission,
     PendingSubmissionImage,
     ContentImage,
