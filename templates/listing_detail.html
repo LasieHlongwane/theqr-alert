@@ -1588,7 +1588,11 @@ window.LAC_ENGAGEMENT_CONFIG = {
         {{ item.zone_id | tojson }},
 
     accessPointId:
-        null,
+        {% if access_point %}
+            {{ access_point.id | tojson }}
+        {% else %}
+            null
+        {% endif %},
 
     contentItemId:
         {{ item.id | tojson }},
