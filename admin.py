@@ -6403,14 +6403,6 @@ def create_content():
         )
 
 
-        # -------------------------------------------------
-        # Workflow determines whether this TYPE of content
-        # is technically eligible for notifications.
-        #
-        # Listing level below determines whether this
-        # specific listing has permission to use them.
-        # -------------------------------------------------
-
         workflow_notification_eligible = bool(
             workflow.get(
                 "notification_eligible",
@@ -6507,9 +6499,7 @@ def create_content():
                 "unclaimed"
             )
 
-            is_verified = (
-                False
-            )
+            is_verified = False
 
 
         else:
@@ -6560,19 +6550,13 @@ def create_content():
 
         else:
 
-            featured = (
-                False
-            )
+            featured = False
 
-            notification_eligible = (
-                False
-            )
+            notification_eligible = False
 
 
         # =================================================
         # BUSINESS FIELDS
-        #
-        # Only Business + Promotion can store/use these.
         # =================================================
 
         if (
@@ -6633,26 +6617,6 @@ def create_content():
             )
 
 
-            image_url_2 = (
-                request.form.get(
-                    "image_url_2",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            image_url_3 = (
-                request.form.get(
-                    "image_url_3",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
         else:
 
             opening_hours = None
@@ -6665,9 +6629,216 @@ def create_content():
 
             special_offer = None
 
-            image_url_2 = None
 
-            image_url_3 = None
+        # =================================================
+        # IMAGE UPLOADS
+        #
+        # Kalxa uses the existing ContentItem columns:
+        #
+        # image_url   = primary image
+        # image_url_2 = second image
+        # image_url_3 = third image
+        #
+        # Discovery:
+        #     maximum 1 image
+        #
+        # Business / Promotion:
+        #     maximum 3 images
+        # =================================================
+
+        uploaded_images = []
+
+
+        # -------------------------------------------------
+        # CURRENT MULTI-IMAGE FIELD
+        #
+        # <input name="images" multiple>
+        # -------------------------------------------------
+
+        for uploaded_file in request.files.getlist(
+            "images"
+        ):
+
+            if (
+                uploaded_file
+                and
+                uploaded_file.filename
+            ):
+
+                uploaded_images.append(
+                    uploaded_file
+                )
+
+
+        # -------------------------------------------------
+        # LEGACY SINGLE-IMAGE FIELD
+        #
+        # <input name="image">
+        #
+        # Keep support for older forms.
+        # -------------------------------------------------
+
+        legacy_image = (
+            request.files.get(
+                "image"
+            )
+        )
+
+
+        if (
+            legacy_image
+            and
+            legacy_image.filename
+        ):
+
+            # Only add it if the multi-image field
+            # did not already supply files.
+
+            if not uploaded_images:
+
+                uploaded_images.append(
+                    legacy_image
+                )
+
+
+        # =================================================
+        # IMAGE LIMIT BY LISTING LEVEL
+        # =================================================
+
+        if (
+            listing_level
+            == "discovery"
+        ):
+
+            maximum_images = 1
+
+        else:
+
+            maximum_images = 3
+
+
+        if (
+            len(uploaded_images)
+            > maximum_images
+        ):
+
+            if (
+                listing_level
+                == "discovery"
+            ):
+
+                message = (
+                    "Discovery listings can have "
+                    "a maximum of 1 image."
+                )
+
+            else:
+
+                message = (
+                    "You can upload a maximum "
+                    "of 3 images."
+                )
+
+
+            flash(
+                message,
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # UPLOAD IMAGES
+        # =================================================
+
+        uploaded_image_urls = []
+
+
+        try:
+
+            for uploaded_file in uploaded_images:
+
+                image_url = (
+                    upload_listing_image(
+                        uploaded_file
+                    )
+                )
+
+
+                if image_url:
+
+                    uploaded_image_urls.append(
+                        image_url
+                    )
+
+
+        except Exception as error:
+
+            current_app.logger.exception(
+                (
+                    "Content image upload failed. "
+                    "title=%s error=%s"
+                ),
+                title,
+                error,
+            )
+
+
+            flash(
+                f"Image upload failed: {error}",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # ASSIGN IMAGE URLS
+        #
+        # THIS IS THE IMPORTANT FIX.
+        #
+        # First uploaded image always becomes:
+        #
+        #     item.image_url
+        #
+        # which is what What's New uses.
+        # =================================================
+
+        primary_image_url = (
+            uploaded_image_urls[0]
+            if len(
+                uploaded_image_urls
+            ) >= 1
+            else None
+        )
+
+
+        second_image_url = (
+            uploaded_image_urls[1]
+            if len(
+                uploaded_image_urls
+            ) >= 2
+            else None
+        )
+
+
+        third_image_url = (
+            uploaded_image_urls[2]
+            if len(
+                uploaded_image_urls
+            ) >= 3
+            else None
+        )
 
 
         # =================================================
@@ -6739,6 +6910,10 @@ def create_content():
                 or None
             ),
 
+            # =============================================
+            # LISTING LEVEL
+            # =============================================
+
             listing_level=
                 listing_level,
 
@@ -6747,6 +6922,11 @@ def create_content():
 
             is_verified=
                 is_verified,
+
+
+            # =============================================
+            # BUSINESS FIELDS
+            # =============================================
 
             opening_hours=
                 opening_hours,
@@ -6763,17 +6943,49 @@ def create_content():
             special_offer=
                 special_offer,
 
-            image_url_2=
-                image_url_2,
 
-            image_url_3=
-                image_url_3,
+            # =============================================
+            # IMAGES
+            # =============================================
+
+            image_url=
+                primary_image_url,
+
+            image_url_2=(
+                second_image_url
+                if listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+                else None
+            ),
+
+            image_url_3=(
+                third_image_url
+                if listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+                else None
+            ),
+
+
+            # =============================================
+            # PROMOTION
+            # =============================================
 
             featured=
                 featured,
 
             notification_eligible=
                 notification_eligible,
+
+
+            # =============================================
+            # STATUS
+            # =============================================
 
             active=(
                 request.form.get(
@@ -6798,10 +7010,7 @@ def create_content():
 
 
         # =================================================
-        # ADD ITEM FIRST
-        #
-        # We need the ContentItem ID before creating
-        # ContentImage child records.
+        # SAVE CONTENT
         # =================================================
 
         try:
@@ -6810,218 +7019,6 @@ def create_content():
                 item
             )
 
-
-            db.session.flush()
-
-
-        except Exception as error:
-
-            db.session.rollback()
-
-
-            current_app.logger.exception(
-                (
-                    "Failed to create content item "
-                    "before image processing. "
-                    "error=%s"
-                ),
-                error,
-            )
-
-
-            flash(
-                "Content could not be created.",
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # LEGACY SINGLE IMAGE
-        # =================================================
-
-        uploaded_image = (
-            request.files.get(
-                "image"
-            )
-        )
-
-
-        if (
-            uploaded_image
-            and uploaded_image.filename
-        ):
-
-            try:
-
-                item.image_url = (
-                    upload_listing_image(
-                        uploaded_image
-                    )
-                )
-
-
-            except Exception as error:
-
-                db.session.rollback()
-
-
-                current_app.logger.exception(
-                    (
-                        "Legacy image upload failed. "
-                        "error=%s"
-                    ),
-                    error,
-                )
-
-
-                flash(
-                    f"Image upload failed: {error}",
-                    "error",
-                )
-
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-        # =================================================
-        # MULTI IMAGE UPLOAD
-        #
-        # content_form.html sends:
-        #
-        # <input name="images" multiple>
-        # =================================================
-
-        uploaded_images = (
-            request.files.getlist(
-                "images"
-            )
-        )
-
-
-        uploaded_images = [
-            image
-            for image in uploaded_images
-            if (
-                image
-                and image.filename
-            )
-        ]
-
-
-        # =================================================
-        # MAXIMUM 3 IMAGES
-        # =================================================
-
-        if (
-            len(uploaded_images)
-            > 3
-        ):
-
-            db.session.rollback()
-
-
-            flash(
-                (
-                    "You can upload a maximum "
-                    "of 3 images."
-                ),
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # UPLOAD MULTIPLE IMAGES
-        # =================================================
-
-        try:
-
-            for uploaded_file in uploaded_images:
-
-                image_url = (
-                    upload_listing_image(
-                        uploaded_file
-                    )
-                )
-
-
-                # -----------------------------------------
-                # This assumes your child image model is:
-                #
-                # ContentImage(
-                #     content_item_id=...,
-                #     image_url=...
-                # )
-                #
-                # If your existing image model has another
-                # class name, use that existing class here.
-                # -----------------------------------------
-
-                image_record = ContentImage(
-
-                    content_item_id=
-                        item.id,
-
-                    image_url=
-                        image_url,
-                )
-
-
-                db.session.add(
-                    image_record
-                )
-
-
-        except Exception as error:
-
-            db.session.rollback()
-
-
-            current_app.logger.exception(
-                (
-                    "Multi-image upload failed. "
-                    "content_item_id=%s error=%s"
-                ),
-                item.id,
-                error,
-            )
-
-
-            flash(
-                f"Image upload failed: {error}",
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # SAVE EVERYTHING
-        # =================================================
-
-        try:
 
             db.session.commit()
 
@@ -7034,8 +7031,9 @@ def create_content():
             current_app.logger.exception(
                 (
                     "Failed to create content item. "
-                    "error=%s"
+                    "title=%s error=%s"
                 ),
+                title,
                 error,
             )
 
@@ -7082,6 +7080,7 @@ def create_content():
         categories,
         None,
     )
+
 
 @admin_bp.route(
     "/content/<int:item_id>/edit",
