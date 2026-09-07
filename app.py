@@ -52,7 +52,10 @@ from models import (
 )
 import json
 from admin import admin_bp
-
+from pricing import (
+    PRICING_MODEL_PRESENCE,
+    PRICING_MODEL_CAMPAIGN,
+)
 
 # =========================================================
 # ENVIRONMENT
