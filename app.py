@@ -1771,21 +1771,28 @@ def listing_detail(
     )
 
 
+    # =====================================================
+    # ZONE
+    # =====================================================
+
     zone = item.zone
 
 
+    # =====================================================
+    # CATEGORY
+    # =====================================================
 
+    category = (
+        Category.query
+        .filter_by(
+            slug=item.category
+        )
+        .first()
+    )
 
 
     # =====================================================
     # ACCESS POINT ATTRIBUTION
-    #
-    # Example:
-    #
-    # /listing/27?ap=3
-    #
-    # We only accept the access point if it belongs
-    # to the same zone as the listing.
     # =====================================================
 
     access_point = None
@@ -1809,12 +1816,18 @@ def listing_detail(
         )
 
 
+    # =====================================================
+    # RENDER
+    # =====================================================
+
     return render_template(
         "listing_detail.html",
 
         item=item,
 
         zone=zone,
+
+        category=category,
 
         access_point=access_point,
     )
