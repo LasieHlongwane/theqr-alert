@@ -1816,8 +1816,6 @@ def listing_detail(
 
         zone=zone,
 
-        category=category,
-
         access_point=access_point,
     )
 
