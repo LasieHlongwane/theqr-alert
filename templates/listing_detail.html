@@ -82,10 +82,264 @@
 
 
     <!-- =========================================
-         CLAIM LISTING CSS
+         BUSINESS / CLAIM LISTING CSS
     ========================================== -->
 
     <style>
+
+        /* =========================================
+           BADGES
+        ========================================== */
+
+        .verified-business-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 4px;
+
+            padding:
+                6px
+                9px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.16
+                );
+
+            border-radius: 999px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.08
+                );
+
+            color: #fff4df;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.5px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        /* =========================================
+           BUSINESS INFORMATION
+        ========================================== */
+
+        .business-information {
+
+            margin-top: 22px;
+
+        }
+
+
+        .business-information-header {
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .business-information-eyebrow {
+
+            margin:
+                0
+                0
+                4px;
+
+            color: #858a91;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 1px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .business-information-title {
+
+            margin: 0;
+
+            color: #fff4df;
+
+            font-size: 18px;
+
+            font-weight: 900;
+
+        }
+
+
+        .business-information-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 10px;
+
+        }
+
+
+        .business-info-card {
+
+            padding: 14px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            border-radius: 14px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.035
+                );
+
+        }
+
+
+        .business-info-card.full {
+
+            grid-column:
+                1 / -1;
+
+        }
+
+
+        .business-info-label {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #858a91;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.6px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .business-info-value {
+
+            margin: 0;
+
+            color: #e7e8ea;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            line-height: 1.55;
+
+            white-space: pre-line;
+
+        }
+
+
+        /* =========================================
+           SPECIAL OFFER
+        ========================================== */
+
+        .listing-special-offer {
+
+            margin-top: 18px;
+
+            padding: 16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.15
+                );
+
+            border-radius: 16px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.06
+                );
+
+        }
+
+
+        .listing-special-offer-label {
+
+            margin-bottom: 6px;
+
+            color: #fff4df;
+
+            font-size: 10px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.8px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .listing-special-offer-text {
+
+            margin: 0;
+
+            color: #f0ede6;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            line-height: 1.55;
+
+            white-space: pre-line;
+
+        }
+
+
+        /* =========================================
+           CLAIM LISTING
+        ========================================== */
 
         .claim-listing-box {
 
@@ -262,6 +516,26 @@
 
         }
 
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .business-information-grid {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .business-info-card.full {
+
+                grid-column: auto;
+
+            }
+
+        }
+
     </style>
 
 </head>
@@ -346,23 +620,41 @@
             </div>
 
 
-            {% elif item.image_url %}
+            {% elif
+                item.image_url
+                or item.image_url_2
+                or item.image_url_3
+            %}
 
-            <div class="listing-detail-gallery single">
+            {% set business_gallery = [
+                item.image_url,
+                item.image_url_2,
+                item.image_url_3
+            ] %}
 
-                <button
-                    type="button"
-                    data-image-url="{{ item.image_url }}"
-                    data-image-alt="{{ item.title }}"
-                    onclick="openImageModalFromButton(this)"
-                >
+            <div class="listing-detail-gallery">
 
-                    <img
-                        src="{{ item.image_url }}"
-                        alt="{{ item.title }}"
+                {% for image_url in business_gallery %}
+
+                    {% if image_url %}
+
+                    <button
+                        type="button"
+                        data-image-url="{{ image_url }}"
+                        data-image-alt="{{ item.title }}"
+                        onclick="openImageModalFromButton(this)"
                     >
 
-                </button>
+                        <img
+                            src="{{ image_url }}"
+                            alt="{{ item.title }}"
+                        >
+
+                    </button>
+
+                    {% endif %}
+
+                {% endfor %}
 
             </div>
 
@@ -374,9 +666,6 @@
 
             <!-- =================================
                  LEVEL 1 — DISCOVERY
-
-                 Discovery listings may display
-                 one discovery image only.
             ================================== -->
 
             {% if item.image_url %}
@@ -446,9 +735,7 @@
             <div class="listing-badge-row">
 
 
-                <!-- =================================
-                     LEVEL 3 — PROMOTION ONLY
-                ================================== -->
+                <!-- LEVEL 3 — PROMOTION -->
 
                 {% if
                     item.can_use_promotion_features()
@@ -461,6 +748,22 @@
 
                 {% endif %}
 
+
+                <!-- VERIFIED BUSINESS -->
+
+                {% if
+                    item.can_use_business_features()
+                    and item.is_verified
+                %}
+
+                <span class="verified-business-badge">
+                    ✓ VERIFIED
+                </span>
+
+                {% endif %}
+
+
+                <!-- CATEGORY -->
 
                 <span class="listing-detail-category-badge">
 
@@ -487,7 +790,23 @@
             {% if item.business_name %}
 
             <div class="listing-detail-business">
+
                 {{ item.business_name }}
+
+                {% if
+                    item.can_use_business_features()
+                    and item.is_verified
+                %}
+
+                    <span
+                        title="Verified by Kalxa"
+                        aria-label="Verified by Kalxa"
+                    >
+                        ✓
+                    </span>
+
+                {% endif %}
+
             </div>
 
             {% endif %}
@@ -503,18 +822,13 @@
 
 
             <!-- =================================
-                 DETAILS
+                 CORE DETAILS
             ================================== -->
 
             <div class="listing-detail-info-grid">
 
 
-                <!-- =================================
-                     LOCATION
-
-                     Discovery feature.
-                     Visible at every level.
-                ================================== -->
+                <!-- LOCATION -->
 
                 {% if item.venue %}
 
@@ -533,11 +847,7 @@
                 {% endif %}
 
 
-                <!-- =================================
-                     PRICE
-
-                     BUSINESS + PROMOTION ONLY
-                ================================== -->
+                <!-- PRICE -->
 
                 {% if
                     item.can_use_business_features()
@@ -573,10 +883,30 @@
                 {% endif %}
 
 
+                <!-- OPENING HOURS -->
+
+                {% if
+                    item.can_use_business_features()
+                    and item.opening_hours
+                %}
+
+                <div>
+
+                    <span>
+                        🕒 Opening Hours
+                    </span>
+
+                    <strong>
+                        {{ item.opening_hours }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
                 <!-- =================================
                      PUBLIC DATES
-
-                     Visible at every level.
                 ================================== -->
 
                 {% if category.slug == "events" %}
@@ -660,21 +990,114 @@
 
 
             <!-- =================================
-                 BUSINESS FEATURES
+                 BUSINESS INFORMATION
 
-                 LEVEL 2 — BUSINESS
-                 LEVEL 3 — PROMOTION
-
-                 Discovery listings cannot expose:
-                 - contact number
-                 - WhatsApp
-                 - phone call CTA
-                 - directions CTA
+                 BUSINESS + PROMOTION ONLY
             ================================== -->
 
             {% if
                 item.can_use_business_features()
-                and (item.contact or item.venue)
+                and (
+                    item.menu_highlights
+                    or item.special_offer
+                )
+            %}
+
+            <section class="business-information">
+
+                <div class="business-information-header">
+
+                    <p class="business-information-eyebrow">
+                        BUSINESS DETAILS
+                    </p>
+
+                    <h2 class="business-information-title">
+                        What you should know
+                    </h2>
+
+                </div>
+
+
+                <div class="business-information-grid">
+
+
+                    {% if item.menu_highlights %}
+
+                    <div class="business-info-card full">
+
+                        <span class="business-info-label">
+
+                            {% if category.slug == "food" %}
+
+                                🍽️ Menu Highlights
+
+                            {% elif category.slug == "services" %}
+
+                                🛠️ Services
+
+                            {% elif category.slug == "property" %}
+
+                                🏠 Highlights
+
+                            {% else %}
+
+                                ✦ Highlights
+
+                            {% endif %}
+
+                        </span>
+
+                        <p class="business-info-value">
+                            {{ item.menu_highlights }}
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <!-- =============================
+                     SPECIAL OFFER
+                ============================== -->
+
+                {% if item.special_offer %}
+
+                <div class="listing-special-offer">
+
+                    <div class="listing-special-offer-label">
+                        🔥 Current Offer
+                    </div>
+
+                    <p class="listing-special-offer-text">
+                        {{ item.special_offer }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+            </section>
+
+            {% endif %}
+
+
+            <!-- =================================
+                 BUSINESS ACTIONS
+
+                 BUSINESS + PROMOTION ONLY
+            ================================== -->
+
+            {% if
+                item.can_use_business_features()
+                and (
+                    item.whatsapp_number
+                    or item.contact
+                    or item.directions_url
+                    or item.venue
+                )
             %}
 
             <section class="listing-detail-contact">
@@ -688,10 +1111,23 @@
                 </h2>
 
 
-                {% if item.contact %}
+                {% if
+                    item.whatsapp_number
+                    or item.contact
+                %}
 
                 <p>
-                    {{ item.contact }}
+
+                    {% if item.whatsapp_number %}
+
+                        {{ item.whatsapp_number }}
+
+                    {% else %}
+
+                        {{ item.contact }}
+
+                    {% endif %}
+
                 </p>
 
                 {% endif %}
@@ -702,12 +1138,25 @@
 
                     <!-- =============================
                          WHATSAPP
+
+                         Dedicated WhatsApp number
+                         takes priority over contact.
                     ============================== -->
 
-                    {% if item.contact %}
+                    {% if
+                        item.whatsapp_number
+                        or item.contact
+                    %}
 
                     <a
-                        href="{{ item.contact|whatsapp_link }}"
+                        href="{{
+                            (
+                                item.whatsapp_number
+                                if item.whatsapp_number
+                                else item.contact
+                            )
+                            | whatsapp_link
+                        }}"
                         class="
                             listing-action-button
                             whatsapp-button
@@ -724,6 +1173,9 @@
 
                     <!-- =============================
                          PHONE CALL
+
+                         General contact remains the
+                         primary phone number.
                     ============================== -->
 
                     {% if item.contact %}
@@ -744,9 +1196,27 @@
 
                     <!-- =============================
                          DIRECTIONS
+
+                         Dedicated URL takes priority.
                     ============================== -->
 
-                    {% if item.venue %}
+                    {% if item.directions_url %}
+
+                    <a
+                        href="{{ item.directions_url }}"
+                        class="
+                            listing-action-button
+                            directions-button
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-lac-event="directions_click"
+                    >
+                        🧭 Directions
+                    </a>
+
+
+                    {% elif item.venue %}
 
                     <a
                         href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
@@ -774,7 +1244,7 @@
             <!-- =================================
                  SHARE
 
-                 AVAILABLE TO ALL LEVELS.
+                 AVAILABLE TO ALL LEVELS
             ================================== -->
 
             <button
@@ -798,10 +1268,6 @@
                  CLAIM LISTING
 
                  DISCOVERY + UNCLAIMED ONLY
-
-                 If there is already a pending claim,
-                 visitors see the review status instead
-                 of another claim button.
             ================================== -->
 
             {% if
@@ -910,6 +1376,7 @@
         type="button"
         class="image-modal-close"
         onclick="closeImageModal()"
+        aria-label="Close image"
     >
         ×
     </button>
@@ -1092,9 +1559,6 @@
 
 
         } catch (error) {
-
-            // User cancelling the native share
-            // dialog is not an application error.
 
             if (
                 error.name !== "AbortError"
