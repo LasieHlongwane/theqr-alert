@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {{ item.title }} Analytics | Kalxa
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+
+    <style>
+
+        body {
+            background: #0b0c0e;
+            color: #f3f3f3;
+        }
+
+
+        .business-report {
+            width: min(1050px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 28px 0 60px;
+        }
+
+
+        .report-back {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #a7abb1;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+
+        .report-eyebrow {
+            margin: 0 0 5px;
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+
+        .report-header h1 {
+            margin: 0 0 6px;
+            font-size: 27px;
+        }
+
+
+        .report-business {
+            color: #a7abb1;
+            font-size: 12px;
+        }
+
+
+        .report-level {
+            padding: 7px 10px;
+            border: 1px solid rgba(255,255,255,.09);
+            border-radius: 999px;
+            color: #fff4df;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+
+        .range-links {
+            display: flex;
+            gap: 6px;
+            margin: 18px 0 26px;
+        }
+
+
+        .range-link {
+            padding: 8px 11px;
+            border: 1px solid rgba(255,255,255,.09);
+            border-radius: 9px;
+            color: #a7abb1;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+
+        .range-link.active {
+            background: #fff4df;
+            color: #111317;
+        }
+
+
+        .report-metrics {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 11px;
+        }
+
+
+        .report-metric {
+            padding: 17px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 15px;
+            background: rgba(255,255,255,.035);
+        }
+
+
+        .report-metric span {
+            display: block;
+            margin-bottom: 7px;
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+        }
+
+
+        .report-metric strong {
+            font-size: 24px;
+        }
+
+
+        .report-section {
+            margin-top: 30px;
+        }
+
+
+        .report-section h2 {
+            margin-bottom: 13px;
+            font-size: 18px;
+        }
+
+
+        .action-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+
+        .action-card {
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px;
+            background: rgba(255,255,255,.03);
+        }
+
+
+        .action-icon {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+
+        .action-card span {
+            display: block;
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+
+        .action-card strong {
+            display: block;
+            margin-top: 5px;
+            font-size: 22px;
+        }
+
+
+        .chart-box {
+            padding: 18px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 16px;
+            background: rgba(255,255,255,.025);
+        }
+
+
+        .chart {
+            height: 220px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+
+        .chart-column {
+            min-width: 18px;
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 5px;
+        }
+
+
+        .chart-bar-wrap {
+            width: 100%;
+            height: 175px;
+            display: flex;
+            align-items: flex-end;
+        }
+
+
+        .chart-bar {
+            width: 100%;
+            min-height: 2px;
+            border-radius: 5px 5px 2px 2px;
+            background: #fff4df;
+        }
+
+
+        .chart-label {
+            color: #747980;
+            font-size: 7px;
+            white-space: nowrap;
+        }
+
+
+        .best-day {
+            padding: 17px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px;
+        }
+
+
+        .best-day span {
+            display: block;
+            margin-bottom: 5px;
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+
+        .best-day strong {
+            font-size: 18px;
+        }
+
+
+        @media (max-width: 760px) {
+
+            .report-metrics,
+            .action-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+        }
+
+
+        @media (max-width: 430px) {
+
+            .report-header {
+                flex-direction: column;
+            }
+
+
+            .report-metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+
+
+            .action-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="business-report">
+
+
+    <a
+        href="{{ url_for(
+            'admin.business_analytics',
+            range=analytics_range.key
+        ) }}"
+        class="report-back"
+    >
+        ← Business Analytics
+    </a>
+
+
+    <!-- =====================================
+         HEADER
+    ====================================== -->
+
+    <div class="report-header">
+
+        <div>
+
+            <p class="report-eyebrow">
+                KALXA BUSINESS PERFORMANCE
+            </p>
+
+            <h1>
+                {{ item.title }}
+            </h1>
+
+            {% if item.business_name %}
+
+            <div class="report-business">
+                {{ item.business_name }}
+            </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="report-level">
+            {{ item.listing_level }}
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         RANGE
+    ====================================== -->
+
+    <div class="range-links">
+
+        {% for range_key, label in [
+            ("7d", "7 Days"),
+            ("30d", "30 Days"),
+            ("90d", "90 Days")
+        ] %}
+
+        <a
+            href="{{ url_for(
+                'admin.business_analytics_detail',
+                item_id=item.id,
+                range=range_key
+            ) }}"
+            class="
+                range-link
+                {% if analytics_range.key == range_key %}
+                    active
+                {% endif %}
+            "
+        >
+            {{ label }}
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- =====================================
+         PRIMARY METRICS
+    ====================================== -->
+
+    <section class="report-metrics">
+
+        <div class="report-metric">
+
+            <span>
+                Listing Views
+            </span>
+
+            <strong>
+                {{ analytics.listing_views }}
+            </strong>
+
+        </div>
+
+
+        <div class="report-metric">
+
+            <span>
+                Useful Actions
+            </span>
+
+            <strong>
+                {{ analytics.total_actions }}
+            </strong>
+
+        </div>
+
+
+        <div class="report-metric">
+
+            <span>
+                Action Rate
+            </span>
+
+            <strong>
+                {{ analytics.action_rate }}%
+            </strong>
+
+        </div>
+
+
+        <div class="report-metric">
+
+            <span>
+                Shares
+            </span>
+
+            <strong>
+                {{ analytics.share_clicks }}
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         ACTION BREAKDOWN
+    ====================================== -->
+
+    <section class="report-section">
+
+        <h2>
+            Customer Actions
+        </h2>
+
+
+        <div class="action-grid">
+
+            {% for action in analytics.action_breakdown %}
+
+            <div class="action-card">
+
+                <div class="action-icon">
+                    {{ action.icon }}
+                </div>
+
+                <span>
+                    {{ action.label }}
+                </span>
+
+                <strong>
+                    {{ action.count }}
+                </strong>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         DAILY VIEWS
+    ====================================== -->
+
+    <section class="report-section">
+
+        <h2>
+            Attention Over Time
+        </h2>
+
+
+        {% set max_views =
+            analytics.daily_views
+            | map(attribute='views')
+            | max
+            if analytics.daily_views
+            else 0
+        %}
+
+
+        <div class="chart-box">
+
+            <div class="chart">
+
+                {% for day in analytics.daily_views %}
+
+                    {% if max_views > 0 %}
+
+                        {% set height =
+                            (
+                                day.views
+                                / max_views
+                                * 100
+                            )
+                        %}
+
+                    {% else %}
+
+                        {% set height = 0 %}
+
+                    {% endif %}
+
+
+                    <div
+                        class="chart-column"
+                        title="{{ day.label }}: {{ day.views }} views"
+                    >
+
+                        <div class="chart-bar-wrap">
+
+                            <div
+                                class="chart-bar"
+                                style="height: {{ height }}%;"
+                            ></div>
+
+                        </div>
+
+
+                        {% if
+                            loop.index0 % 5 == 0
+                            or loop.last
+                        %}
+
+                        <span class="chart-label">
+                            {{ day.label }}
+                        </span>
+
+                        {% else %}
+
+                        <span class="chart-label">
+                            &nbsp;
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         BEST DAY
+    ====================================== -->
+
+    <section class="report-section">
+
+        <h2>
+            Attention Insight
+        </h2>
+
+
+        <div class="best-day">
+
+            <span>
+                Highest View Day
+            </span>
+
+
+            {% if analytics.best_day.views %}
+
+            <strong>
+                {{ analytics.best_day.label }}
+                ·
+                {{ analytics.best_day.views }}
+                views
+            </strong>
+
+            {% else %}
+
+            <strong>
+                Not enough activity yet
+            </strong>
+
+            {% endif %}
+
+        </div>
+
+    </section>
+
+
+</div>
+
+</body>
+
+</html>
