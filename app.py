@@ -1774,9 +1774,7 @@ def listing_detail(
     zone = item.zone
 
 
-    category = get_category_config(
-        item.category
-    )
+
 
 
     # =====================================================
