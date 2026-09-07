@@ -26,11 +26,173 @@
         ) }}"
     >
 
+    <style>
+
+        /* =========================================
+           LISTING LEVEL SECTIONS
+        ========================================== */
+
+        .listing-level-section {
+            margin-top: 24px;
+            padding: 20px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            border-radius: 16px;
+
+            background:
+                rgba(255, 255, 255, 0.025);
+        }
+
+
+        .listing-level-section h3 {
+            margin:
+                0
+                0
+                6px;
+        }
+
+
+        .listing-level-section .muted {
+            margin-bottom: 18px;
+        }
+
+
+        .business-listing-fields,
+        .promotion-fields {
+            margin-top: 18px;
+        }
+
+
+        .business-listing-fields textarea,
+        .promotion-fields textarea {
+            resize: vertical;
+        }
+
+
+        /* =========================================
+           SELECTED IMAGE PREVIEWS
+        ========================================== */
+
+        .selected-images-preview {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+
+        .selected-image-item {
+            position: relative;
+
+            overflow: hidden;
+
+            border-radius: 10px;
+
+            background: #111317;
+        }
+
+
+        .selected-image-item img {
+            display: block;
+
+            width: 100%;
+            height: 120px;
+
+            object-fit: cover;
+        }
+
+
+        .remove-selected-image {
+            position: absolute;
+
+            top: 6px;
+            right: 6px;
+
+            width: 28px;
+            height: 28px;
+
+            padding: 0;
+
+            border: 0;
+            border-radius: 50%;
+
+            background:
+                rgba(0, 0, 0, 0.75);
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 18px;
+            line-height: 28px;
+
+            text-align: center;
+        }
+
+
+        .form-section-divider {
+            margin:
+                22px
+                0;
+
+            border: 0;
+
+            border-top:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+        }
+
+
+        .field-help {
+            display: block;
+
+            margin-top: 5px;
+
+            opacity: 0.7;
+
+            font-size: 12px;
+
+            line-height: 1.45;
+        }
+
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .selected-images-preview {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body class="lac-admin-body">
 
 <div class="admin-shell">
+
+
+    <!-- =========================================
+         ADMIN NAVIGATION
+    ========================================== -->
 
     <nav class="admin-nav">
 
@@ -64,6 +226,14 @@
                 Content
             </a>
 
+            <a
+                href="{{ url_for(
+                    'admin.claims'
+                ) }}"
+            >
+                Listing Claims
+            </a>
+
         </div>
 
     </nav>
@@ -89,6 +259,10 @@
         </p>
 
 
+        <!-- =========================================
+             FLASH MESSAGES
+        ========================================== -->
+
         {% with messages = get_flashed_messages() %}
 
             {% for message in messages %}
@@ -109,6 +283,10 @@
         >
 
 
+            <!-- =====================================
+                 ZONE
+            ====================================== -->
+
             <label>
 
                 Zone
@@ -122,8 +300,10 @@
 
                     <option
                         value="{{ zone.id }}"
-                        {% if item
-                              and item.zone_id == zone.id %}
+                        {% if
+                            item
+                            and item.zone_id == zone.id
+                        %}
                             selected
                         {% endif %}
                     >
@@ -136,6 +316,10 @@
 
             </label>
 
+
+            <!-- =====================================
+                 CATEGORY
+            ====================================== -->
 
             <label>
 
@@ -151,8 +335,10 @@
 
                     <option
                         value="{{ category.slug }}"
-                        {% if item
-                              and item.category == category.slug %}
+                        {% if
+                            item
+                            and item.category == category.slug
+                        %}
                             selected
                         {% endif %}
                     >
@@ -171,6 +357,10 @@
 
             </label>
 
+
+            <!-- =====================================
+                 TITLE
+            ====================================== -->
 
             <label>
 
@@ -191,6 +381,10 @@
             </label>
 
 
+            <!-- =====================================
+                 DESCRIPTION
+            ====================================== -->
+
             <label>
 
                 Description
@@ -203,6 +397,10 @@
 
             </label>
 
+
+            <!-- =====================================
+                 BUSINESS
+            ====================================== -->
 
             <label>
 
@@ -222,6 +420,10 @@
             </label>
 
 
+            <!-- =====================================
+                 VENUE
+            ====================================== -->
+
             <label>
 
                 Venue / Location
@@ -240,6 +442,10 @@
             </label>
 
 
+            <!-- =====================================
+                 PRICE
+            ====================================== -->
+
             <label>
 
                 Price
@@ -257,6 +463,10 @@
 
             </label>
 
+
+            <!-- =====================================
+                 CONTACT
+            ====================================== -->
 
             <label>
 
@@ -296,15 +506,28 @@
 
                 </label>
 
+
                 <p class="muted">
                     You can upload up to 3 images.
-                    You may choose them together or add them one at a time.
-                    
+                    You may choose them together or
+                    add them one at a time.
                 </p>
 
-                <!-- EXISTING DATABASE IMAGES -->
 
-                
+                <!-- =================================
+                     NEWLY SELECTED IMAGE PREVIEW
+                ================================== -->
+
+                <div
+                    id="selected-images-preview"
+                    class="selected-images-preview"
+                ></div>
+
+
+                <!-- =================================
+                     EXISTING DATABASE IMAGES
+                ================================== -->
+
                 {% if item and item.images %}
 
                 <div class="content-image-preview">
@@ -339,6 +562,7 @@
 
                 </div>
 
+
                 {% elif item and item.image_url %}
 
                 <div class="content-image-preview">
@@ -366,6 +590,10 @@
 
             </div>
 
+
+            <!-- =====================================
+                 EVENT DATES
+            ====================================== -->
 
             <div
                 id="event-date-fields"
@@ -439,6 +667,10 @@
             </div>
 
 
+            <!-- =====================================
+                 GENERAL VALIDITY DATES
+            ====================================== -->
+
             <div
                 id="general-date-fields"
                 class="general-date-fields"
@@ -495,79 +727,370 @@
 
             </div>
 
-            <div class="form-group">
-              <label for="listing_level">
-                Listing Level
-              </label>
 
-              <select
-                name="listing_level"
-                id="listing_level"
-              >
-                <option
-                  value="discovery"
-                  {% if not item or item.listing_level == "discovery" %}
-                    selected
-                  {% endif %}
+            <!-- =====================================
+                 LISTING LEVEL
+            ====================================== -->
+
+            <section class="listing-level-section">
+
+                <h3>
+                    Listing Access Level
+                </h3>
+
+                <p class="muted">
+                    Controls which Kalxa business
+                    features this listing can use.
+                </p>
+
+
+                <div class="form-group">
+
+                    <label for="listing_level">
+                        Listing Level
+                    </label>
+
+                    <select
+                        name="listing_level"
+                        id="listing_level"
+                    >
+
+                        <option
+                            value="discovery"
+                            {% if
+                                not item
+                                or item.listing_level == "discovery"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Discovery — Free / Kalxa Seeded
+                        </option>
+
+
+                        <option
+                            value="business"
+                            {% if
+                                item
+                                and item.listing_level == "business"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Business — Claimed / Submitted
+                        </option>
+
+
+                        <option
+                            value="promotion"
+                            {% if
+                                item
+                                and item.listing_level == "promotion"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Promotion — Paid
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =================================
+                     VERIFIED BUSINESS
+                ================================== -->
+
+                <div
+                    id="verification-fields"
+                    class="form-group"
                 >
-                  Discovery — Free / Kalxa Seeded
-                </option>
 
-                <option
-                  value="business"
-                  {% if item and item.listing_level == "business" %}
-                     selected
-                  {% endif %}
-                >
-                  Business — Claimed / Submitted
-                </option>
+                    <label class="checkbox-label">
 
-                <option
-                  value="promotion"
-                  {% if item and item.listing_level == "promotion" %}
-                     selected
-                  {% endif %}
-                >
-                  Promotion — Paid
-                </option>
-              </select>
-            </div>
+                        <input
+                            type="checkbox"
+                            name="is_verified"
+                            {% if
+                                item
+                                and item.is_verified
+                            %}
+                                checked
+                            {% endif %}
+                        >
 
-            <div class="form-group">
-             <label>
-              <input
-               type="checkbox"
-               name="is_verified"
-               {% if item and item.is_verified %}
-                 checked
-               {% endif %}
-              >
-              Verified business
-             </label>
-            </div>
+                        Verified business
+
+                    </label>
+
+                    <span class="field-help">
+                        Use this after Kalxa has verified
+                        the business or approved its
+                        ownership claim.
+                    </span>
+
+                </div>
 
 
-            <label class="checkbox-label">
+                <!-- =================================
+                     BUSINESS DETAILS
 
-                <input
-                    type="checkbox"
-                    name="featured"
-                    {% if item and item.featured %}
-                        checked
-                    {% endif %}
+                     BUSINESS + PROMOTION ONLY
+                ================================== -->
+
+                <div
+                    id="business-listing-fields"
+                    class="business-listing-fields"
                 >
 
-                Feature this listing
+                    <hr class="form-section-divider">
 
-            </label>
+                    <h3>
+                        Business Listing Details
+                    </h3>
 
+                    <p class="muted">
+                        These details are available to
+                        Business and Promotion listings.
+                    </p>
+
+
+                    <!-- =============================
+                         OPENING HOURS
+                    ============================== -->
+
+                    <label>
+
+                        Opening Hours
+
+                        <input
+                            type="text"
+                            name="opening_hours"
+                            value="{{
+                                item.opening_hours
+                                if item and item.opening_hours
+                                else ''
+                            }}"
+                            placeholder="Mon–Fri 08:00–18:00, Sat 08:00–15:00"
+                        >
+
+                    </label>
+
+
+                    <!-- =============================
+                         WHATSAPP
+                    ============================== -->
+
+                    <label>
+
+                        WhatsApp Number
+
+                        <input
+                            type="text"
+                            name="whatsapp_number"
+                            value="{{
+                                item.whatsapp_number
+                                if item and item.whatsapp_number
+                                else ''
+                            }}"
+                            placeholder="079 123 4567"
+                        >
+
+                        <span class="field-help">
+                            Dedicated WhatsApp contact
+                            for this business listing.
+                        </span>
+
+                    </label>
+
+
+                    <!-- =============================
+                         DIRECTIONS URL
+                    ============================== -->
+
+                    <label>
+
+                        Directions URL
+
+                        <input
+                            type="url"
+                            name="directions_url"
+                            value="{{
+                                item.directions_url
+                                if item and item.directions_url
+                                else ''
+                            }}"
+                            placeholder="https://maps.google.com/..."
+                        >
+
+                        <span class="field-help">
+                            Optional direct Google Maps
+                            or location link.
+                        </span>
+
+                    </label>
+
+
+                    <!-- =============================
+                         MENU / SERVICES
+                    ============================== -->
+
+                    <label>
+
+                        Menu / Product / Service Highlights
+
+                        <textarea
+                            name="menu_highlights"
+                            rows="5"
+                            placeholder="Popular meals, services, products, amenities or other business highlights."
+                        >{{ item.menu_highlights if item and item.menu_highlights else '' }}</textarea>
+
+                    </label>
+
+
+                    <!-- =============================
+                         SPECIAL OFFER
+                    ============================== -->
+
+                    <label>
+
+                        Current Offer
+
+                        <textarea
+                            name="special_offer"
+                            rows="3"
+                            placeholder="Example: Buy 2 burgers and get chips free."
+                        >{{ item.special_offer if item and item.special_offer else '' }}</textarea>
+
+                    </label>
+
+
+                    <!-- =============================
+                         ADDITIONAL IMAGE URL 2
+                    ============================== -->
+
+                    <label>
+
+                        Additional Image URL 2
+
+                        <input
+                            type="url"
+                            name="image_url_2"
+                            value="{{
+                                item.image_url_2
+                                if item and item.image_url_2
+                                else ''
+                            }}"
+                            placeholder="https://..."
+                        >
+
+                    </label>
+
+
+                    <!-- =============================
+                         ADDITIONAL IMAGE URL 3
+                    ============================== -->
+
+                    <label>
+
+                        Additional Image URL 3
+
+                        <input
+                            type="url"
+                            name="image_url_3"
+                            value="{{
+                                item.image_url_3
+                                if item and item.image_url_3
+                                else ''
+                            }}"
+                            placeholder="https://..."
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <!-- =================================
+                     PROMOTION
+
+                     LEVEL 3 ONLY
+                ================================== -->
+
+                <div
+                    id="promotion-fields"
+                    class="promotion-fields"
+                >
+
+                    <hr class="form-section-divider">
+
+                    <h3>
+                        Promotion Controls
+                    </h3>
+
+                    <p class="muted">
+                        Paid distribution features.
+                        These controls apply only to
+                        Promotion listings.
+                    </p>
+
+
+                    <label class="checkbox-label">
+
+                        <input
+                            type="checkbox"
+                            name="featured"
+                            {% if
+                                item
+                                and item.listing_level == "promotion"
+                                and item.featured
+                            %}
+                                checked
+                            {% endif %}
+                        >
+
+                        Feature this listing
+
+                    </label>
+
+
+                    <label class="checkbox-label">
+
+                        <input
+                            type="checkbox"
+                            name="notification_eligible"
+                            {% if
+                                item
+                                and item.listing_level == "promotion"
+                                and item.notification_eligible
+                            %}
+                                checked
+                            {% endif %}
+                        >
+
+                        Eligible for promotional notifications
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 PUBLICATION
+            ====================================== -->
 
             <label class="checkbox-label">
 
                 <input
                     type="checkbox"
                     name="active"
-                    {% if not item or item.active %}
+                    {% if
+                        not item
+                        or item.active
+                    %}
                         checked
                     {% endif %}
                 >
@@ -576,6 +1099,10 @@
 
             </label>
 
+
+            <!-- =====================================
+                 SUBMIT
+            ====================================== -->
 
             <button type="submit">
 
@@ -593,6 +1120,10 @@
 
 </div>
 
+
+<!-- =========================================
+     CATEGORY / DATE FIELD CONTROL
+========================================== -->
 
 <script>
 
@@ -618,11 +1149,14 @@
             return;
         }
 
+
         const category =
             categorySelect.value;
 
 
-        if (category === "events") {
+        if (
+            category === "events"
+        ) {
 
             eventDateFields.style.display =
                 "block";
@@ -630,7 +1164,9 @@
             generalDateFields.style.display =
                 "none";
 
-        } else {
+        }
+
+        else {
 
             eventDateFields.style.display =
                 "none";
@@ -643,18 +1179,213 @@
     }
 
 
-    if (categorySelect) {
+    if (
+        categorySelect
+    ) {
 
         categorySelect.addEventListener(
             "change",
             updateDateFields
         );
 
+
         updateDateFields();
 
     }
 
 </script>
+
+
+<!-- =========================================
+     LISTING LEVEL CONTROL
+========================================== -->
+
+<script>
+
+    const listingLevelSelect =
+        document.getElementById(
+            "listing_level"
+        );
+
+    const verificationFields =
+        document.getElementById(
+            "verification-fields"
+        );
+
+    const businessListingFields =
+        document.getElementById(
+            "business-listing-fields"
+        );
+
+    const promotionFields =
+        document.getElementById(
+            "promotion-fields"
+        );
+
+
+    function updateListingLevelFields() {
+
+        if (
+            !listingLevelSelect
+        ) {
+
+            return;
+
+        }
+
+
+        const level =
+            listingLevelSelect.value;
+
+
+        // =========================================
+        // DISCOVERY
+        // =========================================
+
+        if (
+            level === "discovery"
+        ) {
+
+            if (
+                verificationFields
+            ) {
+
+                verificationFields.style.display =
+                    "none";
+
+            }
+
+
+            if (
+                businessListingFields
+            ) {
+
+                businessListingFields.style.display =
+                    "none";
+
+            }
+
+
+            if (
+                promotionFields
+            ) {
+
+                promotionFields.style.display =
+                    "none";
+
+            }
+
+
+            return;
+
+        }
+
+
+        // =========================================
+        // BUSINESS
+        // =========================================
+
+        if (
+            level === "business"
+        ) {
+
+            if (
+                verificationFields
+            ) {
+
+                verificationFields.style.display =
+                    "block";
+
+            }
+
+
+            if (
+                businessListingFields
+            ) {
+
+                businessListingFields.style.display =
+                    "block";
+
+            }
+
+
+            if (
+                promotionFields
+            ) {
+
+                promotionFields.style.display =
+                    "none";
+
+            }
+
+
+            return;
+
+        }
+
+
+        // =========================================
+        // PROMOTION
+        // =========================================
+
+        if (
+            level === "promotion"
+        ) {
+
+            if (
+                verificationFields
+            ) {
+
+                verificationFields.style.display =
+                    "block";
+
+            }
+
+
+            if (
+                businessListingFields
+            ) {
+
+                businessListingFields.style.display =
+                    "block";
+
+            }
+
+
+            if (
+                promotionFields
+            ) {
+
+                promotionFields.style.display =
+                    "block";
+
+            }
+
+        }
+
+    }
+
+
+    if (
+        listingLevelSelect
+    ) {
+
+        listingLevelSelect.addEventListener(
+            "change",
+            updateListingLevelFields
+        );
+
+
+        updateListingLevelFields();
+
+    }
+
+</script>
+
+
+<!-- =========================================
+     MULTI IMAGE SELECTION
+========================================== -->
 
 <script>
 
@@ -669,11 +1400,19 @@
         );
 
 
-    // Stores the files the user has selected.
     let selectedImages = [];
 
 
     function rebuildImageInput() {
+
+        if (
+            !imageInput
+        ) {
+
+            return;
+
+        }
+
 
         const dataTransfer =
             new DataTransfer();
@@ -698,11 +1437,24 @@
 
     function renderImagePreviews() {
 
-        imagePreview.innerHTML = "";
+        if (
+            !imagePreview
+        ) {
+
+            return;
+
+        }
+
+
+        imagePreview.innerHTML =
+            "";
 
 
         selectedImages.forEach(
-            function(file, index) {
+            function(
+                file,
+                index
+            ) {
 
                 const wrapper =
                     document.createElement(
@@ -720,14 +1472,28 @@
                     );
 
 
-                image.src =
+                const objectUrl =
                     URL.createObjectURL(
                         file
                     );
 
 
+                image.src =
+                    objectUrl;
+
+
                 image.alt =
                     file.name;
+
+
+                image.onload =
+                    function() {
+
+                        URL.revokeObjectURL(
+                            objectUrl
+                        );
+
+                    };
 
 
                 const removeButton =
@@ -746,6 +1512,12 @@
 
                 removeButton.className =
                     "remove-selected-image";
+
+
+                removeButton.setAttribute(
+                    "aria-label",
+                    "Remove selected image"
+                );
 
 
                 removeButton.addEventListener(
@@ -786,43 +1558,67 @@
     }
 
 
-    imageInput.addEventListener(
-        "change",
-        function(event) {
+    if (
+        imageInput
+    ) {
 
-            const newFiles =
-                Array.from(
-                    event.target.files
-                );
+        imageInput.addEventListener(
+            "change",
+            function(event) {
 
-
-            for (
-                const file of newFiles
-            ) {
-
-                // Avoid adding same file twice.
-
-                const alreadyExists =
-                    selectedImages.some(
-                        function(existingFile) {
-
-                            return (
-                                existingFile.name
-                                === file.name
-                                &&
-                                existingFile.size
-                                === file.size
-                            );
-
-                        }
+                const newFiles =
+                    Array.from(
+                        event.target.files
                     );
 
 
-                if (
-                    !alreadyExists
-                    &&
-                    selectedImages.length < 3
+                let rejectedFiles =
+                    false;
+
+
+                for (
+                    const file of newFiles
                 ) {
+
+                    const alreadyExists =
+                        selectedImages.some(
+                            function(existingFile) {
+
+                                return (
+                                    existingFile.name
+                                    === file.name
+                                    &&
+                                    existingFile.size
+                                    === file.size
+                                    &&
+                                    existingFile.lastModified
+                                    === file.lastModified
+                                );
+
+                            }
+                        );
+
+
+                    if (
+                        alreadyExists
+                    ) {
+
+                        continue;
+
+                    }
+
+
+                    if (
+                        selectedImages.length >= 3
+                    ) {
+
+                        rejectedFiles =
+                            true;
+
+                        break;
+
+                    }
+
 
                     selectedImages.push(
                         file
@@ -830,30 +1626,29 @@
 
                 }
 
+
+                if (
+                    rejectedFiles
+                ) {
+
+                    alert(
+                        "You can upload a maximum of 3 images."
+                    );
+
+                }
+
+
+                rebuildImageInput();
+
+                renderImagePreviews();
+
             }
+        );
 
-
-            if (
-                newFiles.length
-                + selectedImages.length
-                > 3
-            ) {
-
-                alert(
-                    "You can upload a maximum of 3 images."
-                );
-
-            }
-
-
-            rebuildImageInput();
-
-            renderImagePreviews();
-
-        }
-    );
+    }
 
 </script>
+
 
 </body>
 
