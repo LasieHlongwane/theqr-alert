@@ -7145,7 +7145,6 @@ def edit_content(
 
     if request.method == "POST":
 
-
         # =================================================
         # BASIC DATA
         # =================================================
@@ -7255,15 +7254,6 @@ def edit_content(
 
         # =================================================
         # RECALCULATE WORKFLOW
-        #
-        # Example:
-        #
-        # Property → Room
-        # becomes
-        # Property → Hotel
-        #
-        # The underlying content lifecycle must also
-        # change when the subtype changes.
         # =================================================
 
         workflow = (
@@ -7280,17 +7270,6 @@ def edit_content(
             ]
         )
 
-
-        # -------------------------------------------------
-        # Keep this separately from the final
-        # notification_eligible value.
-        #
-        # Workflow tells us whether this KIND of content
-        # supports notifications.
-        #
-        # Listing level tells us whether THIS listing
-        # has permission to use promotional distribution.
-        # -------------------------------------------------
 
         workflow_notification_eligible = bool(
             workflow.get(
@@ -7345,7 +7324,38 @@ def edit_content(
 
 
         # =================================================
-        # UPDATE CORE FIELDS
+        # LISTING LEVEL
+        # =================================================
+
+        listing_level = (
+            request.form.get(
+                "listing_level",
+                "discovery",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        allowed_listing_levels = {
+            "discovery",
+            "business",
+            "promotion",
+        }
+
+
+        if (
+            listing_level
+            not in allowed_listing_levels
+        ):
+
+            listing_level = (
+                "discovery"
+            )
+
+
+        # =================================================
+        # CORE FIELDS
         # =================================================
 
         item.zone_id = (
@@ -7367,23 +7377,6 @@ def edit_content(
             lifetime_type
         )
 
-
-        # -------------------------------------------------
-        # Do not set notification_eligible here anymore.
-        #
-        # It is determined below using BOTH:
-        #
-        # 1. workflow capability
-        # 2. listing level
-        # -------------------------------------------------
-
-
-        # -------------------------------------------------
-        # Do NOT blindly reset closed listings to available
-        # when editing ordinary text.
-        #
-        # Only initialise legacy/empty records.
-        # -------------------------------------------------
 
         if not item.availability_status:
 
@@ -7447,37 +7440,6 @@ def edit_content(
         )
 
 
-        # =================================================
-        # LISTING LEVEL
-        # =================================================
-
-        listing_level = (
-            request.form.get(
-                "listing_level",
-                "discovery",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        allowed_listing_levels = {
-            "discovery",
-            "business",
-            "promotion",
-        }
-
-
-        if (
-            listing_level
-            not in allowed_listing_levels
-        ):
-
-            listing_level = (
-                "discovery"
-            )
-
-
         item.listing_level = (
             listing_level
         )
@@ -7485,19 +7447,6 @@ def edit_content(
 
         # =================================================
         # OWNERSHIP + VERIFICATION
-        # =================================================
-        #
-        # DISCOVERY:
-        #
-        #   Kalxa/publicly seeded.
-        #   No business ownership privileges.
-        #
-        # BUSINESS / PROMOTION:
-        #
-        #   Business-controlled.
-        #
-        # Verification remains an explicit admin
-        # decision through the checkbox.
         # =================================================
 
         if (
@@ -7542,11 +7491,6 @@ def edit_content(
             }
         ):
 
-
-            # ---------------------------------------------
-            # OPENING HOURS
-            # ---------------------------------------------
-
             item.opening_hours = (
                 request.form.get(
                     "opening_hours",
@@ -7556,10 +7500,6 @@ def edit_content(
                 or None
             )
 
-
-            # ---------------------------------------------
-            # WHATSAPP
-            # ---------------------------------------------
 
             item.whatsapp_number = (
                 request.form.get(
@@ -7571,10 +7511,6 @@ def edit_content(
             )
 
 
-            # ---------------------------------------------
-            # DIRECTIONS
-            # ---------------------------------------------
-
             item.directions_url = (
                 request.form.get(
                     "directions_url",
@@ -7584,10 +7520,6 @@ def edit_content(
                 or None
             )
 
-
-            # ---------------------------------------------
-            # MENU / SERVICES / PRODUCT HIGHLIGHTS
-            # ---------------------------------------------
 
             item.menu_highlights = (
                 request.form.get(
@@ -7599,10 +7531,6 @@ def edit_content(
             )
 
 
-            # ---------------------------------------------
-            # SPECIAL OFFER
-            # ---------------------------------------------
-
             item.special_offer = (
                 request.form.get(
                     "special_offer",
@@ -7613,49 +7541,13 @@ def edit_content(
             )
 
 
-            # ---------------------------------------------
-            # ADDITIONAL IMAGE URL 2
-            # ---------------------------------------------
-
-            item.image_url_2 = (
-                request.form.get(
-                    "image_url_2",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            # ---------------------------------------------
-            # ADDITIONAL IMAGE URL 3
-            # ---------------------------------------------
-
-            item.image_url_3 = (
-                request.form.get(
-                    "image_url_3",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
         else:
 
-            # =================================================
+            # =============================================
             # DISCOVERY DOWNGRADE
             #
-            # If admin changes:
-            #
-            # Business / Promotion
-            #        ↓
-            # Discovery
-            #
-            # Remove the business-only information rather
-            # than leaving hidden commercial data attached
-            # to a Discovery listing.
-            # =================================================
+            # Discovery cannot use business-only fields.
+            # =============================================
 
             item.opening_hours = (
                 None
@@ -7676,6 +7568,14 @@ def edit_content(
             item.special_offer = (
                 None
             )
+
+
+            # =============================================
+            # DISCOVERY SUPPORTS ONE IMAGE ONLY
+            #
+            # Keep the primary image but remove the
+            # additional Business/Promotion images.
+            # =============================================
 
             item.image_url_2 = (
                 None
@@ -7688,14 +7588,6 @@ def edit_content(
 
         # =================================================
         # PROMOTION RULES
-        # =================================================
-        #
-        # Only Promotion listings can receive:
-        #
-        # - featured ranking
-        # - promotional notification distribution
-        #
-        # Business ownership alone does NOT grant these.
         # =================================================
 
         if (
@@ -7710,16 +7602,6 @@ def edit_content(
                 == "on"
             )
 
-
-            # ---------------------------------------------
-            # TWO CONDITIONS MUST BOTH BE TRUE:
-            #
-            # 1. This content workflow supports
-            #    notifications.
-            #
-            # 2. Admin enabled notification distribution
-            #    for this Promotion listing.
-            # ---------------------------------------------
 
             promotion_notification_requested = (
                 request.form.get(
@@ -7737,11 +7619,6 @@ def edit_content(
 
 
         else:
-
-            # ---------------------------------------------
-            # Discovery and Business listings cannot
-            # accidentally retain paid distribution.
-            # ---------------------------------------------
 
             item.featured = (
                 False
@@ -7778,10 +7655,49 @@ def edit_content(
 
 
         # =================================================
-        # LEGACY SINGLE IMAGE UPLOAD
+        # IMAGE UPLOADS
+        #
+        # We now use ONLY:
+        #
+        # item.image_url
+        # item.image_url_2
+        # item.image_url_3
+        #
+        # No ContentImage model.
+        # No item.images relationship.
         # =================================================
 
-        uploaded_image = (
+        uploaded_images = []
+
+
+        # -------------------------------------------------
+        # CURRENT MULTI-IMAGE FIELD
+        #
+        # <input name="images" multiple>
+        # -------------------------------------------------
+
+        for uploaded_file in request.files.getlist(
+            "images"
+        ):
+
+            if (
+                uploaded_file
+                and
+                uploaded_file.filename
+            ):
+
+                uploaded_images.append(
+                    uploaded_file
+                )
+
+
+        # -------------------------------------------------
+        # LEGACY SINGLE-IMAGE FIELD
+        #
+        # Keep compatibility with older form markup.
+        # -------------------------------------------------
+
+        legacy_image = (
             request.files.get(
                 "image"
             )
@@ -7789,22 +7705,120 @@ def edit_content(
 
 
         if (
-            uploaded_image
-            and uploaded_image.filename
+            legacy_image
+            and
+            legacy_image.filename
         ):
+
+            if not uploaded_images:
+
+                uploaded_images.append(
+                    legacy_image
+                )
+
+
+        # =================================================
+        # IMAGE LIMIT
+        # =================================================
+
+        if (
+            listing_level
+            == "discovery"
+        ):
+
+            maximum_images = 1
+
+
+        else:
+
+            maximum_images = 3
+
+
+        if (
+            len(uploaded_images)
+            > maximum_images
+        ):
+
+            if (
+                listing_level
+                == "discovery"
+            ):
+
+                message = (
+                    "Discovery listings can have "
+                    "a maximum of 1 image."
+                )
+
+
+            else:
+
+                message = (
+                    "Business and Promotion listings "
+                    "can have a maximum of 3 images."
+                )
+
+
+            flash(
+                message,
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # UPLOAD NEW IMAGES
+        #
+        # IMPORTANT:
+        #
+        # If NO new images are uploaded, existing images
+        # remain unchanged.
+        #
+        # If images ARE uploaded, they replace the current
+        # image set.
+        # =================================================
+
+        if uploaded_images:
+
+            uploaded_image_urls = []
+
 
             try:
 
-                item.image_url = (
-                    upload_listing_image(
-                        uploaded_image
+                for uploaded_file in uploaded_images:
+
+                    image_url = (
+                        upload_listing_image(
+                            uploaded_file
+                        )
                     )
-                )
+
+
+                    if image_url:
+
+                        uploaded_image_urls.append(
+                            image_url
+                        )
 
 
             except Exception as error:
 
                 db.session.rollback()
+
+
+                current_app.logger.exception(
+                    (
+                        "Content image upload failed. "
+                        "content_item_id=%s error=%s"
+                    ),
+                    item.id,
+                    error,
+                )
 
 
                 flash(
@@ -7820,137 +7834,85 @@ def edit_content(
                 )
 
 
-        # =================================================
-        # MULTI IMAGE UPLOAD
-        #
-        # content_form.html sends:
-        #
-        # name="images"
-        # multiple
-        #
-        # Keep your existing ContentImage relationship.
-        # =================================================
+            # =============================================
+            # PRIMARY IMAGE
+            #
+            # This is the image used by What's New.
+            # =============================================
 
-        uploaded_images = (
-            request.files.getlist(
-                "images"
+            item.image_url = (
+                uploaded_image_urls[0]
+                if len(
+                    uploaded_image_urls
+                ) >= 1
+                else None
             )
-        )
 
 
-        uploaded_images = [
-            image
-            for image in uploaded_images
+            # =============================================
+            # BUSINESS / PROMOTION ADDITIONAL IMAGES
+            # =============================================
+
             if (
-                image
-                and image.filename
-            )
-        ]
+                listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+            ):
+
+                item.image_url_2 = (
+                    uploaded_image_urls[1]
+                    if len(
+                        uploaded_image_urls
+                    ) >= 2
+                    else None
+                )
 
 
-        # -------------------------------------------------
-        # Maximum three images total.
-        # -------------------------------------------------
-
-        current_image_count = (
-            len(item.images)
-            if item.images
-            else 0
-        )
+                item.image_url_3 = (
+                    uploaded_image_urls[2]
+                    if len(
+                        uploaded_image_urls
+                    ) >= 3
+                    else None
+                )
 
 
-        remaining_image_slots = max(
-            0,
-            3 - current_image_count,
-        )
+            else:
 
+                item.image_url_2 = (
+                    None
+                )
+
+                item.image_url_3 = (
+                    None
+                )
+
+
+        # =================================================
+        # FINAL IMAGE SAFETY
+        #
+        # Discovery must never retain extra images,
+        # including when no new image was uploaded.
+        # =================================================
 
         if (
-            len(uploaded_images)
-            >
-            remaining_image_slots
+            listing_level
+            == "discovery"
         ):
 
-            flash(
-                (
-                    "This listing can have a maximum "
-                    "of 3 uploaded images."
-                ),
-                "error",
+            item.image_url_2 = (
+                None
             )
 
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
+            item.image_url_3 = (
+                None
             )
 
 
         # =================================================
-        # UPLOAD NEW IMAGES
-        # =================================================
-
-        try:
-
-            for uploaded_file in uploaded_images:
-
-                image_url = (
-                    upload_listing_image(
-                        uploaded_file
-                    )
-                )
-
-
-                # -------------------------------------------------
-                # IMPORTANT:
-                #
-                # This assumes your image relationship model is
-                # named ContentImage and contains:
-                #
-                # content_item_id
-                # image_url
-                #
-                # If your existing model has another name, keep
-                # your existing image creation code here instead.
-                # -------------------------------------------------
-
-                image_record = (
-                    ContentImage(
-                        content_item_id=
-                            item.id,
-
-                        image_url=
-                            image_url,
-                    )
-                )
-
-
-                db.session.add(
-                    image_record
-                )
-
-
-        except Exception as error:
-
-            db.session.rollback()
-
-
-            flash(
-                f"Image upload failed: {error}",
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # SAVE EVERYTHING IN ONE TRANSACTION
+        # SAVE EVERYTHING
         # =================================================
 
         try:
@@ -8015,8 +7977,6 @@ def edit_content(
         categories,
         item,
     )
-
-
 
 @admin_bp.route(
     "/content/<int:item_id>/toggle",
