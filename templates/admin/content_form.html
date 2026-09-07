@@ -111,7 +111,7 @@
 
 
             <!-- =================================================
-                 ZONE
+                 HOME ZONE
             ================================================== -->
 
             <label>
@@ -189,9 +189,7 @@
                  CONTENT TYPE
             ================================================== -->
 
-            <label
-                id="content-type-wrapper"
-            >
+            <label id="content-type-wrapper">
 
                 What are you listing?
 
@@ -221,7 +219,7 @@
                 style="display: none;"
             >
 
-                <strong id="workflow-title">
+                <strong>
                     Listing behaviour
                 </strong>
 
@@ -315,7 +313,7 @@
 
 
             <!-- =================================================
-                 LISTING PRICE
+                 CUSTOMER-FACING PRICE
             ================================================== -->
 
             <label>
@@ -336,7 +334,7 @@
                 <small class="muted">
                     This is the price customers see for the
                     product, ticket or service. It is not the
-                    Kalxa advertising price.
+                    Kalxa package price.
                 </small>
 
             </label>
@@ -389,16 +387,12 @@
                 </p>
 
 
-                <!-- SELECTED NEW IMAGE PREVIEW -->
-
                 <div
                     id="selected-images-preview"
                     class="content-gallery"
                 >
                 </div>
 
-
-                <!-- EXISTING DATABASE IMAGES -->
 
                 {% if item and (
                     item.image_url
@@ -564,7 +558,7 @@
 
 
             <!-- =================================================
-                 TIME-SPECIFIC GENERAL DATES
+                 GENERAL TIME-SPECIFIC DATES
             ================================================== -->
 
             <div
@@ -580,7 +574,7 @@
                 <p class="muted">
                     These dates describe the natural lifetime of
                     the content. They are separate from the paid
-                    Kalxa campaign duration.
+                    Kalxa package duration.
                 </p>
 
 
@@ -627,7 +621,7 @@
 
 
             <!-- =================================================
-                 UNTIL UNAVAILABLE INFORMATION
+                 UNTIL UNAVAILABLE
             ================================================== -->
 
             <div
@@ -651,7 +645,7 @@
 
 
             <!-- =================================================
-                 ONGOING INFORMATION
+                 ONGOING
             ================================================== -->
 
             <div
@@ -738,9 +732,7 @@
 
                 <!-- DURATION -->
 
-                <label
-                    id="commercial-duration-group"
-                >
+                <label id="commercial-duration-group">
 
                     Kalxa Visibility Duration
 
@@ -776,7 +768,8 @@
 
                     <p class="muted">
                         Choose where this campaign should be
-                        distributed. Current MVP packages support
+                        distributed. The home zone is included
+                        automatically. Current MVP packages support
                         up to 3 zones.
                     </p>
 
@@ -834,7 +827,7 @@
                 </div>
 
 
-                <!-- CALCULATED PRICE -->
+                <!-- CALCULATED PACKAGE PRICE -->
 
                 <div
                     style="
@@ -1014,10 +1007,14 @@
 
 
 <!-- =========================================================
-     CATEGORY / CONTENT TYPE / LIFECYCLE ENGINE
+     CATEGORY / CONTENT TYPE / LIFECYCLE / PRICING ENGINE
 ========================================================= -->
 
 <script>
+
+    /* ========================================================
+       BASIC ELEMENTS
+    ======================================================== */
 
     const categorySelect =
         document.getElementById(
@@ -1074,10 +1071,15 @@
             "end-date-input"
         );
 
+    const homeZoneSelect =
+        document.getElementById(
+            "zone-select"
+        );
 
-    /*
-     * Existing content type when editing.
-     */
+
+    /* ========================================================
+       EXISTING CONTENT TYPE FOR EDIT MODE
+    ======================================================== */
 
     const existingContentType =
         {{ (
@@ -1093,8 +1095,9 @@
 
     const contentWorkflows = {
 
-
-        /* PROPERTY */
+        /* ----------------------------------------------------
+           PROPERTY
+        ---------------------------------------------------- */
 
         "property": [
 
@@ -1146,7 +1149,9 @@
         ],
 
 
-        /* EVENTS */
+        /* ----------------------------------------------------
+           EVENTS
+        ---------------------------------------------------- */
 
         "events": [
 
@@ -1207,7 +1212,9 @@
         ],
 
 
-        /* DISCOUNTS / DEALS */
+        /* ----------------------------------------------------
+           DISCOUNTS / DEALS
+        ---------------------------------------------------- */
 
         "discount-deals": [
 
@@ -1250,7 +1257,9 @@
         ],
 
 
-        /* LOCAL RESTAURANTS */
+        /* ----------------------------------------------------
+           LOCAL RESTAURANTS
+        ---------------------------------------------------- */
 
         "local-restaurants": [
 
@@ -1302,7 +1311,9 @@
         ],
 
 
-        /* JOBS */
+        /* ----------------------------------------------------
+           JOBS
+        ---------------------------------------------------- */
 
         "jobs": [
 
@@ -1363,7 +1374,9 @@
         ],
 
 
-        /* OPPORTUNITIES */
+        /* ----------------------------------------------------
+           OPPORTUNITIES
+        ---------------------------------------------------- */
 
         "opportunities": [
 
@@ -1424,7 +1437,9 @@
         ],
 
 
-        /* SERVICES */
+        /* ----------------------------------------------------
+           SERVICES
+        ---------------------------------------------------- */
 
         "services": [
 
@@ -1485,7 +1500,9 @@
         ],
 
 
-        /* BEAUTY / SALON */
+        /* ----------------------------------------------------
+           BEAUTY / SALON
+        ---------------------------------------------------- */
 
         "beauty-salon": [
 
@@ -1533,9 +1550,8 @@
     /* ========================================================
        PRICING TABLES
 
-       DISPLAY ONLY.
-
-       The Flask backend remains the source of truth.
+       Browser display only.
+       Flask backend remains source of truth.
     ======================================================== */
 
     const presencePricing = {
@@ -1622,6 +1638,181 @@
 
 
     /* ========================================================
+       EXACT COMMERCIAL CLASSIFICATION
+
+       Mirrors backend pricing classification.
+    ======================================================== */
+
+    const pricingModelOverrides = {
+
+        /* PROPERTY */
+
+        "property|room":
+            "campaign",
+
+        "property|rental":
+            "campaign",
+
+        "property|property_sale":
+            "campaign",
+
+        "property|hotel_lodge":
+            "presence",
+
+        "property|accommodation_special":
+            "campaign",
+
+
+        /* EVENTS */
+
+        "events|entertainment":
+            "campaign",
+
+        "events|church_event":
+            "campaign",
+
+        "events|sports_event":
+            "campaign",
+
+        "events|community_event":
+            "campaign",
+
+        "events|business_event":
+            "campaign",
+
+        "events|event":
+            "campaign",
+
+
+        /* DISCOUNT DEALS */
+
+        "discount-deals|grocery_special":
+            "campaign",
+
+        "discount-deals|product_discount":
+            "campaign",
+
+        "discount-deals|weekend_special":
+            "campaign",
+
+        "discount-deals|clearance":
+            "campaign",
+
+
+        /* RESTAURANTS */
+
+        "local-restaurants|restaurant":
+            "presence",
+
+        "local-restaurants|takeaway":
+            "presence",
+
+        "local-restaurants|daily_special":
+            "campaign",
+
+        "local-restaurants|weekend_special":
+            "campaign",
+
+        "local-restaurants|food_deal":
+            "campaign",
+
+
+        /* JOBS */
+
+        "jobs|job":
+            "campaign",
+
+        "jobs|learnership":
+            "campaign",
+
+        "jobs|internship":
+            "campaign",
+
+        "jobs|training":
+            "campaign",
+
+        "jobs|tender":
+            "campaign",
+
+        "jobs|business_opportunity":
+            "campaign",
+
+
+        /* OPPORTUNITIES */
+
+        "opportunities|job":
+            "campaign",
+
+        "opportunities|learnership":
+            "campaign",
+
+        "opportunities|internship":
+            "campaign",
+
+        "opportunities|training":
+            "campaign",
+
+        "opportunities|tender":
+            "campaign",
+
+        "opportunities|business_opportunity":
+            "campaign",
+
+
+        /* SERVICES */
+
+        "services|service_provider":
+            "presence",
+
+        "services|plumber":
+            "presence",
+
+        "services|mechanic":
+            "presence",
+
+        "services|electrician":
+            "presence",
+
+        "services|builder":
+            "presence",
+
+        "services|cleaning_service":
+            "presence",
+
+
+        /* BEAUTY */
+
+        "beauty-salon|salon":
+            "presence",
+
+        "beauty-salon|barber":
+            "presence",
+
+        "beauty-salon|beauty_service":
+            "presence",
+
+        "beauty-salon|beauty_special":
+            "campaign"
+
+    };
+
+
+    const presenceCategories = [
+        "local-restaurants",
+        "beauty-salon",
+        "services"
+    ];
+
+
+    const campaignCategories = [
+        "events",
+        "discount-deals",
+        "jobs",
+        "opportunities"
+    ];
+
+
+    /* ========================================================
        GET CURRENT WORKFLOW
     ======================================================== */
 
@@ -1632,15 +1823,27 @@
             ||
             !contentTypeSelect
         ) {
+
             return null;
+
         }
 
 
         const category =
-            categorySelect.value;
+            String(
+                categorySelect.value || ""
+            )
+            .trim()
+            .toLowerCase();
+
 
         const contentType =
-            contentTypeSelect.value;
+            String(
+                contentTypeSelect.value || ""
+            )
+            .trim()
+            .toLowerCase();
+
 
         const workflows =
             contentWorkflows[category]
@@ -1652,7 +1855,11 @@
                 function(workflow) {
 
                     return (
-                        workflow.value
+                        String(
+                            workflow.value || ""
+                        )
+                        .trim()
+                        .toLowerCase()
                         === contentType
                     );
 
@@ -1665,10 +1872,62 @@
 
 
     /* ========================================================
-       PRICING MODEL
+       DETERMINE PRICING MODEL
     ======================================================== */
 
     function getSelectedPricingModel() {
+
+        if (!categorySelect) {
+            return "";
+        }
+
+
+        const category =
+            String(
+                categorySelect.value || ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        const contentType =
+            String(
+                contentTypeSelect
+                    ? contentTypeSelect.value
+                    : ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        /* ----------------------------------------------------
+           1. EXACT CATEGORY + CONTENT TYPE OVERRIDE
+        ---------------------------------------------------- */
+
+        const overrideKey =
+            category
+            + "|"
+            + contentType;
+
+
+        if (
+            pricingModelOverrides[
+                overrideKey
+            ]
+        ) {
+
+            return (
+                pricingModelOverrides[
+                    overrideKey
+                ]
+            );
+
+        }
+
+
+        /* ----------------------------------------------------
+           2. WORKFLOW DEFINITION
+        ---------------------------------------------------- */
 
         const workflow =
             getSelectedWorkflow();
@@ -1680,34 +1939,20 @@
             workflow.pricing
         ) {
 
-            return workflow.pricing;
+            return (
+                String(
+                    workflow.pricing
+                )
+                .trim()
+                .toLowerCase()
+            );
 
         }
 
 
-        const category =
-            categorySelect
-                ? categorySelect.value
-                : "";
-
-
-        /*
-         * Fallbacks for categories without an explicit
-         * contentWorkflows definition.
-         */
-
-        const presenceCategories = [
-            "services"
-        ];
-
-
-        const campaignCategories = [
-            "events",
-            "jobs",
-            "opportunities",
-            "discount-deals"
-        ];
-
+        /* ----------------------------------------------------
+           3. CATEGORY FALLBACK
+        ---------------------------------------------------- */
 
         if (
             presenceCategories.includes(
@@ -1749,20 +1994,32 @@
             ||
             !contentTypeSelect
         ) {
+
             return;
+
         }
 
 
         const category =
-            categorySelect.value;
+            String(
+                categorySelect.value || ""
+            )
+            .trim()
+            .toLowerCase();
+
 
         const workflows =
             contentWorkflows[category]
             || [];
 
 
-        contentTypeSelect.innerHTML = "";
+        contentTypeSelect.innerHTML =
+            "";
 
+
+        /* ----------------------------------------------------
+           GENERAL CATEGORY
+        ---------------------------------------------------- */
 
         if (
             workflows.length === 0
@@ -1785,11 +2042,15 @@
             );
 
 
-            contentTypeHelp.textContent =
-                (
-                    "This category currently uses "
-                    + "the general listing workflow."
-                );
+            if (contentTypeHelp) {
+
+                contentTypeHelp.textContent =
+                    (
+                        "This category currently uses "
+                        + "the general listing workflow."
+                    );
+
+            }
 
 
             updateWorkflowFields();
@@ -1798,6 +2059,10 @@
 
         }
 
+
+        /* ----------------------------------------------------
+           DEFINED TYPES
+        ---------------------------------------------------- */
 
         workflows.forEach(
             function(workflow) {
@@ -1811,6 +2076,7 @@
                 option.value =
                     workflow.value;
 
+
                 option.textContent =
                     workflow.label;
 
@@ -1818,11 +2084,16 @@
                 if (
                     preserveValue
                     &&
-                    preserveValue
-                    === workflow.value
+                    String(
+                        preserveValue
+                    )
+                    === String(
+                        workflow.value
+                    )
                 ) {
 
-                    option.selected = true;
+                    option.selected =
+                        true;
 
                 }
 
@@ -1833,6 +2104,14 @@
 
             }
         );
+
+
+        if (contentTypeHelp) {
+
+            contentTypeHelp.textContent =
+                "Select the type of content being published.";
+
+        }
 
 
         updateWorkflowFields();
@@ -1851,46 +2130,87 @@
             ||
             !contentTypeSelect
         ) {
+
             return;
+
         }
 
 
         const workflow =
             getSelectedWorkflow();
 
+
         const category =
-            categorySelect.value;
+            String(
+                categorySelect.value || ""
+            )
+            .trim()
+            .toLowerCase();
 
 
-        eventDateFields.style.display =
-            "none";
+        if (eventDateFields) {
 
-        generalDateFields.style.display =
-            "none";
+            eventDateFields.style.display =
+                "none";
 
-        untilUnavailableInfo.style.display =
-            "none";
+        }
 
-        ongoingInfo.style.display =
-            "none";
 
-        workflowInfo.style.display =
-            "none";
+        if (generalDateFields) {
+
+            generalDateFields.style.display =
+                "none";
+
+        }
+
+
+        if (untilUnavailableInfo) {
+
+            untilUnavailableInfo.style.display =
+                "none";
+
+        }
+
+
+        if (ongoingInfo) {
+
+            ongoingInfo.style.display =
+                "none";
+
+        }
+
+
+        if (workflowInfo) {
+
+            workflowInfo.style.display =
+                "none";
+
+        }
 
 
         if (eventDateInput) {
-            eventDateInput.required = false;
+
+            eventDateInput.required =
+                false;
+
         }
+
 
         if (endDateInput) {
-            endDateInput.required = false;
+
+            endDateInput.required =
+                false;
+
         }
 
+
+        /* ----------------------------------------------------
+           NO EXPLICIT WORKFLOW
+        ---------------------------------------------------- */
 
         if (!workflow) {
 
             const ongoingCategories = [
-                "property",
                 "transport",
                 "services"
             ];
@@ -1902,17 +2222,30 @@
                 )
             ) {
 
-                ongoingInfo.style.display =
-                    "block";
+                if (ongoingInfo) {
 
-            } else {
+                    ongoingInfo.style.display =
+                        "block";
 
-                generalDateFields.style.display =
-                    "block";
+                }
+
+            }
+
+            else {
+
+                if (generalDateFields) {
+
+                    generalDateFields.style.display =
+                        "block";
+
+                }
 
 
                 if (endDateInput) {
-                    endDateInput.required = true;
+
+                    endDateInput.required =
+                        true;
+
                 }
 
             }
@@ -1925,12 +2258,29 @@
         }
 
 
-        workflowInfo.style.display =
-            "block";
+        /* ----------------------------------------------------
+           WORKFLOW DESCRIPTION
+        ---------------------------------------------------- */
 
-        workflowDescription.textContent =
-            workflow.help;
+        if (workflowInfo) {
 
+            workflowInfo.style.display =
+                "block";
+
+        }
+
+
+        if (workflowDescription) {
+
+            workflowDescription.textContent =
+                workflow.help || "";
+
+        }
+
+
+        /* ----------------------------------------------------
+           EVENT
+        ---------------------------------------------------- */
 
         if (
             category === "events"
@@ -1938,12 +2288,19 @@
             workflow.lifetime === "event"
         ) {
 
-            eventDateFields.style.display =
-                "block";
+            if (eventDateFields) {
+
+                eventDateFields.style.display =
+                    "block";
+
+            }
 
 
             if (eventDateInput) {
-                eventDateInput.required = true;
+
+                eventDateInput.required =
+                    true;
+
             }
 
 
@@ -1953,18 +2310,29 @@
 
         }
 
+
+        /* ----------------------------------------------------
+           TIME SPECIFIC
+        ---------------------------------------------------- */
 
         if (
             workflow.lifetime
             === "time_specific"
         ) {
 
-            generalDateFields.style.display =
-                "block";
+            if (generalDateFields) {
+
+                generalDateFields.style.display =
+                    "block";
+
+            }
 
 
             if (endDateInput) {
-                endDateInput.required = true;
+
+                endDateInput.required =
+                    true;
+
             }
 
 
@@ -1975,13 +2343,21 @@
         }
 
 
+        /* ----------------------------------------------------
+           UNTIL UNAVAILABLE
+        ---------------------------------------------------- */
+
         if (
             workflow.lifetime
             === "until_unavailable"
         ) {
 
-            untilUnavailableInfo.style.display =
-                "block";
+            if (untilUnavailableInfo) {
+
+                untilUnavailableInfo.style.display =
+                    "block";
+
+            }
 
 
             updateCommercialUI();
@@ -1991,13 +2367,21 @@
         }
 
 
+        /* ----------------------------------------------------
+           ONGOING
+        ---------------------------------------------------- */
+
         if (
             workflow.lifetime
             === "ongoing"
         ) {
 
-            ongoingInfo.style.display =
-                "block";
+            if (ongoingInfo) {
+
+                ongoingInfo.style.display =
+                    "block";
+
+            }
 
         }
 
@@ -2008,7 +2392,7 @@
 
 
     /* ========================================================
-       FORMAT PRICE
+       FORMAT KALXA PRICE
     ======================================================== */
 
     function formatKalxaPrice(
@@ -2040,7 +2424,7 @@
 
 
     /* ========================================================
-       SELECTED CAMPAIGN ZONES
+       SELECTED CAMPAIGN ZONE COUNT
     ======================================================== */
 
     function getSelectedZoneCount() {
@@ -2051,9 +2435,7 @@
         zoneCheckboxes.forEach(
             function(checkbox) {
 
-                if (
-                    checkbox.checked
-                ) {
+                if (checkbox.checked) {
 
                     count += 1;
 
@@ -2069,7 +2451,52 @@
 
 
     /* ========================================================
-       DURATION OPTIONS
+       ENSURE CAMPAIGN HOME ZONE
+
+       Home/origin zone counts as one purchased reach zone.
+    ======================================================== */
+
+    function ensureCampaignHomeZone() {
+
+        if (!homeZoneSelect) {
+            return;
+        }
+
+
+        const homeZoneId =
+            String(
+                homeZoneSelect.value || ""
+            );
+
+
+        if (!homeZoneId) {
+            return;
+        }
+
+
+        zoneCheckboxes.forEach(
+            function(checkbox) {
+
+                if (
+                    String(
+                        checkbox.dataset.zoneId
+                    )
+                    === homeZoneId
+                ) {
+
+                    checkbox.checked =
+                        true;
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       REBUILD DURATION OPTIONS
     ======================================================== */
 
     function rebuildDurationOptions(
@@ -2089,7 +2516,8 @@
             "";
 
 
-        durationSelect.innerHTML = "";
+        durationSelect.innerHTML =
+            "";
 
 
         const placeholder =
@@ -2112,6 +2540,10 @@
         let durations = [];
 
 
+        /* ----------------------------------------------------
+           PRESENCE DURATIONS
+        ---------------------------------------------------- */
+
         if (
             pricingModel === "presence"
         ) {
@@ -2126,7 +2558,11 @@
         }
 
 
-        if (
+        /* ----------------------------------------------------
+           CAMPAIGN DURATIONS
+        ---------------------------------------------------- */
+
+        else if (
             pricingModel === "campaign"
         ) {
 
@@ -2138,6 +2574,10 @@
 
         }
 
+
+        /* ----------------------------------------------------
+           BUILD OPTIONS
+        ---------------------------------------------------- */
 
         durations.forEach(
             function(days) {
@@ -2170,7 +2610,9 @@
                             )
                         );
 
-                } else {
+                }
+
+                else {
 
                     option.textContent =
                         days + " days";
@@ -2186,6 +2628,10 @@
         );
 
 
+        /* ----------------------------------------------------
+           RESTORE EDIT VALUE
+        ---------------------------------------------------- */
+
         if (
             previousValue
             &&
@@ -2197,9 +2643,20 @@
         ) {
 
             durationSelect.value =
-                previousValue;
+                String(
+                    previousValue
+                );
 
         }
+
+
+        /*
+         * The original edit duration only needs to be
+         * restored once.
+         */
+
+        durationSelect.dataset.currentDuration =
+            "";
 
     }
 
@@ -2210,17 +2667,28 @@
 
     function updateKalxaPrice() {
 
+        if (
+            !pricingModelInput
+            ||
+            !durationSelect
+            ||
+            !priceDisplay
+            ||
+            !displayedAmountInput
+        ) {
+
+            return;
+
+        }
+
+
         const pricingModel =
-            pricingModelInput
-                ? pricingModelInput.value
-                : "";
+            pricingModelInput.value;
 
 
         const duration =
             Number(
-                durationSelect
-                    ? durationSelect.value
-                    : 0
+                durationSelect.value || 0
             );
 
 
@@ -2238,8 +2706,13 @@
         }
 
 
-        let amount = null;
+        let amount =
+            null;
 
+
+        /* ----------------------------------------------------
+           PRESENCE
+        ---------------------------------------------------- */
 
         if (
             pricingModel === "presence"
@@ -2255,12 +2728,18 @@
         }
 
 
+        /* ----------------------------------------------------
+           CAMPAIGN
+        ---------------------------------------------------- */
+
         if (
             pricingModel === "campaign"
             &&
             duration
             &&
-            zoneCount > 0
+            zoneCount >= 1
+            &&
+            zoneCount <= 3
         ) {
 
             const durationPrices =
@@ -2287,6 +2766,10 @@
         }
 
 
+        /* ----------------------------------------------------
+           NO PRICE YET
+        ---------------------------------------------------- */
+
         if (
             amount === null
             ||
@@ -2296,8 +2779,10 @@
             priceDisplay.textContent =
                 "—";
 
+
             displayedAmountInput.value =
                 "";
+
 
             return;
 
@@ -2319,7 +2804,7 @@
 
 
     /* ========================================================
-       UPDATE COMMERCIAL PACKAGE UI
+       UPDATE COMMERCIAL UI
     ======================================================== */
 
     function updateCommercialUI() {
@@ -2327,6 +2812,10 @@
         const pricingModel =
             getSelectedPricingModel();
 
+
+        /* ----------------------------------------------------
+           SET HIDDEN MODEL
+        ---------------------------------------------------- */
 
         if (pricingModelInput) {
 
@@ -2336,63 +2825,118 @@
         }
 
 
+        /* ----------------------------------------------------
+           PRESENCE
+        ---------------------------------------------------- */
+
         if (
             pricingModel === "presence"
         ) {
 
-            pricingModelDisplay.value =
-                "Presence";
+            if (pricingModelDisplay) {
+
+                pricingModelDisplay.value =
+                    "Presence";
+
+            }
 
 
-            pricingModelHelp.textContent =
-                (
-                    "Presence pricing is based on "
-                    + "visibility duration only."
-                );
+            if (pricingModelHelp) {
+
+                pricingModelHelp.textContent =
+                    (
+                        "Presence pricing is based on "
+                        + "visibility duration only."
+                    );
+
+            }
 
 
-            campaignReachSection.style.display =
-                "none";
+            if (campaignReachSection) {
+
+                campaignReachSection.style.display =
+                    "none";
+
+            }
 
         }
 
+
+        /* ----------------------------------------------------
+           CAMPAIGN
+        ---------------------------------------------------- */
 
         else if (
             pricingModel === "campaign"
         ) {
 
-            pricingModelDisplay.value =
-                "Campaign";
+            if (pricingModelDisplay) {
+
+                pricingModelDisplay.value =
+                    "Campaign";
+
+            }
 
 
-            pricingModelHelp.textContent =
-                (
-                    "Campaign pricing is based on "
-                    + "duration and geographic reach."
-                );
+            if (pricingModelHelp) {
+
+                pricingModelHelp.textContent =
+                    (
+                        "Campaign pricing is based on "
+                        + "duration and geographic reach."
+                    );
+
+            }
 
 
-            campaignReachSection.style.display =
-                "block";
+            if (campaignReachSection) {
+
+                campaignReachSection.style.display =
+                    "block";
+
+            }
+
+
+            /*
+             * Home zone counts as part of purchased reach.
+             */
+
+            ensureCampaignHomeZone();
 
         }
 
 
+        /* ----------------------------------------------------
+           NOT COMMERCIAL
+        ---------------------------------------------------- */
+
         else {
 
-            pricingModelDisplay.value =
-                "Not assigned";
+            if (pricingModelDisplay) {
+
+                pricingModelDisplay.value =
+                    "Not assigned";
+
+            }
 
 
-            pricingModelHelp.textContent =
-                (
-                    "No commercial pricing model "
-                    + "has been assigned yet."
-                );
+            if (pricingModelHelp) {
+
+                pricingModelHelp.textContent =
+                    (
+                        "No commercial pricing model "
+                        + "has been assigned yet."
+                    );
+
+            }
 
 
-            campaignReachSection.style.display =
-                "none";
+            if (campaignReachSection) {
+
+                campaignReachSection.style.display =
+                    "none";
+
+            }
 
         }
 
@@ -2408,7 +2952,7 @@
 
 
     /* ========================================================
-       EVENTS
+       CATEGORY CHANGE
     ======================================================== */
 
     if (categorySelect) {
@@ -2417,7 +2961,9 @@
             "change",
             function() {
 
-                populateContentTypes();
+                populateContentTypes(
+                    null
+                );
 
             }
         );
@@ -2425,25 +2971,73 @@
     }
 
 
+    /* ========================================================
+       CONTENT TYPE CHANGE
+    ======================================================== */
+
     if (contentTypeSelect) {
 
         contentTypeSelect.addEventListener(
             "change",
-            updateWorkflowFields
+            function() {
+
+                updateWorkflowFields();
+
+            }
         );
 
     }
 
+
+    /* ========================================================
+       HOME ZONE CHANGE
+    ======================================================== */
+
+    if (homeZoneSelect) {
+
+        homeZoneSelect.addEventListener(
+            "change",
+            function() {
+
+                if (
+                    getSelectedPricingModel()
+                    === "campaign"
+                ) {
+
+                    ensureCampaignHomeZone();
+
+                }
+
+
+                updateKalxaPrice();
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       DURATION CHANGE
+    ======================================================== */
 
     if (durationSelect) {
 
         durationSelect.addEventListener(
             "change",
-            updateKalxaPrice
+            function() {
+
+                updateKalxaPrice();
+
+            }
         );
 
     }
 
+
+    /* ========================================================
+       CAMPAIGN ZONE CHANGE
+    ======================================================== */
 
     zoneCheckboxes.forEach(
         function(checkbox) {
@@ -2452,16 +3046,63 @@
                 "change",
                 function() {
 
-                    const zoneCount =
+                    const pricingModel =
+                        getSelectedPricingModel();
+
+
+                    /*
+                     * Campaign home zone must remain selected.
+                     */
+
+                    if (
+                        pricingModel
+                        === "campaign"
+                    ) {
+
+                        ensureCampaignHomeZone();
+
+                    }
+
+
+                    let zoneCount =
                         getSelectedZoneCount();
 
+
+                    /*
+                     * Maximum 3 zones.
+                     */
 
                     if (
                         zoneCount > 3
                     ) {
 
-                        checkbox.checked =
-                            false;
+                        const homeZoneId =
+                            homeZoneSelect
+                                ? String(
+                                    homeZoneSelect.value
+                                )
+                                : "";
+
+
+                        const changedZoneId =
+                            String(
+                                checkbox.dataset.zoneId
+                            );
+
+
+                        /*
+                         * Don't remove the required home zone.
+                         */
+
+                        if (
+                            changedZoneId
+                            !== homeZoneId
+                        ) {
+
+                            checkbox.checked =
+                                false;
+
+                        }
 
 
                         alert(
@@ -2471,6 +3112,22 @@
                                 + "of 3 zones."
                             )
                         );
+
+
+                        ensureCampaignHomeZone();
+
+                        zoneCount =
+                            getSelectedZoneCount();
+
+                    }
+
+
+                    if (zoneCountDisplay) {
+
+                        zoneCountDisplay.textContent =
+                            String(
+                                zoneCount
+                            );
 
                     }
 
@@ -2486,6 +3143,22 @@
 
     /* ========================================================
        INITIAL LOAD
+
+       IMPORTANT ORDER:
+
+       category
+           ↓
+       content types
+           ↓
+       workflow
+           ↓
+       Presence / Campaign
+           ↓
+       duration options
+           ↓
+       reach
+           ↓
+       package price
     ======================================================== */
 
     populateContentTypes(
@@ -2549,7 +3222,8 @@
         }
 
 
-        imagePreview.innerHTML = "";
+        imagePreview.innerHTML =
+            "";
 
 
         selectedImages.forEach(
@@ -2590,8 +3264,10 @@
                 removeButton.type =
                     "button";
 
+
                 removeButton.textContent =
                     "×";
+
 
                 removeButton.className =
                     "remove-selected-image";
@@ -2619,9 +3295,11 @@
                     image
                 );
 
+
                 wrapper.appendChild(
                     removeButton
                 );
+
 
                 imagePreview.appendChild(
                     wrapper
@@ -2645,8 +3323,13 @@
                     );
 
 
+                let rejectedBecauseOfLimit =
+                    false;
+
+
                 for (
-                    const file of newFiles
+                    const file
+                    of newFiles
                 ) {
 
                     const alreadyExists =
@@ -2665,58 +3348,40 @@
                         );
 
 
-                    if (
-                        !alreadyExists
-                        &&
-                        selectedImages.length < 3
-                    ) {
+                    if (alreadyExists) {
 
-                        selectedImages.push(
-                            file
-                        );
+                        continue;
 
                     }
+
+
+                    if (
+                        selectedImages.length
+                        >= 3
+                    ) {
+
+                        rejectedBecauseOfLimit =
+                            true;
+
+                        continue;
+
+                    }
+
+
+                    selectedImages.push(
+                        file
+                    );
 
                 }
 
 
                 if (
-                    selectedImages.length >= 3
-                    &&
-                    newFiles.length > 0
+                    rejectedBecauseOfLimit
                 ) {
 
-                    const rejectedFileExists =
-                        newFiles.some(
-                            function(file) {
-
-                                return !selectedImages.some(
-                                    function(selectedFile) {
-
-                                        return (
-                                            selectedFile.name
-                                            === file.name
-                                            &&
-                                            selectedFile.size
-                                            === file.size
-                                        );
-
-                                    }
-                                );
-
-                            }
-                        );
-
-
-                    if (
-                        rejectedFileExists
-                    ) {
-
-                        alert(
-                            "You can upload a maximum of 3 images."
-                        );
-
-                    }
+                    alert(
+                        "You can upload a maximum of 3 images."
+                    );
 
                 }
 
@@ -2736,3 +3401,7 @@
 </body>
 
 </html>
+
+
+
+     
