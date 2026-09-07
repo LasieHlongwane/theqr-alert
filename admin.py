@@ -19,7 +19,7 @@ from flask import (
     session,
     url_for,
     send_file,
-    current_app
+    current_app,
 )
 
 from sqlalchemy import func
@@ -34,6 +34,7 @@ from models import (
     AccessPoint,
     QRScan,
     ContentItem,
+    ListingClaim
     PendingSubmission,
     PendingSubmissionImage,
     ContentImage,
@@ -695,6 +696,497 @@ def access_point_qr(access_point_id):
         qr_buffer,
         mimetype="image/png",
     )
+
+
+# ============================================================
+# LISTING CLAIMS
+# ============================================================
+
+@admin_bp.route(
+    "/claims"
+)
+def claims():
+
+    # ========================================================
+    # GET FILTER
+    # ========================================================
+
+    status_filter = (
+        request.args.get(
+            "status",
+            "pending",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    allowed_statuses = {
+        "pending",
+        "approved",
+        "rejected",
+        "all",
+    }
+
+
+    if status_filter not in allowed_statuses:
+
+        status_filter = "pending"
+
+
+    # ========================================================
+    # BASE QUERY
+    # ========================================================
+
+    query = ListingClaim.query
+
+
+    # ========================================================
+    # FILTER BY STATUS
+    # ========================================================
+
+    if status_filter != "all":
+
+        query = query.filter(
+            ListingClaim.status
+            == status_filter
+        )
+
+
+    # ========================================================
+    # LOAD CLAIMS
+    # ========================================================
+
+    claim_items = (
+        query
+        .order_by(
+            ListingClaim.created_at.desc()
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # COUNTS
+    # ========================================================
+
+    pending_count = (
+        ListingClaim.query
+        .filter(
+            ListingClaim.status
+            == "pending"
+        )
+        .count()
+    )
+
+
+    approved_count = (
+        ListingClaim.query
+        .filter(
+            ListingClaim.status
+            == "approved"
+        )
+        .count()
+    )
+
+
+    rejected_count = (
+        ListingClaim.query
+        .filter(
+            ListingClaim.status
+            == "rejected"
+        )
+        .count()
+    )
+
+
+    total_count = (
+        ListingClaim.query
+        .count()
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "admin/claims.html",
+
+        claims=claim_items,
+
+        status_filter=status_filter,
+
+        pending_count=pending_count,
+
+        approved_count=approved_count,
+
+        rejected_count=rejected_count,
+
+        total_count=total_count,
+    )
+
+
+# ============================================================
+# LISTING CLAIM DETAIL
+# ============================================================
+
+@admin_bp.route(
+    "/claims/<int:claim_id>"
+)
+def claim_detail(
+    claim_id,
+):
+
+    claim = (
+        ListingClaim.query
+        .filter_by(
+            id=claim_id
+        )
+        .first_or_404()
+    )
+
+
+    item = claim.content_item
+
+
+    return render_template(
+        "admin/claim_detail.html",
+
+        claim=claim,
+
+        item=item,
+    )
+
+
+# ============================================================
+# APPROVE LISTING CLAIM
+# ============================================================
+
+@admin_bp.route(
+    "/claims/<int:claim_id>/approve",
+    methods=["POST"],
+)
+def approve_claim(
+    claim_id,
+):
+
+    # ========================================================
+    # FIND CLAIM
+    # ========================================================
+
+    claim = (
+        ListingClaim.query
+        .filter_by(
+            id=claim_id
+        )
+        .first_or_404()
+    )
+
+
+    item = claim.content_item
+
+
+    # ========================================================
+    # CLAIM MUST STILL BE PENDING
+    # ========================================================
+
+    if claim.status != "pending":
+
+        flash(
+            "This claim has already been reviewed.",
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "admin.claim_detail",
+                claim_id=claim.id,
+            )
+        )
+
+
+    # ========================================================
+    # LISTING MUST STILL BE CLAIMABLE
+    # ========================================================
+
+    if not item.can_be_claimed():
+
+        flash(
+            (
+                "This listing can no longer be claimed. "
+                "Its ownership or listing level has changed."
+            ),
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "admin.claim_detail",
+                claim_id=claim.id,
+            )
+        )
+
+
+    # ========================================================
+    # ADMIN NOTES
+    # ========================================================
+
+    admin_notes = (
+        request.form.get(
+            "admin_notes",
+            ""
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # APPROVE CLAIM
+    # ========================================================
+    #
+    # Discovery
+    #     ↓
+    # Business
+    #
+    # Unclaimed
+    #     ↓
+    # Claimed
+    #
+    # Verification is granted because an administrator
+    # has explicitly reviewed and approved the claim.
+    #
+    # ========================================================
+
+    claim.status = "approved"
+
+    claim.reviewed_at = datetime.utcnow()
+
+    claim.admin_notes = (
+        admin_notes
+        if admin_notes
+        else None
+    )
+
+
+    item.listing_level = "business"
+
+    item.ownership_status = "claimed"
+
+    item.is_verified = True
+
+
+    # ========================================================
+    # FEATURED IS NOT AUTOMATIC
+    # ========================================================
+    #
+    # Claiming a listing does NOT turn it into paid
+    # Promotion.
+    #
+    # This also protects against an old seeded listing
+    # accidentally retaining featured=True.
+    #
+    # ========================================================
+
+    item.featured = False
+
+
+    # ========================================================
+    # NOTIFICATION DISTRIBUTION IS NOT AUTOMATIC
+    # ========================================================
+
+    item.notification_eligible = False
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            "Failed to approve listing claim. "
+            "claim_id=%s content_item_id=%s error=%s",
+            claim.id,
+            item.id,
+            exc,
+        )
+
+
+        flash(
+            "The claim could not be approved.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.claim_detail",
+                claim_id=claim.id,
+            )
+        )
+
+
+    flash(
+        (
+            "Claim approved. "
+            "The listing is now business-controlled."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin.claim_detail",
+            claim_id=claim.id,
+        )
+    )
+
+
+# ============================================================
+# REJECT LISTING CLAIM
+# ============================================================
+
+@admin_bp.route(
+    "/claims/<int:claim_id>/reject",
+    methods=["POST"],
+)
+def reject_claim(
+    claim_id,
+):
+
+    # ========================================================
+    # FIND CLAIM
+    # ========================================================
+
+    claim = (
+        ListingClaim.query
+        .filter_by(
+            id=claim_id
+        )
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # CLAIM MUST STILL BE PENDING
+    # ========================================================
+
+    if claim.status != "pending":
+
+        flash(
+            "This claim has already been reviewed.",
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "admin.claim_detail",
+                claim_id=claim.id,
+            )
+        )
+
+
+    # ========================================================
+    # ADMIN NOTES
+    # ========================================================
+
+    admin_notes = (
+        request.form.get(
+            "admin_notes",
+            ""
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # REJECT CLAIM
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # We only update the claim.
+    #
+    # The ContentItem remains:
+    #
+    # listing_level = discovery
+    # ownership_status = unclaimed
+    # is_verified = False
+    #
+    # This means another legitimate owner can claim it later.
+    #
+    # ========================================================
+
+    claim.status = "rejected"
+
+    claim.reviewed_at = datetime.utcnow()
+
+    claim.admin_notes = (
+        admin_notes
+        if admin_notes
+        else None
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            "Failed to reject listing claim. "
+            "claim_id=%s error=%s",
+            claim.id,
+            exc,
+        )
+
+
+        flash(
+            "The claim could not be rejected.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.claim_detail",
+                claim_id=claim.id,
+            )
+        )
+
+
+    flash(
+        "Claim rejected.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin.claim_detail",
+            claim_id=claim.id,
+        )
+    )
+
 
 
 @admin_bp.route(
