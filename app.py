@@ -44,7 +44,7 @@ from models import (
     ZoneCategoryAppearance,
     Category,
     PushSubscriber,
-    ListingClaim
+    ListingClaim,
     EngagementEvent,
 )
 import json
