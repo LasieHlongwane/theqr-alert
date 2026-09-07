@@ -1755,65 +1755,73 @@ def push_subscribe():
 @app.route(
     "/listing/<int:item_id>"
 )
-def listing_detail(item_id):
+def listing_detail(
+    item_id,
+):
 
-    today = date.today()
+    # =====================================================
+    # LOAD LISTING
+    # =====================================================
 
     item = (
         ContentItem.query
-        .filter(
-            ContentItem.id == item_id,
-            ContentItem.active.is_(True),
-            ContentItem.archived.is_(False),
+        .get_or_404(
+            item_id
         )
-        .first_or_404()
     )
 
-    # -----------------------------------------------------
-    # EXPIRY
-    # -----------------------------------------------------
 
-    if content_is_expired(
-        item,
-        today,
-    ):
-        abort(404)
+    zone = item.zone
 
-    # -----------------------------------------------------
-    # CATEGORY
-    # -----------------------------------------------------
 
-    category = (
-        Category.query
-        .filter_by(
-            slug=item.category,
-            active=True,
-        )
-        .first_or_404()
+    category = get_category_config(
+        item.category
     )
 
-    # -----------------------------------------------------
-    # RECORD LISTING VIEW
-    # -----------------------------------------------------
 
-    item.view_count = (
-        item.view_count or 0
-    ) + 1
+    # =====================================================
+    # ACCESS POINT ATTRIBUTION
+    #
+    # Example:
+    #
+    # /listing/27?ap=3
+    #
+    # We only accept the access point if it belongs
+    # to the same zone as the listing.
+    # =====================================================
 
-    db.session.commit()
+    access_point = None
 
-    # -----------------------------------------------------
-    # TEMPLATE
-    # -----------------------------------------------------
+
+    access_point_id = request.args.get(
+        "ap",
+        type=int,
+    )
+
+
+    if access_point_id:
+
+        access_point = (
+            AccessPoint.query
+            .filter_by(
+                id=access_point_id,
+                zone_id=item.zone_id,
+            )
+            .first()
+        )
+
 
     return render_template(
         "listing_detail.html",
-        item=item,
-        category=category,
-        zone=item.zone,
-        today=today,
-    )
 
+        item=item,
+
+        zone=zone,
+
+        category=category,
+
+        access_point=access_point,
+    )
 
 # =========================================================
 # FIND LIVE ACCESS POINT FOR CONTENT
