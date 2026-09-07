@@ -789,6 +789,153 @@ def _build_business_analytics(
     ]
 
 
+    # =========================================================
+# ACCESS POINT ATTRIBUTION
+#
+# Shows which physical Kalxa access points
+# generated attention/actions for this listing.
+# =========================================================
+
+    access_point_rows = (
+
+     db.session.query(
+
+        EngagementEvent.access_point_id,
+
+        AccessPoint.name,
+
+        func.sum(
+            case(
+                (
+                    EngagementEvent.event_type
+                    == "listing_view",
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "views"
+        ),
+
+        func.sum(
+            case(
+                (
+                    EngagementEvent.event_type.in_(
+                        ACTION_EVENTS
+                    ),
+                    1,
+                ),
+                else_=0,
+            )
+        ).label(
+            "actions"
+        ),
+
+     )
+
+     .join(
+        AccessPoint,
+        EngagementEvent.access_point_id
+        == AccessPoint.id,
+     )
+
+     .filter(
+
+        EngagementEvent.content_item_id
+        == item.id,
+
+        EngagementEvent.created_at
+        >= start_datetime,
+
+        EngagementEvent.created_at
+        < end_datetime,
+
+        EngagementEvent.access_point_id
+        .isnot(None),
+
+     )
+
+     .group_by(
+        EngagementEvent.access_point_id,
+        AccessPoint.name,
+     )
+
+     .order_by(
+        func.sum(
+            case(
+                (
+                    EngagementEvent.event_type
+                    == "listing_view",
+                    1,
+                ),
+                else_=0,
+            )
+        ).desc()
+     )
+
+     .all()
+    )
+
+
+    access_points = []
+
+
+    for (
+     access_point_id,
+     access_point_name,
+     views,
+     actions,
+    ) in access_point_rows:
+
+     views = int(
+        views or 0
+     )
+
+     actions = int(
+        actions or 0
+     )
+
+
+     action_rate = (
+
+        round(
+            (
+                actions
+                / views
+            )
+            * 100,
+            1,
+        )
+
+        if views
+
+        else 0.0
+
+     )
+
+
+     access_points.append(
+        {
+
+            "id":
+                access_point_id,
+
+            "name":
+                access_point_name,
+
+            "views":
+                views,
+
+            "actions":
+                actions,
+
+            "action_rate":
+                action_rate,
+
+        }
+     )
+
+
     # =====================================================
     # RETURN ANALYTICS
     # =====================================================
@@ -821,6 +968,9 @@ def _build_business_analytics(
 
         "best_day":
             best_day,
+        
+        "access_points":
+            access_points,
 
         "action_breakdown":
             action_breakdown,
