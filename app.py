@@ -1751,7 +1751,6 @@ def push_subscribe():
 # =========================================================
 # PUBLIC LISTING DETAIL
 # =========================================================
-
 @app.route(
     "/listing/<int:item_id>"
 )
@@ -1780,6 +1779,13 @@ def listing_detail(
 
     # =====================================================
     # CATEGORY
+    #
+    # ContentItem.category stores the category slug.
+    #
+    # Example:
+    # item.category = "restaurants"
+    #
+    # Category.slug = "restaurants"
     # =====================================================
 
     category = (
@@ -1792,7 +1798,29 @@ def listing_detail(
 
 
     # =====================================================
+    # SAFETY FALLBACK
+    #
+    # If an old ContentItem contains a category slug
+    # that no longer exists, do not crash the page.
+    # =====================================================
+
+    if category is None:
+
+        current_app.logger.warning(
+            "[Kalxa Listing] "
+            "Category not found "
+            "for listing_id=%s category=%s",
+            item.id,
+            item.category,
+        )
+
+
+    # =====================================================
     # ACCESS POINT ATTRIBUTION
+    #
+    # Example:
+    #
+    # /listing/45?ap=1
     # =====================================================
 
     access_point = None
@@ -1817,7 +1845,7 @@ def listing_detail(
 
 
     # =====================================================
-    # RENDER
+    # RENDER LISTING
     # =====================================================
 
     return render_template(
