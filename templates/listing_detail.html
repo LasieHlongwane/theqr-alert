@@ -69,7 +69,7 @@
 
 
     <!-- =========================================
-         CSS
+         MAIN CSS
     ========================================== -->
 
     <link
@@ -79,6 +79,190 @@
             filename='css/style.css'
         ) }}"
     >
+
+
+    <!-- =========================================
+         CLAIM LISTING CSS
+    ========================================== -->
+
+    <style>
+
+        .claim-listing-box {
+
+            margin-top: 24px;
+
+            padding: 18px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.045
+                );
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.09
+                );
+
+            border-radius: 18px;
+
+        }
+
+
+        .claim-listing-label {
+
+            margin-bottom: 6px;
+
+            color: #fff4df;
+
+            font-size: 15px;
+
+            font-weight: 900;
+
+            line-height: 1.3;
+
+        }
+
+
+        .claim-listing-text {
+
+            margin:
+                0
+                0
+                14px;
+
+            color: #9fa4ab;
+
+            font-size: 12px;
+
+            line-height: 1.55;
+
+        }
+
+
+        .claim-listing-button {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 12px;
+
+            width: 100%;
+
+            padding:
+                13px
+                14px;
+
+            background: #fff4df;
+
+            color: #111317;
+
+            border-radius: 12px;
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 900;
+
+            transition:
+                transform 0.12s ease,
+                opacity 0.12s ease;
+
+        }
+
+
+        .claim-listing-button:active {
+
+            transform:
+                scale(0.985);
+
+        }
+
+
+        .claim-listing-arrow {
+
+            flex-shrink: 0;
+
+            font-size: 16px;
+
+            line-height: 1;
+
+        }
+
+
+        /* -----------------------------------------
+           PENDING CLAIM
+        ------------------------------------------ */
+
+        .claim-listing-box.pending {
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.035
+                );
+
+        }
+
+
+        .claim-pending-status {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            margin-top: 2px;
+
+            padding:
+                6px
+                9px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.09
+                );
+
+            border-radius: 999px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.055
+                );
+
+            color: #c6c9ce;
+
+            font-size: 10px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.4px;
+
+            text-transform: uppercase;
+
+        }
+
+    </style>
 
 </head>
 
@@ -188,12 +372,12 @@
         {% else %}
 
 
-            <!--
-                LEVEL 1 — DISCOVERY
+            <!-- =================================
+                 LEVEL 1 — DISCOVERY
 
-                Discovery listings may display one
-                basic discovery image only.
-            -->
+                 Discovery listings may display
+                 one discovery image only.
+            ================================== -->
 
             {% if item.image_url %}
 
@@ -215,31 +399,32 @@
 
             </div>
 
+
             {% elif item.images %}
 
-            {% set discovery_image = item.images|first %}
+                {% set discovery_image = item.images|first %}
 
-            {% if discovery_image %}
+                {% if discovery_image %}
 
-            <div class="listing-detail-gallery single">
+                <div class="listing-detail-gallery single">
 
-                <button
-                    type="button"
-                    data-image-url="{{ discovery_image.image_url }}"
-                    data-image-alt="{{ item.title }}"
-                    onclick="openImageModalFromButton(this)"
-                >
-
-                    <img
-                        src="{{ discovery_image.image_url }}"
-                        alt="{{ item.title }}"
+                    <button
+                        type="button"
+                        data-image-url="{{ discovery_image.image_url }}"
+                        data-image-alt="{{ item.title }}"
+                        onclick="openImageModalFromButton(this)"
                     >
 
-                </button>
+                        <img
+                            src="{{ discovery_image.image_url }}"
+                            alt="{{ item.title }}"
+                        >
 
-            </div>
+                    </button>
 
-            {% endif %}
+                </div>
+
+                {% endif %}
 
             {% endif %}
 
@@ -253,6 +438,10 @@
 
         <article class="listing-detail-main">
 
+
+            <!-- =================================
+                 BADGES
+            ================================== -->
 
             <div class="listing-badge-row">
 
@@ -286,6 +475,10 @@
             </div>
 
 
+            <!-- =================================
+                 TITLE
+            ================================== -->
+
             <h1>
                 {{ item.title }}
             </h1>
@@ -316,10 +509,12 @@
             <div class="listing-detail-info-grid">
 
 
-                <!--
-                    LOCATION IS A DISCOVERY FEATURE.
-                    All levels can see it.
-                -->
+                <!-- =================================
+                     LOCATION
+
+                     Discovery feature.
+                     Visible at every level.
+                ================================== -->
 
                 {% if item.venue %}
 
@@ -341,7 +536,7 @@
                 <!-- =================================
                      PRICE
 
-                     LEVEL 2 + LEVEL 3 ONLY
+                     BUSINESS + PROMOTION ONLY
                 ================================== -->
 
                 {% if
@@ -354,13 +549,17 @@
                     <span>
 
                         {% if category.slug == "property" %}
+
                             🏠 Rent
 
                         {% elif category.slug == "events" %}
+
                             🎟️ Entry
 
                         {% else %}
+
                             💰 Price / Deal
+
                         {% endif %}
 
                     </span>
@@ -377,7 +576,7 @@
                 <!-- =================================
                      PUBLIC DATES
 
-                     Dates remain visible at all levels.
+                     Visible at every level.
                 ================================== -->
 
                 {% if category.slug == "events" %}
@@ -503,8 +702,6 @@
 
                     <!-- =============================
                          WHATSAPP
-
-                         BUSINESS + PROMOTION
                     ============================== -->
 
                     {% if item.contact %}
@@ -527,8 +724,6 @@
 
                     <!-- =============================
                          PHONE CALL
-
-                         BUSINESS + PROMOTION
                     ============================== -->
 
                     {% if item.contact %}
@@ -549,10 +744,6 @@
 
                     <!-- =============================
                          DIRECTIONS
-
-                         BUSINESS + PROMOTION
-
-                         Uses existing venue field.
                     ============================== -->
 
                     {% if item.venue %}
@@ -584,9 +775,6 @@
                  SHARE
 
                  AVAILABLE TO ALL LEVELS.
-
-                 Sharing Discovery listings helps
-                 grow Kalxa organically.
             ================================== -->
 
             <button
@@ -609,11 +797,75 @@
             <!-- =================================
                  CLAIM LISTING
 
-                 NOT ENABLED YET.
+                 DISCOVERY + UNCLAIMED ONLY
 
-                 We will add this after the
-                 /claim/<item_id> workflow exists.
+                 If there is already a pending claim,
+                 visitors see the review status instead
+                 of another claim button.
             ================================== -->
+
+            {% if
+                item.can_be_claimed()
+                and not item.has_pending_claim()
+            %}
+
+            <section class="claim-listing-box">
+
+                <div class="claim-listing-label">
+                    Is this your business?
+                </div>
+
+                <p class="claim-listing-text">
+                    Claim this listing to manage your
+                    business information and unlock richer
+                    listing features on Kalxa.
+                </p>
+
+                <a
+                    href="{{ url_for(
+                        'claim_listing',
+                        item_id=item.id
+                    ) }}"
+                    class="claim-listing-button"
+                >
+
+                    <span>
+                        Claim this listing
+                    </span>
+
+                    <span class="claim-listing-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </section>
+
+
+            {% elif
+                item.can_be_claimed()
+                and item.has_pending_claim()
+            %}
+
+            <section class="claim-listing-box pending">
+
+                <div class="claim-listing-label">
+                    ⏳ Ownership claim under review
+                </div>
+
+                <p class="claim-listing-text">
+                    A claim for this listing has already
+                    been submitted and is currently being
+                    reviewed by Kalxa.
+                </p>
+
+                <div class="claim-pending-status">
+                    ● Pending review
+                </div>
+
+            </section>
+
+            {% endif %}
 
 
         </article>
