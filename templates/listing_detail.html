@@ -767,11 +767,19 @@
 
                 <span class="listing-detail-category-badge">
 
+                   {% if category %}
+
                     {% if category.icon %}
-                        {{ category.icon }}
+                     {{ category.icon }}
                     {% endif %}
 
                     {{ category.name }}
+
+                   {% else %}
+
+                    {{ item.category | replace("_", " ") | title }}
+
+                   {% endif %}
 
                 </span>
 
