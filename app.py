@@ -372,31 +372,24 @@ def get_active_category_by_slug(
 
 def get_active_content(
     zone_id,
-    category,
+    category_slug,
 ):
 
     # =====================================================
     # CURRENT DATE / TIME
-    #
-    # today:
-    #     Used by the natural content lifecycle.
-    #
-    # now:
-    #     Used by the commercial package lifecycle.
     # =====================================================
 
     today = date.today()
-
     now = datetime.utcnow()
 
 
     # =====================================================
-    # NORMALIZE CATEGORY
+    # NORMALIZE CATEGORY SLUG
     # =====================================================
 
-    category = (
+    category_slug = (
         str(
-            category
+            category_slug
             or ""
         )
         .strip()
@@ -408,9 +401,6 @@ def get_active_content(
     # PROMOTION PRIORITY
     #
     # Only Promotion + Featured receives ranking priority.
-    #
-    # Presence / Campaign pricing alone does NOT make an
-    # item featured.
     # =====================================================
 
     promotion_priority = db.case(
@@ -437,17 +427,17 @@ def get_active_content(
     # =====================================================
     # ZONE VISIBILITY
     #
-    # Content can appear in a zone when:
+    # Content appears when:
     #
-    # 1. The zone is its home/origin zone.
+    # 1. The requested zone is its home/origin zone
     #
     # OR
     #
     # 2. It is a Campaign distributed into that zone.
     #
-    # .any() creates an EXISTS-style condition, so one
-    # ContentItem is not duplicated when it has several
-    # distribution zones.
+    # .any() uses EXISTS-style logic, so one campaign
+    # remains one ContentItem even when distributed to
+    # several zones.
     # =====================================================
 
     zone_visibility = db.or_(
@@ -461,7 +451,7 @@ def get_active_content(
 
 
         # -------------------------------------------------
-        # CAMPAIGN DISTRIBUTION
+        # PURCHASED CAMPAIGN DISTRIBUTION
         # -------------------------------------------------
 
         db.and_(
@@ -484,41 +474,23 @@ def get_active_content(
     # =====================================================
     # COMMERCIAL VISIBILITY
     #
-    # There are TWO valid paths.
+    # NON-COMMERCIAL:
+    #
+    # pricing_model = NULL
+    #
+    # Existing/community/legacy Kalxa content continues
+    # using the normal content lifecycle.
     #
     #
-    # PATH 1 — NON-COMMERCIAL / LEGACY CONTENT
+    # COMMERCIAL:
     #
-    # pricing_model = None
+    # Must be:
     #
-    # Existing Kalxa-curated/community/legacy content
-    # continues to work normally.
+    # paid OR waived
     #
+    # AND
     #
-    # PATH 2 — COMMERCIAL CONTENT
-    #
-    # Presence or Campaign content must:
-    #
-    #     payment_status = paid OR waived
-    #
-    #     commercial_starts_at exists
-    #
-    #     commercial_expires_at exists
-    #
-    #     commercial_starts_at <= now
-    #
-    #     commercial_expires_at >= now
-    #
-    #
-    # Therefore:
-    #
-    # unpaid   -> hidden
-    # refunded -> hidden
-    # expired  -> hidden
-    # malformed commercial record -> hidden
-    #
-    # paid + current   -> visible
-    # waived + current -> visible
+    # inside its purchased commercial period.
     # =====================================================
 
     commercial_visibility = db.or_(
@@ -576,16 +548,7 @@ def get_active_content(
 
 
     # =====================================================
-    # BASE PUBLIC QUERY
-    #
-    # An item must now pass:
-    #
-    #     active
-    #     correct category
-    #     correct geographic visibility
-    #     commercial visibility
-    #
-    # before natural content lifecycle rules are applied.
+    # BASE QUERY
     # =====================================================
 
     query = (
@@ -597,7 +560,7 @@ def get_active_content(
             ),
 
             ContentItem.category
-            == category,
+            == category_slug,
 
             zone_visibility,
 
@@ -610,26 +573,17 @@ def get_active_content(
     # =====================================================
     # EVENTS
     #
-    # IMPORTANT:
+    # Upcoming events must appear BEFORE the event date.
     #
-    # Upcoming events must be visible BEFORE their event
-    # date.
-    #
-    # Therefore we intentionally DO NOT require:
+    # Therefore we intentionally do NOT require:
     #
     #     start_date <= today
     #
-    # We only stop showing the event when its natural
-    # content end date has passed.
-    #
-    # Commercial expiry is already enforced separately
-    # above.
+    # An event remains discoverable until its end_date
+    # passes.
     # =====================================================
 
-    if (
-        category
-        == "events"
-    ):
+    if category_slug == "events":
 
         query = (
             query
@@ -654,25 +608,11 @@ def get_active_content(
             query
             .order_by(
 
-                # -----------------------------------------
-                # Promotion + Featured first
-                # -----------------------------------------
-
                 promotion_priority.desc(),
-
-
-                # -----------------------------------------
-                # Nearest upcoming event next
-                # -----------------------------------------
 
                 ContentItem.event_date
                 .asc()
                 .nullslast(),
-
-
-                # -----------------------------------------
-                # Newest as final tie-breaker
-                # -----------------------------------------
 
                 ContentItem.created_at
                 .desc(),
@@ -685,24 +625,15 @@ def get_active_content(
     # =====================================================
     # NON-EVENT CONTENT
     #
-    # Preserve existing natural lifecycle:
+    # Normal content lifecycle remains:
     #
-    # start_date:
-    #     None OR already started
-    #
-    # end_date:
-    #     None OR not expired
-    #
-    # Commercial expiry remains independent.
+    # start_date = NULL or already started
+    # end_date   = NULL or not expired
     # =====================================================
 
     query = (
         query
         .filter(
-
-            # -------------------------------------------------
-            # NATURAL START DATE
-            # -------------------------------------------------
 
             db.or_(
 
@@ -714,11 +645,6 @@ def get_active_content(
                 <= today,
 
             ),
-
-
-            # -------------------------------------------------
-            # NATURAL END DATE
-            # -------------------------------------------------
 
             db.or_(
 
@@ -743,25 +669,11 @@ def get_active_content(
         query
         .order_by(
 
-            # -------------------------------------------------
-            # Promotion + Featured first
-            # -------------------------------------------------
-
             promotion_priority.desc(),
-
-
-            # -------------------------------------------------
-            # Natural content start date
-            # -------------------------------------------------
 
             ContentItem.start_date
             .asc()
             .nullslast(),
-
-
-            # -------------------------------------------------
-            # Newest as final tie-breaker
-            # -------------------------------------------------
 
             ContentItem.created_at
             .desc(),
