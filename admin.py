@@ -5191,17 +5191,25 @@ def _validate_and_normalize_content_dates(
     }, None
 
 
-
 @admin_bp.route(
     "/content/new",
     methods=["GET", "POST"],
 )
 def create_content():
 
+    # =====================================================
+    # ADMIN AUTHENTICATION
+    # =====================================================
+
     auth = require_admin()
 
     if auth:
         return auth
+
+
+    # =====================================================
+    # LOAD ZONES
+    # =====================================================
 
     zones = (
         Zone.query
@@ -5214,9 +5222,21 @@ def create_content():
         .all()
     )
 
+
+    # =====================================================
+    # LOAD CATEGORIES
+    # =====================================================
+
     categories = (
-        get_categories()
+        get_categories(
+            active_only=False
+        )
     )
+
+
+    # =====================================================
+    # POST — CREATE CONTENT
+    # =====================================================
 
     if request.method == "POST":
 
@@ -5229,6 +5249,7 @@ def create_content():
             type=int,
         )
 
+
         category = (
             request.form.get(
                 "category",
@@ -5237,6 +5258,7 @@ def create_content():
             .strip()
             .lower()
         )
+
 
         content_type = (
             request.form.get(
@@ -5248,6 +5270,7 @@ def create_content():
             or None
         )
 
+
         title = (
             request.form.get(
                 "title",
@@ -5256,8 +5279,9 @@ def create_content():
             .strip()
         )
 
+
         # =================================================
-        # REQUIRED FIELD VALIDATION
+        # REQUIRED FIELDS
         # =================================================
 
         if (
@@ -5277,6 +5301,7 @@ def create_content():
                 None,
             )
 
+
         # =================================================
         # VALIDATE ZONE
         # =================================================
@@ -5286,13 +5311,11 @@ def create_content():
             zone_id,
         )
 
-        if (
-            not zone
-            or not zone.active
-        ):
+
+        if not zone:
 
             flash(
-                "Please select a valid active zone.",
+                "Selected zone does not exist.",
                 "error",
             )
 
@@ -5301,21 +5324,19 @@ def create_content():
                 categories,
                 None,
             )
+
 
         # =================================================
         # VALIDATE CATEGORY
         # =================================================
 
-        category_record = (
-            get_category_by_slug(
-                category
-            )
-        )
-
-        if not category_record:
+        if not get_category_by_slug(
+            category,
+            active_only=False,
+        ):
 
             flash(
-                "Invalid or inactive content category.",
+                "Invalid content category.",
                 "error",
             )
 
@@ -5324,6 +5345,7 @@ def create_content():
                 categories,
                 None,
             )
+
 
         # =================================================
         # DETERMINE CONTENT WORKFLOW
@@ -5336,22 +5358,29 @@ def create_content():
             )
         )
 
+
         lifetime_type = (
             workflow[
                 "lifetime_type"
             ]
         )
 
-        notification_eligible = bool(
+
+        # -------------------------------------------------
+        # Workflow determines whether this TYPE of content
+        # is technically eligible for notifications.
+        #
+        # Listing level below determines whether this
+        # specific listing has permission to use them.
+        # -------------------------------------------------
+
+        workflow_notification_eligible = bool(
             workflow.get(
                 "notification_eligible",
                 False,
             )
         )
 
-        availability_status = (
-            "available"
-        )
 
         # =================================================
         # VALIDATE + NORMALIZE DATES
@@ -5368,6 +5397,7 @@ def create_content():
                 )
             )
 
+
         except ValueError:
 
             flash(
@@ -5380,6 +5410,7 @@ def create_content():
                 categories,
                 None,
             )
+
 
         if error:
 
@@ -5394,40 +5425,216 @@ def create_content():
                 None,
             )
 
+
         # =================================================
-        # IMAGE UPLOAD
+        # LISTING LEVEL
         # =================================================
 
-        uploaded_images = (
-            request.files.getlist(
-                "images"
+        listing_level = (
+            request.form.get(
+                "listing_level",
+                "discovery",
             )
+            .strip()
+            .lower()
         )
 
-        uploaded_images = [
-            image
-            for image in uploaded_images
-            if (
-                image
-                and image.filename
-            )
-        ]
 
-        if len(uploaded_images) > 3:
+        allowed_listing_levels = {
+            "discovery",
+            "business",
+            "promotion",
+        }
 
-            flash(
-                "You can upload a maximum of 3 images.",
-                "error",
+
+        if (
+            listing_level
+            not in allowed_listing_levels
+        ):
+
+            listing_level = (
+                "discovery"
             )
 
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
 
         # =================================================
-        # CREATE CONTENT
+        # OWNERSHIP + VERIFICATION
+        # =================================================
+
+        if (
+            listing_level
+            == "discovery"
+        ):
+
+            ownership_status = (
+                "unclaimed"
+            )
+
+            is_verified = (
+                False
+            )
+
+
+        else:
+
+            ownership_status = (
+                "claimed"
+            )
+
+            is_verified = (
+                request.form.get(
+                    "is_verified"
+                )
+                == "on"
+            )
+
+
+        # =================================================
+        # PROMOTION RULES
+        # =================================================
+
+        if (
+            listing_level
+            == "promotion"
+        ):
+
+            featured = (
+                request.form.get(
+                    "featured"
+                )
+                == "on"
+            )
+
+
+            promotion_notification_requested = (
+                request.form.get(
+                    "notification_eligible"
+                )
+                == "on"
+            )
+
+
+            notification_eligible = (
+                workflow_notification_eligible
+                and
+                promotion_notification_requested
+            )
+
+
+        else:
+
+            featured = (
+                False
+            )
+
+            notification_eligible = (
+                False
+            )
+
+
+        # =================================================
+        # BUSINESS FIELDS
+        #
+        # Only Business + Promotion can store/use these.
+        # =================================================
+
+        if (
+            listing_level
+            in {
+                "business",
+                "promotion",
+            }
+        ):
+
+            opening_hours = (
+                request.form.get(
+                    "opening_hours",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            whatsapp_number = (
+                request.form.get(
+                    "whatsapp_number",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            directions_url = (
+                request.form.get(
+                    "directions_url",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            menu_highlights = (
+                request.form.get(
+                    "menu_highlights",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            special_offer = (
+                request.form.get(
+                    "special_offer",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            image_url_2 = (
+                request.form.get(
+                    "image_url_2",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            image_url_3 = (
+                request.form.get(
+                    "image_url_3",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+        else:
+
+            opening_hours = None
+
+            whatsapp_number = None
+
+            directions_url = None
+
+            menu_highlights = None
+
+            special_offer = None
+
+            image_url_2 = None
+
+            image_url_3 = None
+
+
+        # =================================================
+        # CREATE CONTENT ITEM
         # =================================================
 
         item = ContentItem(
@@ -5438,10 +5645,6 @@ def create_content():
             category=
                 category,
 
-            # ---------------------------------------------
-            # NEW
-            # ---------------------------------------------
-
             content_type=
                 content_type,
 
@@ -5449,14 +5652,7 @@ def create_content():
                 lifetime_type,
 
             availability_status=
-                availability_status,
-
-            notification_eligible=
-                notification_eligible,
-
-            # ---------------------------------------------
-            # NORMAL LISTING DATA
-            # ---------------------------------------------
+                "available",
 
             title=
                 title,
@@ -5506,12 +5702,41 @@ def create_content():
                 or None
             ),
 
-            featured=(
-                request.form.get(
-                    "featured"
-                )
-                == "on"
-            ),
+            listing_level=
+                listing_level,
+
+            ownership_status=
+                ownership_status,
+
+            is_verified=
+                is_verified,
+
+            opening_hours=
+                opening_hours,
+
+            whatsapp_number=
+                whatsapp_number,
+
+            directions_url=
+                directions_url,
+
+            menu_highlights=
+                menu_highlights,
+
+            special_offer=
+                special_offer,
+
+            image_url_2=
+                image_url_2,
+
+            image_url_3=
+                image_url_3,
+
+            featured=
+                featured,
+
+            notification_eligible=
+                notification_eligible,
 
             active=(
                 request.form.get(
@@ -5519,80 +5744,59 @@ def create_content():
                 )
                 == "on"
             ),
-
-            **dates,
         )
 
-        db.session.add(
-            item
-        )
-
-        db.session.flush()
 
         # =================================================
-        # IMAGES
+        # APPLY NORMALIZED DATES
+        # =================================================
+
+        for key, value in dates.items():
+
+            setattr(
+                item,
+                key,
+                value,
+            )
+
+
+        # =================================================
+        # ADD ITEM FIRST
+        #
+        # We need the ContentItem ID before creating
+        # ContentImage child records.
         # =================================================
 
         try:
 
-            first_image_url = None
+            db.session.add(
+                item
+            )
 
-            for (
-                index,
-                uploaded_image,
-            ) in enumerate(
-                uploaded_images,
-                start=1,
-            ):
 
-                image_url = (
-                    upload_listing_image(
-                        uploaded_image
-                    )
-                )
+            db.session.flush()
 
-                if not image_url:
-                    continue
-
-                if not first_image_url:
-
-                    first_image_url = (
-                        image_url
-                    )
-
-                content_image = (
-                    ContentImage(
-
-                        content_item_id=
-                            item.id,
-
-                        image_url=
-                            image_url,
-
-                        display_order=
-                            index,
-                    )
-                )
-
-                db.session.add(
-                    content_image
-                )
-
-            # Keep ContentItem.image_url as fallback/cover.
-            if first_image_url:
-
-                item.image_url = (
-                    first_image_url
-                )
 
         except Exception as error:
 
             db.session.rollback()
 
+
+            current_app.logger.exception(
+                (
+                    "Failed to create content item "
+                    "before image processing. "
+                    "error=%s"
+                ),
+                error,
+            )
+
+
             flash(
-                f"Image upload failed: {error}",
+                "Content could not be created.",
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -5600,16 +5804,230 @@ def create_content():
                 None,
             )
 
+
         # =================================================
-        # SAVE
+        # LEGACY SINGLE IMAGE
         # =================================================
 
-        db.session.commit()
+        uploaded_image = (
+            request.files.get(
+                "image"
+            )
+        )
+
+
+        if (
+            uploaded_image
+            and uploaded_image.filename
+        ):
+
+            try:
+
+                item.image_url = (
+                    upload_listing_image(
+                        uploaded_image
+                    )
+                )
+
+
+            except Exception as error:
+
+                db.session.rollback()
+
+
+                current_app.logger.exception(
+                    (
+                        "Legacy image upload failed. "
+                        "error=%s"
+                    ),
+                    error,
+                )
+
+
+                flash(
+                    f"Image upload failed: {error}",
+                    "error",
+                )
+
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    None,
+                )
+
+
+        # =================================================
+        # MULTI IMAGE UPLOAD
+        #
+        # content_form.html sends:
+        #
+        # <input name="images" multiple>
+        # =================================================
+
+        uploaded_images = (
+            request.files.getlist(
+                "images"
+            )
+        )
+
+
+        uploaded_images = [
+            image
+            for image in uploaded_images
+            if (
+                image
+                and image.filename
+            )
+        ]
+
+
+        # =================================================
+        # MAXIMUM 3 IMAGES
+        # =================================================
+
+        if (
+            len(uploaded_images)
+            > 3
+        ):
+
+            db.session.rollback()
+
+
+            flash(
+                (
+                    "You can upload a maximum "
+                    "of 3 images."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # UPLOAD MULTIPLE IMAGES
+        # =================================================
+
+        try:
+
+            for uploaded_file in uploaded_images:
+
+                image_url = (
+                    upload_listing_image(
+                        uploaded_file
+                    )
+                )
+
+
+                # -----------------------------------------
+                # This assumes your child image model is:
+                #
+                # ContentImage(
+                #     content_item_id=...,
+                #     image_url=...
+                # )
+                #
+                # If your existing image model has another
+                # class name, use that existing class here.
+                # -----------------------------------------
+
+                image_record = ContentImage(
+
+                    content_item_id=
+                        item.id,
+
+                    image_url=
+                        image_url,
+                )
+
+
+                db.session.add(
+                    image_record
+                )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "Multi-image upload failed. "
+                    "content_item_id=%s error=%s"
+                ),
+                item.id,
+                error,
+            )
+
+
+            flash(
+                f"Image upload failed: {error}",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # SAVE EVERYTHING
+        # =================================================
+
+        try:
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "Failed to create content item. "
+                    "error=%s"
+                ),
+                error,
+            )
+
+
+            flash(
+                (
+                    "Content could not be published. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # SUCCESS
+        # =================================================
 
         flash(
             "Content published successfully.",
             "success",
         )
+
 
         return redirect(
             url_for(
@@ -5617,13 +6035,16 @@ def create_content():
             )
         )
 
+
+    # =====================================================
+    # GET — SHOW CREATE FORM
+    # =====================================================
+
     return _render_content_form(
         zones,
         categories,
         None,
     )
-
-
 
 @admin_bp.route(
     "/content/<int:item_id>/edit",
@@ -5633,10 +6054,19 @@ def edit_content(
     item_id,
 ):
 
+    # =====================================================
+    # ADMIN AUTHENTICATION
+    # =====================================================
+
     auth = require_admin()
 
     if auth:
         return auth
+
+
+    # =====================================================
+    # LOAD CONTENT ITEM
+    # =====================================================
 
     item = (
         ContentItem.query
@@ -5644,6 +6074,11 @@ def edit_content(
             item_id
         )
     )
+
+
+    # =====================================================
+    # LOAD ZONES
+    # =====================================================
 
     zones = (
         Zone.query
@@ -5656,13 +6091,24 @@ def edit_content(
         .all()
     )
 
+
+    # =====================================================
+    # LOAD CATEGORIES
+    # =====================================================
+
     categories = (
         get_categories(
             active_only=False
         )
     )
 
+
+    # =====================================================
+    # POST — UPDATE CONTENT
+    # =====================================================
+
     if request.method == "POST":
+
 
         # =================================================
         # BASIC DATA
@@ -5673,6 +6119,7 @@ def edit_content(
             type=int,
         )
 
+
         category = (
             request.form.get(
                 "category",
@@ -5681,6 +6128,7 @@ def edit_content(
             .strip()
             .lower()
         )
+
 
         content_type = (
             request.form.get(
@@ -5692,6 +6140,7 @@ def edit_content(
             or None
         )
 
+
         title = (
             request.form.get(
                 "title",
@@ -5699,6 +6148,7 @@ def edit_content(
             )
             .strip()
         )
+
 
         # =================================================
         # REQUIRED FIELDS
@@ -5721,6 +6171,7 @@ def edit_content(
                 item,
             )
 
+
         # =================================================
         # VALIDATE ZONE
         # =================================================
@@ -5729,6 +6180,7 @@ def edit_content(
             Zone,
             zone_id,
         )
+
 
         if not zone:
 
@@ -5742,6 +6194,7 @@ def edit_content(
                 categories,
                 item,
             )
+
 
         # =================================================
         # VALIDATE CATEGORY
@@ -5763,20 +6216,18 @@ def edit_content(
                 item,
             )
 
+
         # =================================================
         # RECALCULATE WORKFLOW
         #
-        # If admin changes:
+        # Example:
         #
         # Property → Room
-        # to
+        # becomes
         # Property → Hotel
         #
-        # LaC must also change:
-        #
-        # until_unavailable
-        # to
-        # ongoing
+        # The underlying content lifecycle must also
+        # change when the subtype changes.
         # =================================================
 
         workflow = (
@@ -5786,18 +6237,32 @@ def edit_content(
             )
         )
 
+
         lifetime_type = (
             workflow[
                 "lifetime_type"
             ]
         )
 
-        notification_eligible = bool(
+
+        # -------------------------------------------------
+        # Keep this separately from the final
+        # notification_eligible value.
+        #
+        # Workflow tells us whether this KIND of content
+        # supports notifications.
+        #
+        # Listing level tells us whether THIS listing
+        # has permission to use promotional distribution.
+        # -------------------------------------------------
+
+        workflow_notification_eligible = bool(
             workflow.get(
                 "notification_eligible",
                 False,
             )
         )
+
 
         # =================================================
         # VALIDATE + NORMALIZE DATES
@@ -5814,6 +6279,7 @@ def edit_content(
                 )
             )
 
+
         except ValueError:
 
             flash(
@@ -5826,6 +6292,7 @@ def edit_content(
                 categories,
                 item,
             )
+
 
         if error:
 
@@ -5840,6 +6307,7 @@ def edit_content(
                 item,
             )
 
+
         # =================================================
         # UPDATE CORE FIELDS
         # =================================================
@@ -5848,27 +6316,37 @@ def edit_content(
             zone_id
         )
 
+
         item.category = (
             category
         )
+
 
         item.content_type = (
             content_type
         )
 
+
         item.lifetime_type = (
             lifetime_type
         )
 
-        item.notification_eligible = (
-            notification_eligible
-        )
+
+        # -------------------------------------------------
+        # Do not set notification_eligible here anymore.
+        #
+        # It is determined below using BOTH:
+        #
+        # 1. workflow capability
+        # 2. listing level
+        # -------------------------------------------------
+
 
         # -------------------------------------------------
         # Do NOT blindly reset closed listings to available
         # when editing ordinary text.
         #
-        # Only initialise if somehow empty/legacy.
+        # Only initialise legacy/empty records.
         # -------------------------------------------------
 
         if not item.availability_status:
@@ -5877,9 +6355,11 @@ def edit_content(
                 "available"
             )
 
+
         item.title = (
             title
         )
+
 
         item.description = (
             request.form.get(
@@ -5890,6 +6370,7 @@ def edit_content(
             or None
         )
 
+
         item.business_name = (
             request.form.get(
                 "business_name",
@@ -5898,6 +6379,7 @@ def edit_content(
             .strip()
             or None
         )
+
 
         item.venue = (
             request.form.get(
@@ -5908,6 +6390,7 @@ def edit_content(
             or None
         )
 
+
         item.price = (
             request.form.get(
                 "price",
@@ -5916,6 +6399,7 @@ def edit_content(
             .strip()
             or None
         )
+
 
         item.contact = (
             request.form.get(
@@ -5926,6 +6410,337 @@ def edit_content(
             or None
         )
 
+
+        # =================================================
+        # LISTING LEVEL
+        # =================================================
+
+        listing_level = (
+            request.form.get(
+                "listing_level",
+                "discovery",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        allowed_listing_levels = {
+            "discovery",
+            "business",
+            "promotion",
+        }
+
+
+        if (
+            listing_level
+            not in allowed_listing_levels
+        ):
+
+            listing_level = (
+                "discovery"
+            )
+
+
+        item.listing_level = (
+            listing_level
+        )
+
+
+        # =================================================
+        # OWNERSHIP + VERIFICATION
+        # =================================================
+        #
+        # DISCOVERY:
+        #
+        #   Kalxa/publicly seeded.
+        #   No business ownership privileges.
+        #
+        # BUSINESS / PROMOTION:
+        #
+        #   Business-controlled.
+        #
+        # Verification remains an explicit admin
+        # decision through the checkbox.
+        # =================================================
+
+        if (
+            listing_level
+            == "discovery"
+        ):
+
+            item.ownership_status = (
+                "unclaimed"
+            )
+
+            item.is_verified = (
+                False
+            )
+
+
+        else:
+
+            item.ownership_status = (
+                "claimed"
+            )
+
+            item.is_verified = (
+                request.form.get(
+                    "is_verified"
+                )
+                == "on"
+            )
+
+
+        # =================================================
+        # BUSINESS LISTING FIELDS
+        #
+        # BUSINESS + PROMOTION ONLY
+        # =================================================
+
+        if (
+            listing_level
+            in {
+                "business",
+                "promotion",
+            }
+        ):
+
+
+            # ---------------------------------------------
+            # OPENING HOURS
+            # ---------------------------------------------
+
+            item.opening_hours = (
+                request.form.get(
+                    "opening_hours",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            # ---------------------------------------------
+            # WHATSAPP
+            # ---------------------------------------------
+
+            item.whatsapp_number = (
+                request.form.get(
+                    "whatsapp_number",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            # ---------------------------------------------
+            # DIRECTIONS
+            # ---------------------------------------------
+
+            item.directions_url = (
+                request.form.get(
+                    "directions_url",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            # ---------------------------------------------
+            # MENU / SERVICES / PRODUCT HIGHLIGHTS
+            # ---------------------------------------------
+
+            item.menu_highlights = (
+                request.form.get(
+                    "menu_highlights",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            # ---------------------------------------------
+            # SPECIAL OFFER
+            # ---------------------------------------------
+
+            item.special_offer = (
+                request.form.get(
+                    "special_offer",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            # ---------------------------------------------
+            # ADDITIONAL IMAGE URL 2
+            # ---------------------------------------------
+
+            item.image_url_2 = (
+                request.form.get(
+                    "image_url_2",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+            # ---------------------------------------------
+            # ADDITIONAL IMAGE URL 3
+            # ---------------------------------------------
+
+            item.image_url_3 = (
+                request.form.get(
+                    "image_url_3",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
+        else:
+
+            # =================================================
+            # DISCOVERY DOWNGRADE
+            #
+            # If admin changes:
+            #
+            # Business / Promotion
+            #        ↓
+            # Discovery
+            #
+            # Remove the business-only information rather
+            # than leaving hidden commercial data attached
+            # to a Discovery listing.
+            # =================================================
+
+            item.opening_hours = (
+                None
+            )
+
+            item.whatsapp_number = (
+                None
+            )
+
+            item.directions_url = (
+                None
+            )
+
+            item.menu_highlights = (
+                None
+            )
+
+            item.special_offer = (
+                None
+            )
+
+            item.image_url_2 = (
+                None
+            )
+
+            item.image_url_3 = (
+                None
+            )
+
+
+        # =================================================
+        # PROMOTION RULES
+        # =================================================
+        #
+        # Only Promotion listings can receive:
+        #
+        # - featured ranking
+        # - promotional notification distribution
+        #
+        # Business ownership alone does NOT grant these.
+        # =================================================
+
+        if (
+            listing_level
+            == "promotion"
+        ):
+
+            item.featured = (
+                request.form.get(
+                    "featured"
+                )
+                == "on"
+            )
+
+
+            # ---------------------------------------------
+            # TWO CONDITIONS MUST BOTH BE TRUE:
+            #
+            # 1. This content workflow supports
+            #    notifications.
+            #
+            # 2. Admin enabled notification distribution
+            #    for this Promotion listing.
+            # ---------------------------------------------
+
+            promotion_notification_requested = (
+                request.form.get(
+                    "notification_eligible"
+                )
+                == "on"
+            )
+
+
+            item.notification_eligible = (
+                workflow_notification_eligible
+                and
+                promotion_notification_requested
+            )
+
+
+        else:
+
+            # ---------------------------------------------
+            # Discovery and Business listings cannot
+            # accidentally retain paid distribution.
+            # ---------------------------------------------
+
+            item.featured = (
+                False
+            )
+
+            item.notification_eligible = (
+                False
+            )
+
+
+        # =================================================
+        # ACTIVE / PUBLICATION STATUS
+        # =================================================
+
+        item.active = (
+            request.form.get(
+                "active"
+            )
+            == "on"
+        )
+
+
+        # =================================================
+        # APPLY NORMALIZED DATE FIELDS
+        # =================================================
+
+        for key, value in dates.items():
+
+            setattr(
+                item,
+                key,
+                value,
+            )
+
+
         # =================================================
         # LEGACY SINGLE IMAGE UPLOAD
         # =================================================
@@ -5935,6 +6750,7 @@ def edit_content(
                 "image"
             )
         )
+
 
         if (
             uploaded_image
@@ -5949,14 +6765,17 @@ def edit_content(
                     )
                 )
 
+
             except Exception as error:
 
                 db.session.rollback()
+
 
                 flash(
                     f"Image upload failed: {error}",
                     "error",
                 )
+
 
                 return _render_content_form(
                     zones,
@@ -5964,46 +6783,185 @@ def edit_content(
                     item,
                 )
 
+
         # =================================================
-        # FLAGS
+        # MULTI IMAGE UPLOAD
+        #
+        # content_form.html sends:
+        #
+        # name="images"
+        # multiple
+        #
+        # Keep your existing ContentImage relationship.
         # =================================================
 
-        item.featured = (
-            request.form.get(
-                "featured"
+        uploaded_images = (
+            request.files.getlist(
+                "images"
             )
-            == "on"
         )
 
-        item.active = (
-            request.form.get(
-                "active"
+
+        uploaded_images = [
+            image
+            for image in uploaded_images
+            if (
+                image
+                and image.filename
             )
-            == "on"
+        ]
+
+
+        # -------------------------------------------------
+        # Maximum three images total.
+        # -------------------------------------------------
+
+        current_image_count = (
+            len(item.images)
+            if item.images
+            else 0
         )
 
-        # =================================================
-        # APPLY NORMALIZED DATE FIELDS
-        # =================================================
 
-        for key, value in dates.items():
+        remaining_image_slots = max(
+            0,
+            3 - current_image_count,
+        )
 
-            setattr(
+
+        if (
+            len(uploaded_images)
+            >
+            remaining_image_slots
+        ):
+
+            flash(
+                (
+                    "This listing can have a maximum "
+                    "of 3 uploaded images."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
                 item,
-                key,
-                value,
             )
 
+
         # =================================================
-        # SAVE
+        # UPLOAD NEW IMAGES
         # =================================================
 
-        db.session.commit()
+        try:
+
+            for uploaded_file in uploaded_images:
+
+                image_url = (
+                    upload_listing_image(
+                        uploaded_file
+                    )
+                )
+
+
+                # -------------------------------------------------
+                # IMPORTANT:
+                #
+                # This assumes your image relationship model is
+                # named ContentImage and contains:
+                #
+                # content_item_id
+                # image_url
+                #
+                # If your existing model has another name, keep
+                # your existing image creation code here instead.
+                # -------------------------------------------------
+
+                image_record = (
+                    ContentImage(
+                        content_item_id=
+                            item.id,
+
+                        image_url=
+                            image_url,
+                    )
+                )
+
+
+                db.session.add(
+                    image_record
+                )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            flash(
+                f"Image upload failed: {error}",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # SAVE EVERYTHING IN ONE TRANSACTION
+        # =================================================
+
+        try:
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "Failed to update content item. "
+                    "content_item_id=%s error=%s"
+                ),
+                item.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Content could not be updated. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # SUCCESS
+        # =================================================
 
         flash(
             "Content updated successfully.",
             "success",
         )
+
 
         return redirect(
             url_for(
@@ -6011,11 +6969,18 @@ def edit_content(
             )
         )
 
+
+    # =====================================================
+    # GET — SHOW EDIT FORM
+    # =====================================================
+
     return _render_content_form(
         zones,
         categories,
         item,
     )
+
+
 
 @admin_bp.route(
     "/content/<int:item_id>/toggle",
