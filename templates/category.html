@@ -26,20 +26,29 @@
 
     <link
         rel="manifest"
-        href="{{ url_for('static', filename='manifest.json') }}"
+        href="{{ url_for(
+            'static',
+            filename='manifest.json'
+        ) }}"
     >
 
     <link
         rel="icon"
         type="image/png"
         sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
     >
 
     <link
         rel="apple-touch-icon"
         sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
     >
 
     <meta
@@ -69,7 +78,7 @@
 
 
     <!-- =========================================
-         CSS
+         MAIN CSS
     ========================================== -->
 
     <link
@@ -87,126 +96,441 @@
 
     <style>
 
+
+        /* =========================================================
+           LISTING LEVEL VISUALS
+        ========================================================= */
+
+        .public-listing-card {
+
+            position: relative;
+
+        }
+
+
+        .listing-level-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 4px;
+
+            padding:
+                6px
+                9px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.09
+                );
+
+            border-radius: 999px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.055
+                );
+
+            color: #c6c9ce;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            line-height: 1;
+
+            letter-spacing: 0.5px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .listing-level-badge.business {
+
+            color: #fff4df;
+
+            border-color:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.14
+                );
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.065
+                );
+
+        }
+
+
+        .verified-business-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 4px;
+
+            padding:
+                6px
+                9px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.16
+                );
+
+            border-radius: 999px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.08
+                );
+
+            color: #fff4df;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            line-height: 1;
+
+            letter-spacing: 0.5px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        /* =========================================================
+           BUSINESS NAME + VERIFIED MARK
+        ========================================================= */
+
+        .business-name-with-status {
+
+            display: flex;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 7px;
+
+        }
+
+
+        .business-inline-verified {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            width: 17px;
+            height: 17px;
+
+            flex:
+                0
+                0
+                17px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.10
+                );
+
+            color: #fff4df;
+
+            font-size: 10px;
+
+            font-weight: 900;
+
+        }
+
+
+        /* =========================================================
+           SPECIAL OFFER PREVIEW
+        ========================================================= */
+
+        .listing-card-offer {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 10px;
+
+            margin:
+                14px
+                0
+                4px;
+
+            padding:
+                12px
+                14px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.13
+                );
+
+            border-radius: 13px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.055
+                );
+
+        }
+
+
+        .listing-card-offer-icon {
+
+            flex-shrink: 0;
+
+            font-size: 16px;
+
+        }
+
+
+        .listing-card-offer-content {
+
+            min-width: 0;
+
+        }
+
+
+        .listing-card-offer-label {
+
+            display: block;
+
+            margin-bottom: 4px;
+
+            color:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.62
+                );
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.7px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .listing-card-offer-value {
+
+            display: block;
+
+            color: #fff4df;
+
+            font-size: 12px;
+
+            font-weight: 750;
+
+            line-height: 1.45;
+
+        }
+
+
+        /* =========================================================
+           OPENING HOURS
+        ========================================================= */
+
+        .listing-hours-card {
+
+            grid-column:
+                1 / -1;
+
+        }
+
+
         /* =========================================================
            DATE DISPLAY
         ========================================================= */
 
         .listing-date-strip {
+
             display: flex;
+
             align-items: center;
+
             gap: 11px;
 
-            margin: 14px 0 4px;
-            padding: 12px 14px;
+            margin:
+                14px
+                0
+                4px;
+
+            padding:
+                12px
+                14px;
 
             box-sizing: border-box;
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.09);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.09
+                );
 
             border-radius: 13px;
 
             background:
-                rgba(255, 255, 255, 0.055);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.055
+                );
+
         }
 
 
         .listing-date-strip-icon {
+
             width: 34px;
             height: 34px;
 
-            flex: 0 0 34px;
+            flex:
+                0
+                0
+                34px;
 
             display: flex;
+
             align-items: center;
+
             justify-content: center;
 
             border-radius: 10px;
 
             background:
-                rgba(255, 255, 255, 0.08);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
 
             font-size: 16px;
+
         }
 
 
         .listing-date-strip-content {
+
             min-width: 0;
 
             flex: 1;
 
             display: flex;
+
             flex-direction: column;
 
             gap: 3px;
+
         }
 
 
         .listing-date-strip-label {
+
             color:
-                rgba(255, 255, 255, 0.45);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.45
+                );
 
             font-size: 9px;
+
             font-weight: 800;
 
             line-height: 1.2;
+
             letter-spacing: 0.8px;
 
             text-transform: uppercase;
+
         }
 
 
         .listing-date-strip-value {
+
             color: #f4f4f4;
 
             font-size: 13px;
+
             font-weight: 750;
 
             line-height: 1.35;
-        }
-
-
-        @media (max-width: 480px) {
-
-            .listing-date-strip {
-                margin-top: 12px;
-
-                padding: 11px 12px;
-
-                gap: 10px;
-
-                border-radius: 12px;
-            }
-
-
-            .listing-date-strip-icon {
-                width: 32px;
-                height: 32px;
-
-                flex-basis: 32px;
-
-                font-size: 15px;
-            }
-
-
-            .listing-date-strip-value {
-                font-size: 12px;
-            }
 
         }
 
 
         /* =========================================================
-           BETTER EMPTY STATES
+           EMPTY STATE
         ========================================================= */
 
         .lac-empty-state {
+
             width: 100%;
+
             max-width: 460px;
 
-            margin: 32px auto 50px;
-            padding: 34px 24px;
+            margin:
+                32px
+                auto
+                50px;
+
+            padding:
+                34px
+                24px;
 
             box-sizing: border-box;
 
@@ -216,58 +540,95 @@
 
             border:
                 1px solid
-                rgba(0, 0, 0, 0.07);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
 
             border-radius: 24px;
 
             box-shadow:
-                0 10px 30px
-                rgba(0, 0, 0, 0.07);
+                0
+                10px
+                30px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
+
         }
 
 
         .lac-empty-icon-wrap {
+
             width: 84px;
             height: 84px;
 
-            margin: 0 auto 20px;
+            margin:
+                0
+                auto
+                20px;
 
             display: flex;
+
             align-items: center;
+
             justify-content: center;
 
             background: #f5f1e8;
 
             border:
                 1px solid
-                rgba(0, 0, 0, 0.05);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
 
             border-radius: 50%;
+
         }
 
 
         .lac-empty-icon {
+
             display: block;
 
             font-size: 38px;
+
             line-height: 1;
+
         }
 
 
         .lac-empty-eyebrow {
+
             margin-bottom: 8px;
 
             color:
-                rgba(63, 67, 72, 0.52);
+                rgba(
+                    63,
+                    67,
+                    72,
+                    0.52
+                );
 
             font-size: 9px;
+
             font-weight: 900;
 
             letter-spacing: 1.4px;
+
         }
 
 
         .lac-empty-title {
+
             max-width: 340px;
 
             margin:
@@ -278,13 +639,16 @@
             color: #3f4348;
 
             font-size: 21px;
+
             font-weight: 850;
 
             line-height: 1.25;
+
         }
 
 
         .lac-empty-message {
+
             max-width: 350px;
 
             margin:
@@ -293,21 +657,30 @@
                 23px;
 
             color:
-                rgba(63, 67, 72, 0.70);
+                rgba(
+                    63,
+                    67,
+                    72,
+                    0.70
+                );
 
             font-size: 13px;
+
             font-weight: 500;
 
             line-height: 1.55;
+
         }
 
 
         /* =========================================================
-           PRIMARY — GET ALERTS
+           EMPTY STATE PRIMARY CTA
         ========================================================= */
 
         .lac-empty-primary {
+
             width: 100%;
+
             max-width: 280px;
 
             min-height: 48px;
@@ -317,39 +690,62 @@
             box-sizing: border-box;
 
             display: inline-flex;
+
             align-items: center;
+
             justify-content: center;
 
             gap: 8px;
 
-            padding: 12px 18px;
+            padding:
+                12px
+                18px;
 
-            background: #f5f1e8 !important;
+            background:
+                #f5f1e8
+                !important;
 
             border:
                 1px solid
-                rgba(63, 67, 72, 0.10);
+                rgba(
+                    63,
+                    67,
+                    72,
+                    0.10
+                );
 
             border-radius: 14px;
 
-            color: #3f4348 !important;
+            color:
+                #3f4348
+                !important;
 
             text-decoration: none;
 
             font-size: 12px;
+
             font-weight: 800;
 
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color:
+                transparent;
 
             transition:
                 transform 0.15s ease,
                 opacity 0.15s ease;
+
         }
 
 
         .lac-empty-primary:active {
-            transform: scale(0.97);
-            opacity: 0.86;
+
+            transform:
+                scale(
+                    0.97
+                );
+
+            opacity:
+                0.86;
+
         }
 
 
@@ -358,54 +754,85 @@
         ========================================================= */
 
         .lac-empty-contribute {
+
             margin-top: 24px;
+
             padding-top: 20px;
 
             border-top:
                 1px solid
-                rgba(0, 0, 0, 0.07);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
 
             display: flex;
+
             flex-direction: column;
+
             align-items: center;
 
             gap: 7px;
+
         }
 
 
         .lac-empty-contribute-text {
+
             color:
-                rgba(63, 67, 72, 0.62);
+                rgba(
+                    63,
+                    67,
+                    72,
+                    0.62
+                );
 
             font-size: 11px;
+
             font-weight: 600;
 
             line-height: 1.4;
+
         }
 
 
         .lac-empty-secondary {
+
             display: inline-block;
 
-            padding: 5px 8px;
+            padding:
+                5px
+                8px;
 
             color: #3f4348;
 
             text-decoration: none;
 
             font-size: 12px;
+
             font-weight: 850;
 
             border-bottom:
                 1px solid
-                rgba(63, 67, 72, 0.28);
+                rgba(
+                    63,
+                    67,
+                    72,
+                    0.28
+                );
 
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color:
+                transparent;
+
         }
 
 
         .lac-empty-secondary:active {
+
             opacity: 0.60;
+
         }
 
 
@@ -414,49 +841,115 @@
         ========================================================= */
 
         .lac-empty-explore {
+
             display: inline-block;
 
             margin-top: 22px;
 
             color:
-                rgba(63, 67, 72, 0.62);
+                rgba(
+                    63,
+                    67,
+                    72,
+                    0.62
+                );
 
             text-decoration: none;
 
             font-size: 11px;
+
             font-weight: 700;
 
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color:
+                transparent;
+
         }
 
 
         .lac-empty-explore:active {
+
             opacity: 0.55;
+
         }
 
 
-        /* DESKTOP */
+        /* =========================================================
+           DESKTOP
+        ========================================================= */
 
-        @media (hover: hover) and (pointer: fine) {
+        @media (
+            hover: hover
+        ) and (
+            pointer: fine
+        ) {
 
             .lac-empty-primary:hover {
+
                 opacity: 0.88;
+
             }
 
 
             .lac-empty-secondary:hover,
             .lac-empty-explore:hover {
+
                 opacity: 0.65;
+
             }
 
         }
 
 
-        /* SMALL MOBILE */
+        /* =========================================================
+           MOBILE
+        ========================================================= */
 
-        @media (max-width: 420px) {
+        @media (
+            max-width: 480px
+        ) {
+
+            .listing-date-strip {
+
+                margin-top: 12px;
+
+                padding:
+                    11px
+                    12px;
+
+                gap: 10px;
+
+                border-radius: 12px;
+
+            }
+
+
+            .listing-date-strip-icon {
+
+                width: 32px;
+                height: 32px;
+
+                flex-basis: 32px;
+
+                font-size: 15px;
+
+            }
+
+
+            .listing-date-strip-value {
+
+                font-size: 12px;
+
+            }
+
+        }
+
+
+        @media (
+            max-width: 420px
+        ) {
 
             .lac-empty-state {
+
                 margin-top: 24px;
 
                 padding:
@@ -464,43 +957,60 @@
                     18px;
 
                 border-radius: 20px;
+
             }
 
 
             .lac-empty-icon-wrap {
+
                 width: 74px;
                 height: 74px;
+
             }
 
 
             .lac-empty-icon {
+
                 font-size: 34px;
+
             }
 
 
             .lac-empty-title {
+
                 font-size: 19px;
+
             }
 
 
             .lac-empty-message {
+
                 font-size: 12px;
+
             }
 
         }
 
 
-        /* ACCESSIBILITY */
+        /* =========================================================
+           ACCESSIBILITY
+        ========================================================= */
 
-        @media (prefers-reduced-motion: reduce) {
+        @media (
+            prefers-reduced-motion: reduce
+        ) {
 
             .lac-empty-primary {
+
                 transition: none;
+
             }
 
 
             .lac-empty-primary:active {
+
                 transform: none;
+
             }
 
         }
@@ -578,9 +1088,13 @@
                 <div class="category-page-icon">
 
                     {% if category.icon %}
+
                         {{ category.icon }}
+
                     {% else %}
+
                         📌
+
                     {% endif %}
 
                 </div>
@@ -643,6 +1157,7 @@
 
         </div>
 
+
         <div
             id="category-search-result-count"
             class="category-search-result-count"
@@ -669,6 +1184,8 @@
                     data-title="{{ item.title|lower }}"
                     data-business="{{ (item.business_name or '')|lower }}"
                     data-venue="{{ (item.venue or '')|lower }}"
+                    data-listing-level="{{ item.listing_level }}"
+                    data-content-item-id="{{ item.id }}"
                 >
 
 
@@ -684,6 +1201,10 @@
 
                     {% if item.can_use_business_features() %}
 
+
+                        <!-- =============================
+                             RELATIONSHIP IMAGES
+                        ============================== -->
 
                         {% if item.images %}
 
@@ -715,6 +1236,7 @@
                                     loading="lazy"
                                 >
 
+
                                 {% if
                                     loop.first
                                     and item.images|length > 1
@@ -733,28 +1255,88 @@
                         </div>
 
 
-                        {% elif item.image_url %}
+                        <!-- =============================
+                             LEGACY / URL GALLERY
+                        ============================== -->
 
-                        <div class="content-gallery single-gallery">
+                        {% elif
+                            item.image_url
+                            or item.image_url_2
+                            or item.image_url_3
+                        %}
 
-                            <button
-                                type="button"
-                                class="gallery-image-button"
-                                data-image-url="{{ item.image_url }}"
-                                data-image-alt="{{ item.title }}"
-                                onclick="openImageModalFromButton(this)"
-                                aria-label="View {{ item.title }} image"
+
+                            {% set business_gallery = [
+                                item.image_url,
+                                item.image_url_2,
+                                item.image_url_3
+                            ] %}
+
+
+                            {% set gallery_count =
+                                (
+                                    [
+                                        item.image_url,
+                                        item.image_url_2,
+                                        item.image_url_3
+                                    ]
+                                    | select
+                                    | list
+                                    | length
+                                )
+                            %}
+
+
+                            <div
+                                class="
+                                    content-gallery
+
+                                    {% if gallery_count == 1 %}
+                                        single-gallery
+                                    {% elif gallery_count == 2 %}
+                                        two-gallery
+                                    {% endif %}
+                                "
                             >
 
-                                <img
-                                    src="{{ item.image_url }}"
-                                    alt="{{ item.title }}"
-                                    loading="lazy"
-                                >
+                                {% for image_url in business_gallery %}
 
-                            </button>
+                                    {% if image_url %}
 
-                        </div>
+                                    <button
+                                        type="button"
+                                        class="gallery-image-button"
+                                        data-image-url="{{ image_url }}"
+                                        data-image-alt="{{ item.title }}"
+                                        onclick="openImageModalFromButton(this)"
+                                        aria-label="View {{ item.title }} image"
+                                    >
+
+                                        <img
+                                            src="{{ image_url }}"
+                                            alt="{{ item.title }}"
+                                            loading="lazy"
+                                        >
+
+
+                                        {% if
+                                            loop.first
+                                            and gallery_count > 1
+                                        %}
+
+                                        <span class="gallery-count-badge">
+                                            📷 {{ gallery_count }}
+                                        </span>
+
+                                        {% endif %}
+
+                                    </button>
+
+                                    {% endif %}
+
+                                {% endfor %}
+
+                            </div>
 
                         {% endif %}
 
@@ -762,11 +1344,9 @@
                     {% else %}
 
 
-                        <!--
-                            LEVEL 1 — DISCOVERY
-
-                            Only one discovery image.
-                        -->
+                        <!-- =============================
+                             LEVEL 1 — DISCOVERY
+                        ============================== -->
 
                         {% if item.image_url %}
 
@@ -794,32 +1374,37 @@
 
                         {% elif item.images %}
 
-                        {% set discovery_image = item.images|first %}
 
-                        {% if discovery_image %}
+                            {% set discovery_image =
+                                item.images|first
+                            %}
 
-                        <div class="content-gallery single-gallery">
 
-                            <button
-                                type="button"
-                                class="gallery-image-button"
-                                data-image-url="{{ discovery_image.image_url }}"
-                                data-image-alt="{{ item.title }}"
-                                onclick="openImageModalFromButton(this)"
-                                aria-label="View {{ item.title }} image"
-                            >
+                            {% if discovery_image %}
 
-                                <img
-                                    src="{{ discovery_image.image_url }}"
-                                    alt="{{ item.title }}"
-                                    loading="lazy"
+                            <div class="content-gallery single-gallery">
+
+                                <button
+                                    type="button"
+                                    class="gallery-image-button"
+                                    data-image-url="{{ discovery_image.image_url }}"
+                                    data-image-alt="{{ item.title }}"
+                                    onclick="openImageModalFromButton(this)"
+                                    aria-label="View {{ item.title }} image"
                                 >
 
-                            </button>
+                                    <img
+                                        src="{{ discovery_image.image_url }}"
+                                        alt="{{ item.title }}"
+                                        loading="lazy"
+                                    >
 
-                        </div>
+                                </button>
 
-                        {% endif %}
+                            </div>
+
+                            {% endif %}
+
 
                         {% endif %}
 
@@ -834,9 +1419,9 @@
                     <div class="listing-badge-row">
 
 
-                        <!--
-                            FEATURED IS LEVEL 3 ONLY
-                        -->
+                        <!-- =============================
+                             PROMOTION — LEVEL 3
+                        ============================== -->
 
                         {% if
                             item.can_use_promotion_features()
@@ -850,10 +1435,51 @@
                         {% endif %}
 
 
+                        <!-- =============================
+                             VERIFIED BUSINESS
+                        ============================== -->
+
+                        {% if
+                            item.can_use_business_features()
+                            and item.is_verified
+                        %}
+
+                        <span class="verified-business-badge">
+                            ✓ VERIFIED
+                        </span>
+
+                        {% endif %}
+
+
+                        <!-- =============================
+                             BUSINESS LEVEL INDICATOR
+
+                             Do not display this for
+                             Promotion because FEATURED
+                             already communicates its
+                             enhanced status.
+                        ============================== -->
+
+                        {% if
+                            item.listing_level == "business"
+                            and not item.is_verified
+                        %}
+
+                        <span class="listing-level-badge business">
+                            BUSINESS
+                        </span>
+
+                        {% endif %}
+
+
                         <!-- NON-EVENT UPCOMING -->
 
                         {% if
-                            category.slug not in ["local-events", "events"]
+                            category.slug
+                            not in [
+                                "local-events",
+                                "events"
+                            ]
                             and item.start_date
                             and item.start_date > today
                         %}
@@ -868,7 +1494,11 @@
                         <!-- EVENT UPCOMING -->
 
                         {% if
-                            category.slug in ["local-events", "events"]
+                            category.slug
+                            in [
+                                "local-events",
+                                "events"
+                            ]
                             and item.event_date
                             and item.event_date > today
                         %}
@@ -879,14 +1509,12 @@
 
                         {% endif %}
 
+
                     </div>
 
 
                     <!-- =================================
                          TITLE / BUSINESS
-
-                         DISCOVERY FEATURE:
-                         Visible at every level.
                     ================================== -->
 
                     <div class="listing-main-info">
@@ -898,8 +1526,28 @@
 
                         {% if item.business_name %}
 
-                        <div class="business-name">
-                            {{ item.business_name }}
+                        <div class="business-name business-name-with-status">
+
+                            <span>
+                                {{ item.business_name }}
+                            </span>
+
+
+                            {% if
+                                item.can_use_business_features()
+                                and item.is_verified
+                            %}
+
+                            <span
+                                class="business-inline-verified"
+                                title="Verified by Kalxa"
+                                aria-label="Verified by Kalxa"
+                            >
+                                ✓
+                            </span>
+
+                            {% endif %}
+
                         </div>
 
                         {% endif %}
@@ -918,13 +1566,15 @@
 
                     <!-- =================================
                          PROMINENT DATE / AVAILABILITY
-
-                         Dates are discovery information,
-                         so they remain visible at all levels.
                     ================================== -->
 
-
-                    {% if category.slug in ["local-events", "events"] %}
+                    {% if
+                        category.slug
+                        in [
+                            "local-events",
+                            "events"
+                        ]
+                    %}
 
 
                         {% if item.event_date %}
@@ -942,11 +1592,17 @@
 
                                     {% if
                                         item.event_end_date
-                                        and item.event_end_date != item.event_date
+                                        and
+                                        item.event_end_date
+                                        != item.event_date
                                     %}
+
                                         Event Dates
+
                                     {% else %}
+
                                         Event Date
+
                                     {% endif %}
 
                                 </span>
@@ -956,9 +1612,12 @@
 
                                     {{ item.event_date.strftime("%d %b %Y") }}
 
+
                                     {% if
                                         item.event_end_date
-                                        and item.event_end_date != item.event_date
+                                        and
+                                        item.event_end_date
+                                        != item.event_date
                                     %}
 
                                         —
@@ -978,7 +1637,10 @@
                     {% else %}
 
 
-                        {% if item.start_date or item.end_date %}
+                        {% if
+                            item.start_date
+                            or item.end_date
+                        %}
 
                         <div class="listing-date-strip">
 
@@ -991,12 +1653,21 @@
 
                                 <span class="listing-date-strip-label">
 
-                                    {% if item.start_date and item.end_date %}
+                                    {% if
+                                        item.start_date
+                                        and item.end_date
+                                    %}
+
                                         Available
+
                                     {% elif item.start_date %}
+
                                         Starts
+
                                     {% else %}
+
                                         Available Until
+
                                     {% endif %}
 
                                 </span>
@@ -1009,9 +1680,14 @@
                                         and item.end_date
                                     %}
 
-                                        {% if item.start_date == item.end_date %}
+
+                                        {% if
+                                            item.start_date
+                                            == item.end_date
+                                        %}
 
                                             {{ item.start_date.strftime("%d %b %Y") }}
+
 
                                         {% else %}
 
@@ -1047,18 +1723,49 @@
 
 
                     <!-- =================================
+                         SPECIAL OFFER
+
+                         BUSINESS + PROMOTION ONLY
+                    ================================== -->
+
+                    {% if
+                        item.can_use_business_features()
+                        and item.special_offer
+                    %}
+
+                    <div class="listing-card-offer">
+
+                        <div class="listing-card-offer-icon">
+                            🔥
+                        </div>
+
+                        <div class="listing-card-offer-content">
+
+                            <span class="listing-card-offer-label">
+                                Current Offer
+                            </span>
+
+                            <strong class="listing-card-offer-value">
+                                {{ item.special_offer }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================
                          KEY DETAILS
                     ================================== -->
 
                     <div class="listing-detail-grid">
 
 
-                        <!--
-                            LOCATION
-
-                            Discovery feature.
-                            Visible at every level.
-                        -->
+                        <!-- =============================
+                             LOCATION — ALL LEVELS
+                        ============================== -->
 
                         {% if item.venue %}
 
@@ -1085,11 +1792,9 @@
                         {% endif %}
 
 
-                        <!-- =================================
-                             PRICE
-
-                             LEVEL 2 + LEVEL 3 ONLY
-                        ================================== -->
+                        <!-- =============================
+                             PRICE — BUSINESS + PROMOTION
+                        ============================== -->
 
                         {% if
                             item.can_use_business_features()
@@ -1104,7 +1809,10 @@
                         >
 
 
-                            {% if category.slug == "property" %}
+                            {% if
+                                category.slug
+                                == "property"
+                            %}
 
                                 <span class="listing-detail-icon">
                                     🏠
@@ -1123,7 +1831,13 @@
                                 </div>
 
 
-                            {% elif category.slug in ["local-events", "events"] %}
+                            {% elif
+                                category.slug
+                                in [
+                                    "local-events",
+                                    "events"
+                                ]
+                            %}
 
                                 <span class="listing-detail-icon">
                                     🎟️
@@ -1167,16 +1881,52 @@
                         {% endif %}
 
 
+                        <!-- =============================
+                             OPENING HOURS
+
+                             BUSINESS + PROMOTION
+                        ============================== -->
+
+                        {% if
+                            item.can_use_business_features()
+                            and item.opening_hours
+                        %}
+
+                        <div
+                            class="
+                                listing-detail-card
+                                listing-hours-card
+                            "
+                        >
+
+                            <span class="listing-detail-icon">
+                                🕒
+                            </span>
+
+                            <div>
+
+                                <span class="listing-detail-label">
+                                    Opening Hours
+                                </span>
+
+                                <strong>
+                                    {{ item.opening_hours }}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+
+
                     </div>
 
 
                     <!-- =================================
-                         VIEW DETAILS
+                         VIEW FULL LISTING
 
                          ALL LEVELS
-
-                         Discovery listings remain useful
-                         and discoverable.
                     ================================== -->
 
                     <div class="listing-card-primary-action">
@@ -1195,14 +1945,19 @@
 
 
                     <!-- =================================
-                         QUICK CONTACT
+                         QUICK ACTIONS
 
-                         LEVEL 2 + LEVEL 3 ONLY
+                         BUSINESS + PROMOTION ONLY
                     ================================== -->
 
                     {% if
                         item.can_use_business_features()
-                        and item.contact
+                        and (
+                            item.whatsapp_number
+                            or item.contact
+                            or item.directions_url
+                            or item.venue
+                        )
                     %}
 
                     <div class="listing-contact">
@@ -1212,18 +1967,36 @@
                             <div>
 
                                 <span class="listing-contact-eyebrow">
-                                    QUICK CONTACT
+                                    QUICK ACTIONS
                                 </span>
 
                                 <strong>
-                                    Contact the listing owner
+                                    Contact or visit
                                 </strong>
 
                             </div>
 
+
+                            {% if
+                                item.whatsapp_number
+                                or item.contact
+                            %}
+
                             <span class="listing-contact-number">
-                                {{ item.contact }}
+
+                                {% if item.whatsapp_number %}
+
+                                    {{ item.whatsapp_number }}
+
+                                {% else %}
+
+                                    {{ item.contact }}
+
+                                {% endif %}
+
                             </span>
+
+                            {% endif %}
 
                         </div>
 
@@ -1231,10 +2004,27 @@
                         <div class="listing-actions">
 
 
-                            <!-- WHATSAPP -->
+                            <!-- =========================
+                                 WHATSAPP
+
+                                 Dedicated WhatsApp
+                                 takes priority.
+                            ========================== -->
+
+                            {% if
+                                item.whatsapp_number
+                                or item.contact
+                            %}
 
                             <a
-                                href="{{ item.contact|whatsapp_link }}"
+                                href="{{
+                                    (
+                                        item.whatsapp_number
+                                        if item.whatsapp_number
+                                        else item.contact
+                                    )
+                                    | whatsapp_link
+                                }}"
                                 class="
                                     listing-action-button
                                     whatsapp-button
@@ -1247,8 +2037,14 @@
                                 💬 WhatsApp
                             </a>
 
+                            {% endif %}
 
-                            <!-- CALL -->
+
+                            <!-- =========================
+                                 CALL
+                            ========================== -->
+
+                            {% if item.contact %}
 
                             <a
                                 href="{{ item.contact|phone_link }}"
@@ -1261,6 +2057,50 @@
                             >
                                 📞 Call
                             </a>
+
+                            {% endif %}
+
+
+                            <!-- =========================
+                                 DIRECTIONS
+
+                                 Dedicated URL first.
+                            ========================== -->
+
+                            {% if item.directions_url %}
+
+                            <a
+                                href="{{ item.directions_url }}"
+                                class="
+                                    listing-action-button
+                                    directions-button
+                                "
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-lac-event="directions_click"
+                                data-content-item-id="{{ item.id }}"
+                            >
+                                🧭 Directions
+                            </a>
+
+
+                            {% elif item.venue %}
+
+                            <a
+                                href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
+                                class="
+                                    listing-action-button
+                                    directions-button
+                                "
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-lac-event="directions_click"
+                                data-content-item-id="{{ item.id }}"
+                            >
+                                🧭 Directions
+                            </a>
+
+                            {% endif %}
 
 
                         </div>
@@ -1280,13 +2120,11 @@
 
 
                 <!-- =================================
-                     BETTER EMPTY STATE
+                     EMPTY STATE
                 ================================== -->
 
                 <div class="lac-empty-state">
 
-
-                    <!-- CATEGORY ILLUSTRATION -->
 
                     <div class="lac-empty-icon-wrap">
 
@@ -1296,31 +2134,58 @@
 
                                 {{ category.icon }}
 
-                            {% elif category.slug in ["local-events", "events"] %}
+                            {% elif
+                                category.slug
+                                in [
+                                    "local-events",
+                                    "events"
+                                ]
+                            %}
 
                                 🎵
 
-                            {% elif category.slug == "discount-deals" %}
+                            {% elif
+                                category.slug
+                                == "discount-deals"
+                            %}
 
                                 🛒
 
-                            {% elif category.slug == "jobs" %}
+                            {% elif
+                                category.slug
+                                == "jobs"
+                            %}
 
                                 💼
 
-                            {% elif category.slug == "property" %}
+                            {% elif
+                                category.slug
+                                == "property"
+                            %}
 
                                 🏠
 
-                            {% elif category.slug in ["local-restaurants", "restaurants"] %}
+                            {% elif
+                                category.slug
+                                in [
+                                    "local-restaurants",
+                                    "restaurants"
+                                ]
+                            %}
 
                                 🍔
 
-                            {% elif category.slug == "services" %}
+                            {% elif
+                                category.slug
+                                == "services"
+                            %}
 
                                 🛠️
 
-                            {% elif category.slug == "beauty-salon" %}
+                            {% elif
+                                category.slug
+                                == "beauty-salon"
+                            %}
 
                                 ✂️
 
@@ -1340,39 +2205,69 @@
                     </div>
 
 
-                    <!-- =================================
-                         CATEGORY-SPECIFIC TITLE
-                    ================================== -->
-
                     <h2 class="lac-empty-title">
 
-                        {% if category.slug in ["local-events", "events"] %}
+                        {% if
+                            category.slug
+                            in [
+                                "local-events",
+                                "events"
+                            ]
+                        %}
 
                             Hade! No upcoming events right now
 
-                        {% elif category.slug == "discount-deals" %}
+
+                        {% elif
+                            category.slug
+                            == "discount-deals"
+                        %}
 
                             Askies! No local specials right now
 
-                        {% elif category.slug == "jobs" %}
+
+                        {% elif
+                            category.slug
+                            == "jobs"
+                        %}
 
                             Askies! No opportunities listed right now
 
-                        {% elif category.slug == "property" %}
+
+                        {% elif
+                            category.slug
+                            == "property"
+                        %}
 
                             No properties available right now
 
-                        {% elif category.slug in ["local-restaurants", "restaurants"] %}
+
+                        {% elif
+                            category.slug
+                            in [
+                                "local-restaurants",
+                                "restaurants"
+                            ]
+                        %}
 
                             Askies! No restaurants listed here yet
 
-                        {% elif category.slug == "services" %}
+
+                        {% elif
+                            category.slug
+                            == "services"
+                        %}
 
                             Hade! No local services listed yet
 
-                        {% elif category.slug == "beauty-salon" %}
+
+                        {% elif
+                            category.slug
+                            == "beauty-salon"
+                        %}
 
                             Askies. No beauty listings available right now
+
 
                         {% else %}
 
@@ -1383,46 +2278,76 @@
                     </h2>
 
 
-                    <!-- =================================
-                         CATEGORY-SPECIFIC MESSAGE
-                    ================================== -->
-
                     <p class="lac-empty-message">
 
-                        {% if category.slug in ["local-events", "events"] %}
+                        {% if
+                            category.slug
+                            in [
+                                "local-events",
+                                "events"
+                            ]
+                        %}
 
                             New events around {{ zone.name }}
                             will appear here when they are added.
 
-                        {% elif category.slug == "discount-deals" %}
+
+                        {% elif
+                            category.slug
+                            == "discount-deals"
+                        %}
 
                             New deals and local specials around
                             {{ zone.name }} will appear here.
 
-                        {% elif category.slug == "jobs" %}
+
+                        {% elif
+                            category.slug
+                            == "jobs"
+                        %}
 
                             New jobs and local opportunities around
                             {{ zone.name }} will appear here.
 
-                        {% elif category.slug == "property" %}
+
+                        {% elif
+                            category.slug
+                            == "property"
+                        %}
 
                             New rooms, houses and property listings
                             around {{ zone.name }} will appear here.
 
-                        {% elif category.slug in ["local-restaurants", "restaurants"] %}
+
+                        {% elif
+                            category.slug
+                            in [
+                                "local-restaurants",
+                                "restaurants"
+                            ]
+                        %}
 
                             Local restaurants and food businesses around
                             {{ zone.name }} will appear here.
 
-                        {% elif category.slug == "services" %}
+
+                        {% elif
+                            category.slug
+                            == "services"
+                        %}
 
                             Local service providers around
                             {{ zone.name }} will appear here.
 
-                        {% elif category.slug == "beauty-salon" %}
+
+                        {% elif
+                            category.slug
+                            == "beauty-salon"
+                        %}
 
                             Salons, barbers and beauty services around
                             {{ zone.name }} will appear here.
+
 
                         {% else %}
 
@@ -1435,11 +2360,7 @@
 
 
                     <!-- =================================
-                         PRIMARY CTA — USER ALERTS
-
-                         This is a USER subscription CTA.
-                         It is not a business promotional
-                         notification permission.
+                         USER ALERT CTA
                     ================================== -->
 
                     <a
@@ -1457,33 +2378,67 @@
 
                         <span>
 
-                            {% if category.slug in ["local-events", "events"] %}
+                            {% if
+                                category.slug
+                                in [
+                                    "local-events",
+                                    "events"
+                                ]
+                            %}
 
                                 Get Event Alerts
 
-                            {% elif category.slug == "discount-deals" %}
+
+                            {% elif
+                                category.slug
+                                == "discount-deals"
+                            %}
 
                                 Get Deal Alerts
 
-                            {% elif category.slug == "jobs" %}
+
+                            {% elif
+                                category.slug
+                                == "jobs"
+                            %}
 
                                 Get Job Alerts
 
-                            {% elif category.slug == "property" %}
+
+                            {% elif
+                                category.slug
+                                == "property"
+                            %}
 
                                 Get Property Alerts
 
-                            {% elif category.slug in ["local-restaurants", "restaurants"] %}
+
+                            {% elif
+                                category.slug
+                                in [
+                                    "local-restaurants",
+                                    "restaurants"
+                                ]
+                            %}
 
                                 Get Food Alerts
 
-                            {% elif category.slug == "services" %}
+
+                            {% elif
+                                category.slug
+                                == "services"
+                            %}
 
                                 Get Service Alerts
 
-                            {% elif category.slug == "beauty-salon" %}
+
+                            {% elif
+                                category.slug
+                                == "beauty-salon"
+                            %}
 
                                 Get Beauty Alerts
+
 
                             {% else %}
 
@@ -1497,7 +2452,7 @@
 
 
                     <!-- =================================
-                         SECONDARY CTA — CONTRIBUTE
+                         ADD A LISTING
                     ================================== -->
 
                     <div class="lac-empty-contribute">
@@ -1505,33 +2460,67 @@
 
                         <span class="lac-empty-contribute-text">
 
-                            {% if category.slug in ["local-events", "events"] %}
+                            {% if
+                                category.slug
+                                in [
+                                    "local-events",
+                                    "events"
+                                ]
+                            %}
 
                                 Hosting an event?
 
-                            {% elif category.slug == "discount-deals" %}
+
+                            {% elif
+                                category.slug
+                                == "discount-deals"
+                            %}
 
                                 Have a local special?
 
-                            {% elif category.slug == "jobs" %}
+
+                            {% elif
+                                category.slug
+                                == "jobs"
+                            %}
 
                                 Have an opportunity to share?
 
-                            {% elif category.slug == "property" %}
+
+                            {% elif
+                                category.slug
+                                == "property"
+                            %}
 
                                 Have a property available?
 
-                            {% elif category.slug in ["local-restaurants", "restaurants"] %}
+
+                            {% elif
+                                category.slug
+                                in [
+                                    "local-restaurants",
+                                    "restaurants"
+                                ]
+                            %}
 
                                 Own a local food business?
 
-                            {% elif category.slug == "services" %}
+
+                            {% elif
+                                category.slug
+                                == "services"
+                            %}
 
                                 Offer a local service?
 
-                            {% elif category.slug == "beauty-salon" %}
+
+                            {% elif
+                                category.slug
+                                == "beauty-salon"
+                            %}
 
                                 Own a salon or barbershop?
+
 
                             {% else %}
 
@@ -1552,10 +2541,6 @@
 
                     </div>
 
-
-                    <!-- =================================
-                         BACK TO CATEGORIES
-                    ================================== -->
 
                     <a
                         href="{{ url_for(
@@ -1579,15 +2564,6 @@
 
         <!-- =========================================
              USER NOTIFICATIONS
-
-             Important:
-             This allows users to subscribe to Kalxa
-             updates. It does NOT mean Discovery or
-             Business listings can send promotional
-             notifications.
-
-             Business campaign sending will later be
-             restricted to Promotion level in backend.
         ========================================== -->
 
         <section class="public-notification-link">
@@ -1622,7 +2598,7 @@
 
 
         <!-- =========================================
-             MAIN LaC WEBSITE
+             LaC COMPANY WEBSITE
         ========================================== -->
 
         <section class="public-website-link">
@@ -1716,6 +2692,7 @@
         const altText =
             button.dataset.imageAlt || "";
 
+
         openImageModal(
             imageUrl,
             altText
@@ -1740,8 +2717,13 @@
             );
 
 
-        if (!modal || !image) {
+        if (
+            !modal
+            || !image
+        ) {
+
             return;
+
         }
 
 
@@ -1781,7 +2763,9 @@
 
 
         if (!modal) {
+
             return;
+
         }
 
 
@@ -1798,6 +2782,7 @@
         if (image) {
 
             image.src = "";
+
             image.alt = "";
 
         }
@@ -1854,8 +2839,12 @@
 
     function filterCategoryListings() {
 
-        if (!categorySearchInput) {
+        if (
+            !categorySearchInput
+        ) {
+
             return;
+
         }
 
 
@@ -1865,7 +2854,8 @@
             .toLowerCase();
 
 
-        let visibleCount = 0;
+        let visibleCount =
+            0;
 
 
         listingCards.forEach(
@@ -1884,11 +2874,17 @@
                 const matches =
                     !query
                     ||
-                    title.includes(query)
+                    title.includes(
+                        query
+                    )
                     ||
-                    business.includes(query)
+                    business.includes(
+                        query
+                    )
                     ||
-                    venue.includes(query);
+                    venue.includes(
+                        query
+                    );
 
 
                 card.style.display =
@@ -1898,7 +2894,10 @@
 
 
                 if (matches) {
-                    visibleCount += 1;
+
+                    visibleCount +=
+                        1;
+
                 }
 
             }
@@ -1914,21 +2913,27 @@
                 categorySearchResultCount.textContent =
                     "";
 
-            } else if (
+            }
+
+            else if (
                 visibleCount === 0
             ) {
 
                 categorySearchResultCount.textContent =
                     "No matching listings found.";
 
-            } else if (
+            }
+
+            else if (
                 visibleCount === 1
             ) {
 
                 categorySearchResultCount.textContent =
                     "1 matching listing";
 
-            } else {
+            }
+
+            else {
 
                 categorySearchResultCount.textContent =
                     visibleCount
@@ -1939,7 +2944,9 @@
         }
 
 
-        if (categorySearchClear) {
+        if (
+            categorySearchClear
+        ) {
 
             categorySearchClear.style.display =
                 query
@@ -1951,7 +2958,9 @@
     }
 
 
-    if (categorySearchInput) {
+    if (
+        categorySearchInput
+    ) {
 
         categorySearchInput.addEventListener(
             "input",
@@ -1961,7 +2970,9 @@
     }
 
 
-    if (categorySearchClear) {
+    if (
+        categorySearchClear
+    ) {
 
         categorySearchClear.addEventListener(
             "click",
