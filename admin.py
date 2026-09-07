@@ -361,6 +361,893 @@ def get_archive_intelligence(item, today=None):
         "ready_to_archive": today >= archive_date,
     }
 
+
+# =========================================================
+# BUSINESS ANALYTICS CONSTANTS
+# =========================================================
+
+BUSINESS_ANALYTICS_EVENTS = {
+    "listing_view",
+    "whatsapp_click",
+    "call_click",
+    "directions_click",
+    "share_click",
+}
+
+
+ACTION_EVENTS = {
+    "whatsapp_click",
+    "call_click",
+    "directions_click",
+    "share_click",
+}
+
+
+# =========================================================
+# BUSINESS ANALYTICS DATE RANGE
+# =========================================================
+
+def _get_analytics_date_range():
+
+    range_key = (
+        request.args.get(
+            "range",
+            "30d",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    today = date.today()
+
+
+    if range_key == "7d":
+
+        days = 7
+
+        label = "Last 7 days"
+
+
+    elif range_key == "90d":
+
+        days = 90
+
+        label = "Last 90 days"
+
+
+    else:
+
+        range_key = "30d"
+
+        days = 30
+
+        label = "Last 30 days"
+
+
+    start_date = (
+        today
+        - timedelta(
+            days=days - 1
+        )
+    )
+
+
+    return {
+        "key": range_key,
+        "days": days,
+        "label": label,
+        "start_date": start_date,
+        "end_date": today,
+    }
+
+
+# =========================================================
+# BUILD BUSINESS ANALYTICS
+# =========================================================
+
+def _build_business_analytics(
+    item,
+    analytics_range,
+):
+
+    start_datetime = datetime.combine(
+        analytics_range[
+            "start_date"
+        ],
+        datetime.min.time(),
+    )
+
+
+    end_datetime = datetime.combine(
+        analytics_range[
+            "end_date"
+        ]
+        + timedelta(days=1),
+        datetime.min.time(),
+    )
+
+
+    # =====================================================
+    # BASE QUERY
+    # =====================================================
+
+    base_query = (
+        EngagementEvent.query
+        .filter(
+            EngagementEvent.content_item_id
+            == item.id,
+            EngagementEvent.event_type.in_(
+                BUSINESS_ANALYTICS_EVENTS
+            ),
+            EngagementEvent.created_at
+            >= start_datetime,
+            EngagementEvent.created_at
+            < end_datetime,
+        )
+    )
+
+
+    # =====================================================
+    # EVENT COUNTS
+    # =====================================================
+
+    event_rows = (
+        db.session.query(
+            EngagementEvent.event_type,
+            func.count(
+                EngagementEvent.id
+            ),
+        )
+        .filter(
+            EngagementEvent.content_item_id
+            == item.id,
+            EngagementEvent.event_type.in_(
+                BUSINESS_ANALYTICS_EVENTS
+            ),
+            EngagementEvent.created_at
+            >= start_datetime,
+            EngagementEvent.created_at
+            < end_datetime,
+        )
+        .group_by(
+            EngagementEvent.event_type
+        )
+        .all()
+    )
+
+
+    counts = {
+        event_type: count
+        for event_type, count
+        in event_rows
+    }
+
+
+    listing_views = (
+        counts.get(
+            "listing_view",
+            0,
+        )
+    )
+
+
+    whatsapp_clicks = (
+        counts.get(
+            "whatsapp_click",
+            0,
+        )
+    )
+
+
+    call_clicks = (
+        counts.get(
+            "call_click",
+            0,
+        )
+    )
+
+
+    directions_clicks = (
+        counts.get(
+            "directions_click",
+            0,
+        )
+    )
+
+
+    share_clicks = (
+        counts.get(
+            "share_click",
+            0,
+        )
+    )
+
+
+    total_actions = (
+        whatsapp_clicks
+        + call_clicks
+        + directions_clicks
+        + share_clicks
+    )
+
+
+    # =====================================================
+    # ACTION RATE
+    #
+    # This is NOT conversion-to-sale.
+    #
+    # It means:
+    #
+    # tracked actions / listing views
+    # =====================================================
+
+    if listing_views:
+
+        action_rate = round(
+            (
+                total_actions
+                / listing_views
+            )
+            * 100,
+            1,
+        )
+
+    else:
+
+        action_rate = 0.0
+
+
+    # =====================================================
+    # DAILY LISTING VIEWS
+    # =====================================================
+
+    daily_view_rows = (
+        db.session.query(
+            func.date(
+                EngagementEvent.created_at
+            ).label(
+                "day"
+            ),
+            func.count(
+                EngagementEvent.id
+            ).label(
+                "views"
+            ),
+        )
+        .filter(
+            EngagementEvent.content_item_id
+            == item.id,
+            EngagementEvent.event_type
+            == "listing_view",
+            EngagementEvent.created_at
+            >= start_datetime,
+            EngagementEvent.created_at
+            < end_datetime,
+        )
+        .group_by(
+            func.date(
+                EngagementEvent.created_at
+            )
+        )
+        .order_by(
+            func.date(
+                EngagementEvent.created_at
+            )
+        )
+        .all()
+    )
+
+
+    daily_view_map = {
+        str(day): count
+        for day, count
+        in daily_view_rows
+    }
+
+
+    # -----------------------------------------------------
+    # Fill missing dates with zero.
+    # -----------------------------------------------------
+
+    daily_views = []
+
+
+    current_day = (
+        analytics_range[
+            "start_date"
+        ]
+    )
+
+
+    while (
+        current_day
+        <= analytics_range[
+            "end_date"
+        ]
+    ):
+
+        day_key = (
+            current_day.isoformat()
+        )
+
+
+        daily_views.append(
+            {
+                "date":
+                    day_key,
+
+                "label":
+                    current_day.strftime(
+                        "%d %b"
+                    ),
+
+                "views":
+                    daily_view_map.get(
+                        day_key,
+                        0,
+                    ),
+            }
+        )
+
+
+        current_day += timedelta(
+            days=1
+        )
+
+
+    # =====================================================
+    # BEST DAY
+    # =====================================================
+
+    if daily_views:
+
+        best_day = max(
+            daily_views,
+            key=lambda row:
+                row["views"],
+        )
+
+    else:
+
+        best_day = {
+            "date": None,
+            "label": "—",
+            "views": 0,
+        }
+
+
+    if (
+        best_day["views"]
+        == 0
+    ):
+
+        best_day = {
+            "date": None,
+            "label": "—",
+            "views": 0,
+        }
+
+
+    # =====================================================
+    # ACTION BREAKDOWN
+    # =====================================================
+
+    action_breakdown = [
+        {
+            "event_type":
+                "whatsapp_click",
+
+            "label":
+                "WhatsApp",
+
+            "icon":
+                "💬",
+
+            "count":
+                whatsapp_clicks,
+        },
+        {
+            "event_type":
+                "call_click",
+
+            "label":
+                "Calls",
+
+            "icon":
+                "📞",
+
+            "count":
+                call_clicks,
+        },
+        {
+            "event_type":
+                "directions_click",
+
+            "label":
+                "Directions",
+
+            "icon":
+                "🧭",
+
+            "count":
+                directions_clicks,
+        },
+        {
+            "event_type":
+                "share_click",
+
+            "label":
+                "Shares",
+
+            "icon":
+                "↗",
+
+            "count":
+                share_clicks,
+        },
+    ]
+
+
+    # =====================================================
+    # RETURN ANALYTICS
+    # =====================================================
+
+    return {
+
+        "listing_views":
+            listing_views,
+
+        "whatsapp_clicks":
+            whatsapp_clicks,
+
+        "call_clicks":
+            call_clicks,
+
+        "directions_clicks":
+            directions_clicks,
+
+        "share_clicks":
+            share_clicks,
+
+        "total_actions":
+            total_actions,
+
+        "action_rate":
+            action_rate,
+
+        "daily_views":
+            daily_views,
+
+        "best_day":
+            best_day,
+
+        "action_breakdown":
+            action_breakdown,
+
+    }
+
+
+# =========================================================
+# BUSINESS ANALYTICS — OVERVIEW
+# =========================================================
+
+@admin_bp.route(
+    "/business-analytics"
+)
+def business_analytics():
+
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+
+    # =====================================================
+    # ANALYTICS RANGE
+    # =====================================================
+
+    analytics_range = (
+        _get_analytics_date_range()
+    )
+
+
+    start_datetime = datetime.combine(
+        analytics_range[
+            "start_date"
+        ],
+        datetime.min.time(),
+    )
+
+
+    end_datetime = datetime.combine(
+        analytics_range[
+            "end_date"
+        ]
+        + timedelta(days=1),
+        datetime.min.time(),
+    )
+
+
+    # =====================================================
+    # BUSINESS / PROMOTION LISTINGS
+    # =====================================================
+
+    listings = (
+        ContentItem.query
+        .filter(
+            ContentItem.listing_level.in_(
+                {
+                    "business",
+                    "promotion",
+                }
+            )
+        )
+        .order_by(
+            ContentItem.created_at.desc()
+        )
+        .all()
+    )
+
+
+    listing_ids = [
+        item.id
+        for item in listings
+    ]
+
+
+    # =====================================================
+    # AGGREGATE EVENTS IN ONE QUERY
+    # =====================================================
+
+    analytics_by_listing = {}
+
+
+    if listing_ids:
+
+        rows = (
+            db.session.query(
+                EngagementEvent.content_item_id,
+                EngagementEvent.event_type,
+                func.count(
+                    EngagementEvent.id
+                ).label(
+                    "event_count"
+                ),
+            )
+            .filter(
+                EngagementEvent.content_item_id.in_(
+                    listing_ids
+                ),
+                EngagementEvent.event_type.in_(
+                    BUSINESS_ANALYTICS_EVENTS
+                ),
+                EngagementEvent.created_at
+                >= start_datetime,
+                EngagementEvent.created_at
+                < end_datetime,
+            )
+            .group_by(
+                EngagementEvent.content_item_id,
+                EngagementEvent.event_type,
+            )
+            .all()
+        )
+
+
+        for (
+            content_item_id,
+            event_type,
+            event_count,
+        ) in rows:
+
+            analytics_by_listing.setdefault(
+                content_item_id,
+                {}
+            )
+
+
+            analytics_by_listing[
+                content_item_id
+            ][
+                event_type
+            ] = event_count
+
+
+    # =====================================================
+    # BUILD LISTING REPORT
+    # =====================================================
+
+    listing_reports = []
+
+
+    for item in listings:
+
+        counts = (
+            analytics_by_listing.get(
+                item.id,
+                {},
+            )
+        )
+
+
+        views = counts.get(
+            "listing_view",
+            0,
+        )
+
+
+        whatsapp = counts.get(
+            "whatsapp_click",
+            0,
+        )
+
+
+        calls = counts.get(
+            "call_click",
+            0,
+        )
+
+
+        directions = counts.get(
+            "directions_click",
+            0,
+        )
+
+
+        shares = counts.get(
+            "share_click",
+            0,
+        )
+
+
+        actions = (
+            whatsapp
+            + calls
+            + directions
+            + shares
+        )
+
+
+        action_rate = (
+            round(
+                (
+                    actions
+                    / views
+                )
+                * 100,
+                1,
+            )
+            if views
+            else 0.0
+        )
+
+
+        listing_reports.append(
+            {
+                "item":
+                    item,
+
+                "views":
+                    views,
+
+                "actions":
+                    actions,
+
+                "whatsapp":
+                    whatsapp,
+
+                "calls":
+                    calls,
+
+                "directions":
+                    directions,
+
+                "shares":
+                    shares,
+
+                "action_rate":
+                    action_rate,
+            }
+        )
+
+
+    # =====================================================
+    # RANK BY ATTENTION
+    # =====================================================
+
+    listing_reports.sort(
+        key=lambda row: (
+            row["views"],
+            row["actions"],
+        ),
+        reverse=True,
+    )
+
+
+    # =====================================================
+    # PLATFORM TOTALS
+    # =====================================================
+
+    total_views = sum(
+        row["views"]
+        for row
+        in listing_reports
+    )
+
+
+    total_actions = sum(
+        row["actions"]
+        for row
+        in listing_reports
+    )
+
+
+    total_whatsapp = sum(
+        row["whatsapp"]
+        for row
+        in listing_reports
+    )
+
+
+    total_calls = sum(
+        row["calls"]
+        for row
+        in listing_reports
+    )
+
+
+    total_directions = sum(
+        row["directions"]
+        for row
+        in listing_reports
+    )
+
+
+    total_shares = sum(
+        row["shares"]
+        for row
+        in listing_reports
+    )
+
+
+    overall_action_rate = (
+        round(
+            (
+                total_actions
+                / total_views
+            )
+            * 100,
+            1,
+        )
+        if total_views
+        else 0.0
+    )
+
+
+    totals = {
+
+        "views":
+            total_views,
+
+        "actions":
+            total_actions,
+
+        "whatsapp":
+            total_whatsapp,
+
+        "calls":
+            total_calls,
+
+        "directions":
+            total_directions,
+
+        "shares":
+            total_shares,
+
+        "action_rate":
+            overall_action_rate,
+
+    }
+
+
+    return render_template(
+        "admin/business_analytics.html",
+
+        analytics_range=
+            analytics_range,
+
+        listing_reports=
+            listing_reports,
+
+        totals=
+            totals,
+    )
+
+
+# =========================================================
+# BUSINESS ANALYTICS — LISTING DETAIL
+# =========================================================
+
+@admin_bp.route(
+    "/business-analytics/<int:item_id>"
+)
+def business_analytics_detail(
+    item_id,
+):
+
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+
+    # =====================================================
+    # LOAD LISTING
+    # =====================================================
+
+    item = (
+        ContentItem.query
+        .get_or_404(
+            item_id
+        )
+    )
+
+
+    # =====================================================
+    # ONLY BUSINESS / PROMOTION
+    # =====================================================
+
+    if (
+        item.listing_level
+        not in {
+            "business",
+            "promotion",
+        }
+    ):
+
+        flash(
+            (
+                "Business analytics are available "
+                "for Business and Promotion listings."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.business_analytics"
+            )
+        )
+
+
+    analytics_range = (
+        _get_analytics_date_range()
+    )
+
+
+    analytics = (
+        _build_business_analytics(
+            item,
+            analytics_range,
+        )
+    )
+
+
+    return render_template(
+        "admin/business_analytics_detail.html",
+
+        item=
+            item,
+
+        analytics=
+            analytics,
+
+        analytics_range=
+            analytics_range,
+    )
+
 @admin_bp.route(
     "/categories/<int:category_id>/delete",
     methods=["POST"]
