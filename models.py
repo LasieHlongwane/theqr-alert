@@ -334,6 +334,7 @@ class AccessPoint(db.Model):
 # ============================================================
 # CONTENT ITEM
 # ============================================================
+
 class ContentItem(db.Model):
 
     __tablename__ = "content_items"
@@ -365,23 +366,6 @@ class ContentItem(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # LISTING LEVEL / OWNERSHIP
-    # ========================================================
-    #
-    # listing_level:
-    #
-    # discovery = Kalxa/publicly seeded listing
-    # business  = claimed/business-controlled listing
-    # promotion = paid/promoted listing
-    #
-    # ownership_status:
-    #
-    # unclaimed = no approved owner yet
-    # claimed   = approved business owner
-    #
-    # ========================================================
 
     listing_level = db.Column(
         db.String(30),
@@ -516,6 +500,110 @@ class ContentItem(db.Model):
         db.String(500),
         nullable=True,
     )
+    
+    
+        # =====================================================
+    # COMMERCIAL / MONETIZATION MODEL
+    # =====================================================
+    #
+    # presence:
+    #     Long-life business presence.
+    #     Price depends mainly on duration.
+    #
+    # campaign:
+    #     Short-life promotional content.
+    #     Price depends on duration + distribution reach.
+    #
+    # None:
+    #     Legacy / Kalxa-curated / non-commercial content.
+    # =====================================================
+
+    pricing_model = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
+    )
+
+
+    # =====================================================
+    # COMMERCIAL DURATION
+    # =====================================================
+
+    commercial_duration_days = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+
+    commercial_starts_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    commercial_expires_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    # =====================================================
+    # PAYMENT
+    # =====================================================
+    #
+    # unpaid:
+    #     Customer has not yet paid.
+    #
+    # paid:
+    #     Customer payment confirmed.
+    #
+    # waived:
+    #     Kalxa intentionally allows the listing without
+    #     customer payment, e.g. pilot / partner / seeded.
+    #
+    # refunded:
+    #     Payment refunded.
+    # =====================================================
+
+    payment_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="unpaid",
+        index=True,
+    )
+
+
+    amount_due = db.Column(
+        db.Numeric(
+            10,
+            2,
+        ),
+        nullable=True,
+    )
+
+
+    amount_paid = db.Column(
+        db.Numeric(
+            10,
+            2,
+        ),
+        nullable=True,
+    )
+
+
+    payment_reference = db.Column(
+        db.String(150),
+        nullable=True,
+        index=True,
+    )
+
+
+    paid_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
 
 
     # ========================================================
@@ -595,23 +683,6 @@ class ContentItem(db.Model):
     )
 
 
-    # ========================================================
-    # CLAIM RELATIONSHIP
-    # ========================================================
-    #
-    # One ContentItem can receive multiple claim attempts.
-    #
-    # Example:
-    #
-    # ContentItem
-    #     ↓
-    # Claim #1 — rejected
-    # Claim #2 — approved
-    #
-    # We intentionally keep claim history rather than storing
-    # only one claim on the listing.
-    #
-    # ========================================================
 
     claims = db.relationship(
         "ListingClaim",
@@ -721,7 +792,9 @@ class ContentItem(db.Model):
             claim.status == "pending"
             for claim in self.claims
         )
-
+        
+        
+        
 class ListingClaim(db.Model):
 
     __tablename__ = "listing_claims"
@@ -1603,3 +1676,103 @@ class EngagementEvent(db.Model):
             lazy=True,
         ),
     )
+
+
+class ContentDistributionZone(db.Model):
+
+    __tablename__ = (
+        "content_distribution_zones"
+    )
+
+
+    # =====================================================
+    # PRIMARY KEY
+    # =====================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # =====================================================
+    # CONTENT ITEM
+    # =====================================================
+
+    content_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "content_items.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # =====================================================
+    # DISTRIBUTION ZONE
+    # =====================================================
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "zones.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # =====================================================
+    # RELATIONSHIPS
+    # =====================================================
+
+    content_item = db.relationship(
+        "ContentItem",
+        backref=db.backref(
+            "distribution_zone_links",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+
+    zone = db.relationship(
+        "Zone",
+        backref=db.backref(
+            "distributed_content_links",
+            lazy=True,
+        ),
+    )
+
+
+    # =====================================================
+    # CONSTRAINTS
+    # =====================================================
+
+    __table_args__ = (
+
+        db.UniqueConstraint(
+            "content_item_id",
+            "zone_id",
+            name=(
+                "uq_content_item_distribution_zone"
+            ),
+        ),
+
+    )
+
+
+    # =====================================================
+    # DEBUG REPRESENTATION
+    # =====================================================
+
+    def __repr__(self):
+
+        return (
+            "<ContentDistributionZone "
+            f"content_item_id={self.content_item_id} "
+            f"zone_id={self.zone_id}>"
+        )
