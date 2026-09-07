@@ -482,6 +482,109 @@
 
     </section>
 
+    <!-- =====================================
+     PHYSICAL ACCESS POINT PERFORMANCE
+====================================== -->
+
+    <section class="report-section">
+
+     <h2>
+        Where Customers Discovered You
+     </h2>
+
+
+     {% if analytics.access_points %}
+
+
+        <div class="analytics-table-wrap">
+
+            <table class="analytics-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Kalxa Access Point
+                        </th>
+
+                        <th>
+                            Views
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                        <th>
+                            Action Rate
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for point in analytics.access_points %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong>
+                                📍 {{ point.name }}
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+                            {{ point.views }}
+                        </td>
+
+
+                        <td>
+                            {{ point.actions }}
+                        </td>
+
+
+                        <td>
+                            {{ point.action_rate }}%
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+     {% else %}
+
+
+        <div class="best-day">
+
+            <span>
+                ACCESS POINT DATA
+            </span>
+
+            <strong>
+                No attributed QR activity yet
+            </strong>
+
+        </div>
+
+
+     {% endif %}
+
+    </section>
+
 
     <!-- =====================================
          DAILY VIEWS
