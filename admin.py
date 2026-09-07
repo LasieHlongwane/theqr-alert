@@ -26,6 +26,13 @@ from sqlalchemy import func
 
 from cloud_storage import upload_listing_image
 
+from pricing import (
+    PRICING_MODEL_PRESENCE,
+    PRICING_MODEL_CAMPAIGN,
+    calculate_kalxa_price,
+    format_kalxa_price,
+    KalxaPricingError,
+)
 from models import (
     db,
     Zone,
@@ -41,6 +48,7 @@ from models import (
     PushNotification,
     PushSubscriber,
     EngagementEvent,
+    ContentDistributionZone,
 )
 ONGOING_CATEGORIES = {
     "property",
@@ -50,6 +58,248 @@ ONGOING_CATEGORIES = {
 from qr_generator import generate_access_qr
 ARCHIVE_GRACE_DAYS = 7
 EXPIRING_SOON_DAYS = 3
+
+# =========================================================
+# KALXA PRESENCE CATEGORIES
+# =========================================================
+#
+# These are categories where the GENERAL / fallback listing
+# represents an ongoing business or service presence.
+#
+# More specific content types can override this below.
+# =========================================================
+
+# =========================================================
+# KALXA COMMERCIAL PRICING CLASSIFICATION
+# =========================================================
+
+
+# =========================================================
+# DEFAULT PRESENCE CATEGORIES
+#
+# These are categories whose GENERAL listing should normally
+# be treated as long-term business presence.
+#
+# Specific content types can override this below.
+# =========================================================
+
+KALXA_PRESENCE_CATEGORIES = {
+
+    "local-restaurants",
+
+    "beauty-salon",
+
+    "services",
+
+}
+
+
+# =========================================================
+# DEFAULT CAMPAIGN CATEGORIES
+#
+# These categories are normally short-term distribution.
+# =========================================================
+
+KALXA_CAMPAIGN_CATEGORIES = {
+
+    "events",
+
+    "discount-deals",
+
+    "jobs",
+
+    "opportunities",
+
+}
+
+
+# =========================================================
+# CONTENT-TYPE OVERRIDES
+#
+# These rules are checked BEFORE the category defaults.
+#
+# This allows:
+#
+# Restaurant       -> Presence
+# Restaurant Deal  -> Campaign
+#
+# Salon            -> Presence
+# Beauty Special   -> Campaign
+#
+# Hotel            -> Presence
+# Accommodation Special -> Campaign
+# =========================================================
+
+KALXA_PRICING_MODEL_OVERRIDES = {
+
+
+    # =====================================================
+    # PROPERTY
+    # =====================================================
+
+    ("property", "room"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("property", "rental"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("property", "property_sale"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("property", "hotel_lodge"):
+        PRICING_MODEL_PRESENCE,
+
+    ("property", "accommodation_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+
+    # =====================================================
+    # EVENTS
+    # =====================================================
+
+    ("events", "entertainment"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("events", "church_event"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("events", "sports_event"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("events", "community_event"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("events", "business_event"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("events", "event"):
+        PRICING_MODEL_CAMPAIGN,
+
+
+    # =====================================================
+    # DISCOUNT DEALS
+    # =====================================================
+
+    ("discount-deals", "grocery_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("discount-deals", "product_discount"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("discount-deals", "weekend_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("discount-deals", "clearance"):
+        PRICING_MODEL_CAMPAIGN,
+
+
+    # =====================================================
+    # LOCAL RESTAURANTS
+    # =====================================================
+
+    ("local-restaurants", "restaurant"):
+        PRICING_MODEL_PRESENCE,
+
+    ("local-restaurants", "takeaway"):
+        PRICING_MODEL_PRESENCE,
+
+    ("local-restaurants", "daily_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("local-restaurants", "weekend_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("local-restaurants", "food_deal"):
+        PRICING_MODEL_CAMPAIGN,
+
+
+    # =====================================================
+    # JOBS
+    # =====================================================
+
+    ("jobs", "job"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("jobs", "learnership"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("jobs", "internship"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("jobs", "training"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("jobs", "tender"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("jobs", "business_opportunity"):
+        PRICING_MODEL_CAMPAIGN,
+
+
+    # =====================================================
+    # OPPORTUNITIES
+    # =====================================================
+
+    ("opportunities", "job"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("opportunities", "learnership"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("opportunities", "internship"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("opportunities", "training"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("opportunities", "tender"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("opportunities", "business_opportunity"):
+        PRICING_MODEL_CAMPAIGN,
+
+
+    # =====================================================
+    # SERVICES
+    # =====================================================
+
+    ("services", "service_provider"):
+        PRICING_MODEL_PRESENCE,
+
+    ("services", "plumber"):
+        PRICING_MODEL_PRESENCE,
+
+    ("services", "mechanic"):
+        PRICING_MODEL_PRESENCE,
+
+    ("services", "electrician"):
+        PRICING_MODEL_PRESENCE,
+
+    ("services", "builder"):
+        PRICING_MODEL_PRESENCE,
+
+    ("services", "cleaning_service"):
+        PRICING_MODEL_PRESENCE,
+
+
+    # =====================================================
+    # BEAUTY / SALON
+    # =====================================================
+
+    ("beauty-salon", "salon"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "barber"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "beauty_service"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "beauty_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+}
+
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -283,6 +533,412 @@ def get_content_status(
         "icon": "🟢",
     }
 
+def _parse_distribution_zone_ids():
+
+    # =====================================================
+    # READ SELECTED ZONES
+    # =====================================================
+
+    raw_zone_ids = (
+        request.form.getlist(
+            "distribution_zone_ids"
+        )
+    )
+
+
+    zone_ids = []
+
+
+    # =====================================================
+    # NORMALIZE / VALIDATE IDS
+    # =====================================================
+
+    for raw_zone_id in raw_zone_ids:
+
+        try:
+
+            zone_id = int(
+                raw_zone_id
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            continue
+
+
+        if (
+            zone_id not in zone_ids
+        ):
+
+            zone_ids.append(
+                zone_id
+            )
+
+
+    return zone_ids
+    
+def _configure_commercial_content(
+    item,
+    category,
+    content_type,
+):
+
+    # =====================================================
+    # GET WORKFLOW
+    # =====================================================
+
+    workflow = (
+        _get_content_workflow(
+            category,
+            content_type,
+        )
+    )
+
+
+    pricing_model = (
+        workflow.get(
+            "pricing_model"
+        )
+    )
+
+
+    # =====================================================
+    # NON-COMMERCIAL / UNMAPPED CONTENT
+    # =====================================================
+
+    if not pricing_model:
+
+        item.pricing_model = None
+
+        item.commercial_duration_days = None
+
+        item.commercial_starts_at = None
+
+        item.commercial_expires_at = None
+
+        item.amount_due = None
+
+        return []
+
+
+    # =====================================================
+    # DURATION
+    # =====================================================
+
+    raw_duration = (
+        request.form.get(
+            "commercial_duration_days",
+            "",
+        )
+        .strip()
+    )
+
+
+    try:
+
+        duration_days = int(
+            raw_duration
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        raise ValueError(
+            "Please select a valid Kalxa package duration."
+        )
+
+
+    # =====================================================
+    # PAYMENT STATUS
+    # =====================================================
+
+    payment_status = (
+        request.form.get(
+            "payment_status",
+            "unpaid",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    allowed_payment_statuses = {
+
+        "unpaid",
+
+        "paid",
+
+        "waived",
+
+        "refunded",
+
+    }
+
+
+    if (
+        payment_status
+        not in allowed_payment_statuses
+    ):
+
+        payment_status = (
+            "unpaid"
+        )
+
+
+    # =====================================================
+    # DISTRIBUTION REACH
+    # =====================================================
+
+    distribution_zone_ids = []
+
+
+    if (
+        pricing_model
+        == PRICING_MODEL_CAMPAIGN
+    ):
+
+        distribution_zone_ids = (
+            _parse_distribution_zone_ids()
+        )
+
+
+        if not distribution_zone_ids:
+
+            raise ValueError(
+                (
+                    "Campaign content must have at least "
+                    "one distribution zone."
+                )
+            )
+
+
+        if (
+            len(
+                distribution_zone_ids
+            )
+            > 3
+        ):
+
+            raise ValueError(
+                (
+                    "The current Kalxa campaign packages "
+                    "support a maximum of 3 zones."
+                )
+            )
+
+
+        # ---------------------------------------------
+        # Confirm all selected zone IDs really exist.
+        # ---------------------------------------------
+
+        existing_zone_ids = {
+
+            zone.id
+
+            for zone in (
+                Zone.query
+                .filter(
+                    Zone.id.in_(
+                        distribution_zone_ids
+                    )
+                )
+                .all()
+            )
+
+        }
+
+
+        if (
+            len(
+                existing_zone_ids
+            )
+            != len(
+                distribution_zone_ids
+            )
+        ):
+
+            raise ValueError(
+                "One or more selected campaign zones are invalid."
+            )
+
+
+        zone_count = len(
+            distribution_zone_ids
+        )
+
+
+    else:
+
+        # =================================================
+        # PRESENCE
+        #
+        # Presence pricing is based only on duration.
+        # No purchased multi-zone reach.
+        # =================================================
+
+        distribution_zone_ids = []
+
+        zone_count = 1
+
+
+    # =====================================================
+    # SERVER-SIDE PRICE CALCULATION
+    #
+    # NEVER trust displayed_amount_due from the browser.
+    # =====================================================
+
+    try:
+
+        amount_due = (
+            calculate_kalxa_price(
+                pricing_model=
+                    pricing_model,
+
+                duration_days=
+                    duration_days,
+
+                zone_count=
+                    zone_count,
+            )
+        )
+
+    except KalxaPricingError as exc:
+
+        raise ValueError(
+            str(
+                exc
+            )
+        )
+
+
+    # =====================================================
+    # COMMERCIAL DATES
+    # =====================================================
+
+    now = datetime.utcnow()
+
+
+    commercial_starts_at = None
+
+    commercial_expires_at = None
+
+
+    # =====================================================
+    # ACTIVATE COMMERCIAL PERIOD ONLY WHEN AUTHORIZED
+    #
+    # paid:
+    #     Customer paid.
+    #
+    # waived:
+    #     Kalxa intentionally grants access.
+    #
+    # unpaid/refunded:
+    #     Do not start purchased visibility.
+    # =====================================================
+
+    if (
+        payment_status
+        in {
+            "paid",
+            "waived",
+        }
+    ):
+
+        commercial_starts_at = (
+            now
+        )
+
+
+        commercial_expires_at = (
+            now
+            + timedelta(
+                days=duration_days
+            )
+        )
+
+
+    # =====================================================
+    # SAVE COMMERCIAL VALUES
+    # =====================================================
+
+    item.pricing_model = (
+        pricing_model
+    )
+
+
+    item.commercial_duration_days = (
+        duration_days
+    )
+
+
+    item.commercial_starts_at = (
+        commercial_starts_at
+    )
+
+
+    item.commercial_expires_at = (
+        commercial_expires_at
+    )
+
+
+    item.payment_status = (
+        payment_status
+    )
+
+
+    item.amount_due = (
+        amount_due
+    )
+
+
+    item.payment_reference = (
+        request.form.get(
+            "payment_reference",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    # =====================================================
+    # AMOUNT PAID / PAID AT
+    # =====================================================
+
+    if (
+        payment_status
+        == "paid"
+    ):
+
+        item.amount_paid = (
+            amount_due
+        )
+
+
+        item.paid_at = (
+            now
+        )
+
+
+    else:
+
+        item.amount_paid = None
+
+        item.paid_at = None
+
+
+    # =====================================================
+    # RETURN DISTRIBUTION IDS
+    #
+    # The ContentItem must first be flushed so it has an ID.
+    # =====================================================
+
+    return distribution_zone_ids
 
 def get_content_expiry_date(
     item,
@@ -1598,19 +2254,123 @@ def get_access_point_qr_url(access_point):
     )
 
 
+def _get_pricing_model(
+    category,
+    content_type=None,
+):
+
+    # =====================================================
+    # NORMALIZE VALUES
+    # =====================================================
+
+    category = (
+        str(
+            category
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    content_type = (
+        str(
+            content_type
+            or ""
+        )
+        .strip()
+        .lower()
+        or None
+    )
+
+
+    # =====================================================
+    # CONTENT TYPE OVERRIDE
+    #
+    # More specific rule wins first.
+    # =====================================================
+
+    override_key = (
+        category,
+        content_type,
+    )
+
+
+    if (
+        override_key
+        in KALXA_PRICING_MODEL_OVERRIDES
+    ):
+
+        return (
+            KALXA_PRICING_MODEL_OVERRIDES[
+                override_key
+            ]
+        )
+
+
+    # =====================================================
+    # PRESENCE CATEGORY
+    # =====================================================
+
+    if (
+        category
+        in KALXA_PRESENCE_CATEGORIES
+    ):
+
+        return (
+            PRICING_MODEL_PRESENCE
+        )
+
+
+    # =====================================================
+    # CAMPAIGN CATEGORY
+    # =====================================================
+
+    if (
+        category
+        in KALXA_CAMPAIGN_CATEGORIES
+    ):
+
+        return (
+            PRICING_MODEL_CAMPAIGN
+        )
+
+
+    # =====================================================
+    # NO COMMERCIAL MODEL YET
+    #
+    # IMPORTANT:
+    #
+    # Do NOT guess.
+    #
+    # Existing/community content can continue working while
+    # we decide how a new category should be monetized.
+    # =====================================================
+
+    return None
+
 def _get_content_workflow(
     category,
     content_type,
 ):
 
+    # =====================================================
+    # NORMALIZE INPUT
+    # =====================================================
+
     category = (
         category or ""
     ).strip().lower()
+
 
     content_type = (
         content_type or ""
     ).strip().lower()
 
+
+    # =====================================================
+    # CHECK EXISTING CONTENT-TYPE WORKFLOW
+    # =====================================================
 
     category_workflows = (
         ADMIN_CONTENT_WORKFLOWS.get(
@@ -1619,56 +2379,189 @@ def _get_content_workflow(
         )
     )
 
+
     workflow = (
         category_workflows.get(
             content_type
         )
     )
 
+
+    # =====================================================
+    # USE EXISTING SPECIFIC WORKFLOW
+    # =====================================================
+
     if workflow:
-        return workflow
+
+        # ---------------------------------------------
+        # Make a copy.
+        #
+        # This prevents us from modifying the original
+        # ADMIN_CONTENT_WORKFLOWS dictionary.
+        # ---------------------------------------------
+
+        workflow = dict(
+            workflow
+        )
 
 
-    # -----------------------------------------
+    # =====================================================
     # EVENTS ALWAYS EXPIRE
-    # -----------------------------------------
+    # =====================================================
 
-    if category == "events":
+    elif category == "events":
 
-        return {
-            "lifetime_type": "time_specific",
-            "notification_eligible": True,
+        workflow = {
+
+            "lifetime_type":
+                "time_specific",
+
+            "notification_eligible":
+                True,
+
         }
 
 
-    # -----------------------------------------
+    # =====================================================
     # ONLY THESE CATEGORIES ARE ONGOING
-    # -----------------------------------------
+    # =====================================================
 
-    ongoing_categories = {
+    elif category in {
+
         "property",
+
         "transport",
+
         "services",
-    }
 
-    if category in ongoing_categories:
+    }:
 
-        return {
-            "lifetime_type": "ongoing",
-            "notification_eligible": False,
+        workflow = {
+
+            "lifetime_type":
+                "ongoing",
+
+            "notification_eligible":
+                False,
+
         }
 
 
-    # -----------------------------------------
+    # =====================================================
     # EVERYTHING ELSE EXPIRES
-    # -----------------------------------------
+    # =====================================================
 
-    return {
-        "lifetime_type": "time_specific",
-        "notification_eligible": True,
-    }
+    else:
+
+        workflow = {
+
+            "lifetime_type":
+                "time_specific",
+
+            "notification_eligible":
+                True,
+
+        }
 
 
+    # =====================================================
+    # ADD KALXA COMMERCIAL PRICING MODEL
+    # =====================================================
+    #
+    # This does NOT calculate a price.
+    #
+    # It tells Kalxa which commercial pricing engine
+    # applies to this category / content type:
+    #
+    # presence
+    #     Duration-based pricing.
+    #
+    # campaign
+    #     Duration × geographic reach pricing.
+    #
+    # None
+    #     No commercial pricing rule has been assigned.
+    # =====================================================
+
+    workflow[
+        "pricing_model"
+    ] = (
+        _get_pricing_model(
+            category,
+            content_type,
+        )
+    )
+
+
+    # =====================================================
+    # RETURN COMPLETE WORKFLOW
+    # =====================================================
+
+    return workflow
+
+def _calculate_content_price(
+    category,
+    content_type,
+    duration_days,
+    zone_count=1,
+):
+
+    # =====================================================
+    # GET CONTENT WORKFLOW
+    # =====================================================
+
+    workflow = (
+        _get_content_workflow(
+            category,
+            content_type,
+        )
+    )
+
+
+    pricing_model = (
+        workflow.get(
+            "pricing_model"
+        )
+    )
+
+
+    # =====================================================
+    # CONTENT WITHOUT COMMERCIAL PRICING
+    # =====================================================
+
+    if not pricing_model:
+
+        return None
+
+
+    # =====================================================
+    # PRESENCE
+    #
+    # Geographic reach does not affect Presence pricing.
+    # =====================================================
+
+    if (
+        pricing_model
+        == PRICING_MODEL_PRESENCE
+    ):
+
+        zone_count = 1
+
+
+    # =====================================================
+    # CALCULATE
+    # =====================================================
+
+    return calculate_kalxa_price(
+        pricing_model=
+            pricing_model,
+
+        duration_days=
+            duration_days,
+
+        zone_count=
+            zone_count,
+    )
 
 
 def create_access_point_qr(access_point):
@@ -6411,8 +7304,22 @@ def create_content():
         )
 
 
+        pricing_model = (
+            workflow.get(
+                "pricing_model"
+            )
+        )
+
+
         # =================================================
-        # VALIDATE + NORMALIZE DATES
+        # VALIDATE + NORMALIZE CONTENT DATES
+        #
+        # These are the natural content lifecycle dates.
+        #
+        # They are separate from:
+        #
+        # commercial_starts_at
+        # commercial_expires_at
         # =================================================
 
         try:
@@ -6633,26 +7540,21 @@ def create_content():
         # =================================================
         # IMAGE UPLOADS
         #
-        # Kalxa uses the existing ContentItem columns:
+        # ContentItem columns:
         #
-        # image_url   = primary image
-        # image_url_2 = second image
-        # image_url_3 = third image
+        # image_url
+        # image_url_2
+        # image_url_3
         #
-        # Discovery:
-        #     maximum 1 image
-        #
-        # Business / Promotion:
-        #     maximum 3 images
+        # Discovery = maximum 1
+        # Business / Promotion = maximum 3
         # =================================================
 
         uploaded_images = []
 
 
         # -------------------------------------------------
-        # CURRENT MULTI-IMAGE FIELD
-        #
-        # <input name="images" multiple>
+        # MULTI-IMAGE FIELD
         # -------------------------------------------------
 
         for uploaded_file in request.files.getlist(
@@ -6671,11 +7573,7 @@ def create_content():
 
 
         # -------------------------------------------------
-        # LEGACY SINGLE-IMAGE FIELD
-        #
-        # <input name="image">
-        #
-        # Keep support for older forms.
+        # LEGACY SINGLE IMAGE FIELD
         # -------------------------------------------------
 
         legacy_image = (
@@ -6689,20 +7587,17 @@ def create_content():
             legacy_image
             and
             legacy_image.filename
+            and
+            not uploaded_images
         ):
 
-            # Only add it if the multi-image field
-            # did not already supply files.
-
-            if not uploaded_images:
-
-                uploaded_images.append(
-                    legacy_image
-                )
+            uploaded_images.append(
+                legacy_image
+            )
 
 
         # =================================================
-        # IMAGE LIMIT BY LISTING LEVEL
+        # IMAGE LIMIT
         # =================================================
 
         if (
@@ -6718,7 +7613,9 @@ def create_content():
 
 
         if (
-            len(uploaded_images)
+            len(
+                uploaded_images
+            )
             > maximum_images
         ):
 
@@ -6804,14 +7701,6 @@ def create_content():
 
         # =================================================
         # ASSIGN IMAGE URLS
-        #
-        # THIS IS THE IMPORTANT FIX.
-        #
-        # First uploaded image always becomes:
-        #
-        #     item.image_url
-        #
-        # which is what What's New uses.
         # =================================================
 
         primary_image_url = (
@@ -6843,9 +7732,20 @@ def create_content():
 
         # =================================================
         # CREATE CONTENT ITEM
+        #
+        # IMPORTANT:
+        #
+        # Commercial configuration is NOT called inside
+        # this constructor.
+        #
+        # We first create the Python ContentItem object.
         # =================================================
 
         item = ContentItem(
+
+            # =============================================
+            # LOCATION / CLASSIFICATION
+            # =============================================
 
             zone_id=
                 zone_id,
@@ -6861,6 +7761,11 @@ def create_content():
 
             availability_status=
                 "available",
+
+
+            # =============================================
+            # BASIC CONTENT
+            # =============================================
 
             title=
                 title,
@@ -6909,6 +7814,7 @@ def create_content():
                 .strip()
                 or None
             ),
+
 
             # =============================================
             # LISTING LEVEL
@@ -6993,11 +7899,12 @@ def create_content():
                 )
                 == "on"
             ),
+
         )
 
 
         # =================================================
-        # APPLY NORMALIZED DATES
+        # APPLY NORMALIZED CONTENT DATES
         # =================================================
 
         for key, value in dates.items():
@@ -7010,15 +7917,205 @@ def create_content():
 
 
         # =================================================
-        # SAVE CONTENT
+        # CONFIGURE KALXA COMMERCIAL PACKAGE
+        #
+        # This determines:
+        #
+        # pricing_model
+        # commercial_duration_days
+        # amount_due
+        # payment_status
+        # payment_reference
+        # amount_paid
+        # paid_at
+        # commercial_starts_at
+        # commercial_expires_at
+        #
+        # For Campaigns it also returns the selected
+        # distribution zone IDs.
+        #
+        # IMPORTANT:
+        #
+        # Price is calculated on the SERVER.
+        #
+        # We do NOT trust displayed_amount_due sent by JS.
         # =================================================
 
         try:
+
+            distribution_zone_ids = (
+                _configure_commercial_content(
+                    item=item,
+                    category=category,
+                    content_type=content_type,
+                )
+            )
+
+
+        except ValueError as error:
+
+            db.session.rollback()
+
+
+            flash(
+                str(
+                    error
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # ENFORCE CAMPAIGN HOME-ZONE RULE
+        #
+        # The content's origin/home zone counts as part of
+        # campaign reach.
+        #
+        # Example:
+        #
+        # KwaMhlanga event:
+        #
+        # 1 zone = KwaMhlanga
+        #
+        # 2 zones =
+        # KwaMhlanga + another zone
+        #
+        # 3 zones =
+        # KwaMhlanga + two other zones
+        #
+        # =================================================
+
+        if (
+            pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            # ---------------------------------------------
+            # Home zone MUST be selected.
+            # ---------------------------------------------
+
+            if (
+                zone_id
+                not in distribution_zone_ids
+            ):
+
+                flash(
+                    (
+                        "A campaign must include its "
+                        "home zone as part of its reach."
+                    ),
+                    "error",
+                )
+
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    None,
+                )
+
+
+            # ---------------------------------------------
+            # Defensive maximum.
+            # ---------------------------------------------
+
+            if (
+                len(
+                    distribution_zone_ids
+                )
+                > 3
+            ):
+
+                flash(
+                    (
+                        "Kalxa campaign packages currently "
+                        "support a maximum of 3 zones."
+                    ),
+                    "error",
+                )
+
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    None,
+                )
+
+
+        # =================================================
+        # PRESENCE MUST NOT HAVE DISTRIBUTION ZONES
+        # =================================================
+
+        elif (
+            pricing_model
+            == PRICING_MODEL_PRESENCE
+        ):
+
+            distribution_zone_ids = []
+
+
+        # =================================================
+        # SAVE CONTENT + DISTRIBUTION
+        #
+        # This happens in one database transaction.
+        # =================================================
+
+        try:
+
+            # ---------------------------------------------
+            # ADD CONTENT ITEM
+            # ---------------------------------------------
 
             db.session.add(
                 item
             )
 
+
+            # ---------------------------------------------
+            # FLUSH
+            #
+            # Gives item.id without committing yet.
+            # ---------------------------------------------
+
+            db.session.flush()
+
+
+            # =============================================
+            # CAMPAIGN DISTRIBUTION ZONES
+            # =============================================
+
+            for distribution_zone_id in (
+                distribution_zone_ids
+            ):
+
+                distribution_link = (
+                    ContentDistributionZone(
+
+                        content_item_id=
+                            item.id,
+
+                        zone_id=
+                            distribution_zone_id,
+
+                    )
+                )
+
+
+                db.session.add(
+                    distribution_link
+                )
+
+
+            # =============================================
+            # COMMIT EVERYTHING TOGETHER
+            # =============================================
 
             db.session.commit()
 
@@ -7058,10 +8155,44 @@ def create_content():
         # SUCCESS
         # =================================================
 
-        flash(
-            "Content published successfully.",
-            "success",
-        )
+        if (
+            item.pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            flash(
+                (
+                    "Campaign published successfully. "
+                    f"Reach: "
+                    f"{len(distribution_zone_ids)} zone(s). "
+                    f"Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
+        elif (
+            item.pricing_model
+            == PRICING_MODEL_PRESENCE
+        ):
+
+            flash(
+                (
+                    "Presence listing published successfully. "
+                    f"Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
+        else:
+
+            flash(
+                "Content published successfully.",
+                "success",
+            )
 
 
         return redirect(
@@ -7080,7 +8211,6 @@ def create_content():
         categories,
         None,
     )
-
 
 @admin_bp.route(
     "/content/<int:item_id>/edit",
@@ -7144,6 +8274,73 @@ def edit_content(
     # =====================================================
 
     if request.method == "POST":
+
+        # =================================================
+        # SNAPSHOT EXISTING COMMERCIAL PACKAGE
+        #
+        # We need these values so that normal content edits
+        # do NOT restart an existing paid package.
+        # =================================================
+
+        old_pricing_model = (
+            item.pricing_model
+        )
+
+
+        old_duration_days = (
+            item.commercial_duration_days
+        )
+
+
+        old_payment_status = (
+            item.payment_status
+        )
+
+
+        old_amount_due = (
+            item.amount_due
+        )
+
+
+        old_amount_paid = (
+            item.amount_paid
+        )
+
+
+        old_payment_reference = (
+            item.payment_reference
+        )
+
+
+        old_paid_at = (
+            item.paid_at
+        )
+
+
+        old_commercial_starts_at = (
+            item.commercial_starts_at
+        )
+
+
+        old_commercial_expires_at = (
+            item.commercial_expires_at
+        )
+
+
+        # =================================================
+        # EXISTING DISTRIBUTION ZONES
+        # =================================================
+
+        old_distribution_zone_ids = {
+
+            link.zone_id
+
+            for link in (
+                item.distribution_zone_links
+            )
+
+        }
+
 
         # =================================================
         # BASIC DATA
@@ -7279,8 +8476,15 @@ def edit_content(
         )
 
 
+        pricing_model = (
+            workflow.get(
+                "pricing_model"
+            )
+        )
+
+
         # =================================================
-        # VALIDATE + NORMALIZE DATES
+        # VALIDATE + NORMALIZE CONTENT DATES
         # =================================================
 
         try:
@@ -7330,7 +8534,8 @@ def edit_content(
         listing_level = (
             request.form.get(
                 "listing_level",
-                "discovery",
+                item.listing_level
+                or "discovery",
             )
             .strip()
             .lower()
@@ -7478,9 +8683,7 @@ def edit_content(
 
 
         # =================================================
-        # BUSINESS LISTING FIELDS
-        #
-        # BUSINESS + PROMOTION ONLY
+        # BUSINESS FIELDS
         # =================================================
 
         if (
@@ -7543,47 +8746,24 @@ def edit_content(
 
         else:
 
-            # =============================================
-            # DISCOVERY DOWNGRADE
-            #
-            # Discovery cannot use business-only fields.
-            # =============================================
+            item.opening_hours = None
 
-            item.opening_hours = (
-                None
-            )
+            item.whatsapp_number = None
 
-            item.whatsapp_number = (
-                None
-            )
+            item.directions_url = None
 
-            item.directions_url = (
-                None
-            )
+            item.menu_highlights = None
 
-            item.menu_highlights = (
-                None
-            )
-
-            item.special_offer = (
-                None
-            )
+            item.special_offer = None
 
 
             # =============================================
-            # DISCOVERY SUPPORTS ONE IMAGE ONLY
-            #
-            # Keep the primary image but remove the
-            # additional Business/Promotion images.
+            # DISCOVERY ONLY SUPPORTS PRIMARY IMAGE
             # =============================================
 
-            item.image_url_2 = (
-                None
-            )
+            item.image_url_2 = None
 
-            item.image_url_3 = (
-                None
-            )
+            item.image_url_3 = None
 
 
         # =================================================
@@ -7620,17 +8800,13 @@ def edit_content(
 
         else:
 
-            item.featured = (
-                False
-            )
+            item.featured = False
 
-            item.notification_eligible = (
-                False
-            )
+            item.notification_eligible = False
 
 
         # =================================================
-        # ACTIVE / PUBLICATION STATUS
+        # ACTIVE STATUS
         # =================================================
 
         item.active = (
@@ -7642,7 +8818,7 @@ def edit_content(
 
 
         # =================================================
-        # APPLY NORMALIZED DATE FIELDS
+        # APPLY NORMALIZED CONTENT DATES
         # =================================================
 
         for key, value in dates.items():
@@ -7655,26 +8831,11 @@ def edit_content(
 
 
         # =================================================
-        # IMAGE UPLOADS
-        #
-        # We now use ONLY:
-        #
-        # item.image_url
-        # item.image_url_2
-        # item.image_url_3
-        #
-        # No ContentImage model.
-        # No item.images relationship.
+        # IMAGES
         # =================================================
 
         uploaded_images = []
 
-
-        # -------------------------------------------------
-        # CURRENT MULTI-IMAGE FIELD
-        #
-        # <input name="images" multiple>
-        # -------------------------------------------------
 
         for uploaded_file in request.files.getlist(
             "images"
@@ -7692,9 +8853,7 @@ def edit_content(
 
 
         # -------------------------------------------------
-        # LEGACY SINGLE-IMAGE FIELD
-        #
-        # Keep compatibility with older form markup.
+        # LEGACY FIELD
         # -------------------------------------------------
 
         legacy_image = (
@@ -7708,13 +8867,13 @@ def edit_content(
             legacy_image
             and
             legacy_image.filename
+            and
+            not uploaded_images
         ):
 
-            if not uploaded_images:
-
-                uploaded_images.append(
-                    legacy_image
-                )
+            uploaded_images.append(
+                legacy_image
+            )
 
 
         # =================================================
@@ -7728,14 +8887,15 @@ def edit_content(
 
             maximum_images = 1
 
-
         else:
 
             maximum_images = 3
 
 
         if (
-            len(uploaded_images)
+            len(
+                uploaded_images
+            )
             > maximum_images
         ):
 
@@ -7748,7 +8908,6 @@ def edit_content(
                     "Discovery listings can have "
                     "a maximum of 1 image."
                 )
-
 
             else:
 
@@ -7774,13 +8933,11 @@ def edit_content(
         # =================================================
         # UPLOAD NEW IMAGES
         #
-        # IMPORTANT:
+        # No new upload:
+        #     preserve existing images.
         #
-        # If NO new images are uploaded, existing images
-        # remain unchanged.
-        #
-        # If images ARE uploaded, they replace the current
-        # image set.
+        # New upload:
+        #     replace existing image set.
         # =================================================
 
         if uploaded_images:
@@ -7836,8 +8993,6 @@ def edit_content(
 
             # =============================================
             # PRIMARY IMAGE
-            #
-            # This is the image used by What's New.
             # =============================================
 
             item.image_url = (
@@ -7850,7 +9005,7 @@ def edit_content(
 
 
             # =============================================
-            # BUSINESS / PROMOTION ADDITIONAL IMAGES
+            # EXTRA BUSINESS / PROMOTION IMAGES
             # =============================================
 
             if (
@@ -7881,20 +9036,13 @@ def edit_content(
 
             else:
 
-                item.image_url_2 = (
-                    None
-                )
+                item.image_url_2 = None
 
-                item.image_url_3 = (
-                    None
-                )
+                item.image_url_3 = None
 
 
         # =================================================
-        # FINAL IMAGE SAFETY
-        #
-        # Discovery must never retain extra images,
-        # including when no new image was uploaded.
+        # FINAL DISCOVERY IMAGE SAFETY
         # =================================================
 
         if (
@@ -7902,20 +9050,337 @@ def edit_content(
             == "discovery"
         ):
 
-            item.image_url_2 = (
-                None
-            )
+            item.image_url_2 = None
 
-            item.image_url_3 = (
-                None
-            )
+            item.image_url_3 = None
 
 
         # =================================================
-        # SAVE EVERYTHING
+        # CONFIGURE COMMERCIAL PACKAGE
+        #
+        # This recalculates the official package price from:
+        #
+        # Presence:
+        #     duration
+        #
+        # Campaign:
+        #     duration × zones
+        #
         # =================================================
 
         try:
+
+            distribution_zone_ids = (
+                _configure_commercial_content(
+                    item=item,
+                    category=category,
+                    content_type=content_type,
+                )
+            )
+
+
+        except ValueError as error:
+
+            db.session.rollback()
+
+
+            flash(
+                str(
+                    error
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # CAMPAIGN HOME-ZONE RULE
+        # =================================================
+
+        if (
+            pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            if (
+                zone_id
+                not in distribution_zone_ids
+            ):
+
+                db.session.rollback()
+
+
+                flash(
+                    (
+                        "A campaign must include its "
+                        "home zone as part of its reach."
+                    ),
+                    "error",
+                )
+
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    item,
+                )
+
+
+            if (
+                len(
+                    distribution_zone_ids
+                )
+                > 3
+            ):
+
+                db.session.rollback()
+
+
+                flash(
+                    (
+                        "Kalxa campaign packages currently "
+                        "support a maximum of 3 zones."
+                    ),
+                    "error",
+                )
+
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    item,
+                )
+
+
+        elif (
+            pricing_model
+            == PRICING_MODEL_PRESENCE
+        ):
+
+            distribution_zone_ids = []
+
+
+        # =================================================
+        # DETERMINE WHETHER PACKAGE CHANGED
+        # =================================================
+
+        new_distribution_zone_ids = set(
+            distribution_zone_ids
+        )
+
+
+        package_changed = (
+
+            old_pricing_model
+            != item.pricing_model
+
+            or
+
+            old_duration_days
+            != item.commercial_duration_days
+
+            or
+
+            (
+                item.pricing_model
+                == PRICING_MODEL_CAMPAIGN
+
+                and
+
+                old_distribution_zone_ids
+                != new_distribution_zone_ids
+            )
+
+            or
+
+            (
+                old_pricing_model
+                == PRICING_MODEL_CAMPAIGN
+
+                and
+
+                item.pricing_model
+                != PRICING_MODEL_CAMPAIGN
+            )
+
+        )
+
+
+        # =================================================
+        # PRESERVE EXISTING PAID PERIOD
+        #
+        # Example:
+        #
+        # Existing:
+        # 90-day Restaurant Presence
+        # Paid
+        #
+        # Admin edits:
+        # title / phone / image
+        #
+        # Result:
+        # original paid_at/start/expiry remain untouched.
+        # =================================================
+
+        if (
+            not package_changed
+            and
+            old_payment_status
+            == item.payment_status
+            and
+            item.payment_status
+            in {
+                "paid",
+                "waived",
+            }
+        ):
+
+            item.commercial_starts_at = (
+                old_commercial_starts_at
+            )
+
+
+            item.commercial_expires_at = (
+                old_commercial_expires_at
+            )
+
+
+            # ---------------------------------------------
+            # ACTUAL PAID TRANSACTION
+            # ---------------------------------------------
+
+            if (
+                item.payment_status
+                == "paid"
+            ):
+
+                item.paid_at = (
+                    old_paid_at
+                )
+
+
+                item.amount_paid = (
+                    old_amount_paid
+                )
+
+
+            # ---------------------------------------------
+            # WAIVED PACKAGE
+            # ---------------------------------------------
+
+            else:
+
+                item.paid_at = None
+
+                item.amount_paid = None
+
+
+        # =================================================
+        # PRESERVE PAYMENT REFERENCE WHEN FORM LEFT EMPTY
+        #
+        # Avoid accidentally deleting a real payment
+        # reference while editing unrelated fields.
+        # =================================================
+
+        if (
+            not item.payment_reference
+            and
+            old_payment_reference
+            and
+            not package_changed
+        ):
+
+            item.payment_reference = (
+                old_payment_reference
+            )
+
+
+        # =================================================
+        # PAYMENT / PACKAGE CHANGE SEMANTICS
+        #
+        # _configure_commercial_content() already handles:
+        #
+        # unpaid:
+        #     no active commercial period
+        #
+        # paid:
+        #     start now + duration
+        #
+        # waived:
+        #     start now + duration
+        #
+        # refunded:
+        #     no active commercial period
+        #
+        # Therefore:
+        #
+        # package changed + Paid
+        #     -> begins newly confirmed package
+        #
+        # unchanged Paid
+        #     -> preserved above
+        # =================================================
+
+
+        # =================================================
+        # SAVE EVERYTHING AS ONE TRANSACTION
+        # =================================================
+
+        try:
+
+            # =============================================
+            # REMOVE OLD DISTRIBUTION LINKS
+            #
+            # We recreate them from the current package.
+            #
+            # This avoids:
+            # - duplicate rows
+            # - old zones remaining attached
+            # - stale reach after an edit
+            # =============================================
+
+            (
+                ContentDistributionZone.query
+                .filter_by(
+                    content_item_id=
+                        item.id
+                )
+                .delete(
+                    synchronize_session=False
+                )
+            )
+
+
+            # =============================================
+            # CREATE CURRENT CAMPAIGN DISTRIBUTION
+            # =============================================
+
+            for distribution_zone_id in (
+                distribution_zone_ids
+            ):
+
+                db.session.add(
+                    ContentDistributionZone(
+
+                        content_item_id=
+                            item.id,
+
+                        zone_id=
+                            distribution_zone_id,
+
+                    )
+                )
+
+
+            # =============================================
+            # COMMIT ITEM + DISTRIBUTION TOGETHER
+            # =============================================
 
             db.session.commit()
 
@@ -7952,13 +9417,47 @@ def edit_content(
 
 
         # =================================================
-        # SUCCESS
+        # SUCCESS MESSAGE
         # =================================================
 
-        flash(
-            "Content updated successfully.",
-            "success",
-        )
+        if (
+            item.pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            flash(
+                (
+                    "Campaign updated successfully. "
+                    f"Reach: "
+                    f"{len(distribution_zone_ids)} zone(s). "
+                    f"Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
+        elif (
+            item.pricing_model
+            == PRICING_MODEL_PRESENCE
+        ):
+
+            flash(
+                (
+                    "Presence listing updated successfully. "
+                    f"Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
+        else:
+
+            flash(
+                "Content updated successfully.",
+                "success",
+            )
 
 
         return redirect(
@@ -7977,7 +9476,7 @@ def edit_content(
         categories,
         item,
     )
-
+    
 @admin_bp.route(
     "/content/<int:item_id>/toggle",
     methods=["POST"],
@@ -8126,6 +9625,7 @@ def archive_content_now(item_id):
     db.session.commit()
     flash(f"{item.title} archived.", "success")
     return redirect(url_for("admin.content_list"))
+
 
 
 @admin_bp.route("/submissions")
