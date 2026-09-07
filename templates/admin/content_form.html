@@ -26,162 +26,6 @@
         ) }}"
     >
 
-    <style>
-
-        /* =========================================
-           LISTING LEVEL SECTIONS
-        ========================================== */
-
-        .listing-level-section {
-            margin-top: 24px;
-            padding: 20px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
-            border-radius: 16px;
-
-            background:
-                rgba(255, 255, 255, 0.025);
-        }
-
-
-        .listing-level-section h3 {
-            margin:
-                0
-                0
-                6px;
-        }
-
-
-        .listing-level-section .muted {
-            margin-bottom: 18px;
-        }
-
-
-        .business-listing-fields,
-        .promotion-fields {
-            margin-top: 18px;
-        }
-
-
-        .business-listing-fields textarea,
-        .promotion-fields textarea {
-            resize: vertical;
-        }
-
-
-        /* =========================================
-           SELECTED IMAGE PREVIEWS
-        ========================================== */
-
-        .selected-images-preview {
-            display: grid;
-
-            grid-template-columns:
-                repeat(
-                    3,
-                    minmax(0, 1fr)
-                );
-
-            gap: 10px;
-
-            margin-top: 14px;
-        }
-
-
-        .selected-image-item {
-            position: relative;
-
-            overflow: hidden;
-
-            border-radius: 10px;
-
-            background: #111317;
-        }
-
-
-        .selected-image-item img {
-            display: block;
-
-            width: 100%;
-            height: 120px;
-
-            object-fit: cover;
-        }
-
-
-        .remove-selected-image {
-            position: absolute;
-
-            top: 6px;
-            right: 6px;
-
-            width: 28px;
-            height: 28px;
-
-            padding: 0;
-
-            border: 0;
-            border-radius: 50%;
-
-            background:
-                rgba(0, 0, 0, 0.75);
-
-            color: white;
-
-            cursor: pointer;
-
-            font-size: 18px;
-            line-height: 28px;
-
-            text-align: center;
-        }
-
-
-        .form-section-divider {
-            margin:
-                22px
-                0;
-
-            border: 0;
-
-            border-top:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-        }
-
-
-        .field-help {
-            display: block;
-
-            margin-top: 5px;
-
-            opacity: 0.7;
-
-            font-size: 12px;
-
-            line-height: 1.45;
-        }
-
-
-        @media (
-            max-width: 600px
-        ) {
-
-            .selected-images-preview {
-                grid-template-columns:
-                    repeat(
-                        2,
-                        minmax(0, 1fr)
-                    );
-            }
-
-        }
-
-    </style>
-
 </head>
 
 
@@ -189,10 +33,9 @@
 
 <div class="admin-shell">
 
-
-    <!-- =========================================
+    <!-- =====================================================
          ADMIN NAVIGATION
-    ========================================== -->
+    ====================================================== -->
 
     <nav class="admin-nav">
 
@@ -202,42 +45,26 @@
 
         <div class="admin-nav-links">
 
-            <a
-                href="{{ url_for(
-                    'admin.analytics'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.analytics') }}">
                 Analytics
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.categories'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.categories') }}">
                 Categories
             </a>
 
-            <a
-                href="{{ url_for(
-                    'admin.content_list'
-                ) }}"
-            >
+            <a href="{{ url_for('admin.content_list') }}">
                 Content
-            </a>
-
-            <a
-                href="{{ url_for(
-                    'admin.claims'
-                ) }}"
-            >
-                Listing Claims
             </a>
 
         </div>
 
     </nav>
 
+
+    <!-- =====================================================
+         CONTENT FORM
+    ====================================================== -->
 
     <section class="admin-form-container">
 
@@ -254,22 +81,22 @@
         </h1>
 
         <p>
-            This content will appear to users
-            accessing the selected zone and category.
+            Select what you are listing. Kalxa will determine
+            the listing lifecycle and commercial pricing model.
         </p>
 
 
-        <!-- =========================================
+        <!-- =================================================
              FLASH MESSAGES
-        ========================================== -->
+        ================================================== -->
 
         {% with messages = get_flashed_messages() %}
 
             {% for message in messages %}
 
-            <div class="admin-alert">
-                {{ message }}
-            </div>
+                <div class="admin-alert">
+                    {{ message }}
+                </div>
 
             {% endfor %}
 
@@ -283,43 +110,46 @@
         >
 
 
-            <!-- =====================================
+            <!-- =================================================
                  ZONE
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
-                Zone
+                Home Zone
 
                 <select
                     name="zone_id"
+                    id="zone-select"
                     required
                 >
 
                     {% for zone in zones %}
 
-                    <option
-                        value="{{ zone.id }}"
-                        {% if
-                            item
-                            and item.zone_id == zone.id
-                        %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ zone.name }}
-                    </option>
+                        <option
+                            value="{{ zone.id }}"
+                            {% if item and item.zone_id == zone.id %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ zone.name }}
+                        </option>
 
                     {% endfor %}
 
                 </select>
 
+                <small class="muted">
+                    The home zone is where this business,
+                    event or opportunity originates.
+                </small>
+
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  CATEGORY
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
@@ -333,23 +163,20 @@
 
                     {% for category in categories %}
 
-                    <option
-                        value="{{ category.slug }}"
-                        {% if
-                            item
-                            and item.category == category.slug
-                        %}
-                            selected
-                        {% endif %}
-                    >
+                        <option
+                            value="{{ category.slug }}"
+                            {% if item and item.category == category.slug %}
+                                selected
+                            {% endif %}
+                        >
 
-                        {% if category.icon %}
-                            {{ category.icon }}
-                        {% endif %}
+                            {% if category.icon %}
+                                {{ category.icon }}
+                            {% endif %}
 
-                        {{ category.name }}
+                            {{ category.name }}
 
-                    </option>
+                        </option>
 
                     {% endfor %}
 
@@ -358,9 +185,58 @@
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
+                 CONTENT TYPE
+            ================================================== -->
+
+            <label
+                id="content-type-wrapper"
+            >
+
+                What are you listing?
+
+                <select
+                    name="content_type"
+                    id="content-type-select"
+                >
+                </select>
+
+                <small
+                    class="muted"
+                    id="content-type-help"
+                >
+                    Select the type of content being published.
+                </small>
+
+            </label>
+
+
+            <!-- =================================================
+                 WORKFLOW INFORMATION
+            ================================================== -->
+
+            <div
+                id="workflow-info"
+                class="admin-alert"
+                style="display: none;"
+            >
+
+                <strong id="workflow-title">
+                    Listing behaviour
+                </strong>
+
+                <div
+                    id="workflow-description"
+                    style="margin-top: 5px;"
+                >
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
                  TITLE
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
@@ -371,19 +247,15 @@
                     name="title"
                     required
                     placeholder="Saturday Groove Session"
-                    value="{{
-                        item.title
-                        if item
-                        else ''
-                    }}"
+                    value="{{ item.title if item else '' }}"
                 >
 
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  DESCRIPTION
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
@@ -398,9 +270,9 @@
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  BUSINESS
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
@@ -420,9 +292,9 @@
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  VENUE
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
@@ -442,13 +314,13 @@
             </label>
 
 
-            <!-- =====================================
-                 PRICE
-            ====================================== -->
+            <!-- =================================================
+                 LISTING PRICE
+            ================================================== -->
 
             <label>
 
-                Price
+                Listing / Product Price
 
                 <input
                     type="text"
@@ -461,12 +333,18 @@
                     }}"
                 >
 
+                <small class="muted">
+                    This is the price customers see for the
+                    product, ticket or service. It is not the
+                    Kalxa advertising price.
+                </small>
+
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  CONTACT
-            ====================================== -->
+            ================================================== -->
 
             <label>
 
@@ -486,9 +364,9 @@
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  MULTI IMAGE UPLOAD
-            ====================================== -->
+            ================================================== -->
 
             <div class="content-upload-section">
 
@@ -506,98 +384,112 @@
 
                 </label>
 
-
                 <p class="muted">
                     You can upload up to 3 images.
-                    You may choose them together or
-                    add them one at a time.
                 </p>
 
 
-                <!-- =================================
-                     NEWLY SELECTED IMAGE PREVIEW
-                ================================== -->
+                <!-- SELECTED NEW IMAGE PREVIEW -->
 
                 <div
                     id="selected-images-preview"
-                    class="selected-images-preview"
-                ></div>
+                    class="content-gallery"
+                >
+                </div>
 
 
-                <!-- =================================
-                     EXISTING DATABASE IMAGES
-                ================================== -->
+                <!-- EXISTING DATABASE IMAGES -->
 
-                {% if item and item.images %}
+                {% if item and (
+                    item.image_url
+                    or item.image_url_2
+                    or item.image_url_3
+                ) %}
 
-                <div class="content-image-preview">
+                    <div class="content-image-preview">
 
-                    <p>
-                        Current images
-                    </p>
+                        <p>
+                            Current images
+                        </p>
 
-                    <div class="content-gallery">
+                        <div class="content-gallery">
 
-                        {% for image in item.images[:3] %}
+                            {% if item.image_url %}
 
-                        <img
-                            src="{{ image.image_url }}"
-                            alt="{{ item.title }}"
-                            loading="lazy"
-                            style="
-                                max-width: 160px;
-                                width: 100%;
-                                height: 120px;
-                                object-fit: cover;
-                                border-radius: 10px;
-                                display: inline-block;
-                                margin-right: 8px;
-                                margin-bottom: 8px;
-                            "
-                        >
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                    style="
+                                        width: 160px;
+                                        height: 120px;
+                                        object-fit: cover;
+                                        border-radius: 10px;
+                                        display: inline-block;
+                                        margin-right: 8px;
+                                        margin-bottom: 8px;
+                                    "
+                                >
 
-                        {% endfor %}
+                            {% endif %}
+
+
+                            {% if item.image_url_2 %}
+
+                                <img
+                                    src="{{ item.image_url_2 }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                    style="
+                                        width: 160px;
+                                        height: 120px;
+                                        object-fit: cover;
+                                        border-radius: 10px;
+                                        display: inline-block;
+                                        margin-right: 8px;
+                                        margin-bottom: 8px;
+                                    "
+                                >
+
+                            {% endif %}
+
+
+                            {% if item.image_url_3 %}
+
+                                <img
+                                    src="{{ item.image_url_3 }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                    style="
+                                        width: 160px;
+                                        height: 120px;
+                                        object-fit: cover;
+                                        border-radius: 10px;
+                                        display: inline-block;
+                                        margin-right: 8px;
+                                        margin-bottom: 8px;
+                                    "
+                                >
+
+                            {% endif %}
+
+                        </div>
 
                     </div>
-
-                </div>
-
-
-                {% elif item and item.image_url %}
-
-                <div class="content-image-preview">
-
-                    <p>
-                        Current image
-                    </p>
-
-                    <img
-                        src="{{ item.image_url }}"
-                        alt="{{ item.title }}"
-                        loading="lazy"
-                        style="
-                            width: 160px;
-                            height: 120px;
-                            object-fit: cover;
-                            border-radius: 12px;
-                            display: block;
-                        "
-                    >
-
-                </div>
 
                 {% endif %}
 
             </div>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  EVENT DATES
-            ====================================== -->
+            ================================================== -->
 
             <div
                 id="event-date-fields"
                 class="event-date-fields"
+                style="display: none;"
             >
 
                 <h3>
@@ -605,8 +497,9 @@
                 </h3>
 
                 <p class="muted">
-                    These fields are used when
-                    the category is Events.
+                    These dates describe when the event happens.
+                    They are separate from the paid Kalxa campaign
+                    duration.
                 </p>
 
 
@@ -619,6 +512,7 @@
                         <input
                             type="date"
                             name="publish_from"
+                            id="publish-from-input"
                             value="{{
                                 item.publish_from.strftime('%Y-%m-%d')
                                 if item and item.publish_from
@@ -636,6 +530,7 @@
                         <input
                             type="date"
                             name="event_date"
+                            id="event-date-input"
                             value="{{
                                 item.event_date.strftime('%Y-%m-%d')
                                 if item and item.event_date
@@ -655,6 +550,7 @@
                     <input
                         type="date"
                         name="event_end_date"
+                        id="event-end-date-input"
                         value="{{
                             item.event_end_date.strftime('%Y-%m-%d')
                             if item and item.event_end_date
@@ -667,13 +563,14 @@
             </div>
 
 
-            <!-- =====================================
-                 GENERAL VALIDITY DATES
-            ====================================== -->
+            <!-- =================================================
+                 TIME-SPECIFIC GENERAL DATES
+            ================================================== -->
 
             <div
                 id="general-date-fields"
                 class="general-date-fields"
+                style="display: none;"
             >
 
                 <h3>
@@ -681,10 +578,9 @@
                 </h3>
 
                 <p class="muted">
-                    These dates are used for
-                    non-event listings such as
-                    specials, jobs, property,
-                    food, services and transport.
+                    These dates describe the natural lifetime of
+                    the content. They are separate from the paid
+                    Kalxa campaign duration.
                 </p>
 
 
@@ -697,6 +593,7 @@
                         <input
                             type="date"
                             name="start_date"
+                            id="start-date-input"
                             value="{{
                                 item.start_date.strftime('%Y-%m-%d')
                                 if item and item.start_date
@@ -714,6 +611,7 @@
                         <input
                             type="date"
                             name="end_date"
+                            id="end-date-input"
                             value="{{
                                 item.end_date.strftime('%Y-%m-%d')
                                 if item and item.end_date
@@ -728,369 +626,363 @@
             </div>
 
 
-            <!-- =====================================
-                 LISTING LEVEL
-            ====================================== -->
+            <!-- =================================================
+                 UNTIL UNAVAILABLE INFORMATION
+            ================================================== -->
 
-            <section class="listing-level-section">
+            <div
+                id="until-unavailable-info"
+                class="admin-alert"
+                style="display: none;"
+            >
 
-                <h3>
-                    Listing Access Level
+                <strong>
+                    Availability-based listing
+                </strong>
+
+                <p style="margin-bottom: 0;">
+                    The content itself remains relevant until
+                    marked as taken, sold, filled or closed.
+                    Commercial visibility can still have its own
+                    Kalxa package duration.
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 ONGOING INFORMATION
+            ================================================== -->
+
+            <div
+                id="ongoing-info"
+                class="admin-alert"
+                style="display: none;"
+            >
+
+                <strong>
+                    Ongoing listing
+                </strong>
+
+                <p style="margin-bottom: 0;">
+                    This content has no natural expiry date.
+                    Its paid Kalxa Presence period is controlled
+                    separately below.
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 KALXA COMMERCIAL PACKAGE
+            ================================================== -->
+
+            <div
+                id="kalxa-commercial-section"
+                style="
+                    margin-top: 28px;
+                    padding: 20px;
+                    border: 1px solid rgba(128,128,128,.35);
+                    border-radius: 14px;
+                "
+            >
+
+                <p class="admin-eyebrow">
+                    KALXA COMMERCIAL PACKAGE
+                </p>
+
+                <h3 style="margin-top: 0;">
+                    Presence & Distribution
                 </h3>
 
                 <p class="muted">
-                    Controls which Kalxa business
-                    features this listing can use.
+                    Kalxa automatically determines whether this
+                    content uses duration-only Presence pricing
+                    or Duration × Reach Campaign pricing.
                 </p>
 
 
-                <div class="form-group">
+                <!-- PRICING MODEL -->
 
-                    <label for="listing_level">
-                        Listing Level
-                    </label>
+                <label>
 
-                    <select
-                        name="listing_level"
-                        id="listing_level"
+                    Pricing Model
+
+                    <input
+                        type="text"
+                        id="pricing-model-display"
+                        value=""
+                        readonly
                     >
 
-                        <option
-                            value="discovery"
-                            {% if
-                                not item
-                                or item.listing_level == "discovery"
-                            %}
-                                selected
-                            {% endif %}
-                        >
-                            Discovery — Free / Kalxa Seeded
-                        </option>
+                    <input
+                        type="hidden"
+                        name="pricing_model"
+                        id="pricing-model"
+                        value="{{
+                            item.pricing_model
+                            if item and item.pricing_model
+                            else ''
+                        }}"
+                    >
+
+                    <small
+                        class="muted"
+                        id="pricing-model-help"
+                    >
+                        Select a category and content type.
+                    </small>
+
+                </label>
 
 
-                        <option
-                            value="business"
-                            {% if
-                                item
-                                and item.listing_level == "business"
-                            %}
-                                selected
-                            {% endif %}
-                        >
-                            Business — Claimed / Submitted
-                        </option>
+                <!-- DURATION -->
 
+                <label
+                    id="commercial-duration-group"
+                >
 
-                        <option
-                            value="promotion"
-                            {% if
-                                item
-                                and item.listing_level == "promotion"
-                            %}
-                                selected
-                            {% endif %}
-                        >
-                            Promotion — Paid
+                    Kalxa Visibility Duration
+
+                    <select
+                        name="commercial_duration_days"
+                        id="commercial-duration-days"
+                        data-current-duration="{{
+                            item.commercial_duration_days
+                            if item and item.commercial_duration_days
+                            else ''
+                        }}"
+                    >
+
+                        <option value="">
+                            Select duration
                         </option>
 
                     </select>
 
-                </div>
+                </label>
 
 
-                <!-- =================================
-                     VERIFIED BUSINESS
-                ================================== -->
+                <!-- CAMPAIGN REACH -->
 
                 <div
-                    id="verification-fields"
-                    class="form-group"
+                    id="campaign-reach-section"
+                    style="display: none;"
                 >
-
-                    <label class="checkbox-label">
-
-                        <input
-                            type="checkbox"
-                            name="is_verified"
-                            {% if
-                                item
-                                and item.is_verified
-                            %}
-                                checked
-                            {% endif %}
-                        >
-
-                        Verified business
-
-                    </label>
-
-                    <span class="field-help">
-                        Use this after Kalxa has verified
-                        the business or approved its
-                        ownership claim.
-                    </span>
-
-                </div>
-
-
-                <!-- =================================
-                     BUSINESS DETAILS
-
-                     BUSINESS + PROMOTION ONLY
-                ================================== -->
-
-                <div
-                    id="business-listing-fields"
-                    class="business-listing-fields"
-                >
-
-                    <hr class="form-section-divider">
 
                     <h3>
-                        Business Listing Details
+                        Geographic Reach
                     </h3>
 
                     <p class="muted">
-                        These details are available to
-                        Business and Promotion listings.
+                        Choose where this campaign should be
+                        distributed. Current MVP packages support
+                        up to 3 zones.
                     </p>
 
 
-                    <!-- =============================
-                         OPENING HOURS
-                    ============================== -->
+                    <div
+                        class="zone-checkbox-list"
+                        style="
+                            display: grid;
+                            gap: 10px;
+                            margin: 14px 0;
+                        "
+                    >
 
-                    <label>
+                        {% for zone in zones %}
 
-                        Opening Hours
+                            <label class="checkbox-label">
 
-                        <input
-                            type="text"
-                            name="opening_hours"
-                            value="{{
-                                item.opening_hours
-                                if item and item.opening_hours
-                                else ''
-                            }}"
-                            placeholder="Mon–Fri 08:00–18:00, Sat 08:00–15:00"
-                        >
+                                <input
+                                    type="checkbox"
+                                    name="distribution_zone_ids"
+                                    value="{{ zone.id }}"
+                                    data-zone-id="{{ zone.id }}"
+                                    class="distribution-zone-checkbox"
 
-                    </label>
+                                    {% if item %}
+                                        {% for link in item.distribution_zone_links %}
+                                            {% if link.zone_id == zone.id %}
+                                                checked
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                >
 
+                                {{ zone.name }}
 
-                    <!-- =============================
-                         WHATSAPP
-                    ============================== -->
+                            </label>
 
-                    <label>
+                        {% endfor %}
 
-                        WhatsApp Number
-
-                        <input
-                            type="text"
-                            name="whatsapp_number"
-                            value="{{
-                                item.whatsapp_number
-                                if item and item.whatsapp_number
-                                else ''
-                            }}"
-                            placeholder="079 123 4567"
-                        >
-
-                        <span class="field-help">
-                            Dedicated WhatsApp contact
-                            for this business listing.
-                        </span>
-
-                    </label>
+                    </div>
 
 
-                    <!-- =============================
-                         DIRECTIONS URL
-                    ============================== -->
+                    <div class="admin-alert">
 
-                    <label>
+                        Campaign reach:
 
-                        Directions URL
+                        <strong id="campaign-zone-count">
+                            0
+                        </strong>
 
-                        <input
-                            type="url"
-                            name="directions_url"
-                            value="{{
-                                item.directions_url
-                                if item and item.directions_url
-                                else ''
-                            }}"
-                            placeholder="https://maps.google.com/..."
-                        >
+                        zone(s)
 
-                        <span class="field-help">
-                            Optional direct Google Maps
-                            or location link.
-                        </span>
-
-                    </label>
-
-
-                    <!-- =============================
-                         MENU / SERVICES
-                    ============================== -->
-
-                    <label>
-
-                        Menu / Product / Service Highlights
-
-                        <textarea
-                            name="menu_highlights"
-                            rows="5"
-                            placeholder="Popular meals, services, products, amenities or other business highlights."
-                        >{{ item.menu_highlights if item and item.menu_highlights else '' }}</textarea>
-
-                    </label>
-
-
-                    <!-- =============================
-                         SPECIAL OFFER
-                    ============================== -->
-
-                    <label>
-
-                        Current Offer
-
-                        <textarea
-                            name="special_offer"
-                            rows="3"
-                            placeholder="Example: Buy 2 burgers and get chips free."
-                        >{{ item.special_offer if item and item.special_offer else '' }}</textarea>
-
-                    </label>
-
-
-                    <!-- =============================
-                         ADDITIONAL IMAGE URL 2
-                    ============================== -->
-
-                    <label>
-
-                        Additional Image URL 2
-
-                        <input
-                            type="url"
-                            name="image_url_2"
-                            value="{{
-                                item.image_url_2
-                                if item and item.image_url_2
-                                else ''
-                            }}"
-                            placeholder="https://..."
-                        >
-
-                    </label>
-
-
-                    <!-- =============================
-                         ADDITIONAL IMAGE URL 3
-                    ============================== -->
-
-                    <label>
-
-                        Additional Image URL 3
-
-                        <input
-                            type="url"
-                            name="image_url_3"
-                            value="{{
-                                item.image_url_3
-                                if item and item.image_url_3
-                                else ''
-                            }}"
-                            placeholder="https://..."
-                        >
-
-                    </label>
+                    </div>
 
                 </div>
 
 
-                <!-- =================================
-                     PROMOTION
-
-                     LEVEL 3 ONLY
-                ================================== -->
+                <!-- CALCULATED PRICE -->
 
                 <div
-                    id="promotion-fields"
-                    class="promotion-fields"
+                    style="
+                        margin-top: 18px;
+                        margin-bottom: 18px;
+                    "
                 >
 
-                    <hr class="form-section-divider">
+                    <small class="muted">
+                        KALXA PACKAGE PRICE
+                    </small>
 
-                    <h3>
-                        Promotion Controls
-                    </h3>
+                    <div
+                        id="kalxa-price-display"
+                        style="
+                            font-size: 2rem;
+                            font-weight: 800;
+                            margin-top: 5px;
+                        "
+                    >
+                        —
+                    </div>
 
-                    <p class="muted">
-                        Paid distribution features.
-                        These controls apply only to
-                        Promotion listings.
-                    </p>
+                    <input
+                        type="hidden"
+                        name="displayed_amount_due"
+                        id="displayed-amount-due"
+                        value="{{
+                            item.amount_due
+                            if item and item.amount_due is not none
+                            else ''
+                        }}"
+                    >
 
-
-                    <label class="checkbox-label">
-
-                        <input
-                            type="checkbox"
-                            name="featured"
-                            {% if
-                                item
-                                and item.listing_level == "promotion"
-                                and item.featured
-                            %}
-                                checked
-                            {% endif %}
-                        >
-
-                        Feature this listing
-
-                    </label>
-
-
-                    <label class="checkbox-label">
-
-                        <input
-                            type="checkbox"
-                            name="notification_eligible"
-                            {% if
-                                item
-                                and item.listing_level == "promotion"
-                                and item.notification_eligible
-                            %}
-                                checked
-                            {% endif %}
-                        >
-
-                        Eligible for promotional notifications
-
-                    </label>
+                    <small class="muted">
+                        The browser displays an estimate. The
+                        server calculates the official amount
+                        again before saving.
+                    </small>
 
                 </div>
 
-            </section>
+
+                <!-- PAYMENT STATUS -->
+
+                <label>
+
+                    Payment Status
+
+                    <select
+                        name="payment_status"
+                        id="payment-status"
+                    >
+
+                        <option
+                            value="unpaid"
+                            {% if not item or item.payment_status == "unpaid" %}
+                                selected
+                            {% endif %}
+                        >
+                            Unpaid
+                        </option>
+
+                        <option
+                            value="paid"
+                            {% if item and item.payment_status == "paid" %}
+                                selected
+                            {% endif %}
+                        >
+                            Paid
+                        </option>
+
+                        <option
+                            value="waived"
+                            {% if item and item.payment_status == "waived" %}
+                                selected
+                            {% endif %}
+                        >
+                            Waived / Kalxa Pilot
+                        </option>
+
+                        <option
+                            value="refunded"
+                            {% if item and item.payment_status == "refunded" %}
+                                selected
+                            {% endif %}
+                        >
+                            Refunded
+                        </option>
+
+                    </select>
+
+                </label>
 
 
-            <!-- =====================================
-                 PUBLICATION
-            ====================================== -->
+                <!-- PAYMENT REFERENCE -->
+
+                <label>
+
+                    Payment Reference
+
+                    <input
+                        type="text"
+                        name="payment_reference"
+                        id="payment-reference"
+                        maxlength="150"
+                        placeholder="EFT / receipt / payment reference"
+                        value="{{
+                            item.payment_reference
+                            if item and item.payment_reference
+                            else ''
+                        }}"
+                    >
+
+                    <small class="muted">
+                        Optional during the manual-payment MVP.
+                    </small>
+
+                </label>
+
+            </div>
+
+
+            <!-- =================================================
+                 FLAGS
+            ================================================== -->
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    name="featured"
+                    {% if item and item.featured %}
+                        checked
+                    {% endif %}
+                >
+
+                Feature this listing
+
+            </label>
+
 
             <label class="checkbox-label">
 
                 <input
                     type="checkbox"
                     name="active"
-                    {% if
-                        not item
-                        or item.active
-                    %}
+                    {% if not item or item.active %}
                         checked
                     {% endif %}
                 >
@@ -1100,9 +992,9 @@
             </label>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  SUBMIT
-            ====================================== -->
+            ================================================== -->
 
             <button type="submit">
 
@@ -1121,15 +1013,35 @@
 </div>
 
 
-<!-- =========================================
-     CATEGORY / DATE FIELD CONTROL
-========================================== -->
+<!-- =========================================================
+     CATEGORY / CONTENT TYPE / LIFECYCLE ENGINE
+========================================================= -->
 
 <script>
 
     const categorySelect =
         document.getElementById(
             "category-select"
+        );
+
+    const contentTypeSelect =
+        document.getElementById(
+            "content-type-select"
+        );
+
+    const contentTypeHelp =
+        document.getElementById(
+            "content-type-help"
+        );
+
+    const workflowInfo =
+        document.getElementById(
+            "workflow-info"
+        );
+
+    const workflowDescription =
+        document.getElementById(
+            "workflow-description"
         );
 
     const eventDateFields =
@@ -1142,10 +1054,701 @@
             "general-date-fields"
         );
 
+    const untilUnavailableInfo =
+        document.getElementById(
+            "until-unavailable-info"
+        );
 
-    function updateDateFields() {
+    const ongoingInfo =
+        document.getElementById(
+            "ongoing-info"
+        );
 
-        if (!categorySelect) {
+    const eventDateInput =
+        document.getElementById(
+            "event-date-input"
+        );
+
+    const endDateInput =
+        document.getElementById(
+            "end-date-input"
+        );
+
+
+    /*
+     * Existing content type when editing.
+     */
+
+    const existingContentType =
+        {{ (
+            item.content_type
+            if item and item.content_type
+            else ''
+        ) | tojson }};
+
+
+    /* ========================================================
+       CONTENT WORKFLOW DEFINITIONS
+    ======================================================== */
+
+    const contentWorkflows = {
+
+
+        /* PROPERTY */
+
+        "property": [
+
+            {
+                value: "room",
+                label: "Room to Rent",
+                lifetime: "until_unavailable",
+                pricing: "campaign",
+                help:
+                    "Stays active until the room is marked as taken."
+            },
+
+            {
+                value: "rental",
+                label: "House / Apartment to Rent",
+                lifetime: "until_unavailable",
+                pricing: "campaign",
+                help:
+                    "Stays active until the property is taken."
+            },
+
+            {
+                value: "property_sale",
+                label: "Property for Sale",
+                lifetime: "until_unavailable",
+                pricing: "campaign",
+                help:
+                    "Stays active until the property is marked as sold."
+            },
+
+            {
+                value: "hotel_lodge",
+                label: "Hotel / Lodge / Guest House",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing accommodation business listing."
+            },
+
+            {
+                value: "accommodation_special",
+                label: "Accommodation Special",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary accommodation promotion."
+            }
+
+        ],
+
+
+        /* EVENTS */
+
+        "events": [
+
+            {
+                value: "entertainment",
+                label: "Party / Entertainment",
+                lifetime: "event",
+                pricing: "campaign",
+                help:
+                    "Event listing that expires after the event."
+            },
+
+            {
+                value: "church_event",
+                label: "Church Event",
+                lifetime: "event",
+                pricing: "campaign",
+                help:
+                    "Church or religious community event."
+            },
+
+            {
+                value: "sports_event",
+                label: "Sports Event",
+                lifetime: "event",
+                pricing: "campaign",
+                help:
+                    "Local sports match, tournament or sporting event."
+            },
+
+            {
+                value: "community_event",
+                label: "Community Event",
+                lifetime: "event",
+                pricing: "campaign",
+                help:
+                    "Community meeting, gathering or public activity."
+            },
+
+            {
+                value: "business_event",
+                label: "Business Event",
+                lifetime: "event",
+                pricing: "campaign",
+                help:
+                    "Business, networking or entrepreneurship event."
+            },
+
+            {
+                value: "event",
+                label: "Other Event",
+                lifetime: "event",
+                pricing: "campaign",
+                help:
+                    "General local event."
+            }
+
+        ],
+
+
+        /* DISCOUNTS / DEALS */
+
+        "discount-deals": [
+
+            {
+                value: "grocery_special",
+                label: "Grocery Special",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary grocery promotion."
+            },
+
+            {
+                value: "product_discount",
+                label: "Product Discount",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Discount on a particular product."
+            },
+
+            {
+                value: "weekend_special",
+                label: "Weekend Special",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Short-term weekend promotion."
+            },
+
+            {
+                value: "clearance",
+                label: "Clearance",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary clearance promotion."
+            }
+
+        ],
+
+
+        /* LOCAL RESTAURANTS */
+
+        "local-restaurants": [
+
+            {
+                value: "restaurant",
+                label: "Restaurant",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing restaurant presence."
+            },
+
+            {
+                value: "takeaway",
+                label: "Takeaway / Fast Food",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing takeaway or fast-food presence."
+            },
+
+            {
+                value: "daily_special",
+                label: "Daily Special",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary food promotion."
+            },
+
+            {
+                value: "weekend_special",
+                label: "Weekend Special",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Weekend food promotion."
+            },
+
+            {
+                value: "food_deal",
+                label: "Combo / Promotion",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary meal deal, combo or promotion."
+            }
+
+        ],
+
+
+        /* JOBS */
+
+        "jobs": [
+
+            {
+                value: "job",
+                label: "Job",
+                lifetime: "until_unavailable",
+                pricing: "campaign",
+                help:
+                    "Stays active until the position is filled or closed."
+            },
+
+            {
+                value: "learnership",
+                label: "Learnership",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Opportunity with an application deadline."
+            },
+
+            {
+                value: "internship",
+                label: "Internship",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Internship with an application deadline."
+            },
+
+            {
+                value: "training",
+                label: "Training",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Training or skills-development opportunity."
+            },
+
+            {
+                value: "tender",
+                label: "Tender",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Tender or procurement opportunity."
+            },
+
+            {
+                value: "business_opportunity",
+                label: "Business Opportunity",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary local business opportunity."
+            }
+
+        ],
+
+
+        /* OPPORTUNITIES */
+
+        "opportunities": [
+
+            {
+                value: "job",
+                label: "Job",
+                lifetime: "until_unavailable",
+                pricing: "campaign",
+                help:
+                    "Stays active until filled or closed."
+            },
+
+            {
+                value: "learnership",
+                label: "Learnership",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Learnership with an application deadline."
+            },
+
+            {
+                value: "internship",
+                label: "Internship",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Internship with an application deadline."
+            },
+
+            {
+                value: "training",
+                label: "Training",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Training or skills-development opportunity."
+            },
+
+            {
+                value: "tender",
+                label: "Tender",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Tender with a closing date."
+            },
+
+            {
+                value: "business_opportunity",
+                label: "Business Opportunity",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary business opportunity."
+            }
+
+        ],
+
+
+        /* SERVICES */
+
+        "services": [
+
+            {
+                value: "service_provider",
+                label: "General Service",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing local service provider."
+            },
+
+            {
+                value: "plumber",
+                label: "Plumber",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing plumbing service."
+            },
+
+            {
+                value: "mechanic",
+                label: "Mechanic",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing mechanic service."
+            },
+
+            {
+                value: "electrician",
+                label: "Electrician",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing electrical service."
+            },
+
+            {
+                value: "builder",
+                label: "Builder",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing building service."
+            },
+
+            {
+                value: "cleaning_service",
+                label: "Cleaning Service",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing cleaning service."
+            }
+
+        ],
+
+
+        /* BEAUTY / SALON */
+
+        "beauty-salon": [
+
+            {
+                value: "salon",
+                label: "Salon",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing salon presence."
+            },
+
+            {
+                value: "barber",
+                label: "Barber",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing barber presence."
+            },
+
+            {
+                value: "beauty_service",
+                label: "Beauty Service",
+                lifetime: "ongoing",
+                pricing: "presence",
+                help:
+                    "Ongoing beauty service."
+            },
+
+            {
+                value: "beauty_special",
+                label: "Beauty Special",
+                lifetime: "time_specific",
+                pricing: "campaign",
+                help:
+                    "Temporary beauty promotion."
+            }
+
+        ]
+
+    };
+
+
+    /* ========================================================
+       PRICING TABLES
+
+       DISPLAY ONLY.
+
+       The Flask backend remains the source of truth.
+    ======================================================== */
+
+    const presencePricing = {
+
+        30: 49,
+        90: 99,
+        180: 169,
+        365: 249
+
+    };
+
+
+    const campaignPricing = {
+
+        7: {
+            1: 49,
+            2: 79,
+            3: 109
+        },
+
+        14: {
+            1: 79,
+            2: 119,
+            3: 159
+        },
+
+        30: {
+            1: 129,
+            2: 179,
+            3: 229
+        }
+
+    };
+
+
+    /* ========================================================
+       COMMERCIAL ELEMENTS
+    ======================================================== */
+
+    const pricingModelInput =
+        document.getElementById(
+            "pricing-model"
+        );
+
+    const pricingModelDisplay =
+        document.getElementById(
+            "pricing-model-display"
+        );
+
+    const pricingModelHelp =
+        document.getElementById(
+            "pricing-model-help"
+        );
+
+    const durationSelect =
+        document.getElementById(
+            "commercial-duration-days"
+        );
+
+    const campaignReachSection =
+        document.getElementById(
+            "campaign-reach-section"
+        );
+
+    const zoneCheckboxes =
+        document.querySelectorAll(
+            ".distribution-zone-checkbox"
+        );
+
+    const zoneCountDisplay =
+        document.getElementById(
+            "campaign-zone-count"
+        );
+
+    const priceDisplay =
+        document.getElementById(
+            "kalxa-price-display"
+        );
+
+    const displayedAmountInput =
+        document.getElementById(
+            "displayed-amount-due"
+        );
+
+
+    /* ========================================================
+       GET CURRENT WORKFLOW
+    ======================================================== */
+
+    function getSelectedWorkflow() {
+
+        if (
+            !categorySelect
+            ||
+            !contentTypeSelect
+        ) {
+            return null;
+        }
+
+
+        const category =
+            categorySelect.value;
+
+        const contentType =
+            contentTypeSelect.value;
+
+        const workflows =
+            contentWorkflows[category]
+            || [];
+
+
+        return (
+            workflows.find(
+                function(workflow) {
+
+                    return (
+                        workflow.value
+                        === contentType
+                    );
+
+                }
+            )
+            || null
+        );
+
+    }
+
+
+    /* ========================================================
+       PRICING MODEL
+    ======================================================== */
+
+    function getSelectedPricingModel() {
+
+        const workflow =
+            getSelectedWorkflow();
+
+
+        if (
+            workflow
+            &&
+            workflow.pricing
+        ) {
+
+            return workflow.pricing;
+
+        }
+
+
+        const category =
+            categorySelect
+                ? categorySelect.value
+                : "";
+
+
+        /*
+         * Fallbacks for categories without an explicit
+         * contentWorkflows definition.
+         */
+
+        const presenceCategories = [
+            "services"
+        ];
+
+
+        const campaignCategories = [
+            "events",
+            "jobs",
+            "opportunities",
+            "discount-deals"
+        ];
+
+
+        if (
+            presenceCategories.includes(
+                category
+            )
+        ) {
+
+            return "presence";
+
+        }
+
+
+        if (
+            campaignCategories.includes(
+                category
+            )
+        ) {
+
+            return "campaign";
+
+        }
+
+
+        return "";
+
+    }
+
+
+    /* ========================================================
+       POPULATE CONTENT TYPES
+    ======================================================== */
+
+    function populateContentTypes(
+        preserveValue = null
+    ) {
+
+        if (
+            !categorySelect
+            ||
+            !contentTypeSelect
+        ) {
             return;
         }
 
@@ -1153,239 +1756,748 @@
         const category =
             categorySelect.value;
 
+        const workflows =
+            contentWorkflows[category]
+            || [];
+
+
+        contentTypeSelect.innerHTML = "";
+
+
+        if (
+            workflows.length === 0
+        ) {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value = "";
+
+            option.textContent =
+                "General Listing";
+
+
+            contentTypeSelect.appendChild(
+                option
+            );
+
+
+            contentTypeHelp.textContent =
+                (
+                    "This category currently uses "
+                    + "the general listing workflow."
+                );
+
+
+            updateWorkflowFields();
+
+            return;
+
+        }
+
+
+        workflows.forEach(
+            function(workflow) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    workflow.value;
+
+                option.textContent =
+                    workflow.label;
+
+
+                if (
+                    preserveValue
+                    &&
+                    preserveValue
+                    === workflow.value
+                ) {
+
+                    option.selected = true;
+
+                }
+
+
+                contentTypeSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        updateWorkflowFields();
+
+    }
+
+
+    /* ========================================================
+       LIFECYCLE UI
+    ======================================================== */
+
+    function updateWorkflowFields() {
+
+        if (
+            !categorySelect
+            ||
+            !contentTypeSelect
+        ) {
+            return;
+        }
+
+
+        const workflow =
+            getSelectedWorkflow();
+
+        const category =
+            categorySelect.value;
+
+
+        eventDateFields.style.display =
+            "none";
+
+        generalDateFields.style.display =
+            "none";
+
+        untilUnavailableInfo.style.display =
+            "none";
+
+        ongoingInfo.style.display =
+            "none";
+
+        workflowInfo.style.display =
+            "none";
+
+
+        if (eventDateInput) {
+            eventDateInput.required = false;
+        }
+
+        if (endDateInput) {
+            endDateInput.required = false;
+        }
+
+
+        if (!workflow) {
+
+            const ongoingCategories = [
+                "property",
+                "transport",
+                "services"
+            ];
+
+
+            if (
+                ongoingCategories.includes(
+                    category
+                )
+            ) {
+
+                ongoingInfo.style.display =
+                    "block";
+
+            } else {
+
+                generalDateFields.style.display =
+                    "block";
+
+
+                if (endDateInput) {
+                    endDateInput.required = true;
+                }
+
+            }
+
+
+            updateCommercialUI();
+
+            return;
+
+        }
+
+
+        workflowInfo.style.display =
+            "block";
+
+        workflowDescription.textContent =
+            workflow.help;
+
 
         if (
             category === "events"
+            ||
+            workflow.lifetime === "event"
         ) {
 
             eventDateFields.style.display =
                 "block";
 
+
+            if (eventDateInput) {
+                eventDateInput.required = true;
+            }
+
+
+            updateCommercialUI();
+
+            return;
+
+        }
+
+
+        if (
+            workflow.lifetime
+            === "time_specific"
+        ) {
+
             generalDateFields.style.display =
+                "block";
+
+
+            if (endDateInput) {
+                endDateInput.required = true;
+            }
+
+
+            updateCommercialUI();
+
+            return;
+
+        }
+
+
+        if (
+            workflow.lifetime
+            === "until_unavailable"
+        ) {
+
+            untilUnavailableInfo.style.display =
+                "block";
+
+
+            updateCommercialUI();
+
+            return;
+
+        }
+
+
+        if (
+            workflow.lifetime
+            === "ongoing"
+        ) {
+
+            ongoingInfo.style.display =
+                "block";
+
+        }
+
+
+        updateCommercialUI();
+
+    }
+
+
+    /* ========================================================
+       FORMAT PRICE
+    ======================================================== */
+
+    function formatKalxaPrice(
+        amount
+    ) {
+
+        if (
+            amount === null
+            ||
+            amount === undefined
+            ||
+            amount === ""
+        ) {
+
+            return "—";
+
+        }
+
+
+        return (
+            "R"
+            +
+            Number(
+                amount
+            ).toFixed(0)
+        );
+
+    }
+
+
+    /* ========================================================
+       SELECTED CAMPAIGN ZONES
+    ======================================================== */
+
+    function getSelectedZoneCount() {
+
+        let count = 0;
+
+
+        zoneCheckboxes.forEach(
+            function(checkbox) {
+
+                if (
+                    checkbox.checked
+                ) {
+
+                    count += 1;
+
+                }
+
+            }
+        );
+
+
+        return count;
+
+    }
+
+
+    /* ========================================================
+       DURATION OPTIONS
+    ======================================================== */
+
+    function rebuildDurationOptions(
+        pricingModel
+    ) {
+
+        if (!durationSelect) {
+            return;
+        }
+
+
+        const previousValue =
+            durationSelect.value
+            ||
+            durationSelect.dataset.currentDuration
+            ||
+            "";
+
+
+        durationSelect.innerHTML = "";
+
+
+        const placeholder =
+            document.createElement(
+                "option"
+            );
+
+
+        placeholder.value = "";
+
+        placeholder.textContent =
+            "Select duration";
+
+
+        durationSelect.appendChild(
+            placeholder
+        );
+
+
+        let durations = [];
+
+
+        if (
+            pricingModel === "presence"
+        ) {
+
+            durations = [
+                30,
+                90,
+                180,
+                365
+            ];
+
+        }
+
+
+        if (
+            pricingModel === "campaign"
+        ) {
+
+            durations = [
+                7,
+                14,
+                30
+            ];
+
+        }
+
+
+        durations.forEach(
+            function(days) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    String(
+                        days
+                    );
+
+
+                if (
+                    pricingModel
+                    === "presence"
+                ) {
+
+                    option.textContent =
+                        (
+                            days
+                            + " days — "
+                            + formatKalxaPrice(
+                                presencePricing[
+                                    days
+                                ]
+                            )
+                        );
+
+                } else {
+
+                    option.textContent =
+                        days + " days";
+
+                }
+
+
+                durationSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        if (
+            previousValue
+            &&
+            durations.includes(
+                Number(
+                    previousValue
+                )
+            )
+        ) {
+
+            durationSelect.value =
+                previousValue;
+
+        }
+
+    }
+
+
+    /* ========================================================
+       CALCULATE DISPLAY PRICE
+    ======================================================== */
+
+    function updateKalxaPrice() {
+
+        const pricingModel =
+            pricingModelInput
+                ? pricingModelInput.value
+                : "";
+
+
+        const duration =
+            Number(
+                durationSelect
+                    ? durationSelect.value
+                    : 0
+            );
+
+
+        const zoneCount =
+            getSelectedZoneCount();
+
+
+        if (zoneCountDisplay) {
+
+            zoneCountDisplay.textContent =
+                String(
+                    zoneCount
+                );
+
+        }
+
+
+        let amount = null;
+
+
+        if (
+            pricingModel === "presence"
+            &&
+            duration
+        ) {
+
+            amount =
+                presencePricing[
+                    duration
+                ];
+
+        }
+
+
+        if (
+            pricingModel === "campaign"
+            &&
+            duration
+            &&
+            zoneCount > 0
+        ) {
+
+            const durationPrices =
+                campaignPricing[
+                    duration
+                ];
+
+
+            if (
+                durationPrices
+                &&
+                durationPrices[
+                    zoneCount
+                ] !== undefined
+            ) {
+
+                amount =
+                    durationPrices[
+                        zoneCount
+                    ];
+
+            }
+
+        }
+
+
+        if (
+            amount === null
+            ||
+            amount === undefined
+        ) {
+
+            priceDisplay.textContent =
+                "—";
+
+            displayedAmountInput.value =
+                "";
+
+            return;
+
+        }
+
+
+        priceDisplay.textContent =
+            formatKalxaPrice(
+                amount
+            );
+
+
+        displayedAmountInput.value =
+            String(
+                amount
+            );
+
+    }
+
+
+    /* ========================================================
+       UPDATE COMMERCIAL PACKAGE UI
+    ======================================================== */
+
+    function updateCommercialUI() {
+
+        const pricingModel =
+            getSelectedPricingModel();
+
+
+        if (pricingModelInput) {
+
+            pricingModelInput.value =
+                pricingModel;
+
+        }
+
+
+        if (
+            pricingModel === "presence"
+        ) {
+
+            pricingModelDisplay.value =
+                "Presence";
+
+
+            pricingModelHelp.textContent =
+                (
+                    "Presence pricing is based on "
+                    + "visibility duration only."
+                );
+
+
+            campaignReachSection.style.display =
                 "none";
 
         }
+
+
+        else if (
+            pricingModel === "campaign"
+        ) {
+
+            pricingModelDisplay.value =
+                "Campaign";
+
+
+            pricingModelHelp.textContent =
+                (
+                    "Campaign pricing is based on "
+                    + "duration and geographic reach."
+                );
+
+
+            campaignReachSection.style.display =
+                "block";
+
+        }
+
 
         else {
 
-            eventDateFields.style.display =
+            pricingModelDisplay.value =
+                "Not assigned";
+
+
+            pricingModelHelp.textContent =
+                (
+                    "No commercial pricing model "
+                    + "has been assigned yet."
+                );
+
+
+            campaignReachSection.style.display =
                 "none";
 
-            generalDateFields.style.display =
-                "block";
-
         }
+
+
+        rebuildDurationOptions(
+            pricingModel
+        );
+
+
+        updateKalxaPrice();
 
     }
 
 
-    if (
-        categorySelect
-    ) {
+    /* ========================================================
+       EVENTS
+    ======================================================== */
+
+    if (categorySelect) {
 
         categorySelect.addEventListener(
             "change",
-            updateDateFields
+            function() {
+
+                populateContentTypes();
+
+            }
         );
-
-
-        updateDateFields();
-
-    }
-
-</script>
-
-
-<!-- =========================================
-     LISTING LEVEL CONTROL
-========================================== -->
-
-<script>
-
-    const listingLevelSelect =
-        document.getElementById(
-            "listing_level"
-        );
-
-    const verificationFields =
-        document.getElementById(
-            "verification-fields"
-        );
-
-    const businessListingFields =
-        document.getElementById(
-            "business-listing-fields"
-        );
-
-    const promotionFields =
-        document.getElementById(
-            "promotion-fields"
-        );
-
-
-    function updateListingLevelFields() {
-
-        if (
-            !listingLevelSelect
-        ) {
-
-            return;
-
-        }
-
-
-        const level =
-            listingLevelSelect.value;
-
-
-        // =========================================
-        // DISCOVERY
-        // =========================================
-
-        if (
-            level === "discovery"
-        ) {
-
-            if (
-                verificationFields
-            ) {
-
-                verificationFields.style.display =
-                    "none";
-
-            }
-
-
-            if (
-                businessListingFields
-            ) {
-
-                businessListingFields.style.display =
-                    "none";
-
-            }
-
-
-            if (
-                promotionFields
-            ) {
-
-                promotionFields.style.display =
-                    "none";
-
-            }
-
-
-            return;
-
-        }
-
-
-        // =========================================
-        // BUSINESS
-        // =========================================
-
-        if (
-            level === "business"
-        ) {
-
-            if (
-                verificationFields
-            ) {
-
-                verificationFields.style.display =
-                    "block";
-
-            }
-
-
-            if (
-                businessListingFields
-            ) {
-
-                businessListingFields.style.display =
-                    "block";
-
-            }
-
-
-            if (
-                promotionFields
-            ) {
-
-                promotionFields.style.display =
-                    "none";
-
-            }
-
-
-            return;
-
-        }
-
-
-        // =========================================
-        // PROMOTION
-        // =========================================
-
-        if (
-            level === "promotion"
-        ) {
-
-            if (
-                verificationFields
-            ) {
-
-                verificationFields.style.display =
-                    "block";
-
-            }
-
-
-            if (
-                businessListingFields
-            ) {
-
-                businessListingFields.style.display =
-                    "block";
-
-            }
-
-
-            if (
-                promotionFields
-            ) {
-
-                promotionFields.style.display =
-                    "block";
-
-            }
-
-        }
 
     }
 
 
-    if (
-        listingLevelSelect
-    ) {
+    if (contentTypeSelect) {
 
-        listingLevelSelect.addEventListener(
+        contentTypeSelect.addEventListener(
             "change",
-            updateListingLevelFields
+            updateWorkflowFields
         );
 
+    }
 
-        updateListingLevelFields();
+
+    if (durationSelect) {
+
+        durationSelect.addEventListener(
+            "change",
+            updateKalxaPrice
+        );
 
     }
+
+
+    zoneCheckboxes.forEach(
+        function(checkbox) {
+
+            checkbox.addEventListener(
+                "change",
+                function() {
+
+                    const zoneCount =
+                        getSelectedZoneCount();
+
+
+                    if (
+                        zoneCount > 3
+                    ) {
+
+                        checkbox.checked =
+                            false;
+
+
+                        alert(
+                            (
+                                "The current Kalxa campaign "
+                                + "packages support a maximum "
+                                + "of 3 zones."
+                            )
+                        );
+
+                    }
+
+
+                    updateKalxaPrice();
+
+                }
+            );
+
+        }
+    );
+
+
+    /* ========================================================
+       INITIAL LOAD
+    ======================================================== */
+
+    populateContentTypes(
+        existingContentType
+    );
 
 </script>
 
 
-<!-- =========================================
-     MULTI IMAGE SELECTION
-========================================== -->
+<!-- =========================================================
+     IMAGE SELECTION / PREVIEW
+========================================================= -->
 
 <script>
 
@@ -1399,18 +2511,13 @@
             "selected-images-preview"
         );
 
-
     let selectedImages = [];
 
 
     function rebuildImageInput() {
 
-        if (
-            !imageInput
-        ) {
-
+        if (!imageInput) {
             return;
-
         }
 
 
@@ -1437,24 +2544,16 @@
 
     function renderImagePreviews() {
 
-        if (
-            !imagePreview
-        ) {
-
+        if (!imagePreview) {
             return;
-
         }
 
 
-        imagePreview.innerHTML =
-            "";
+        imagePreview.innerHTML = "";
 
 
         selectedImages.forEach(
-            function(
-                file,
-                index
-            ) {
+            function(file, index) {
 
                 const wrapper =
                     document.createElement(
@@ -1472,28 +2571,14 @@
                     );
 
 
-                const objectUrl =
+                image.src =
                     URL.createObjectURL(
                         file
                     );
 
 
-                image.src =
-                    objectUrl;
-
-
                 image.alt =
                     file.name;
-
-
-                image.onload =
-                    function() {
-
-                        URL.revokeObjectURL(
-                            objectUrl
-                        );
-
-                    };
 
 
                 const removeButton =
@@ -1505,19 +2590,11 @@
                 removeButton.type =
                     "button";
 
-
                 removeButton.textContent =
                     "×";
 
-
                 removeButton.className =
                     "remove-selected-image";
-
-
-                removeButton.setAttribute(
-                    "aria-label",
-                    "Remove selected image"
-                );
 
 
                 removeButton.addEventListener(
@@ -1542,11 +2619,9 @@
                     image
                 );
 
-
                 wrapper.appendChild(
                     removeButton
                 );
-
 
                 imagePreview.appendChild(
                     wrapper
@@ -1558,9 +2633,7 @@
     }
 
 
-    if (
-        imageInput
-    ) {
+    if (imageInput) {
 
         imageInput.addEventListener(
             "change",
@@ -1570,10 +2643,6 @@
                     Array.from(
                         event.target.files
                     );
-
-
-                let rejectedFiles =
-                    false;
 
 
                 for (
@@ -1590,9 +2659,6 @@
                                     &&
                                     existingFile.size
                                     === file.size
-                                    &&
-                                    existingFile.lastModified
-                                    === file.lastModified
                                 );
 
                             }
@@ -1600,40 +2666,57 @@
 
 
                     if (
-                        alreadyExists
+                        !alreadyExists
+                        &&
+                        selectedImages.length < 3
                     ) {
 
-                        continue;
+                        selectedImages.push(
+                            file
+                        );
 
                     }
-
-
-                    if (
-                        selectedImages.length >= 3
-                    ) {
-
-                        rejectedFiles =
-                            true;
-
-                        break;
-
-                    }
-
-
-                    selectedImages.push(
-                        file
-                    );
 
                 }
 
 
                 if (
-                    rejectedFiles
+                    selectedImages.length >= 3
+                    &&
+                    newFiles.length > 0
                 ) {
 
-                    alert(
-                        "You can upload a maximum of 3 images."
-                    );
+                    const rejectedFileExists =
+                        newFiles.some(
+                            function(file) {
+
+                                return !selectedImages.some(
+                                    function(selectedFile) {
+
+                                        return (
+                                            selectedFile.name
+                                            === file.name
+                                            &&
+                                            selectedFile.size
+                                            === file.size
+                                        );
+
+                                    }
+                                );
+
+                            }
+                        );
+
+
+                    if (
+                        rejectedFileExists
+                    ) {
+
+                        alert(
+                            "You can upload a maximum of 3 images."
+                        );
+
+                    }
 
                 }
 
