@@ -28,7 +28,9 @@ from flask import (
 )
 from flask_migrate import Migrate
 from sqlalchemy import or_
-
+from pricing import (
+    PRICING_MODEL_CAMPAIGN,
+)
 from image_utils import (
     upload_lac_image,
     allowed_image_file,
@@ -42,6 +44,7 @@ from models import (
     PendingSubmission,
     PendingSubmissionImage,
     ZoneCategoryAppearance,
+    ContentDistributionZone,
     Category,
     PushSubscriber,
     ListingClaim,
@@ -367,39 +370,51 @@ def get_active_category_by_slug(
     )
 
 
-# =========================================================
-# ACTIVE CONTENT HELPER
-# =========================================================
 def get_active_content(
     zone_id,
-    category_slug,
+    category,
 ):
 
+    # =====================================================
+    # CURRENT DATE / TIME
+    #
+    # today:
+    #     Used by the natural content lifecycle.
+    #
+    # now:
+    #     Used by the commercial package lifecycle.
+    # =====================================================
+
     today = date.today()
+
+    now = datetime.utcnow()
+
+
+    # =====================================================
+    # NORMALIZE CATEGORY
+    # =====================================================
+
+    category = (
+        str(
+            category
+            or ""
+        )
+        .strip()
+        .lower()
+    )
 
 
     # =====================================================
     # PROMOTION PRIORITY
-    # =====================================================
     #
-    # Only LEVEL 3 — PROMOTION listings that are explicitly
-    # marked featured are allowed to receive featured
-    # placement.
+    # Only Promotion + Featured receives ranking priority.
     #
-    # Discovery + featured=True  -> no priority
-    # Business + featured=True   -> no priority
-    # Promotion + featured=True  -> priority
-    #
-    # CASE returns:
-    #
-    #   1 = promoted + featured
-    #   0 = everything else
-    #
-    # Sorting DESC therefore puts legitimate promoted
-    # listings first.
+    # Presence / Campaign pricing alone does NOT make an
+    # item featured.
     # =====================================================
 
     promotion_priority = db.case(
+
         (
             (
                 ContentItem.listing_level
@@ -413,126 +428,347 @@ def get_active_content(
             ),
             1,
         ),
+
         else_=0,
+
     )
 
 
     # =====================================================
-    # BASE QUERY
+    # ZONE VISIBILITY
+    #
+    # Content can appear in a zone when:
+    #
+    # 1. The zone is its home/origin zone.
+    #
+    # OR
+    #
+    # 2. It is a Campaign distributed into that zone.
+    #
+    # .any() creates an EXISTS-style condition, so one
+    # ContentItem is not duplicated when it has several
+    # distribution zones.
+    # =====================================================
+
+    zone_visibility = db.or_(
+
+        # -------------------------------------------------
+        # HOME / ORIGIN ZONE
+        # -------------------------------------------------
+
+        ContentItem.zone_id
+        == zone_id,
+
+
+        # -------------------------------------------------
+        # CAMPAIGN DISTRIBUTION
+        # -------------------------------------------------
+
+        db.and_(
+
+            ContentItem.pricing_model
+            == PRICING_MODEL_CAMPAIGN,
+
+            ContentItem.distribution_zone_links.any(
+
+                ContentDistributionZone.zone_id
+                == zone_id
+
+            ),
+
+        ),
+
+    )
+
+
+    # =====================================================
+    # COMMERCIAL VISIBILITY
+    #
+    # There are TWO valid paths.
+    #
+    #
+    # PATH 1 — NON-COMMERCIAL / LEGACY CONTENT
+    #
+    # pricing_model = None
+    #
+    # Existing Kalxa-curated/community/legacy content
+    # continues to work normally.
+    #
+    #
+    # PATH 2 — COMMERCIAL CONTENT
+    #
+    # Presence or Campaign content must:
+    #
+    #     payment_status = paid OR waived
+    #
+    #     commercial_starts_at exists
+    #
+    #     commercial_expires_at exists
+    #
+    #     commercial_starts_at <= now
+    #
+    #     commercial_expires_at >= now
+    #
+    #
+    # Therefore:
+    #
+    # unpaid   -> hidden
+    # refunded -> hidden
+    # expired  -> hidden
+    # malformed commercial record -> hidden
+    #
+    # paid + current   -> visible
+    # waived + current -> visible
+    # =====================================================
+
+    commercial_visibility = db.or_(
+
+        # -------------------------------------------------
+        # LEGACY / COMMUNITY CONTENT
+        # -------------------------------------------------
+
+        ContentItem.pricing_model.is_(
+            None
+        ),
+
+
+        # -------------------------------------------------
+        # VALID COMMERCIAL CONTENT
+        # -------------------------------------------------
+
+        db.and_(
+
+            ContentItem.pricing_model.in_(
+
+                (
+                    PRICING_MODEL_PRESENCE,
+                    PRICING_MODEL_CAMPAIGN,
+                )
+
+            ),
+
+            ContentItem.payment_status.in_(
+
+                (
+                    "paid",
+                    "waived",
+                )
+
+            ),
+
+            ContentItem.commercial_starts_at.is_not(
+                None
+            ),
+
+            ContentItem.commercial_expires_at.is_not(
+                None
+            ),
+
+            ContentItem.commercial_starts_at
+            <= now,
+
+            ContentItem.commercial_expires_at
+            >= now,
+
+        ),
+
+    )
+
+
+    # =====================================================
+    # BASE PUBLIC QUERY
+    #
+    # An item must now pass:
+    #
+    #     active
+    #     correct category
+    #     correct geographic visibility
+    #     commercial visibility
+    #
+    # before natural content lifecycle rules are applied.
     # =====================================================
 
     query = (
         ContentItem.query
         .filter(
-            ContentItem.zone_id
-            == zone_id,
-
-            ContentItem.category
-            == category_slug,
 
             ContentItem.active.is_(
                 True
             ),
 
-            ContentItem.archived.is_(
-                False
-            ),
+            ContentItem.category
+            == category,
+
+            zone_visibility,
+
+            commercial_visibility,
+
         )
     )
 
 
     # =====================================================
     # EVENTS
-    # =====================================================
     #
-    # Events:
+    # IMPORTANT:
     #
-    # 1. Must already be allowed to publish.
-    # 2. Must not have ended.
-    # 3. Promotion + Featured comes first.
-    # 4. Earlier upcoming event dates come next.
-    # 5. Newer listings break ties.
+    # Upcoming events must be visible BEFORE their event
+    # date.
     #
+    # Therefore we intentionally DO NOT require:
+    #
+    #     start_date <= today
+    #
+    # We only stop showing the event when its natural
+    # content end date has passed.
+    #
+    # Commercial expiry is already enforced separately
+    # above.
     # =====================================================
 
-    if category_slug == "events":
+    if (
+        category
+        == "events"
+    ):
 
-        query = query.filter(
-            or_(
-                ContentItem.publish_from.is_(
-                    None
-                ),
-                ContentItem.publish_from
-                <= today,
-            ),
-            or_(
-                ContentItem.event_end_date.is_(
-                    None
-                ),
-                ContentItem.event_end_date
-                >= today,
-            ),
+        query = (
+            query
+            .filter(
+
+                db.or_(
+
+                    ContentItem.end_date.is_(
+                        None
+                    ),
+
+                    ContentItem.end_date
+                    >= today,
+
+                )
+
+            )
         )
 
 
         return (
             query
             .order_by(
+
+                # -----------------------------------------
+                # Promotion + Featured first
+                # -----------------------------------------
+
                 promotion_priority.desc(),
+
+
+                # -----------------------------------------
+                # Nearest upcoming event next
+                # -----------------------------------------
 
                 ContentItem.event_date
                 .asc()
                 .nullslast(),
 
+
+                # -----------------------------------------
+                # Newest as final tie-breaker
+                # -----------------------------------------
+
                 ContentItem.created_at
                 .desc(),
+
             )
             .all()
         )
 
 
     # =====================================================
-    # OTHER CONTENT
-    # =====================================================
+    # NON-EVENT CONTENT
     #
-    # Future listings are allowed to appear immediately.
+    # Preserve existing natural lifecycle:
     #
-    # Listings disappear only after end_date.
+    # start_date:
+    #     None OR already started
     #
-    # Ordering:
+    # end_date:
+    #     None OR not expired
     #
-    # 1. Promotion + Featured
-    # 2. Earliest start date
-    # 3. Newest created listing
-    #
+    # Commercial expiry remains independent.
     # =====================================================
 
-    query = query.filter(
-        or_(
-            ContentItem.end_date.is_(
-                None
+    query = (
+        query
+        .filter(
+
+            # -------------------------------------------------
+            # NATURAL START DATE
+            # -------------------------------------------------
+
+            db.or_(
+
+                ContentItem.start_date.is_(
+                    None
+                ),
+
+                ContentItem.start_date
+                <= today,
+
             ),
-            ContentItem.end_date
-            >= today,
+
+
+            # -------------------------------------------------
+            # NATURAL END DATE
+            # -------------------------------------------------
+
+            db.or_(
+
+                ContentItem.end_date.is_(
+                    None
+                ),
+
+                ContentItem.end_date
+                >= today,
+
+            ),
+
         )
     )
 
 
+    # =====================================================
+    # NON-EVENT ORDERING
+    # =====================================================
+
     return (
         query
         .order_by(
+
+            # -------------------------------------------------
+            # Promotion + Featured first
+            # -------------------------------------------------
+
             promotion_priority.desc(),
+
+
+            # -------------------------------------------------
+            # Natural content start date
+            # -------------------------------------------------
 
             ContentItem.start_date
             .asc()
             .nullslast(),
 
+
+            # -------------------------------------------------
+            # Newest as final tie-breaker
+            # -------------------------------------------------
+
             ContentItem.created_at
             .desc(),
+
         )
         .all()
     )
-# =========================================================
 # CONTENT EXPIRY HELPERS
 # =========================================================
 
