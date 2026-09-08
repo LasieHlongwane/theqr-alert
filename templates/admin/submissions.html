@@ -11,7 +11,7 @@
     >
 
     <title>
-        LAC Submissions
+        Kalxa Submissions
     </title>
 
     <link
@@ -39,11 +39,11 @@
         <div>
 
             <strong>
-                LAC
+                KALXA
             </strong>
 
             <span>
-                NETWORK
+                · POWERED BY LAC
             </span>
 
         </div>
@@ -93,9 +93,8 @@
 
 
         <p>
-            Review and manage content
-            submitted by businesses,
-            organisers and local users.
+            Review submissions, commercial packages
+            and customer payments.
         </p>
 
     </section>
@@ -186,9 +185,7 @@
          FLASH MESSAGES
     ========================================== -->
 
-    {% with messages =
-        get_flashed_messages()
-    %}
+    {% with messages = get_flashed_messages() %}
 
         {% for message in messages %}
 
@@ -227,7 +224,7 @@
                     <span class="content-category">
 
                         {% if item.category %}
-                            {{ item.category|title }}
+                            {{ item.category|replace('-', ' ')|title }}
                         {% endif %}
 
                     </span>
@@ -241,13 +238,13 @@
 
 
                     <a
-                      href="{{ url_for(
-                        'admin.edit_submission',
-                        submission_id=item.id
-                      ) }}"
-                      class="submission-edit-button"
+                        href="{{ url_for(
+                            'admin.edit_submission',
+                            submission_id=item.id
+                        ) }}"
+                        class="submission-edit-button"
                     >
-                      ✏ Edit Before Approval
+                        ✏ Edit Before Approval
                     </a>
 
 
@@ -290,11 +287,9 @@
                 {% if item.business_name %}
 
                 <p>
-
                     <strong>
                         {{ item.business_name }}
                     </strong>
-
                 </p>
 
                 {% endif %}
@@ -329,6 +324,7 @@
 
                 </div>
 
+
                 {% elif item.image_url %}
 
                 <div class="submission-images">
@@ -338,6 +334,104 @@
                         alt="{{ item.title }}"
                         loading="lazy"
                     >
+
+                </div>
+
+                {% endif %}
+
+
+                <hr>
+
+
+                <!-- =================================
+                     COMMERCIAL PACKAGE
+                ================================== -->
+
+                {% if item.pricing_model %}
+
+                <div class="submission-commercial-box">
+
+                    <p>
+                        <strong>
+                            Kalxa Package
+                        </strong>
+                    </p>
+
+
+                    <p>
+                        Type:
+                        <strong>
+                            {{ item.pricing_model|title }}
+                        </strong>
+                    </p>
+
+
+                    {% if item.commercial_duration_days %}
+
+                    <p>
+                        Duration:
+                        <strong>
+                            {{ item.commercial_duration_days }}
+                            days
+                        </strong>
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.pricing_model == "campaign" %}
+
+                    <p>
+                        Reach:
+                        <strong>
+
+                            {% if item.distribution_zone_ids %}
+
+                                {{ item.distribution_zone_ids|length }}
+                                zone{% if item.distribution_zone_ids|length != 1 %}s{% endif %}
+
+                            {% else %}
+
+                                1 zone
+
+                            {% endif %}
+
+                        </strong>
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.amount_due is not none %}
+
+                    <p>
+                        Amount Due:
+                        <strong>
+                            R{{ "%.2f"|format(item.amount_due) }}
+                        </strong>
+                    </p>
+
+                    {% endif %}
+
+
+                    <p>
+                        Payment:
+                        <strong>
+                            {{ item.payment_status|upper }}
+                        </strong>
+                    </p>
+
+
+                    {% if item.status == "pending"
+                          and item.payment_status == "unpaid" %}
+
+                    <p class="muted">
+                        Payment has not yet been confirmed.
+                        The listing will remain hidden if
+                        approved before payment.
+                    </p>
+
+                    {% endif %}
 
                 </div>
 
@@ -362,9 +456,13 @@
                 </p>
 
 
+                {% if item.submitter_phone %}
+
                 <p>
                     📞 {{ item.submitter_phone }}
                 </p>
+
+                {% endif %}
 
 
                 {% if item.submitter_email %}
@@ -596,6 +694,117 @@
                 </div>
 
 
+                <!-- =================================
+                     PAYMENT MANAGEMENT
+
+                     The PendingSubmission mirrors payment
+                     status from ContentItem.
+                ================================== -->
+
+                {% if item.pricing_model %}
+
+
+                    {% if item.payment_status == "unpaid" %}
+
+                    <div class="admin-alert">
+
+                        <strong>
+                            PAYMENT REQUIRED
+                        </strong>
+
+                        <p>
+                            This listing is approved but
+                            remains hidden until payment
+                            is confirmed.
+                        </p>
+
+
+                        {% if item.amount_due is not none %}
+
+                        <p>
+                            Amount expected:
+                            <strong>
+                                R{{ "%.2f"|format(item.amount_due) }}
+                            </strong>
+                        </p>
+
+                        {% endif %}
+
+
+                        <p>
+                            Confirm only after verifying
+                            the payment in Yoco.
+                        </p>
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.confirm_submission_payment',
+                                submission_id=item.id
+                            ) }}"
+                            onsubmit="
+                                return confirm(
+                                    'Have you verified this payment in Yoco?'
+                                );
+                            "
+                        >
+
+                            <button type="submit">
+                                ✓ Confirm Payment
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                    {% elif item.payment_status == "paid" %}
+
+                    <div class="submission-review-result approved">
+
+                        <strong>
+                            ✓ PAYMENT CONFIRMED
+                        </strong>
+
+                        {% if item.amount_due is not none %}
+
+                        <span>
+                            R{{ "%.2f"|format(item.amount_due) }}
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% elif item.payment_status == "waived" %}
+
+                    <div class="submission-review-result approved">
+
+                        <strong>
+                            PAYMENT WAIVED
+                        </strong>
+
+                    </div>
+
+
+                    {% elif item.payment_status == "refunded" %}
+
+                    <div class="submission-review-result rejected">
+
+                        <strong>
+                            PAYMENT REFUNDED
+                        </strong>
+
+                    </div>
+
+                    {% endif %}
+
+
+                {% endif %}
+
+
                 {% if item.published_content_id %}
 
                 <a
@@ -668,6 +877,7 @@
 
         <div class="empty-state">
 
+
             {% if selected_status == "pending" %}
 
             <h2>
@@ -694,6 +904,7 @@
             </h2>
 
             {% endif %}
+
 
         </div>
 
