@@ -16,7 +16,7 @@
     >
 
     <title>
-        Submission Received | LaC
+        Submission Received | Kalxa
     </title>
 
     <link
@@ -26,6 +26,117 @@
             filename='css/style.css'
         ) }}"
     >
+
+    <style>
+
+        /* =========================================
+           KALXA PAYMENT SUMMARY
+        ========================================== */
+
+        .kalxa-payment-card {
+            margin-top: 24px;
+            padding: 22px;
+            border-radius: 18px;
+            background: #15171a;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .kalxa-payment-card h2 {
+            margin-top: 0;
+            margin-bottom: 18px;
+        }
+
+        .kalxa-payment-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .kalxa-payment-row:last-of-type {
+            border-bottom: 0;
+        }
+
+        .kalxa-payment-label {
+            opacity: 0.70;
+        }
+
+        .kalxa-payment-value {
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .kalxa-payment-total {
+            margin-top: 18px;
+            padding-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .kalxa-payment-total-label {
+            font-size: 0.95rem;
+            opacity: 0.75;
+        }
+
+        .kalxa-payment-total-amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .kalxa-pay-button {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 22px;
+            padding: 16px 20px;
+            border: 0;
+            border-radius: 14px;
+            text-align: center;
+            text-decoration: none;
+            font: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            background: #ffffff;
+            color: #0b0c0e;
+        }
+
+        .kalxa-pay-button:hover {
+            opacity: 0.92;
+        }
+
+        .kalxa-payment-security {
+            margin: 14px 0 0;
+            text-align: center;
+            font-size: 0.85rem;
+            opacity: 0.65;
+        }
+
+        .kalxa-payment-status-paid {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 14px;
+            background: rgba(40, 180, 100, 0.12);
+            border: 1px solid rgba(40, 180, 100, 0.30);
+        }
+
+        .kalxa-payment-notice {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            opacity: 0.75;
+        }
+
+        .kalxa-powered-by {
+            margin-top: 4px;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            opacity: 0.55;
+        }
+
+    </style>
 
 </head>
 
@@ -43,11 +154,15 @@
         <div class="public-brand-wrap">
 
             <div class="lac-brand">
-                LaC
+                Kalxa
             </div>
 
             <div class="lac-tagline">
-                LOCAL DIGITAL INFRASTRUCTURE
+                EVERY PLACE HAS ITS OWN KALXA
+            </div>
+
+            <div class="kalxa-powered-by">
+                POWERED BY LaC
             </div>
 
         </div>
@@ -79,16 +194,22 @@
             </p>
 
             <h1>
-                Your listing is now under review.
+                Your listing has been received.
             </h1>
 
 
             <p class="submission-success-intro">
 
-                Thanks for submitting local content
-                to LaC. Your listing has been received
-                and will not appear publicly until it
-                has been reviewed and approved.
+                Your Kalxa submission has been saved
+                successfully.
+
+                {% if payment_required %}
+                    Complete payment below and your
+                    submission will remain under review
+                    until it is approved.
+                {% else %}
+                    Your listing is now under review.
+                {% endif %}
 
             </p>
 
@@ -102,7 +223,7 @@
                 <div>
 
                     <span class="submission-success-label">
-                        Current Status
+                        Review Status
                     </span>
 
                     <strong>
@@ -111,7 +232,189 @@
 
                 </div>
 
+
+                {% if is_commercial %}
+
+                    <div>
+
+                        <span class="submission-success-label">
+                            Payment Status
+                        </span>
+
+                        <strong>
+
+                            {% if submission.payment_status == "paid" %}
+                                🟢 Paid
+
+                            {% elif submission.payment_status == "waived" %}
+                                🟢 Confirmed
+
+                            {% elif submission.payment_status == "refunded" %}
+                                Refunded
+
+                            {% else %}
+                                🟠 Payment Required
+                            {% endif %}
+
+                        </strong>
+
+                    </div>
+
+                {% endif %}
+
             </div>
+
+
+            <!-- =====================================
+                 COMMERCIAL PACKAGE
+            ====================================== -->
+
+            {% if is_commercial %}
+
+                <div class="kalxa-payment-card">
+
+                    <h2>
+                        Your Kalxa Package
+                    </h2>
+
+
+                    <div class="kalxa-payment-row">
+
+                        <span class="kalxa-payment-label">
+                            Package
+                        </span>
+
+                        <span class="kalxa-payment-value">
+
+                            {% if submission.pricing_model == "presence" %}
+                                Presence
+                            {% elif submission.pricing_model == "campaign" %}
+                                Campaign
+                            {% else %}
+                                Kalxa Listing
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    {% if submission.commercial_duration_days %}
+
+                        <div class="kalxa-payment-row">
+
+                            <span class="kalxa-payment-label">
+                                Duration
+                            </span>
+
+                            <span class="kalxa-payment-value">
+                                {{ submission.commercial_duration_days }}
+                                days
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if (
+                        submission.pricing_model == "campaign"
+                        and submission.distribution_zone_ids
+                    ) %}
+
+                        <div class="kalxa-payment-row">
+
+                            <span class="kalxa-payment-label">
+                                Geographic Reach
+                            </span>
+
+                            <span class="kalxa-payment-value">
+                                {{
+                                    submission.distribution_zone_ids
+                                    | length
+                                }}
+                                zone{% if (
+                                    submission.distribution_zone_ids
+                                    | length
+                                ) != 1 %}s{% endif %}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="kalxa-payment-total">
+
+                        <span class="kalxa-payment-total-label">
+                            Total
+                        </span>
+
+                        <span class="kalxa-payment-total-amount">
+                            R{{ "%.2f"|format(amount_due or 0) }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- =================================
+                         PAYMENT REQUIRED
+                    ================================== -->
+
+                    {% if payment_required %}
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'create_yoco_checkout',
+                                code=submission.tracking_code
+                            ) }}"
+                        >
+
+                            <button
+                                type="submit"
+                                class="kalxa-pay-button"
+                            >
+                                Pay R{{ "%.2f"|format(amount_due) }}
+                                with Yoco →
+                            </button>
+
+                        </form>
+
+
+                        <p class="kalxa-payment-security">
+                            Secure payment powered by Yoco
+                        </p>
+
+
+                        <p class="kalxa-payment-notice">
+                            Payment does not automatically
+                            approve your listing. Kalxa will
+                            review the submitted content before
+                            it becomes publicly visible.
+                        </p>
+
+                    {% elif submission.payment_status == "paid" %}
+
+                        <div class="kalxa-payment-status-paid">
+
+                            <strong>
+                                ✓ Payment received
+                            </strong>
+
+                            <p>
+                                Your payment has been confirmed.
+                                Your submission will become
+                                publicly visible once approved.
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
 
 
             <!-- =====================================
@@ -130,9 +433,8 @@
 
                 <p>
                     Keep this reference safe.
-                    You can use it to check whether
-                    your submission has been approved
-                    or rejected.
+                    You can use it to check your
+                    submission and payment status.
                 </p>
 
             </div>
@@ -149,78 +451,150 @@
                 </h2>
 
 
-                <div class="submission-step">
+                {% if payment_required %}
 
-                    <span class="submission-step-number">
-                        1
-                    </span>
+                    <div class="submission-step">
 
-                    <div>
+                        <span class="submission-step-number">
+                            1
+                        </span>
 
-                        <strong>
-                            LaC reviews your submission
-                        </strong>
+                        <div>
 
-                        <p>
-                            We check the listing details,
-                            category, dates and content.
-                        </p>
+                            <strong>
+                                Complete payment
+                            </strong>
 
-                    </div>
+                            <p>
+                                Pay the package amount securely
+                                through Yoco.
+                            </p>
 
-                </div>
-
-
-                <div class="submission-step">
-
-                    <span class="submission-step-number">
-                        2
-                    </span>
-
-                    <div>
-
-                        <strong>
-                            Your status is updated
-                        </strong>
-
-                        <p>
-                            Your submission will change
-                            from Pending Review to Approved
-                            or Not Approved.
-                        </p>
+                        </div>
 
                     </div>
 
-                </div>
 
+                    <div class="submission-step">
 
-                <div class="submission-step">
+                        <span class="submission-step-number">
+                            2
+                        </span>
 
-                    <span class="submission-step-number">
-                        3
-                    </span>
+                        <div>
 
-                    <div>
+                            <strong>
+                                Kalxa reviews your listing
+                            </strong>
 
-                        <strong>
-                            Approved listings go live
-                        </strong>
+                            <p>
+                                We check the listing details,
+                                category, dates and content.
+                            </p>
 
-                        <p>
-                            Once approved, your listing
-                            will appear in the category
-                            and zone you selected.
-                        </p>
+                        </div>
 
                     </div>
 
-                </div>
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            3
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Approved listing goes live
+                            </strong>
+
+                            <p>
+                                Once payment is confirmed and
+                                the submission is approved,
+                                your listing can become visible
+                                on Kalxa.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            1
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Kalxa reviews your submission
+                            </strong>
+
+                            <p>
+                                We check the listing details,
+                                category, dates and content.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            2
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Your status is updated
+                            </strong>
+
+                            <p>
+                                Your submission will change
+                                from Pending Review to Approved
+                                or Not Approved.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            3
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Approved listings go live
+                            </strong>
+
+                            <p>
+                                Eligible approved listings
+                                become visible on Kalxa.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
 
             </div>
 
 
             <!-- =====================================
-                 ACTION
+                 STATUS ACTION
             ====================================== -->
 
             <a
@@ -254,11 +628,11 @@
     <footer class="public-footer">
 
         <div class="footer-brand">
-            LaC
+            Kalxa
         </div>
 
         <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
+            POWERED BY LaC
         </div>
 
     </footer>
