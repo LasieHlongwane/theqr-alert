@@ -1,167 +1,811 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0b0c0e">
 
-    <title>Listing Dashboard | LaC</title>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
+    <title>
+        Listing Dashboard | Kalxa
+    </title>
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
     >
+
+    <style>
+
+        /* =========================================
+           KALXA LIGHT THEME
+        ========================================== */
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        body.lac-public-body {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .lac-page {
+            min-height: 100vh;
+
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================== */
+
+        .access-header {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .public-brand-wrap {
+            color: #111111 !important;
+        }
+
+        .lac-brand {
+            color: #111111 !important;
+        }
+
+        .lac-tagline {
+            color: #333333 !important;
+        }
+
+        .kalxa-powered-by {
+            margin-top: 4px;
+
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+
+            color: #666666 !important;
+        }
+
+
+        /* =========================================
+           MAIN DASHBOARD
+        ========================================== */
+
+        .organiser-dashboard-container {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .organiser-dashboard-container h1,
+        .organiser-dashboard-container h2,
+        .organiser-dashboard-container h3,
+        .organiser-dashboard-container strong {
+            color: #111111 !important;
+        }
+
+        .organiser-dashboard-container p {
+            color: #444444 !important;
+        }
+
+        .access-eyebrow {
+            color: #555555 !important;
+        }
+
+
+        /* =========================================
+           HERO
+        ========================================== */
+
+        .organiser-dashboard-hero {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .organiser-dashboard-hero h1 {
+            color: #111111 !important;
+        }
+
+        .organiser-business-name {
+            color: #555555 !important;
+        }
+
+
+        /* =========================================
+           REFERENCE
+        ========================================== */
+
+        .organiser-reference {
+            background: #fffaf0 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e8dfc8 !important;
+            border-radius: 14px;
+        }
+
+        .organiser-reference span {
+            color: #666666 !important;
+        }
+
+        .organiser-reference strong {
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           DASHBOARD PANELS
+        ========================================== */
+
+        .organiser-dashboard-panel {
+            background: #ffffff !important;
+            color: #111111 !important;
+
+            border: 1px solid #e5e5e5 !important;
+            border-radius: 18px;
+        }
+
+        .dashboard-panel-label {
+            color: #666666 !important;
+        }
+
+
+        /* =========================================
+           STATUS ROW
+        ========================================== */
+
+        .dashboard-status-row {
+            color: #111111 !important;
+        }
+
+        .dashboard-status-row strong {
+            color: #111111 !important;
+        }
+
+        .dashboard-status-row p {
+            color: #555555 !important;
+        }
+
+
+        /* =========================================
+           PENDING
+        ========================================== */
+
+        .dashboard-status-row.pending {
+            background: #fffaf0 !important;
+
+            border: 1px solid #e8dfc8 !important;
+            border-radius: 14px;
+        }
+
+
+        /* =========================================
+           APPROVED
+        ========================================== */
+
+        .dashboard-status-row.approved {
+            background: #f4fbf6 !important;
+
+            border: 1px solid #c7e1ce !important;
+            border-radius: 14px;
+        }
+
+
+        /* =========================================
+           REJECTED
+        ========================================== */
+
+        .dashboard-status-row.rejected {
+            background: #fff7f7 !important;
+
+            border: 1px solid #ead0d0 !important;
+            border-radius: 14px;
+        }
+
+
+        /* =========================================
+           REVIEW NOTE
+        ========================================== */
+
+        .dashboard-review-note {
+            background: #fffaf0 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e8dfc8 !important;
+            border-radius: 14px;
+        }
+
+        .dashboard-review-note span {
+            color: #666666 !important;
+        }
+
+        .dashboard-review-note p {
+            color: #444444 !important;
+        }
+
+
+        /* =========================================
+           LISTING INFORMATION
+        ========================================== */
+
+        .organiser-info-grid {
+            color: #111111 !important;
+        }
+
+        .organiser-info-grid > div {
+            background: #fffaf0 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e8dfc8 !important;
+            border-radius: 14px;
+        }
+
+        .organiser-info-grid span {
+            color: #666666 !important;
+        }
+
+        .organiser-info-grid strong {
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           PERFORMANCE
+        ========================================== */
+
+        .organiser-performance-heading {
+            color: #111111 !important;
+        }
+
+        .organiser-performance-heading h2 {
+            color: #111111 !important;
+        }
+
+        .organiser-performance-heading p {
+            color: #555555 !important;
+        }
+
+
+        /* =========================================
+           METRICS
+        ========================================== */
+
+        .organiser-metric-grid {
+            color: #111111 !important;
+        }
+
+        .organiser-metric {
+            background: #fffaf0 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e8dfc8 !important;
+            border-radius: 16px;
+        }
+
+        .organiser-main-metric {
+            background: #fff8e7 !important;
+        }
+
+        .organiser-metric span {
+            color: #555555 !important;
+        }
+
+        .organiser-metric strong {
+            color: #111111 !important;
+        }
+
+        .organiser-metric small {
+            color: #666666 !important;
+        }
+
+        .organiser-status-value {
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           EXPIRY
+        ========================================== */
+
+        .organiser-expiry {
+            background: #ffffff !important;
+            color: #111111 !important;
+
+            border: 1px solid #e5e5e5 !important;
+            border-radius: 14px;
+        }
+
+        .organiser-expiry span {
+            color: #666666 !important;
+        }
+
+        .organiser-expiry strong {
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           LIVE LISTING BUTTON
+        ========================================== */
+
+        .organiser-live-listing-button {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            box-sizing: border-box;
+
+            width: 100%;
+
+            padding: 15px 20px;
+
+            background: #fff8e7 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e2d8bd !important;
+            border-radius: 14px;
+
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .organiser-live-listing-button:hover {
+            background: #f7efd9 !important;
+            color: #111111 !important;
+
+            border-color: #d7caa8 !important;
+
+            transform: translateY(-1px);
+        }
+
+        .organiser-live-listing-button:active {
+            transform: scale(0.99);
+        }
+
+
+        /* =========================================
+           SECONDARY LINK
+        ========================================== */
+
+        .organiser-secondary-link {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            box-sizing: border-box;
+
+            width: 100%;
+
+            margin-top: 14px;
+            padding: 15px 20px;
+
+            background: #fff8e7 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e2d8bd !important;
+            border-radius: 14px;
+
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .organiser-secondary-link:hover {
+            background: #f7efd9 !important;
+            color: #111111 !important;
+
+            border-color: #d7caa8 !important;
+
+            transform: translateY(-1px);
+        }
+
+        .organiser-secondary-link:active {
+            transform: scale(0.99);
+        }
+
+
+        /* =========================================
+           FOOTER
+        ========================================== */
+
+        .public-footer {
+            background: #ffffff !important;
+            color: #111111 !important;
+
+            border-top: 1px solid #eeeeee;
+        }
+
+        .footer-brand {
+            color: #111111 !important;
+        }
+
+        .footer-tagline {
+            color: #666666 !important;
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================== */
+
+        @media (max-width: 640px) {
+
+            .organiser-dashboard-panel {
+                border-radius: 14px;
+            }
+
+            .organiser-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .organiser-metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
 </head>
 
+
 <body class="lac-public-body">
+
 <div class="lac-page">
 
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
     <header class="access-header">
+
         <div class="public-brand-wrap">
-            <div class="lac-brand">LaC</div>
-            <div class="lac-tagline">LOCAL DIGITAL INFRASTRUCTURE.</div>
+
+            <div class="lac-brand">
+                Kalxa
+            </div>
+
+            <div class="lac-tagline">
+                EVERY PLACE HAS ITS OWN KALXA.
+            </div>
+
+            <div class="kalxa-powered-by">
+                POWERED BY LaC
+            </div>
+
         </div>
+
     </header>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
 
     <main class="organiser-dashboard-container">
 
-        <section class="organiser-dashboard-hero">
-            <p class="access-eyebrow">LISTING DASHBOARD</p>
 
-            <h1>{{ submission.title }}</h1>
+        <!-- =====================================
+             HERO
+        ====================================== -->
+
+        <section class="organiser-dashboard-hero">
+
+            <p class="access-eyebrow">
+                LISTING DASHBOARD
+            </p>
+
+            <h1>
+                {{ submission.title }}
+            </h1>
+
 
             {% if submission.business_name %}
+
                 <p class="organiser-business-name">
                     {{ submission.business_name }}
                 </p>
+
             {% endif %}
 
+
             <div class="organiser-reference">
-                <span>Reference</span>
-                <strong>{{ submission.tracking_code }}</strong>
+
+                <span>
+                    Reference
+                </span>
+
+                <strong>
+                    {{ submission.tracking_code }}
+                </strong>
+
             </div>
+
         </section>
 
+
+        <!-- =====================================
+             SUBMISSION STATUS
+        ====================================== -->
+
         <section class="organiser-dashboard-panel">
+
             <span class="dashboard-panel-label">
                 SUBMISSION STATUS
             </span>
 
+
             {% if submission.status == "pending" %}
+
                 <div class="dashboard-status-row pending">
-                    <span>🟡</span>
+
+                    <span>
+                        🟡
+                    </span>
 
                     <div>
-                        <strong>Pending Review</strong>
-                        <p>Your listing is waiting for LaC review.</p>
+
+                        <strong>
+                            Pending Review
+                        </strong>
+
+                        <p>
+                            Your listing is waiting for
+                            Kalxa review.
+                        </p>
+
                     </div>
+
                 </div>
+
 
             {% elif submission.status == "approved" %}
+
                 <div class="dashboard-status-row approved">
-                    <span>✓</span>
+
+                    <span>
+                        ✓
+                    </span>
 
                     <div>
-                        <strong>Approved &amp; Published</strong>
-                        <p>Your listing is available on the LaC network.</p>
+
+                        <strong>
+                            Approved &amp; Published
+                        </strong>
+
+                        <p>
+                            Your listing is available
+                            on Kalxa.
+                        </p>
+
                     </div>
+
                 </div>
+
 
             {% elif submission.status == "rejected" %}
+
                 <div class="dashboard-status-row rejected">
-                    <span>×</span>
+
+                    <span>
+                        ×
+                    </span>
 
                     <div>
-                        <strong>Not Approved</strong>
+
+                        <strong>
+                            Not Approved
+                        </strong>
+
                         <p>
-                            This submission was not approved for publication.
+                            This submission was not approved
+                            for publication.
                         </p>
+
                     </div>
+
                 </div>
+
             {% endif %}
 
-            {% if submission.status == "rejected" and submission.admin_notes %}
+
+            {% if (
+                submission.status == "rejected"
+                and submission.admin_notes
+            ) %}
+
                 <div class="dashboard-review-note">
-                    <span>REVIEW NOTE</span>
 
-                    <p>{{ submission.admin_notes }}</p>
+                    <span>
+                        REVIEW NOTE
+                    </span>
+
+                    <p>
+                        {{ submission.admin_notes }}
+                    </p>
+
                 </div>
+
             {% endif %}
+
         </section>
 
+
+        <!-- =====================================
+             LISTING INFORMATION
+        ====================================== -->
+
         <section class="organiser-dashboard-panel">
+
             <span class="dashboard-panel-label">
                 LISTING INFORMATION
             </span>
 
+
             <div class="organiser-info-grid">
 
+
                 <div>
-                    <span>Zone</span>
+
+                    <span>
+                        Zone
+                    </span>
 
                     <strong>
                         📍 {{ submission.zone.name }}
                     </strong>
+
                 </div>
 
+
                 <div>
-                    <span>Category</span>
+
+                    <span>
+                        Category
+                    </span>
 
                     <strong>
-                        {% if category_record and category_record.icon %}
+
+                        {% if (
+                            category_record
+                            and category_record.icon
+                        ) %}
+
                             {{ category_record.icon }}
+
                         {% endif %}
+
 
                         {{
                             category_record.name
                             if category_record
                             else submission.category
                         }}
+
                     </strong>
+
                 </div>
+
 
                 <div>
-                    <span>Submitted</span>
+
+                    <span>
+                        Submitted
+                    </span>
 
                     <strong>
-                        {{ submission.created_at.strftime("%d %b %Y") }}
+                        {{
+                            submission.created_at
+                            .strftime("%d %b %Y")
+                        }}
                     </strong>
+
                 </div>
 
+
                 {% if submission.reviewed_at %}
+
                     <div>
-                        <span>Reviewed</span>
+
+                        <span>
+                            Reviewed
+                        </span>
 
                         <strong>
-                            {{ submission.reviewed_at.strftime("%d %b %Y") }}
+                            {{
+                                submission.reviewed_at
+                                .strftime("%d %b %Y")
+                            }}
                         </strong>
+
                     </div>
+
                 {% endif %}
 
+
             </div>
+
         </section>
 
-        {% if submission.status == "approved" and published_content %}
+
+        <!-- =====================================
+             LISTING PERFORMANCE
+        ====================================== -->
+
+        {% if (
+            submission.status == "approved"
+            and published_content
+        ) %}
+
             <section class="organiser-dashboard-panel">
+
                 <span class="dashboard-panel-label">
                     LISTING PERFORMANCE
                 </span>
 
+
                 <div class="organiser-performance-heading">
+
                     <div>
-                        <h2>How people are viewing your listing</h2>
+
+                        <h2>
+                            How people are viewing your listing
+                        </h2>
 
                         <p>
-                            These numbers show engagement with your
-                            published LaC listing.
+                            These numbers show engagement with
+                            your published Kalxa listing.
                         </p>
+
                     </div>
+
                 </div>
+
 
                 <div class="organiser-metric-grid">
 
-                    <div class="organiser-metric organiser-main-metric">
-                        <span>👁 Full Listing Views</span>
+
+                    <div
+                        class="
+                            organiser-metric
+                            organiser-main-metric
+                        "
+                    >
+
+                        <span>
+                            👁 Full Listing Views
+                        </span>
 
                         <strong>
                             {{ published_content.view_count or 0 }}
@@ -170,55 +814,103 @@
                         <small>
                             People who opened your full listing.
                         </small>
+
                     </div>
 
+
                     <div class="organiser-metric">
-                        <span>📡 Listing Status</span>
+
+                        <span>
+                            📡 Listing Status
+                        </span>
 
                         <strong class="organiser-status-value">
+
                             {% if published_content.archived %}
+
                                 Archived
+
                             {% elif listing_expired %}
+
                                 Expired
+
                             {% elif published_content.active %}
+
                                 Live
+
                             {% else %}
+
                                 Inactive
-                            {% endif %} 
+
+                            {% endif %}
+
                         </strong>
 
                         <small>
                             Current publication state.
                         </small>
+
                     </div>
+
 
                 </div>
 
+
+                <!-- =================================
+                     EXPIRY
+                ================================== -->
+
                 {% if expiry_date %}
+
                     <div class="organiser-expiry">
+
                         <div>
-                            <span>LISTING EXPIRY</span>
+
+                            <span>
+                                LISTING EXPIRY
+                            </span>
 
                             <strong>
-                                {{ expiry_date.strftime("%d %b %Y") }}
+                                {{
+                                    expiry_date
+                                    .strftime("%d %b %Y")
+                                }}
                             </strong>
+
                         </div>
 
+
                         <div>
+
                             {% if days_remaining is not none %}
+
                                 {% if days_remaining > 1 %}
-                                    {{ days_remaining }} days remaining
+
+                                    {{ days_remaining }}
+                                    days remaining
+
                                 {% elif days_remaining == 1 %}
+
                                     1 day remaining
+
                                 {% elif days_remaining == 0 %}
+
                                     Expires today
+
                                 {% else %}
+
                                     Expired
+
                                 {% endif %}
+
                             {% endif %}
+
                         </div>
+
                     </div>
+
                 {% endif %}
+
 
                 <a
                     href="{{ url_for(
@@ -229,10 +921,18 @@
                 >
                     View My Live Listing →
                 </a>
+
             </section>
+
         {% endif %}
 
+
+        <!-- =====================================
+             LIVE LISTING
+        ====================================== -->
+
         {% if live_access_point and published_content %}
+
             <a
                 href="{{ url_for(
                     'listing_detail',
@@ -242,7 +942,13 @@
             >
                 View Live Listing →
             </a>
+
         {% endif %}
+
+
+        <!-- =====================================
+             SUBMISSION STATUS LINK
+        ====================================== -->
 
         <a
             href="{{ url_for(
@@ -254,15 +960,29 @@
             View Submission Status
         </a>
 
+
     </main>
 
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
     <footer class="public-footer">
-        <div class="footer-brand">LaC</div>
-        <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
+
+        <div class="footer-brand">
+            Kalxa
         </div>
+
+        <div class="footer-tagline">
+            POWERED BY LaC
+        </div>
+
     </footer>
 
+
 </div>
+
 </body>
+
 </html>
