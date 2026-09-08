@@ -2816,27 +2816,28 @@ def get_legacy_lifetime_type(
 # =========================================================
 # PUBLIC CONTENT SUBMISSION
 # =========================================================
-
 @app.route(
     "/submit",
     methods=["GET", "POST"],
 )
 def submit_content():
 
+    # =====================================================
+    # LOAD FORM OPTIONS
+    # =====================================================
+
     zones = (
         Zone.query
-        .filter_by(
-            active=True
-        )
-        .order_by(
-            Zone.name
-        )
+        .filter_by(active=True)
+        .order_by(Zone.name)
         .all()
     )
 
-    categories = (
-        get_active_categories()
-    )
+    categories = get_active_categories()
+
+    # =====================================================
+    # POST
+    # =====================================================
 
     if request.method == "POST":
 
@@ -2933,8 +2934,26 @@ def submit_content():
             .strip()
         )
 
+        submitter_email = (
+            request.form.get(
+                "submitter_email",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        submitter_phone = (
+            request.form.get(
+                "submitter_phone",
+                "",
+            )
+            .strip()
+            or None
+        )
+
         # =================================================
-        # REQUIRED FIELD VALIDATION
+        # REQUIRED FIELDS
         # =================================================
 
         if (
@@ -2956,7 +2975,7 @@ def submit_content():
             )
 
         # =================================================
-        # VALIDATE ZONE
+        # VALIDATE HOME ZONE
         # =================================================
 
         zone = db.session.get(
@@ -2981,7 +3000,7 @@ def submit_content():
             )
 
         # =================================================
-        # VALIDATE CATEGORY
+        # VALIDATE REAL PUBLIC CATEGORY
         # =================================================
 
         category_record = (
@@ -3004,22 +3023,19 @@ def submit_content():
             )
 
         # =================================================
-        # NORMALIZE CATEGORY FOR WORKFLOW / PRICING
+        # NORMALIZE CATEGORY FOR INTERNAL WORKFLOW/PRICING
         #
         # IMPORTANT:
-        # We keep category_slug unchanged for storage.
+        #
+        # category_slug remains the REAL public category.
         #
         # Example:
         #
-        # stored:
+        # Database/public route:
         # upcoming-event-🥹🔥
         #
-        # workflow/pricing:
+        # Internal workflow:
         # events
-        #
-        # This allows the listing to appear in the correct
-        # real public Kalxa category while still using the
-        # Events commercial rules.
         # =================================================
 
         category_aliases = {
@@ -3053,7 +3069,7 @@ def submit_content():
         )
 
         # =================================================
-        # DETERMINE CONTENT WORKFLOW
+        # DETERMINE WORKFLOW
         # =================================================
 
         workflow = (
@@ -3093,17 +3109,12 @@ def submit_content():
                 categories=categories,
             )
 
-        # Every new listing begins as available.
+        # Every new listing starts available.
 
-        availability_status = (
-            "available"
-        )
+        availability_status = "available"
 
         # =================================================
-        # COMMERCIAL PRICING MODEL
-        #
-        # NEVER trust pricing_model sent by JavaScript.
-        # Determine it again on the server.
+        # DETERMINE COMMERCIAL PRICING MODEL
         # =================================================
 
         pricing_model = (
@@ -3113,15 +3124,13 @@ def submit_content():
             )
         )
 
-        # =================================================
-        # VALIDATE COMMERCIAL PACKAGE
-        # =================================================
-
         commercial_duration_days = None
-
         amount_due = None
-
         distribution_zone_ids = []
+
+        # =================================================
+        # COMMERCIAL PACKAGE
+        # =================================================
 
         if pricing_model:
 
@@ -3198,8 +3207,7 @@ def submit_content():
                         )
 
                 # -----------------------------------------
-                # Campaign must include its home zone.
-                # Do not rely on JavaScript.
+                # HOME ZONE MUST BE INCLUDED
                 # -----------------------------------------
 
                 if (
@@ -3220,7 +3228,7 @@ def submit_content():
                     )
 
                 # -----------------------------------------
-                # Minimum one zone.
+                # AT LEAST ONE ZONE
                 # -----------------------------------------
 
                 if not distribution_zone_ids:
@@ -3238,15 +3246,10 @@ def submit_content():
                     )
 
                 # -----------------------------------------
-                # MVP maximum = 3 zones.
+                # MAXIMUM 3 ZONES
                 # -----------------------------------------
 
-                if (
-                    len(
-                        distribution_zone_ids
-                    )
-                    > 3
-                ):
+                if len(distribution_zone_ids) > 3:
 
                     flash(
                         "Kalxa Campaign currently supports "
@@ -3261,7 +3264,7 @@ def submit_content():
                     )
 
                 # -----------------------------------------
-                # Validate every selected zone against DB.
+                # VALIDATE SELECTED ZONES
                 # -----------------------------------------
 
                 valid_distribution_zones = (
@@ -3316,17 +3319,14 @@ def submit_content():
                 == PRICING_MODEL_PRESENCE
             ):
 
-                # Presence stays in its home zone.
-                #
-                # We intentionally do NOT store
-                # distribution zones for Presence.
+                # Presence stays in home/origin zone.
 
                 distribution_zone_ids = []
 
                 zone_count = 1
 
             # =============================================
-            # UNKNOWN PRICING MODEL
+            # INVALID PRICING MODEL
             # =============================================
 
             else:
@@ -3346,9 +3346,8 @@ def submit_content():
             # =============================================
             # SERVER-SIDE PRICE CALCULATION
             #
-            # IMPORTANT:
-            # displayed_amount_due from the browser is NOT
-            # trusted.
+            # Never trust displayed_amount_due sent
+            # by JavaScript/browser.
             # =============================================
 
             try:
@@ -3380,12 +3379,10 @@ def submit_content():
                 )
 
         # =================================================
-        # DATE HELPER
+        # DATE PARSER
         # =================================================
 
-        def parse_form_date(
-            field_name,
-        ):
+        def parse_form_date(field_name):
 
             value = (
                 request.form.get(
@@ -3396,7 +3393,6 @@ def submit_content():
             )
 
             if not value:
-
                 return None
 
             return datetime.strptime(
@@ -3454,7 +3450,7 @@ def submit_content():
             )
 
         # =================================================
-        # LIFETIME-SPECIFIC DATE VALIDATION
+        # TIME-SPECIFIC CONTENT
         # =================================================
 
         if (
@@ -3464,9 +3460,6 @@ def submit_content():
 
             # =============================================
             # EVENTS
-            #
-            # Use normalized workflow category so your
-            # actual public event slug also works.
             # =============================================
 
             if (
@@ -3491,8 +3484,7 @@ def submit_content():
                 if (
                     publish_from
                     and
-                    publish_from
-                    > event_date
+                    publish_from > event_date
                 ):
 
                     flash(
@@ -3510,8 +3502,7 @@ def submit_content():
                 if (
                     event_end_date
                     and
-                    event_end_date
-                    < event_date
+                    event_end_date < event_date
                 ):
 
                     flash(
@@ -3526,14 +3517,11 @@ def submit_content():
                         categories=categories,
                     )
 
-                # Events use event-specific dates.
-
                 start_date = None
-
                 end_date = None
 
             # =============================================
-            # NON-EVENT TIME-SPECIFIC CONTENT
+            # OTHER TIME-SPECIFIC CONTENT
             # =============================================
 
             else:
@@ -3573,9 +3561,7 @@ def submit_content():
                     )
 
                 publish_from = None
-
                 event_date = None
-
                 event_end_date = None
 
         # =================================================
@@ -3588,13 +3574,9 @@ def submit_content():
         ):
 
             publish_from = None
-
             event_date = None
-
             event_end_date = None
-
             start_date = None
-
             end_date = None
 
         # =================================================
@@ -3607,13 +3589,9 @@ def submit_content():
         ):
 
             publish_from = None
-
             event_date = None
-
             event_end_date = None
-
             start_date = None
-
             end_date = None
 
         # =================================================
@@ -3626,9 +3604,7 @@ def submit_content():
         ):
 
             publish_from = None
-
             event_date = None
-
             event_end_date = None
 
             if (
@@ -3652,7 +3628,7 @@ def submit_content():
                 )
 
         # =================================================
-        # IMAGES
+        # IMAGE UPLOADS
         # =================================================
 
         uploaded_images = (
@@ -3672,12 +3648,7 @@ def submit_content():
             )
         ]
 
-        if (
-            len(
-                uploaded_images
-            )
-            > 3
-        ):
+        if len(uploaded_images) > 3:
 
             flash(
                 "You can upload a maximum "
@@ -3694,9 +3665,7 @@ def submit_content():
         # =================================================
         # CREATE PENDING SUBMISSION
         #
-        # IMPORTANT:
-        #
-        # Public users NEVER control:
+        # Public users cannot choose:
         #
         # paid
         # waived
@@ -3704,24 +3673,28 @@ def submit_content():
         # active
         # featured
         #
-        # Every commercial public submission starts unpaid.
+        # Commercial submissions ALWAYS begin unpaid.
         # =================================================
 
         submission = PendingSubmission(
 
+            # ---------------------------------------------
+            # LOCATION
+            # ---------------------------------------------
+
             zone_id=
                 zone.id,
 
-            # IMPORTANT:
-            # Store the REAL public category slug.
-            #
-            # Example:
-            # upcoming-event-🥹🔥
-            #
-            # Do not store "events" here.
+            # ---------------------------------------------
+            # REAL PUBLIC CATEGORY
+            # ---------------------------------------------
 
             category=
                 category_slug,
+
+            # ---------------------------------------------
+            # WORKFLOW
+            # ---------------------------------------------
 
             content_type=
                 content_type,
@@ -3734,6 +3707,10 @@ def submit_content():
 
             notification_eligible=
                 notification_eligible,
+
+            # ---------------------------------------------
+            # LISTING DATA
+            # ---------------------------------------------
 
             title=
                 title,
@@ -3753,8 +3730,22 @@ def submit_content():
             contact=
                 contact,
 
+            # ---------------------------------------------
+            # SUBMITTER
+            # ---------------------------------------------
+
             submitter_name=
                 submitter_name,
+
+            submitter_email=
+                submitter_email,
+
+            submitter_phone=
+                submitter_phone,
+
+            # ---------------------------------------------
+            # NATURAL CONTENT DATES
+            # ---------------------------------------------
 
             publish_from=
                 publish_from,
@@ -3771,9 +3762,9 @@ def submit_content():
             end_date=
                 end_date,
 
-            # =============================================
-            # COMMERCIAL REQUEST
-            # =============================================
+            # ---------------------------------------------
+            # COMMERCIAL PACKAGE
+            # ---------------------------------------------
 
             pricing_model=
                 pricing_model,
@@ -3784,24 +3775,34 @@ def submit_content():
             amount_due=
                 amount_due,
 
-            # Public submission can never self-activate.
-            payment_status=
-                (
-                    "unpaid"
-                    if pricing_model
-                    else "waived"
-                ),
-
-            # Campaign only.
+            # CRITICAL:
             #
-            # Presence stores [].
+            # payment_status is NOT NULL in PostgreSQL.
+            #
+            # Commercial:
+            #     unpaid
+            #
+            # Non-commercial/community:
+            #     waived
+
+            payment_status=(
+                "unpaid"
+                if pricing_model
+                else "waived"
+            ),
+
+            # Campaign:
+            # [1], [1,2], [1,2,3]
+            #
+            # Presence:
+            # []
 
             distribution_zone_ids=
                 distribution_zone_ids,
 
-            # =============================================
+            # ---------------------------------------------
             # MODERATION
-            # =============================================
+            # ---------------------------------------------
 
             status=
                 "pending",
@@ -3820,7 +3821,7 @@ def submit_content():
             )
 
         # =================================================
-        # SAVE SUBMISSION + CLOUDINARY IMAGES
+        # SAVE SUBMISSION + IMAGES
         # =================================================
 
         try:
@@ -3828,6 +3829,8 @@ def submit_content():
             db.session.add(
                 submission
             )
+
+            # Generate submission.id before images.
 
             db.session.flush()
 
@@ -3850,7 +3853,6 @@ def submit_content():
                 )
 
                 if not image_url:
-
                     continue
 
                 if not first_image_url:
@@ -3905,7 +3907,8 @@ def submit_content():
             db.session.rollback()
 
             current_app.logger.exception(
-                "Submission error: %s",
+                "[Kalxa Submission] "
+                "Unable to create submission: %s",
                 error,
             )
 
@@ -3934,7 +3937,7 @@ def submit_content():
         )
 
     # =====================================================
-    # GET REQUEST
+    # GET
     # =====================================================
 
     return render_template(
@@ -3943,7 +3946,9 @@ def submit_content():
         categories=categories,
     )
 
+    
 
+         
            
 
 # =========================================================
