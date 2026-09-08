@@ -3121,7 +3121,7 @@ def submit_content():
         # =================================================
 
         pricing_model = (
-            _get_pricing_model(
+            get_pricing_model(
                 workflow_category,
                 content_type,
             )
