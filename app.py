@@ -1397,7 +1397,6 @@ def get_active_category_by_slug(
         .first()
     )
 
-
 def get_active_content(
     zone_id,
     category_slug,
@@ -1463,9 +1462,8 @@ def get_active_content(
     #
     # 2. It is a Campaign distributed into that zone.
     #
-    # .any() uses EXISTS-style logic, so one campaign
-    # remains one ContentItem even when distributed to
-    # several zones.
+    # One Campaign remains one ContentItem even when
+    # distributed into several zones.
     # =====================================================
 
     zone_visibility = db.or_(
@@ -1502,15 +1500,15 @@ def get_active_content(
     # =====================================================
     # COMMERCIAL VISIBILITY
     #
-    # NON-COMMERCIAL:
+    # LEGACY / COMMUNITY CONTENT
     #
     # pricing_model = NULL
     #
-    # Existing/community/legacy Kalxa content continues
-    # using the normal content lifecycle.
+    # These listings continue using their normal natural
+    # content lifecycle.
     #
     #
-    # COMMERCIAL:
+    # COMMERCIAL CONTENT
     #
     # Must be:
     #
@@ -1518,7 +1516,15 @@ def get_active_content(
     #
     # AND
     #
-    # inside its purchased commercial period.
+    # inside the purchased commercial visibility period.
+    #
+    # IMPORTANT:
+    #
+    # Once commercial_expires_at is earlier than "now",
+    # the listing automatically disappears from Kalxa.
+    #
+    # No scheduled cleanup job is required for public
+    # visibility.
     # =====================================================
 
     commercial_visibility = db.or_(
@@ -1577,6 +1583,13 @@ def get_active_content(
 
     # =====================================================
     # BASE QUERY
+    #
+    # Every public listing must:
+    #
+    # - be active
+    # - match the requested category
+    # - be visible in the requested zone
+    # - satisfy commercial visibility rules
     # =====================================================
 
     query = (
@@ -1601,36 +1614,112 @@ def get_active_content(
     # =====================================================
     # EVENTS
     #
-    # Upcoming events must appear BEFORE the event date.
+    # Events are slightly different from normal content.
     #
-    # Therefore we intentionally do NOT require:
+    # Upcoming events SHOULD be visible before the event
+    # happens.
     #
-    #     start_date <= today
+    # Therefore:
     #
-    # An event remains discoverable until its end_date
-    # passes.
+    # We DO NOT require start_date <= today.
+    #
+    #
+    # EXPIRY RULE:
+    #
+    # 1. If end_date exists:
+    #       end_date must be today or later.
+    #
+    # 2. If end_date does NOT exist but event_date exists:
+    #       event_date must be today or later.
+    #
+    # 3. If neither exists:
+    #       keep the listing visible because there is no
+    #       natural event expiry information available.
+    #
+    # Commercial expiry is still independently enforced
+    # by commercial_visibility above.
     # =====================================================
 
     if category_slug == "events":
 
+        event_natural_visibility = db.or_(
+
+            # ---------------------------------------------
+            # MULTI-DAY / EXPLICIT END DATE EVENT
+            # ---------------------------------------------
+
+            db.and_(
+
+                ContentItem.end_date.is_not(
+                    None
+                ),
+
+                ContentItem.end_date
+                >= today,
+
+            ),
+
+
+            # ---------------------------------------------
+            # ONE-DAY EVENT
+            #
+            # No end_date means event_date becomes the
+            # natural expiry boundary.
+            # ---------------------------------------------
+
+            db.and_(
+
+                ContentItem.end_date.is_(
+                    None
+                ),
+
+                ContentItem.event_date.is_not(
+                    None
+                ),
+
+                ContentItem.event_date
+                >= today,
+
+            ),
+
+
+            # ---------------------------------------------
+            # LEGACY EVENT WITHOUT DATES
+            #
+            # Preserve existing legacy/community content
+            # that has no natural date information.
+            # ---------------------------------------------
+
+            db.and_(
+
+                ContentItem.end_date.is_(
+                    None
+                ),
+
+                ContentItem.event_date.is_(
+                    None
+                ),
+
+            ),
+
+        )
+
+
         query = (
             query
             .filter(
-
-                db.or_(
-
-                    ContentItem.end_date.is_(
-                        None
-                    ),
-
-                    ContentItem.end_date
-                    >= today,
-
-                )
-
+                event_natural_visibility
             )
         )
 
+
+        # =================================================
+        # EVENT ORDERING
+        #
+        # 1. Featured promotions
+        # 2. Closest upcoming event
+        # 3. Newest content
+        # =================================================
 
         return (
             query
@@ -1653,44 +1742,67 @@ def get_active_content(
     # =====================================================
     # NON-EVENT CONTENT
     #
-    # Normal content lifecycle remains:
+    # Natural content lifecycle:
     #
-    # start_date = NULL or already started
-    # end_date   = NULL or not expired
+    # start_date = NULL
+    # OR
+    # start_date <= today
+    #
+    # AND
+    #
+    # end_date = NULL
+    # OR
+    # end_date >= today
+    #
+    #
+    # Therefore once end_date passes, the content
+    # automatically disappears from public Kalxa pages.
+    #
+    # Commercial content must ALSO pass the commercial
+    # expiry rules above.
     # =====================================================
+
+    natural_content_visibility = db.and_(
+
+        db.or_(
+
+            ContentItem.start_date.is_(
+                None
+            ),
+
+            ContentItem.start_date
+            <= today,
+
+        ),
+
+        db.or_(
+
+            ContentItem.end_date.is_(
+                None
+            ),
+
+            ContentItem.end_date
+            >= today,
+
+        ),
+
+    )
+
 
     query = (
         query
         .filter(
-
-            db.or_(
-
-                ContentItem.start_date.is_(
-                    None
-                ),
-
-                ContentItem.start_date
-                <= today,
-
-            ),
-
-            db.or_(
-
-                ContentItem.end_date.is_(
-                    None
-                ),
-
-                ContentItem.end_date
-                >= today,
-
-            ),
-
+            natural_content_visibility
         )
     )
 
 
     # =====================================================
     # NON-EVENT ORDERING
+    #
+    # 1. Featured promotions
+    # 2. Earliest start date
+    # 3. Newest content
     # =====================================================
 
     return (
@@ -1709,6 +1821,7 @@ def get_active_content(
         )
         .all()
     )
+
 # CONTENT EXPIRY HELPERS
 # =========================================================
 
