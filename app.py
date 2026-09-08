@@ -51,6 +51,7 @@ from models import (
     PendingSubmissionImage,
     ZoneCategoryAppearance,
     ContentDistributionZone,
+    PushSubscriberPreference,
     Category,
     PushSubscriber,
     ListingClaim,
