@@ -60,6 +60,10 @@ from pricing import (
     get_pricing_model,
 )
 
+
+YOCO_SECRET_KEY = os.getenv("YOCO_SECRET_KEY")
+YOCO_PUBLIC_KEY = os.getenv("YOCO_PUBLIC_KEY")
+YOCO_MODE = os.getenv("YOCO_MODE", "test")
 # =========================================================
 # ENVIRONMENT
 # =========================================================
