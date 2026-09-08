@@ -1208,6 +1208,54 @@ class PendingSubmission(db.Model):
 
 
 # ============================================================
+# PENDING SUBMISSION IMAGE
+# ============================================================
+
+class PendingSubmissionImage(db.Model):
+
+    __tablename__ = "pending_submission_images"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    submission_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "pending_submissions.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    image_url = db.Column(
+        db.String(500),
+        nullable=False,
+    )
+
+    display_order = db.Column(
+        db.Integer,
+        nullable=False,
+        default=1,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    submission = db.relationship(
+        "PendingSubmission",
+        backref=db.backref(
+            "images",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+# ============================================================
 # QR SCAN
 # ============================================================
 
