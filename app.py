@@ -1,6 +1,11 @@
 import os
 import re
 import uuid
+import base64
+import hashlib
+import hmac
+import json
+import time
 import requests
 from datetime import (
     date,
@@ -51,7 +56,6 @@ from models import (
     ListingClaim,
     EngagementEvent,
 )
-import json
 from admin import admin_bp
 from pricing import (
     calculate_kalxa_price,
@@ -874,27 +878,489 @@ def yoco_payment_return(code):
 def yoco_webhook():
 
     # --------------------------------------------------------
-    # TEMPORARY YOCO WEBHOOK ENDPOINT
+    # 1. MAKE SURE WEBHOOK VERIFICATION IS CONFIGURED
+    # --------------------------------------------------------
+
+    if not YOCO_WEBHOOK_SECRET:
+
+        current_app.logger.error(
+            "[Kalxa Yoco Webhook] "
+            "YOCO_WEBHOOK_SECRET is not configured."
+        )
+
+        return "", 500
+
+    # --------------------------------------------------------
+    # 2. READ RAW REQUEST BODY
     # --------------------------------------------------------
     #
-    # For now this ONLY proves that:
-    #
-    # Yoco
-    #   ↓
-    # can reach
-    #   ↓
-    # Kalxa
-    #
-    # We will add signature verification and automatic payment
-    # confirmation after registration is working.
-    #
-    # DO NOT mark anything as paid here yet.
+    # IMPORTANT:
+    # Signature verification must happen against the exact
+    # raw body Yoco sent. Do not parse and re-serialize it
+    # before verifying the signature.
 
-    raw_body = request.get_data(as_text=True)
+    raw_body = request.get_data()
+
+    webhook_id = request.headers.get("webhook-id")
+    webhook_timestamp = request.headers.get(
+        "webhook-timestamp"
+    )
+    webhook_signature = request.headers.get(
+        "webhook-signature"
+    )
+
+    if not all(
+        (
+            webhook_id,
+            webhook_timestamp,
+            webhook_signature,
+        )
+    ):
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Missing webhook verification headers."
+        )
+
+        return "", 400
+
+    # --------------------------------------------------------
+    # 3. REPLAY PROTECTION
+    # --------------------------------------------------------
+    #
+    # Yoco recommends accepting timestamps within roughly
+    # 3 minutes.
+
+    try:
+        timestamp_int = int(webhook_timestamp)
+
+    except (TypeError, ValueError):
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Invalid webhook timestamp."
+        )
+
+        return "", 400
+
+    current_timestamp = int(time.time())
+
+    if abs(current_timestamp - timestamp_int) > 180:
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Webhook timestamp outside allowed window "
+            "webhook_id=%s",
+            webhook_id,
+        )
+
+        return "", 400
+
+    # --------------------------------------------------------
+    # 4. BUILD YOCO SIGNED CONTENT
+    # --------------------------------------------------------
+
+    try:
+        raw_body_text = raw_body.decode("utf-8")
+
+    except UnicodeDecodeError:
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Webhook body is not valid UTF-8."
+        )
+
+        return "", 400
+
+    signed_content = (
+        f"{webhook_id}."
+        f"{webhook_timestamp}."
+        f"{raw_body_text}"
+    )
+
+    # --------------------------------------------------------
+    # 5. DECODE YOCO WEBHOOK SECRET
+    # --------------------------------------------------------
+    #
+    # Expected format:
+    #
+    # whsec_XXXXXXXXXXXXXXXXXXXXXXXXX=
+
+    try:
+
+        if not YOCO_WEBHOOK_SECRET.startswith("whsec_"):
+            raise ValueError(
+                "Invalid webhook secret prefix."
+            )
+
+        encoded_secret = YOCO_WEBHOOK_SECRET.split(
+            "_",
+            1,
+        )[1]
+
+        secret_bytes = base64.b64decode(
+            encoded_secret
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            "[Kalxa Yoco Webhook] "
+            "Unable to decode webhook secret."
+        )
+
+        return "", 500
+
+    # --------------------------------------------------------
+    # 6. CALCULATE EXPECTED SIGNATURE
+    # --------------------------------------------------------
+
+    calculated_signature = hmac.new(
+        secret_bytes,
+        signed_content.encode("utf-8"),
+        hashlib.sha256,
+    ).digest()
+
+    expected_signature = base64.b64encode(
+        calculated_signature
+    ).decode("utf-8")
+
+    # --------------------------------------------------------
+    # 7. VERIFY SIGNATURE
+    # --------------------------------------------------------
+    #
+    # Yoco may send multiple signatures separated by spaces.
+    #
+    # Example:
+    #
+    # v1,abc... v1,xyz...
+
+    signature_valid = False
+
+    for signature in webhook_signature.split():
+
+        if not signature.startswith("v1,"):
+            continue
+
+        supplied_signature = signature[
+            len("v1,"):
+        ]
+
+        if hmac.compare_digest(
+            expected_signature,
+            supplied_signature,
+        ):
+            signature_valid = True
+            break
+
+    if not signature_valid:
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Invalid webhook signature "
+            "webhook_id=%s",
+            webhook_id,
+        )
+
+        return "", 401
+
+    # --------------------------------------------------------
+    # 8. PARSE VERIFIED JSON
+    # --------------------------------------------------------
+
+    try:
+        event = json.loads(raw_body_text)
+
+    except json.JSONDecodeError:
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Invalid JSON after signature verification "
+            "webhook_id=%s",
+            webhook_id,
+        )
+
+        return "", 400
+
+    event_type = event.get("type")
+
+    # --------------------------------------------------------
+    # 9. IGNORE EVENTS WE DON'T HANDLE YET
+    # --------------------------------------------------------
+    #
+    # For the MVP we only need successful payments.
+    #
+    # Returning 200 tells Yoco:
+    #
+    # "We received this event successfully."
+
+    if event_type != "payment.succeeded":
+
+        current_app.logger.info(
+            "[Kalxa Yoco Webhook] "
+            "Ignoring unsupported event "
+            "webhook_id=%s event_type=%s",
+            webhook_id,
+            event_type,
+        )
+
+        return "", 200
+
+    # --------------------------------------------------------
+    # 10. READ PAYMENT PAYLOAD
+    # --------------------------------------------------------
+
+    payload = event.get("payload") or {}
+
+    payment_status = payload.get("status")
+    payment_id = payload.get("id")
+    payment_amount = payload.get("amount")
+    payment_currency = payload.get("currency")
+
+    metadata = payload.get("metadata") or {}
+
+    checkout_id = metadata.get("checkoutId")
+
+    # --------------------------------------------------------
+    # 11. VALIDATE REQUIRED PAYMENT DATA
+    # --------------------------------------------------------
+
+    if (
+        payment_status != "succeeded"
+        or not payment_id
+        or payment_amount is None
+        or payment_currency != "ZAR"
+        or not checkout_id
+    ):
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Incomplete/invalid payment event "
+            "webhook_id=%s payment_id=%s "
+            "status=%s currency=%s checkout_id=%s",
+            webhook_id,
+            payment_id,
+            payment_status,
+            payment_currency,
+            checkout_id,
+        )
+
+        return "", 400
+
+    # --------------------------------------------------------
+    # 12. FIND EXACT KALXA SUBMISSION
+    # --------------------------------------------------------
+
+    submission = (
+        PendingSubmission.query
+        .filter_by(
+            yoco_checkout_id=checkout_id
+        )
+        .first()
+    )
+
+    if submission is None:
+
+        current_app.logger.error(
+            "[Kalxa Yoco Webhook] "
+            "No submission found for checkout "
+            "webhook_id=%s checkout_id=%s "
+            "payment_id=%s",
+            webhook_id,
+            checkout_id,
+            payment_id,
+        )
+
+        # Return non-2xx so Yoco may retry.
+        #
+        # This is useful if the event arrived before our
+        # database transaction became visible.
+
+        return "", 404
+
+    # --------------------------------------------------------
+    # 13. MAKE WEBHOOK IDEMPOTENT
+    # --------------------------------------------------------
+    #
+    # Yoco may deliver the same event more than once.
+    #
+    # If we've already processed this exact payment,
+    # acknowledge it without changing anything.
+
+    if (
+        submission.payment_status == "paid"
+        and submission.yoco_payment_id == payment_id
+    ):
+
+        current_app.logger.info(
+            "[Kalxa Yoco Webhook] "
+            "Duplicate successful payment ignored "
+            "submission_id=%s payment_id=%s "
+            "webhook_id=%s",
+            submission.id,
+            payment_id,
+            webhook_id,
+        )
+
+        return "", 200
+
+    # --------------------------------------------------------
+    # 14. PREVENT PAYMENT ID FROM BEING REUSED
+    # --------------------------------------------------------
+
+    existing_payment = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.yoco_payment_id
+            == payment_id,
+            PendingSubmission.id
+            != submission.id,
+        )
+        .first()
+    )
+
+    if existing_payment:
+
+        current_app.logger.error(
+            "[Kalxa Yoco Webhook] "
+            "Payment ID already belongs to another submission "
+            "payment_id=%s existing_submission_id=%s "
+            "current_submission_id=%s",
+            payment_id,
+            existing_payment.id,
+            submission.id,
+        )
+
+        return "", 409
+
+    # --------------------------------------------------------
+    # 15. VERIFY EXPECTED KALXA AMOUNT
+    # --------------------------------------------------------
+
+    if submission.amount_due is None:
+
+        current_app.logger.error(
+            "[Kalxa Yoco Webhook] "
+            "Submission has no amount_due "
+            "submission_id=%s",
+            submission.id,
+        )
+
+        return "", 409
+
+    try:
+
+        expected_amount_cents = int(
+            submission.amount_due * 100
+        )
+
+        received_amount_cents = int(
+            payment_amount
+        )
+
+    except (TypeError, ValueError, ArithmeticError):
+
+        current_app.logger.exception(
+            "[Kalxa Yoco Webhook] "
+            "Unable to compare payment amounts "
+            "submission_id=%s",
+            submission.id,
+        )
+
+        return "", 400
+
+    if received_amount_cents != expected_amount_cents:
+
+        current_app.logger.error(
+            "[Kalxa Yoco Webhook] "
+            "PAYMENT AMOUNT MISMATCH "
+            "submission_id=%s expected=%s received=%s "
+            "payment_id=%s",
+            submission.id,
+            expected_amount_cents,
+            received_amount_cents,
+            payment_id,
+        )
+
+        # Never mark the submission paid when amounts differ.
+
+        return "", 409
+
+    # --------------------------------------------------------
+    # 16. VERIFY SUBMISSION IS STILL PAYABLE
+    # --------------------------------------------------------
+
+    if submission.payment_status != "unpaid":
+
+        current_app.logger.warning(
+            "[Kalxa Yoco Webhook] "
+            "Successful payment received for submission "
+            "with unexpected payment_status "
+            "submission_id=%s status=%s payment_id=%s",
+            submission.id,
+            submission.payment_status,
+            payment_id,
+        )
+
+        return "", 409
+
+    # --------------------------------------------------------
+    # 17. MARK PAYMENT AS CONFIRMED
+    # --------------------------------------------------------
+    #
+    # IMPORTANT:
+    #
+    # This confirms PAYMENT ONLY.
+    #
+    # It does NOT:
+    #
+    # - approve the submission
+    # - create/publish ContentItem
+    # - start the commercial period
+    #
+    # Admin moderation remains independent.
+
+    try:
+
+        submission.payment_status = "paid"
+        submission.yoco_payment_id = payment_id
+
+        db.session.commit()
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Kalxa Yoco Webhook] "
+            "Database error confirming payment "
+            "submission_id=%s payment_id=%s error=%s",
+            submission.id,
+            payment_id,
+            exc,
+        )
+
+        # Yoco should retry because we were unable to persist
+        # the payment confirmation.
+
+        return "", 500
+
+    # --------------------------------------------------------
+    # 18. SUCCESS
+    # --------------------------------------------------------
 
     current_app.logger.info(
-        "[Kalxa Yoco Webhook] Event received body=%s",
-        raw_body[:2000],
+        "[Kalxa Yoco Webhook] PAYMENT CONFIRMED "
+        "submission_id=%s reference=%s "
+        "payment_id=%s checkout_id=%s "
+        "amount_cents=%s mode=%s webhook_id=%s",
+        submission.id,
+        submission.tracking_code,
+        payment_id,
+        checkout_id,
+        received_amount_cents,
+        payload.get("mode"),
+        webhook_id,
     )
 
     return "", 200
