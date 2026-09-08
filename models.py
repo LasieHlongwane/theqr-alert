@@ -1061,7 +1061,22 @@ class PendingSubmission(db.Model):
         nullable=True,
         default=list,
     )
+    
+    
+    yoco_checkout_id = db.Column(
+       db.String(150),
+       nullable=True,
+       unique=True,
+       index=True,
+    )
 
+    yoco_payment_id = db.Column(
+       db.String(150),
+       nullable=True,
+       unique=True,
+       index=True,
+    )
+ 
     # --------------------------------------------------------
     # LISTING INFORMATION
     # --------------------------------------------------------
@@ -1163,6 +1178,7 @@ class PendingSubmission(db.Model):
         default="pending",
         index=True,
     )
+    
 
     tracking_code = db.Column(
         db.String(40),
