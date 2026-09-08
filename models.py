@@ -1150,35 +1150,235 @@ class PendingSubmission(db.Model):
 # ============================================================
 # PENDING SUBMISSION IMAGE
 # ============================================================
+class PendingSubmission(db.Model):
 
-class PendingSubmissionImage(db.Model):
-
-    __tablename__ = "pending_submission_images"
+    __tablename__ = "pending_submissions"
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-    submission_id = db.Column(
+    zone_id = db.Column(
         db.Integer,
-        db.ForeignKey(
-            "pending_submissions.id",
-            ondelete="CASCADE",
-        ),
+        db.ForeignKey("zones.id"),
+        nullable=False,
+    )
+
+    category = db.Column(
+        db.String(100),
         nullable=False,
         index=True,
     )
 
-    image_url = db.Column(
-        db.String(500),
+    # --------------------------------------------------------
+    # CONTENT WORKFLOW
+    # --------------------------------------------------------
+
+    content_type = db.Column(
+        db.String(60),
+        nullable=True,
+        index=True,
+    )
+
+    lifetime_type = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
+    )
+
+    availability_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="available",
+        index=True,
+    )
+
+    notification_eligible = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    # --------------------------------------------------------
+    # COMMERCIAL PACKAGE
+    #
+    # Stores what the public submitter requested.
+    #
+    # IMPORTANT:
+    # These are NOT yet an active commercial period.
+    # commercial_starts_at / commercial_expires_at belong
+    # on ContentItem after payment + approval.
+    # --------------------------------------------------------
+
+    pricing_model = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
+    )
+
+    commercial_duration_days = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    amount_due = db.Column(
+        db.Numeric(10, 2),
+        nullable=True,
+    )
+
+    payment_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="unpaid",
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # REQUESTED CAMPAIGN DISTRIBUTION
+    #
+    # Example:
+    #
+    # [1]
+    # = KwaMhlanga only
+    #
+    # [1, 2]
+    # = KwaMhlanga + Siyabuswa
+    #
+    # Presence listings store [].
+    #
+    # When approved, these IDs are converted into
+    # ContentDistributionZone records for ContentItem.
+    # --------------------------------------------------------
+
+    distribution_zone_ids = db.Column(
+        db.JSON,
+        nullable=True,
+        default=list,
+    )
+
+    # --------------------------------------------------------
+    # LISTING INFORMATION
+    # --------------------------------------------------------
+
+    title = db.Column(
+        db.String(200),
         nullable=False,
     )
 
-    display_order = db.Column(
-        db.Integer,
+    description = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    business_name = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    venue = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    price = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    contact = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    image_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # SUBMITTER INFORMATION
+    # --------------------------------------------------------
+
+    submitter_name = db.Column(
+        db.String(150),
         nullable=False,
-        default=1,
+    )
+
+    submitter_email = db.Column(
+        db.String(200),
+        nullable=True,
+    )
+
+    submitter_phone = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # EVENT DATES
+    # --------------------------------------------------------
+
+    publish_from = db.Column(
+        db.Date,
+        nullable=True,
+    )
+
+    event_date = db.Column(
+        db.Date,
+        nullable=True,
+    )
+
+    event_end_date = db.Column(
+        db.Date,
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # GENERAL VALIDITY DATES
+    # --------------------------------------------------------
+
+    start_date = db.Column(
+        db.Date,
+        nullable=True,
+    )
+
+    end_date = db.Column(
+        db.Date,
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # MODERATION STATUS
+    # --------------------------------------------------------
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    tracking_code = db.Column(
+        db.String(40),
+        unique=True,
+        nullable=False,
+        index=True,
+        default=lambda: (
+            "LAC-"
+            + secrets.token_hex(4).upper()
+        ),
+    )
+
+    admin_notes = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    published_content_id = db.Column(
+        db.Integer,
+        db.ForeignKey("content_items.id"),
+        nullable=True,
     )
 
     created_at = db.Column(
@@ -1187,15 +1387,18 @@ class PendingSubmissionImage(db.Model):
         nullable=False,
     )
 
-    submission = db.relationship(
-        "PendingSubmission",
-        backref=db.backref(
-            "images",
-            lazy=True,
-            cascade="all, delete-orphan",
-            order_by=
-                "PendingSubmissionImage.display_order",
-        ),
+    reviewed_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    # --------------------------------------------------------
+    # RELATIONSHIPS
+    # --------------------------------------------------------
+
+    zone = db.relationship(
+        "Zone",
+        backref="pending_submissions",
     )
 
 
