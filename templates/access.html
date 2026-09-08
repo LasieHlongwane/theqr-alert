@@ -1946,6 +1946,673 @@
     .lac-install-section[hidden] {
         display: none !important;
     }
+	
+	
+	/* =========================================================
+   KALXA APP MENU
+========================================================= */
+
+.access-header {
+    position: relative;
+}
+
+
+.kalxa-menu-button {
+    position: absolute;
+
+    top: 18px;
+    right: 18px;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 0;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+
+    border-radius: 14px;
+
+    background:
+        rgba(255, 255, 255, 0.05);
+
+    cursor: pointer;
+
+    z-index: 100;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+.kalxa-menu-button span {
+    width: 18px;
+    height: 2px;
+
+    display: block;
+
+    border-radius: 999px;
+
+    background: #ffffff;
+}
+
+
+.kalxa-menu-button:active {
+    transform: scale(0.94);
+}
+
+
+/* =========================================================
+   MENU OVERLAY
+========================================================= */
+
+.kalxa-menu-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(0, 0, 0, 0.62);
+
+    backdrop-filter:
+        blur(3px);
+
+    -webkit-backdrop-filter:
+        blur(3px);
+
+    z-index: 1998;
+}
+
+
+.kalxa-menu-overlay[hidden] {
+    display: none !important;
+}
+
+
+/* =========================================================
+   SIDE MENU
+========================================================= */
+
+.kalxa-side-menu {
+    position: fixed;
+
+    top: 0;
+    right: 0;
+
+    width:
+        min(
+            88vw,
+            380px
+        );
+
+    height: 100dvh;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #101114;
+
+    border-left:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        -20px
+        0
+        60px
+        rgba(0, 0, 0, 0.42);
+
+    transform:
+        translateX(105%);
+
+    transition:
+        transform
+        0.25s
+        ease;
+
+    z-index: 1999;
+}
+
+
+.kalxa-side-menu.is-open {
+    transform:
+        translateX(0);
+}
+
+
+/* =========================================================
+   MENU HEADER
+========================================================= */
+
+.kalxa-side-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    padding:
+        calc(
+            22px
+            +
+            env(safe-area-inset-top)
+        )
+        20px
+        20px;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.07);
+}
+
+
+.kalxa-side-menu-brand {
+    color: #ffffff;
+
+    font-size: 24px;
+    font-weight: 900;
+
+    letter-spacing: -1px;
+}
+
+
+.kalxa-side-menu-zone {
+    margin-top: 5px;
+
+    color:
+        rgba(255, 255, 255, 0.50);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.kalxa-menu-close {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.05);
+
+    color: #ffffff;
+
+    font-size: 25px;
+    font-weight: 300;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   MENU CONTENT
+========================================================= */
+
+.kalxa-side-menu-content {
+    flex: 1;
+
+    overflow-y: auto;
+
+    padding: 12px 14px 24px;
+}
+
+
+.kalxa-menu-section {
+    padding:
+        16px
+        0;
+}
+
+
+.kalxa-menu-section +
+.kalxa-menu-section {
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.06);
+}
+
+
+.kalxa-menu-section-label {
+    margin:
+        0
+        8px
+        10px;
+
+    color:
+        rgba(255, 255, 255, 0.34);
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 1.3px;
+}
+
+
+.kalxa-menu-item {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    margin-bottom: 5px;
+
+    padding:
+        13px
+        12px;
+
+    border-radius: 14px;
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+.kalxa-menu-item:active {
+    background:
+        rgba(255, 255, 255, 0.06);
+}
+
+
+.kalxa-menu-item-primary {
+    background:
+        #f5f1e8;
+
+    color: #292c30;
+}
+
+
+.kalxa-menu-item-primary:active {
+    background:
+        #e9e4da;
+}
+
+
+.kalxa-menu-item-icon {
+    width: 37px;
+    height: 37px;
+
+    flex: 0 0 37px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background:
+        rgba(255, 255, 255, 0.06);
+
+    font-size: 17px;
+}
+
+
+.kalxa-menu-item-primary
+.kalxa-menu-item-icon {
+    background:
+        rgba(0, 0, 0, 0.07);
+}
+
+
+.kalxa-menu-item > span:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+}
+
+
+.kalxa-menu-item strong {
+    display: block;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.kalxa-menu-item small {
+    display: block;
+
+    margin-top: 3px;
+
+    color:
+        rgba(255, 255, 255, 0.43);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    line-height: 1.35;
+}
+
+
+.kalxa-menu-item-primary small {
+    color:
+        rgba(41, 44, 48, 0.58);
+}
+
+
+.kalxa-menu-arrow {
+    margin-left: auto;
+
+    font-size: 17px;
+
+    opacity: 0.55;
+}
+
+
+/* =========================================================
+   MENU FOOTER
+========================================================= */
+
+.kalxa-side-menu-footer {
+    padding:
+        17px
+        20px
+        calc(
+            20px
+            +
+            env(safe-area-inset-bottom)
+        );
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.07);
+}
+
+
+.kalxa-side-menu-footer strong {
+    display: block;
+
+    color:
+        rgba(255, 255, 255, 0.65);
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+.kalxa-side-menu-footer span {
+    display: block;
+
+    margin-top: 4px;
+
+    color:
+        rgba(255, 255, 255, 0.30);
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   BUSINESS CTA
+========================================================= */
+
+.kalxa-business-cta {
+    margin:
+        10px
+        0
+        34px;
+
+    padding:
+        27px
+        22px;
+
+    border-radius: 22px;
+
+    background:
+        #f5f1e8;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.10);
+
+    color: #3f4348;
+
+    box-shadow:
+        0
+        8px
+        26px
+        rgba(0, 0, 0, 0.15);
+}
+
+
+.kalxa-business-cta-eyebrow {
+    margin-bottom: 9px;
+
+    color:
+        rgba(63, 67, 72, 0.52);
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: 1.2px;
+}
+
+
+.kalxa-business-cta h2 {
+    margin: 0;
+
+    color: #3f4348;
+
+    font-size: 23px;
+    font-weight: 900;
+
+    line-height: 1.15;
+
+    letter-spacing: -0.5px;
+}
+
+
+.kalxa-business-cta > p {
+    margin:
+        11px
+        0
+        19px;
+
+    color:
+        rgba(63, 67, 72, 0.70);
+
+    font-size: 13px;
+
+    line-height: 1.55;
+}
+
+
+.kalxa-business-cta-primary {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding:
+        15px
+        16px;
+
+    border-radius: 14px;
+
+    background: #111316;
+
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 850;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+.kalxa-business-cta-primary:active {
+    transform: scale(0.985);
+}
+
+
+.kalxa-business-cta-divider {
+    position: relative;
+
+    margin:
+        18px
+        0;
+
+    text-align: center;
+}
+
+
+.kalxa-business-cta-divider::before {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+    left: 0;
+
+    width: 100%;
+    height: 1px;
+
+    background:
+        rgba(63, 67, 72, 0.12);
+}
+
+
+.kalxa-business-cta-divider span {
+    position: relative;
+
+    padding:
+        0
+        9px;
+
+    background: #f5f1e8;
+
+    color:
+        rgba(63, 67, 72, 0.38);
+
+    font-size: 8px;
+    font-weight: 900;
+}
+
+
+.kalxa-business-cta-secondary-text {
+    margin-bottom: 12px !important;
+
+    font-size: 11px !important;
+}
+
+
+.kalxa-business-cta-secondary {
+    display: inline-flex;
+    align-items: center;
+
+    padding:
+        11px
+        13px;
+
+    border:
+        1px solid
+        rgba(63, 67, 72, 0.14);
+
+    border-radius: 12px;
+
+    color: #3f4348;
+
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+.kalxa-business-cta-note {
+    margin-top: 15px;
+
+    color:
+        rgba(63, 67, 72, 0.43);
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   SMALL DEVICES
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .kalxa-menu-button {
+        top: 14px;
+        right: 14px;
+
+        width: 41px;
+        height: 41px;
+    }
+
+
+    .kalxa-business-cta {
+        padding:
+            23px
+            18px;
+
+        border-radius: 20px;
+    }
+
+
+    .kalxa-business-cta h2 {
+        font-size: 21px;
+    }
+
+}
+
+
+/* =========================================================
+   MENU DESKTOP HOVER
+========================================================= */
+
+@media (hover: hover) and (pointer: fine) {
+
+    .kalxa-menu-item:hover {
+        background:
+            rgba(255, 255, 255, 0.055);
+    }
+
+
+    .kalxa-menu-item-primary:hover {
+        background:
+            #ffffff;
+    }
+
+
+    .kalxa-business-cta-primary:hover {
+        opacity: 0.90;
+    }
+
+}
 
 </style>
 
@@ -2011,20 +2678,265 @@
 
     <header class="access-header">
 
-        <div class="public-brand-wrap">
+     <div class="public-brand-wrap">
 
-            <div class="lac-brand">
+        <div class="lac-brand">
+            KALXA
+        </div>
+
+        <div class="lac-tagline">
+            EVERY PLACE HAS ITS OWN KALXA.
+        </div>
+
+     </div>
+
+
+    <!-- =========================================
+         KALXA MENU
+    ========================================== -->
+
+     <button
+        type="button"
+        class="kalxa-menu-button"
+        id="kalxa-menu-button"
+        aria-label="Open Kalxa menu"
+        aria-controls="kalxa-side-menu"
+        aria-expanded="false"
+     >
+        <span></span>
+        <span></span>
+        <span></span>
+     </button>
+
+    </header>
+	
+	
+	<!-- =========================================
+     KALXA SIDE MENU
+========================================== -->
+
+    <div
+      class="kalxa-menu-overlay"
+      id="kalxa-menu-overlay"
+      hidden
+    ></div>
+
+
+    <aside
+      class="kalxa-side-menu"
+      id="kalxa-side-menu"
+      aria-hidden="true"
+    >
+
+      <div class="kalxa-side-menu-header">
+
+        <div>
+
+            <div class="kalxa-side-menu-brand">
                 KALXA
             </div>
 
-            <div class="lac-tagline">
-                EVERY PLACE HAS ITS OWN KALXA.
+            <div class="kalxa-side-menu-zone">
+                📍 {{ zone.name }}
             </div>
 
         </div>
 
-    </header>
 
+        <button
+            type="button"
+            class="kalxa-menu-close"
+            id="kalxa-menu-close"
+            aria-label="Close Kalxa menu"
+        >
+            ×
+        </button>
+
+      </div>
+
+
+      <div class="kalxa-side-menu-content">
+
+
+        <!-- =====================================
+             EXPLORE
+        ====================================== -->
+
+        <div class="kalxa-menu-section">
+
+            <div class="kalxa-menu-section-label">
+                EXPLORE
+            </div>
+
+
+            <a
+                href="#"
+                class="kalxa-menu-item"
+                id="kalxa-menu-home"
+            >
+
+                <span class="kalxa-menu-item-icon">
+                    🏠
+                </span>
+
+                <span>
+                    <strong>
+                        {{ zone.name }} Home
+                    </strong>
+
+                    <small>
+                        Explore local categories
+                    </small>
+                </span>
+
+            </a>
+
+
+            <a
+                href="#lac-alerts"
+                class="kalxa-menu-item"
+                data-close-kalxa-menu
+            >
+
+                <span class="kalxa-menu-item-icon">
+                    🔔
+                </span>
+
+                <span>
+                    <strong>
+                        Notifications
+                    </strong>
+
+                    <small>
+                        Choose what you want to hear about
+                    </small>
+                </span>
+
+            </a>
+
+        </div>
+
+
+        <!-- =====================================
+             BUSINESS / CONTENT
+        ====================================== -->
+
+        <div class="kalxa-menu-section">
+
+            <div class="kalxa-menu-section-label">
+                FOR LOCAL BUSINESSES
+            </div>
+
+
+            <a
+                href="{{ url_for('submit_content') }}"
+                class="
+                    kalxa-menu-item
+                    kalxa-menu-item-primary
+                "
+            >
+
+                <span class="kalxa-menu-item-icon">
+                    ＋
+                </span>
+
+                <span>
+                    <strong>
+                        Add your business
+                    </strong>
+
+                    <small>
+                        Get discovered on Kalxa
+                    </small>
+                </span>
+
+                <span class="kalxa-menu-arrow">
+                    →
+                </span>
+
+            </a>
+
+
+            <a
+                href="{{ url_for('submit_content') }}"
+                class="kalxa-menu-item"
+            >
+
+                <span class="kalxa-menu-item-icon">
+                    📣
+                </span>
+
+                <span>
+                    <strong>
+                        Promote something
+                    </strong>
+
+                    <small>
+                        Events, specials and local campaigns
+                    </small>
+                </span>
+
+                <span class="kalxa-menu-arrow">
+                    →
+                </span>
+
+            </a>
+
+        </div>
+
+
+        <!-- =====================================
+             KALXA
+        ====================================== -->
+
+        <div class="kalxa-menu-section">
+
+            <div class="kalxa-menu-section-label">
+                KALXA
+            </div>
+
+
+            <a
+                href="https://lac-acess-delivered.onrender.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="kalxa-menu-item"
+            >
+
+                <span class="kalxa-menu-item-icon">
+                    ℹ️
+                </span>
+
+                <span>
+                    <strong>
+                        About Kalxa
+                    </strong>
+
+                    <small>
+                        Powered by LaC
+                    </small>
+                </span>
+
+            </a>
+
+        </div>
+
+      </div>
+
+
+      <div class="kalxa-side-menu-footer">
+
+        <strong>
+            Kalxa · Powered by LaC
+        </strong>
+
+        <span>
+            Every place has its own Kalxa.
+        </span>
+
+    </div>
+
+    </aside>
 
     <!-- =========================================
          MAIN EXPERIENCE
@@ -2624,7 +3536,72 @@
 
         </section>
 
+        <!-- =========================================
+     GROW YOUR LOCAL PRESENCE
+========================================== -->
 
+        <section class="kalxa-business-cta">
+
+          <div class="kalxa-business-cta-eyebrow">
+            FOR LOCAL BUSINESSES
+          </div>
+
+
+          <h2>
+            Own a business in {{ zone.name }}?
+          </h2>
+
+
+          <p>
+            Put your business where local people
+            are already discovering what is around them.
+          </p>
+
+
+          <a
+            href="{{ url_for('submit_content') }}"
+            class="kalxa-business-cta-primary"
+          >
+            <span>
+              ＋
+            </span>
+
+            Add your business to Kalxa
+
+            <span>
+              →
+            </span>
+          </a>
+
+
+          <div class="kalxa-business-cta-divider">
+
+            <span>
+              OR
+            </span>
+
+          </div>
+
+
+          <p class="kalxa-business-cta-secondary-text">
+            Hosting an event, running a special
+            or promoting something locally?
+          </p>
+
+
+          <a
+            href="{{ url_for('submit_content') }}"
+            class="kalxa-business-cta-secondary"
+          >
+            📣 Promote it on Kalxa
+          </a>
+
+
+          <div class="kalxa-business-cta-note">
+            Presence and Campaign packages available.
+          </div>
+
+        </section>
         <!-- =========================================
              QUICK ACCESS / ADD TO HOME SCREEN
         ========================================== -->
@@ -3392,7 +4369,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </span>
 
         <span class="lac-mobile-action-label">
-            Kalxa
+            LaC
         </span>
 
     </a>
@@ -3526,6 +4503,200 @@ window.addEventListener(
 
         console.log(
             "====================================="
+        );
+
+    }
+);
+
+</script>
+
+<!-- =========================================
+     KALXA SIDE MENU SCRIPT
+========================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const menuButton =
+            document.getElementById(
+                "kalxa-menu-button"
+            );
+
+        const menu =
+            document.getElementById(
+                "kalxa-side-menu"
+            );
+
+        const overlay =
+            document.getElementById(
+                "kalxa-menu-overlay"
+            );
+
+        const closeButton =
+            document.getElementById(
+                "kalxa-menu-close"
+            );
+
+        const homeButton =
+            document.getElementById(
+                "kalxa-menu-home"
+            );
+
+
+        if (
+            !menuButton
+            ||
+            !menu
+            ||
+            !overlay
+        ) {
+
+            return;
+
+        }
+
+
+        function openMenu() {
+
+            overlay.hidden = false;
+
+            menu.classList.add(
+                "is-open"
+            );
+
+            menu.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+            document.body.style.overflow =
+                "hidden";
+
+        }
+
+
+        function closeMenu() {
+
+            menu.classList.remove(
+                "is-open"
+            );
+
+            menu.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+            document.body.style.overflow =
+                "";
+
+            window.setTimeout(
+                function () {
+
+                    if (
+                        !menu.classList.contains(
+                            "is-open"
+                        )
+                    ) {
+
+                        overlay.hidden =
+                            true;
+
+                    }
+
+                },
+                250
+            );
+
+        }
+
+
+        menuButton.addEventListener(
+            "click",
+            openMenu
+        );
+
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                closeMenu
+            );
+
+        }
+
+
+        overlay.addEventListener(
+            "click",
+            closeMenu
+        );
+
+
+        document.querySelectorAll(
+            "[data-close-kalxa-menu]"
+        ).forEach(
+            function (link) {
+
+                link.addEventListener(
+                    "click",
+                    closeMenu
+                );
+
+            }
+        );
+
+
+        if (homeButton) {
+
+            homeButton.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    closeMenu();
+
+                    window.scrollTo({
+                        top: 0,
+                        behavior: "smooth"
+                    });
+
+                }
+            );
+
+        }
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape"
+                    &&
+                    menu.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeMenu();
+
+                }
+
+            }
         );
 
     }
