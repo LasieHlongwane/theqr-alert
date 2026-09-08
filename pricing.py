@@ -29,68 +29,35 @@ from decimal import Decimal
 # Price depends on DURATION only.
 # =========================================================
 
+from decimal import Decimal
+
+
 KALXA_PRESENCE_PRICING = {
-
-    30: Decimal("49.00"),
-
-    90: Decimal("99.00"),
-
-    180: Decimal("169.00"),
-
-    365: Decimal("249.00"),
-
+    30: Decimal("99.00"),
+    90: Decimal("179.00"),
+    180: Decimal("299.00"),
+    365: Decimal("499.00"),
 }
 
 
-# =========================================================
-# CAMPAIGN PRICING
-#
-# Used for shorter-life / time-sensitive content.
-#
-# Price depends on:
-#
-# 1. Duration
-# 2. Number of distribution zones
-#
-# Format:
-#
-# duration_days: {
-#     zone_count: price
-# }
-# =========================================================
-
 KALXA_CAMPAIGN_PRICING = {
-
     7: {
-
-        1: Decimal("49.00"),
-
-        2: Decimal("79.00"),
-
-        3: Decimal("109.00"),
-
+        1: Decimal("79.00"),
+        2: Decimal("99.00"),
+        3: Decimal("119.00"),
     },
 
     14: {
-
-        1: Decimal("79.00"),
-
+        1: Decimal("99.00"),
         2: Decimal("119.00"),
-
         3: Decimal("159.00"),
-
     },
 
     30: {
-
-        1: Decimal("129.00"),
-
-        2: Decimal("179.00"),
-
-        3: Decimal("229.00"),
-
+        1: Decimal("179.00"),
+        2: Decimal("199.00"),
+        3: Decimal("249.00"),
     },
-
 }
 
 
