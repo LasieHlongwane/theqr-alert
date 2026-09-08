@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#0b0c0e"
+        content="#ffffff"
     >
 
     <title>
@@ -30,28 +30,154 @@
     <style>
 
         /* =========================================
+           KALXA LIGHT THEME
+        ========================================== */
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        body.lac-public-body {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .lac-page {
+            min-height: 100vh;
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .submission-success-container {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .submission-success-card {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           GLOBAL TEXT
+        ========================================== */
+
+        .submission-success-card h1,
+        .submission-success-card h2,
+        .submission-success-card h3,
+        .submission-success-card strong,
+        .submission-success-card p,
+        .submission-success-card span {
+            color: #111111;
+        }
+
+        .submission-success-intro {
+            color: #444444 !important;
+            line-height: 1.7;
+        }
+
+        .access-eyebrow {
+            color: #555555 !important;
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================== */
+
+        .access-header {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .public-brand-wrap {
+            color: #111111 !important;
+        }
+
+        .lac-brand {
+            color: #111111 !important;
+        }
+
+        .lac-tagline {
+            color: #333333 !important;
+        }
+
+        .kalxa-powered-by {
+            margin-top: 4px;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            color: #666666 !important;
+            opacity: 1;
+        }
+
+
+        /* =========================================
+           SUCCESS ICON
+        ========================================== */
+
+        .submission-success-icon {
+            background: #fff8e7 !important;
+            color: #111111 !important;
+            border: 1px solid #e7dec7;
+        }
+
+
+        /* =========================================
+           REVIEW / PAYMENT STATUS
+        ========================================== */
+
+        .submission-success-status {
+            background: #fffaf0 !important;
+            color: #111111 !important;
+            border: 1px solid #e8dfc8 !important;
+        }
+
+        .submission-success-label {
+            color: #666666 !important;
+        }
+
+        .submission-success-status strong {
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
            KALXA PAYMENT SUMMARY
         ========================================== */
 
         .kalxa-payment-card {
             margin-top: 24px;
             padding: 22px;
+
             border-radius: 18px;
-            background: #15171a;
-            border: 1px solid rgba(255, 255, 255, 0.10);
+
+            background: #fffaf0;
+            color: #111111;
+
+            border: 1px solid #e8dfc8;
         }
 
         .kalxa-payment-card h2 {
             margin-top: 0;
             margin-bottom: 18px;
+
+            color: #111111;
         }
 
         .kalxa-payment-row {
             display: flex;
             justify-content: space-between;
+
             gap: 20px;
+
             padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+            border-bottom: 1px solid #e8dfc8;
         }
 
         .kalxa-payment-row:last-of-type {
@@ -59,10 +185,12 @@
         }
 
         .kalxa-payment-label {
-            opacity: 0.70;
+            color: #666666 !important;
+            opacity: 1;
         }
 
         .kalxa-payment-value {
+            color: #111111 !important;
             font-weight: 700;
             text-align: right;
         }
@@ -70,70 +198,277 @@
         .kalxa-payment-total {
             margin-top: 18px;
             padding-top: 18px;
+
             display: flex;
             justify-content: space-between;
             align-items: center;
+
             gap: 20px;
+
+            border-top: 1px solid #e8dfc8;
         }
 
         .kalxa-payment-total-label {
             font-size: 0.95rem;
-            opacity: 0.75;
+
+            color: #555555 !important;
+            opacity: 1;
         }
 
         .kalxa-payment-total-amount {
             font-size: 1.8rem;
             font-weight: 800;
+
+            color: #111111 !important;
         }
+
+
+        /* =========================================
+           PAYMENT BUTTON
+        ========================================== */
 
         .kalxa-pay-button {
             display: block;
+
             width: 100%;
             box-sizing: border-box;
+
             margin-top: 22px;
             padding: 16px 20px;
-            border: 0;
+
+            border: 1px solid #e2d8bd;
             border-radius: 14px;
+
             text-align: center;
             text-decoration: none;
+
             font: inherit;
             font-weight: 800;
+
             cursor: pointer;
-            background: #ffffff;
-            color: #0b0c0e;
+
+            background: #fff8e7;
+            color: #111111;
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease,
+                border-color 0.2s ease;
         }
 
         .kalxa-pay-button:hover {
-            opacity: 0.92;
+            background: #f7efd9;
+            border-color: #d7caa8;
+            color: #111111;
+
+            transform: translateY(-1px);
+        }
+
+        .kalxa-pay-button:active {
+            transform: scale(0.99);
         }
 
         .kalxa-payment-security {
             margin: 14px 0 0;
+
             text-align: center;
             font-size: 0.85rem;
-            opacity: 0.65;
-        }
 
-        .kalxa-payment-status-paid {
-            margin-top: 20px;
-            padding: 16px;
-            border-radius: 14px;
-            background: rgba(40, 180, 100, 0.12);
-            border: 1px solid rgba(40, 180, 100, 0.30);
+            color: #666666 !important;
+            opacity: 1;
         }
 
         .kalxa-payment-notice {
             margin-top: 16px;
+
             font-size: 0.9rem;
             line-height: 1.6;
-            opacity: 0.75;
+
+            color: #555555 !important;
+            opacity: 1;
         }
 
-        .kalxa-powered-by {
-            margin-top: 4px;
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
-            opacity: 0.55;
+
+        /* =========================================
+           PAID STATUS
+        ========================================== */
+
+        .kalxa-payment-status-paid {
+            margin-top: 20px;
+            padding: 16px;
+
+            border-radius: 14px;
+
+            background: #f2fbf5;
+            border: 1px solid #bcdcc6;
+
+            color: #111111;
+        }
+
+        .kalxa-payment-status-paid strong {
+            color: #176b36 !important;
+        }
+
+        .kalxa-payment-status-paid p {
+            color: #333333 !important;
+        }
+
+
+        /* =========================================
+           REFERENCE CARD
+        ========================================== */
+
+        .submission-reference-card {
+            background: #fffaf0 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e8dfc8 !important;
+        }
+
+        .submission-reference-code {
+            color: #111111 !important;
+        }
+
+        .submission-reference-card p {
+            color: #555555 !important;
+        }
+
+
+        /* =========================================
+           WHAT HAPPENS NEXT
+        ========================================== */
+
+        .submission-next-steps {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        .submission-next-steps h2 {
+            color: #111111 !important;
+        }
+
+        .submission-step {
+            color: #111111 !important;
+        }
+
+        .submission-step strong {
+            color: #111111 !important;
+        }
+
+        .submission-step p {
+            color: #555555 !important;
+        }
+
+        .submission-step-number {
+            background: #fff8e7 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e8dfc8 !important;
+        }
+
+
+        /* =========================================
+           CHECK STATUS BUTTON
+        ========================================== */
+
+        .submission-success-button {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 100%;
+            box-sizing: border-box;
+
+            margin-top: 26px;
+            padding: 16px 20px;
+
+            border-radius: 14px;
+
+            background: #fff8e7 !important;
+            color: #111111 !important;
+
+            border: 1px solid #e2d8bd !important;
+
+            font-weight: 800;
+
+            text-decoration: none;
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        .submission-success-button:hover {
+            background: #f7efd9 !important;
+            border-color: #d7caa8 !important;
+
+            color: #111111 !important;
+
+            transform: translateY(-1px);
+        }
+
+        .submission-success-button:active {
+            transform: scale(0.99);
+        }
+
+
+        /* =========================================
+           HELP / REFERENCE
+        ========================================== */
+
+        .submission-success-help {
+            color: #666666 !important;
+        }
+
+        .submission-success-help strong {
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           FOOTER
+        ========================================== */
+
+        .public-footer {
+            background: #ffffff !important;
+            color: #111111 !important;
+
+            border-top: 1px solid #eeeeee;
+        }
+
+        .footer-brand {
+            color: #111111 !important;
+        }
+
+        .footer-tagline {
+            color: #666666 !important;
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================== */
+
+        @media (max-width: 640px) {
+
+            .kalxa-payment-card {
+                padding: 18px;
+            }
+
+            .kalxa-payment-row {
+                gap: 12px;
+            }
+
+            .kalxa-payment-total {
+                gap: 12px;
+            }
+
+            .kalxa-payment-total-amount {
+                font-size: 1.55rem;
+            }
+
         }
 
     </style>
@@ -288,8 +623,10 @@
 
                             {% if submission.pricing_model == "presence" %}
                                 Presence
+
                             {% elif submission.pricing_model == "campaign" %}
                                 Campaign
+
                             {% else %}
                                 Kalxa Listing
                             {% endif %}
@@ -329,14 +666,17 @@
                             </span>
 
                             <span class="kalxa-payment-value">
+
                                 {{
                                     submission.distribution_zone_ids
                                     | length
                                 }}
+
                                 zone{% if (
                                     submission.distribution_zone_ids
                                     | length
                                 ) != 1 %}s{% endif %}
+
                             </span>
 
                         </div>
@@ -388,11 +728,14 @@
 
 
                         <p class="kalxa-payment-notice">
+
                             Payment does not automatically
                             approve your listing. Kalxa will
                             review the submitted content before
                             it becomes publicly visible.
+
                         </p>
+
 
                     {% elif submission.payment_status == "paid" %}
 
@@ -452,6 +795,7 @@
 
 
                 {% if payment_required %}
+
 
                     <div class="submission-step">
 
@@ -520,7 +864,9 @@
 
                     </div>
 
+
                 {% else %}
+
 
                     <div class="submission-step">
 
@@ -588,6 +934,7 @@
 
                     </div>
 
+
                 {% endif %}
 
             </div>
@@ -609,10 +956,13 @@
 
 
             <p class="submission-success-help">
+
                 Reference:
+
                 <strong>
                     {{ submission.tracking_code }}
                 </strong>
+
             </p>
 
 
