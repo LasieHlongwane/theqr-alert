@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#0b0c0e"
+        content="#ffffff"
     >
 
     <title>
@@ -54,7 +54,7 @@
 
     <meta
         name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent"
+        content="default"
     >
 
     <meta
@@ -69,7 +69,7 @@
 
 
     <!-- =========================================
-         CSS
+         EXISTING MAIN CSS
     ========================================== -->
 
     <link
@@ -79,6 +79,1051 @@
             filename='css/style.css'
         ) }}"
     >
+
+
+    <!-- =========================================
+         KALXA SUBMISSION PAGE
+         WHITE / BLACK DESIGN
+    ========================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            background: #ffffff;
+            scroll-behavior: smooth;
+        }
+
+
+        body,
+        body.lac-public-body {
+            margin: 0 !important;
+
+            min-height: 100vh;
+
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+
+            color: #111111 !important;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+
+        .lac-page {
+            min-height: 100vh;
+
+            background: #ffffff !important;
+
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================== */
+
+        .access-header {
+            width: 100%;
+
+            padding: 22px 18px;
+
+            background: #ffffff !important;
+
+            border-bottom:
+                1px solid #ececec;
+        }
+
+
+        .public-brand-wrap {
+            width: 100%;
+            max-width: 720px;
+
+            margin: 0 auto;
+        }
+
+
+        .lac-brand {
+            color: #111111 !important;
+
+            font-size: 25px;
+            font-weight: 900;
+
+            line-height: 1;
+
+            letter-spacing: -1px;
+        }
+
+
+        .lac-tagline {
+            margin-top: 6px;
+
+            color: #777777 !important;
+
+            font-size: 9px;
+            font-weight: 800;
+
+            letter-spacing: 1.5px;
+        }
+
+
+        /* =========================================
+           MAIN CONTAINER
+        ========================================== */
+
+        .public-submit-container {
+            width: 100%;
+            max-width: 720px;
+
+            margin: 0 auto;
+
+            padding:
+                42px
+                18px
+                70px;
+
+            color: #111111 !important;
+        }
+
+
+        /* =========================================
+           HERO
+        ========================================== */
+
+        .public-submit-hero {
+            margin-bottom: 34px;
+        }
+
+
+        .access-eyebrow {
+            margin:
+                0
+                0
+                9px;
+
+            color: #777777 !important;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            letter-spacing: 1.5px;
+        }
+
+
+        .public-submit-hero h1 {
+            margin: 0;
+
+            color: #111111 !important;
+
+            font-size:
+                clamp(
+                    30px,
+                    8vw,
+                    46px
+                );
+
+            font-weight: 900;
+
+            line-height: 1.04;
+
+            letter-spacing: -1.5px;
+        }
+
+
+        .public-submit-hero > p:not(.access-eyebrow) {
+            max-width: 570px;
+
+            margin:
+                16px
+                0
+                0;
+
+            color: #555555 !important;
+
+            font-size: 14px;
+
+            line-height: 1.65;
+        }
+
+
+        /* =========================================
+           REVIEW / INFORMATION NOTE
+        ========================================== */
+
+        .submit-review-note {
+            display: flex;
+
+            gap: 13px;
+
+            margin-top: 22px;
+
+            padding: 16px;
+
+            border:
+                1px solid #dedede;
+
+            border-radius: 15px;
+
+            background: #f7f7f7 !important;
+
+            color: #111111 !important;
+        }
+
+
+        .submit-review-note-icon {
+            width: 30px;
+            height: 30px;
+
+            flex: 0 0 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #111111;
+
+            color: #ffffff;
+
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+
+        .submit-review-note strong {
+            display: block;
+
+            color: #111111 !important;
+
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+
+        .submit-review-note p {
+            margin:
+                5px
+                0
+                0;
+
+            color: #666666 !important;
+
+            font-size: 11px;
+
+            line-height: 1.55;
+        }
+
+
+        /* =========================================
+           ALERTS
+        ========================================== */
+
+        .public-submit-alert {
+            margin-bottom: 20px;
+
+            padding: 14px 16px;
+
+            border:
+                1px solid #d7d7d7;
+
+            border-radius: 12px;
+
+            background: #f5f5f5 !important;
+
+            color: #111111 !important;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+
+        /* =========================================
+           FORM
+        ========================================== */
+
+        .public-submit-form-new {
+            width: 100%;
+
+            color: #111111 !important;
+        }
+
+
+        .public-form-section {
+            margin-bottom: 22px;
+
+            padding: 25px;
+
+            border:
+                1px solid #e3e3e3;
+
+            border-radius: 20px;
+
+            background: #ffffff !important;
+
+            color: #111111 !important;
+
+            box-shadow:
+                0
+                5px
+                22px
+                rgba(0, 0, 0, 0.045);
+        }
+
+
+        /* =========================================
+           SECTION HEADING
+        ========================================== */
+
+        .public-form-section-heading {
+            display: flex;
+            align-items: flex-start;
+
+            gap: 13px;
+
+            margin-bottom: 22px;
+        }
+
+
+        .public-form-number {
+            width: 34px;
+            height: 34px;
+
+            flex: 0 0 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background: #111111;
+
+            color: #ffffff !important;
+
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+
+        .public-form-section-heading h2 {
+            margin: 0;
+
+            color: #111111 !important;
+
+            font-size: 19px;
+            font-weight: 850;
+
+            line-height: 1.2;
+        }
+
+
+        .public-form-section-heading p {
+            margin:
+                5px
+                0
+                0;
+
+            color: #777777 !important;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           GRID
+        ========================================== */
+
+        .public-form-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 15px;
+        }
+
+
+        /* =========================================
+           FIELDS
+        ========================================== */
+
+        .public-field {
+            display: block;
+
+            margin-bottom: 17px;
+
+            color: #111111 !important;
+        }
+
+
+        .public-field > span:first-child {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #222222 !important;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        .public-field input[type="text"],
+        .public-field input[type="tel"],
+        .public-field input[type="date"],
+        .public-field select,
+        .public-field textarea {
+            width: 100%;
+
+            min-height: 48px;
+
+            padding:
+                12px
+                13px;
+
+            border:
+                1px solid #d6d6d6;
+
+            border-radius: 11px;
+
+            outline: none;
+
+            background: #ffffff !important;
+
+            color: #111111 !important;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            transition:
+                border-color 0.16s ease,
+                box-shadow 0.16s ease;
+        }
+
+
+        .public-field textarea {
+            min-height: 125px;
+
+            resize: vertical;
+
+            line-height: 1.5;
+        }
+
+
+        .public-field input::placeholder,
+        .public-field textarea::placeholder {
+            color: #9a9a9a !important;
+        }
+
+
+        .public-field input:focus,
+        .public-field select:focus,
+        .public-field textarea:focus {
+            border-color: #111111;
+
+            box-shadow:
+                0
+                0
+                0
+                3px
+                rgba(0, 0, 0, 0.06);
+        }
+
+
+        .public-field small,
+        .public-form-section > small {
+            display: block;
+
+            margin-top: 6px;
+
+            color: #777777 !important;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           LOCKED HOME AREA
+        ========================================== */
+
+        .kalxa-locked-zone-wrapper {
+            margin-bottom: 17px;
+        }
+
+
+        .kalxa-locked-zone-label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #222222;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        .kalxa-locked-zone {
+            width: 100%;
+
+            min-height: 58px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+
+            padding:
+                13px
+                15px;
+
+            border:
+                1px solid #d5d5d5;
+
+            border-radius: 13px;
+
+            background: #f7f7f7;
+
+            color: #111111;
+        }
+
+
+        .kalxa-locked-zone-icon {
+            width: 34px;
+            height: 34px;
+
+            flex: 0 0 34px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e2e2e2;
+
+            font-size: 16px;
+        }
+
+
+        .kalxa-locked-zone-content {
+            min-width: 0;
+
+            flex: 1;
+        }
+
+
+        .kalxa-locked-zone-content strong {
+            display: block;
+
+            overflow: hidden;
+
+            color: #111111;
+
+            font-size: 14px;
+            font-weight: 850;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+        }
+
+
+        .kalxa-locked-zone-content span {
+            display: block;
+
+            margin-top: 3px;
+
+            color: #777777;
+
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+
+        .kalxa-locked-zone-check {
+            width: 27px;
+            height: 27px;
+
+            flex: 0 0 27px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #111111;
+
+            color: #ffffff;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+
+        .kalxa-locked-zone-help {
+            display: block;
+
+            margin-top: 7px;
+
+            color: #777777;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           UPLOAD
+        ========================================== */
+
+        .public-upload-box {
+            min-height: 150px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            gap: 5px;
+
+            padding: 25px;
+
+            border:
+                1px dashed #bdbdbd;
+
+            border-radius: 15px;
+
+            background: #fafafa !important;
+
+            color: #111111 !important;
+
+            text-align: center;
+
+            cursor: pointer;
+        }
+
+
+        .public-upload-icon {
+            margin-bottom: 5px;
+
+            font-size: 27px;
+        }
+
+
+        .public-upload-box strong {
+            color: #111111 !important;
+
+            font-size: 13px;
+        }
+
+
+        .public-upload-box span,
+        .public-upload-box small {
+            color: #777777 !important;
+
+            font-size: 10px;
+        }
+
+
+        .public-upload-box input {
+            margin-top: 10px;
+
+            color: #111111 !important;
+
+            max-width: 100%;
+        }
+
+
+        /* =========================================
+           IMAGE PREVIEW
+        ========================================== */
+
+        .selected-images-preview {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+
+        .selected-image-item {
+            position: relative;
+
+            aspect-ratio: 1 / 1;
+
+            overflow: hidden;
+
+            border-radius: 12px;
+
+            background: #eeeeee;
+        }
+
+
+        .selected-image-item img {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+
+        .remove-selected-image {
+            position: absolute;
+
+            top: 6px;
+            right: 6px;
+
+            width: 28px;
+            height: 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0;
+
+            border: 0;
+
+            border-radius: 50%;
+
+            background:
+                rgba(0, 0, 0, 0.78);
+
+            color: #ffffff;
+
+            font-size: 18px;
+
+            cursor: pointer;
+        }
+
+
+        /* =========================================
+           CAMPAIGN CHECKBOXES
+        ========================================== */
+
+        .distribution-zone-option {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+
+            gap: 11px;
+
+            margin-bottom: 0 !important;
+
+            padding: 13px;
+
+            border:
+                1px solid #dddddd;
+
+            border-radius: 11px;
+
+            background: #fafafa;
+        }
+
+
+        .distribution-zone-option input {
+            width: 18px;
+            height: 18px;
+
+            flex: 0 0 18px;
+
+            accent-color: #111111;
+        }
+
+
+        .distribution-zone-option span {
+            margin: 0 !important;
+
+            color: #111111 !important;
+
+            font-size: 12px !important;
+            font-weight: 750 !important;
+        }
+
+
+        .campaign-zone-grid {
+            display: grid;
+
+            gap: 9px;
+
+            margin-top: 14px;
+        }
+
+
+        /* =========================================
+           PACKAGE PRICE
+        ========================================== */
+
+        .kalxa-price-summary {
+            margin-top: 22px;
+
+            padding: 20px;
+
+            border:
+                1px solid #dddddd;
+
+            border-radius: 15px;
+
+            background: #fafafa;
+
+            color: #111111;
+        }
+
+
+        .kalxa-price-summary small {
+            color: #777777;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: 1px;
+        }
+
+
+        #kalxa-package-summary {
+            margin-top: 8px;
+
+            color: #111111;
+
+            font-size: 13px;
+
+            font-weight: 750;
+        }
+
+
+        #kalxa-price-display {
+            margin-top: 10px;
+
+            color: #111111;
+
+            font-size: 32px;
+            font-weight: 900;
+        }
+
+
+        .kalxa-price-summary p {
+            margin:
+                10px
+                0
+                0;
+
+            color: #666666;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           FINAL SUBMIT
+        ========================================== */
+
+        .public-submit-final {
+            margin-top: 26px;
+
+            padding: 28px;
+
+            border-radius: 20px;
+
+            background: #111111 !important;
+
+            color: #ffffff !important;
+        }
+
+
+        .public-submit-final-info > span {
+            color:
+                rgba(255, 255, 255, 0.55) !important;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: 1.3px;
+        }
+
+
+        .public-submit-final h2 {
+            margin:
+                8px
+                0
+                0;
+
+            color: #ffffff !important;
+
+            font-size: 23px;
+            font-weight: 900;
+        }
+
+
+        .public-submit-final p {
+            max-width: 540px;
+
+            margin:
+                10px
+                0
+                20px;
+
+            color:
+                rgba(255, 255, 255, 0.68) !important;
+
+            font-size: 11px;
+
+            line-height: 1.55;
+        }
+
+
+        .public-submit-primary-button {
+            width: 100%;
+
+            min-height: 52px;
+
+            padding:
+                13px
+                18px;
+
+            border: 0;
+
+            border-radius: 12px;
+
+            background: #ffffff !important;
+
+            color: #111111 !important;
+
+            font-family: inherit;
+
+            font-size: 13px;
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+
+        .public-submit-primary-button:active {
+            transform: scale(0.985);
+        }
+
+
+        /* =========================================
+           FOOTER
+        ========================================== */
+
+        .public-footer {
+            padding:
+                30px
+                18px
+                45px;
+
+            border-top:
+                1px solid #eeeeee;
+
+            background: #ffffff !important;
+
+            color: #111111 !important;
+
+            text-align: center;
+        }
+
+
+        .footer-brand {
+            color: #111111 !important;
+
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+
+        .footer-tagline {
+            margin-top: 5px;
+
+            color: #888888 !important;
+
+            font-size: 8px;
+            font-weight: 800;
+
+            letter-spacing: 1.4px;
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================== */
+
+        @media (max-width: 600px) {
+
+            .public-submit-container {
+                padding:
+                    32px
+                    14px
+                    55px;
+            }
+
+
+            .public-form-grid {
+                grid-template-columns: 1fr;
+
+                gap: 0;
+            }
+
+
+            .public-form-section {
+                padding: 20px 17px;
+
+                border-radius: 17px;
+            }
+
+
+            .public-submit-final {
+                padding: 23px 18px;
+
+                border-radius: 17px;
+            }
+
+
+            .selected-images-preview {
+                grid-template-columns:
+                    repeat(
+                        3,
+                        minmax(0, 1fr)
+                    );
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -274,49 +1319,128 @@
                 <div class="public-form-grid">
 
 
-                    <!-- HOME ZONE -->
+                    <!-- =================================
+                         HOME ZONE
 
-                    <label class="public-field">
+                         If opened from a Kalxa zone page:
+                         locked location.
 
-                        <span>
-                            Home Area *
-                        </span>
+                         If /submit opened directly:
+                         normal dropdown.
+                    ================================== -->
 
-                        <select
-                            name="zone_id"
-                            id="zone-select"
-                            required
-                        >
+                    {% if selected_zone %}
 
-                            <option value="">
-                                Choose your area
-                            </option>
+                        <div class="kalxa-locked-zone-wrapper">
 
-                            {% for zone in zones %}
+                            <span class="kalxa-locked-zone-label">
+                                Home Area *
+                            </span>
 
-                                <option
-                                    
-                                    value="{{ zone_option.id }}"
-                                    {% if selected_zone_id == zone_option.id %}
-                                        selected
-                                    {% endif %}
-                                >
-                                    {{ zone_option.name }}
+
+                            <div class="kalxa-locked-zone">
+
+                                <span class="kalxa-locked-zone-icon">
+                                    📍
+                                </span>
+
+
+                                <div class="kalxa-locked-zone-content">
+
+                                    <strong>
+                                        {{ selected_zone.name }}
+                                    </strong>
+
+                                    <span>
+                                        Selected from your Kalxa location
+                                    </span>
+
+                                </div>
+
+
+                                <span class="kalxa-locked-zone-check">
+                                    ✓
+                                </span>
+
+                            </div>
+
+
+                            <small class="kalxa-locked-zone-help">
+                                This is where your business,
+                                event or listing originates.
+                            </small>
+
+
+                            <!--
+                                IMPORTANT:
+                                Still submit zone_id to Flask.
+                            -->
+
+                            <input
+                                type="hidden"
+                                name="zone_id"
+                                id="zone-select"
+                                value="{{ selected_zone.id }}"
+                            >
+
+                        </div>
+
+
+                    {% else %}
+
+
+                        <label class="public-field">
+
+                            <span>
+                                Home Area *
+                            </span>
+
+                            <select
+                                name="zone_id"
+                                id="zone-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Choose your area
                                 </option>
 
-                            {% endfor %}
 
-                        </select>
+                                {% for zone_option in zones %}
 
-                        <small>
-                            This is where your business,
-                            event or listing originates.
-                        </small>
+                                    <option
+                                        value="{{ zone_option.id }}"
 
-                    </label>
+                                        {% if request.form.get('zone_id') == zone_option.id|string %}
+                                            selected
+
+                                        {% elif selected_zone_id == zone_option.id %}
+                                            selected
+
+                                        {% endif %}
+                                    >
+                                        {{ zone_option.name }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
 
 
-                    <!-- CATEGORY -->
+                            <small>
+                                This is where your business,
+                                event or listing originates.
+                            </small>
+
+                        </label>
+
+
+                    {% endif %}
+
+
+                    <!-- =================================
+                         CATEGORY
+                    ================================== -->
 
                     <label class="public-field">
 
@@ -334,10 +1458,12 @@
                                 Select category
                             </option>
 
+
                             {% for category in categories %}
 
                                 <option
                                     value="{{ category.slug }}"
+
                                     {% if request.form.get('category') == category.slug %}
                                         selected
                                     {% endif %}
@@ -360,7 +1486,9 @@
                 </div>
 
 
-                <!-- CONTENT TYPE -->
+                <!-- =================================
+                     CONTENT TYPE
+                ================================== -->
 
                 <div
                     id="content-type-wrapper"
@@ -384,6 +1512,7 @@
 
                         </select>
 
+
                         <small id="content-type-help">
                             Choose the option that best
                             describes your listing.
@@ -394,7 +1523,9 @@
                 </div>
 
 
-                <!-- WORKFLOW NOTE -->
+                <!-- =================================
+                     WORKFLOW NOTE
+                ================================== -->
 
                 <div
                     id="listing-workflow-note"
@@ -581,8 +1712,7 @@
                         </h2>
 
                         <p>
-                            Upload up to 3 photos or
-                            posters.
+                            Upload up to 3 photos or posters.
                         </p>
 
                     </div>
@@ -785,6 +1915,7 @@
 
                 </div>
 
+
                 <small>
                     These dates describe the content itself.
                     Your paid Kalxa package duration is chosen
@@ -795,7 +1926,7 @@
 
 
             <!-- =================================
-                 05 — ONGOING / UNTIL UNAVAILABLE
+                 05 — ONGOING
             ================================== -->
 
             <section
@@ -881,8 +2012,6 @@
                 </div>
 
 
-                <!-- HIDDEN PRICING MODEL -->
-
                 <input
                     type="hidden"
                     name="pricing_model"
@@ -890,8 +2019,6 @@
                     value="{{ request.form.get('pricing_model', '') }}"
                 >
 
-
-                <!-- PACKAGE TYPE -->
 
                 <div class="submit-review-note">
 
@@ -914,7 +2041,9 @@
                 </div>
 
 
-                <!-- DURATION -->
+                <!-- =================================
+                     DURATION
+                ================================== -->
 
                 <label class="public-field">
 
@@ -933,6 +2062,7 @@
                         </option>
 
                     </select>
+
 
                     <small id="duration-help">
                         Choose how long you want the listing
@@ -970,40 +2100,31 @@
                     </div>
 
 
-                    <div
-                        style="
-                            display: grid;
-                            gap: 10px;
-                            margin-top: 14px;
-                        "
-                    >
+                    <div class="campaign-zone-grid">
 
-                        {% for zone in zones %}
+                        {% for zone_option in zones %}
 
                             <label
-                                class="public-field"
-                                style="
-                                    display: flex;
-                                    flex-direction: row;
-                                    align-items: center;
-                                    gap: 10px;
+                                class="
+                                    public-field
+                                    distribution-zone-option
                                 "
                             >
 
                                 <input
                                     type="checkbox"
                                     name="distribution_zone_ids"
-                                    value="{{ zone.id }}"
-                                    data-zone-id="{{ zone.id }}"
+                                    value="{{ zone_option.id }}"
+                                    data-zone-id="{{ zone_option.id }}"
                                     class="distribution-zone-checkbox"
 
-                                    {% if zone.id|string in request.form.getlist('distribution_zone_ids') %}
+                                    {% if zone_option.id|string in request.form.getlist('distribution_zone_ids') %}
                                         checked
                                     {% endif %}
                                 >
 
                                 <span>
-                                    {{ zone.name }}
+                                    {{ zone_option.name }}
                                 </span>
 
                             </label>
@@ -1047,38 +2168,19 @@
                      PRICE SUMMARY
                 ================================== -->
 
-                <div
-                    style="
-                        margin-top: 22px;
-                        padding: 20px;
-                        border: 1px solid rgba(128,128,128,.35);
-                        border-radius: 14px;
-                    "
-                >
+                <div class="kalxa-price-summary">
 
                     <small>
                         YOUR KALXA PACKAGE
                     </small>
 
-                    <div
-                        id="kalxa-package-summary"
-                        style="
-                            margin-top: 8px;
-                            font-weight: 700;
-                        "
-                    >
+
+                    <div id="kalxa-package-summary">
                         Select a package duration.
                     </div>
 
 
-                    <div
-                        id="kalxa-price-display"
-                        style="
-                            font-size: 2rem;
-                            font-weight: 800;
-                            margin-top: 10px;
-                        "
-                    >
+                    <div id="kalxa-price-display">
                         —
                     </div>
 
@@ -1091,12 +2193,7 @@
                     >
 
 
-                    <p
-                        style="
-                            margin-bottom: 0;
-                            margin-top: 10px;
-                        "
-                    >
+                    <p>
                         Your listing will be submitted for
                         review. Kalxa will confirm payment
                         before commercial content becomes
@@ -1175,55 +2272,89 @@
     // =====================================================
 
     const zoneSelect =
-        document.getElementById("zone-select");
+        document.getElementById(
+            "zone-select"
+        );
 
     const categorySelect =
-        document.getElementById("category-select");
+        document.getElementById(
+            "category-select"
+        );
 
     const contentTypeWrapper =
-        document.getElementById("content-type-wrapper");
+        document.getElementById(
+            "content-type-wrapper"
+        );
 
     const contentTypeSelect =
-        document.getElementById("content-type-select");
+        document.getElementById(
+            "content-type-select"
+        );
 
     const contentTypeLabel =
-        document.getElementById("content-type-label");
+        document.getElementById(
+            "content-type-label"
+        );
 
     const listingWorkflowNote =
-        document.getElementById("listing-workflow-note");
+        document.getElementById(
+            "listing-workflow-note"
+        );
 
     const workflowNoteTitle =
-        document.getElementById("workflow-note-title");
+        document.getElementById(
+            "workflow-note-title"
+        );
 
     const workflowNoteText =
-        document.getElementById("workflow-note-text");
+        document.getElementById(
+            "workflow-note-text"
+        );
 
     const eventDateFields =
-        document.getElementById("event-date-fields");
+        document.getElementById(
+            "event-date-fields"
+        );
 
     const generalDateFields =
-        document.getElementById("general-date-fields");
+        document.getElementById(
+            "general-date-fields"
+        );
 
     const statusLifetimeSection =
-        document.getElementById("status-lifetime-section");
+        document.getElementById(
+            "status-lifetime-section"
+        );
 
     const statusLifetimeTitle =
-        document.getElementById("status-lifetime-title");
+        document.getElementById(
+            "status-lifetime-title"
+        );
 
     const statusLifetimeText =
-        document.getElementById("status-lifetime-text");
+        document.getElementById(
+            "status-lifetime-text"
+        );
 
     const statusCardTitle =
-        document.getElementById("status-card-title");
+        document.getElementById(
+            "status-card-title"
+        );
 
     const statusCardText =
-        document.getElementById("status-card-text");
+        document.getElementById(
+            "status-card-text"
+        );
 
     const eventDateInput =
-        document.getElementById("event-date");
+        document.getElementById(
+            "event-date"
+        );
 
     const endDateInput =
-        document.getElementById("end-date");
+        document.getElementById(
+            "end-date"
+        );
 
 
     // =====================================================
@@ -1231,25 +2362,39 @@
     // =====================================================
 
     const packageSection =
-        document.getElementById("kalxa-package-section");
+        document.getElementById(
+            "kalxa-package-section"
+        );
 
     const pricingModelInput =
-        document.getElementById("pricing-model");
+        document.getElementById(
+            "pricing-model"
+        );
 
     const packageModelTitle =
-        document.getElementById("package-model-title");
+        document.getElementById(
+            "package-model-title"
+        );
 
     const packageModelDescription =
-        document.getElementById("package-model-description");
+        document.getElementById(
+            "package-model-description"
+        );
 
     const durationSelect =
-        document.getElementById("commercial-duration-days");
+        document.getElementById(
+            "commercial-duration-days"
+        );
 
     const durationHelp =
-        document.getElementById("duration-help");
+        document.getElementById(
+            "duration-help"
+        );
 
     const campaignReachSection =
-        document.getElementById("campaign-reach-section");
+        document.getElementById(
+            "campaign-reach-section"
+        );
 
     const zoneCheckboxes =
         document.querySelectorAll(
@@ -1257,16 +2402,24 @@
         );
 
     const campaignZoneCount =
-        document.getElementById("campaign-zone-count");
+        document.getElementById(
+            "campaign-zone-count"
+        );
 
     const packageSummary =
-        document.getElementById("kalxa-package-summary");
+        document.getElementById(
+            "kalxa-package-summary"
+        );
 
     const priceDisplay =
-        document.getElementById("kalxa-price-display");
+        document.getElementById(
+            "kalxa-price-display"
+        );
 
     const displayedAmountInput =
-        document.getElementById("displayed-amount-due");
+        document.getElementById(
+            "displayed-amount-due"
+        );
 
 
     // =====================================================
@@ -1274,10 +2427,12 @@
     // =====================================================
 
     const presencePricing = {
+
         30: 49,
         90: 99,
         180: 169,
         365: 249
+
     };
 
 
@@ -1306,9 +2461,6 @@
 
     // =====================================================
     // CATEGORY NORMALIZATION
-    //
-    // These aliases allow the commercial engine to work
-    // with your actual public Kalxa category slugs.
     // =====================================================
 
     function getRawCategory() {
@@ -1316,6 +2468,7 @@
         if (!categorySelect) {
             return "";
         }
+
 
         return String(
             categorySelect.value || ""
@@ -1733,7 +2886,10 @@
     // =====================================================
 
     const previousContentType =
-        {{ request.form.get('content_type', '') | tojson }};
+        {{ request.form.get(
+            'content_type',
+            ''
+        ) | tojson }};
 
 
     // =====================================================
@@ -1796,7 +2952,7 @@
             "campaign",
 
 
-        // FOOD
+        // FOOD / RESTAURANTS
 
         "local-restaurants|restaurant":
             "presence",
@@ -1933,28 +3089,42 @@
     function hideLifetimeSections() {
 
         if (eventDateFields) {
+
             eventDateFields.style.display =
                 "none";
+
         }
+
 
         if (generalDateFields) {
+
             generalDateFields.style.display =
                 "none";
+
         }
+
 
         if (statusLifetimeSection) {
+
             statusLifetimeSection.style.display =
                 "none";
+
         }
+
 
         if (eventDateInput) {
+
             eventDateInput.required =
                 false;
+
         }
 
+
         if (endDateInput) {
+
             endDateInput.required =
                 false;
+
         }
 
     }
@@ -1979,14 +3149,18 @@
 
 
         if (workflowNoteTitle) {
+
             workflowNoteTitle.textContent =
                 title;
+
         }
 
 
         if (workflowNoteText) {
+
             workflowNoteText.textContent =
                 message;
+
         }
 
     }
@@ -2019,7 +3193,9 @@
             ||
             !contentTypeWrapper
         ) {
+
             return;
+
         }
 
 
@@ -2055,8 +3231,10 @@
             contentTypeWrapper.style.display =
                 "none";
 
+
             contentTypeSelect.required =
                 false;
+
 
             hideLifetimeSections();
 
@@ -2168,7 +3346,9 @@
             ||
             !contentTypeSelect
         ) {
+
             return;
+
         }
 
 
@@ -2424,8 +3604,10 @@
 
         const key =
             category
-            + "|"
-            + contentType;
+            +
+            "|"
+            +
+            contentType;
 
 
         if (
@@ -2490,7 +3672,9 @@
         return (
             "R"
             +
-            Number(amount).toFixed(0)
+            Number(
+                amount
+            ).toFixed(0)
         );
 
     }
@@ -2509,7 +3693,9 @@
             function(checkbox) {
 
                 if (checkbox.checked) {
+
                     count += 1;
+
                 }
 
             }
@@ -2649,15 +3835,18 @@
 
 
                 if (
-                    pricingModel ===
+                    pricingModel
+                    ===
                     "presence"
                 ) {
 
                     option.textContent =
                         (
                             days
-                            + " days — "
-                            + formatKalxaPrice(
+                            +
+                            " days — "
+                            +
+                            formatKalxaPrice(
                                 presencePricing[days]
                             )
                         );
@@ -2667,7 +3856,9 @@
                 else {
 
                     option.textContent =
-                        days + " days";
+                        days
+                        +
+                        " days";
 
                 }
 
@@ -2684,12 +3875,16 @@
             currentValue
             &&
             durations.includes(
-                Number(currentValue)
+                Number(
+                    currentValue
+                )
             )
         ) {
 
             durationSelect.value =
-                String(currentValue);
+                String(
+                    currentValue
+                );
 
         }
 
@@ -2713,7 +3908,9 @@
             ||
             !priceDisplay
         ) {
+
             return;
+
         }
 
 
@@ -2734,7 +3931,9 @@
         if (campaignZoneCount) {
 
             campaignZoneCount.textContent =
-                String(zoneCount);
+                String(
+                    zoneCount
+                );
 
         }
 
@@ -2816,13 +4015,17 @@
 
 
         priceDisplay.textContent =
-            formatKalxaPrice(amount);
+            formatKalxaPrice(
+                amount
+            );
 
 
         if (displayedAmountInput) {
 
             displayedAmountInput.value =
-                String(amount);
+                String(
+                    amount
+                );
 
         }
 
@@ -2830,14 +4033,18 @@
         if (packageSummary) {
 
             if (
-                pricingModel === "presence"
+                pricingModel
+                ===
+                "presence"
             ) {
 
                 packageSummary.textContent =
                     (
                         "Presence · "
-                        + duration
-                        + " days"
+                        +
+                        duration
+                        +
+                        " days"
                     );
 
             }
@@ -2847,11 +4054,16 @@
                 packageSummary.textContent =
                     (
                         "Campaign · "
-                        + duration
-                        + " days · "
-                        + zoneCount
-                        + " zone"
-                        + (
+                        +
+                        duration
+                        +
+                        " days · "
+                        +
+                        zoneCount
+                        +
+                        " zone"
+                        +
+                        (
                             zoneCount === 1
                                 ? ""
                                 : "s"
@@ -3027,7 +4239,9 @@
             "change",
             function() {
 
-                updateContentTypes(false);
+                updateContentTypes(
+                    false
+                );
 
             }
         );
@@ -3055,9 +4269,18 @@
 
     // =====================================================
     // HOME ZONE CHANGE
+    //
+    // This also works when zone-select is the hidden
+    // input used by the locked Kalxa location.
     // =====================================================
 
-    if (zoneSelect) {
+    if (
+        zoneSelect
+        &&
+        zoneSelect.tagName
+        ===
+        "SELECT"
+    ) {
 
         zoneSelect.addEventListener(
             "change",
@@ -3065,7 +4288,8 @@
 
                 if (
                     getSelectedPricingModel()
-                    === "campaign"
+                    ===
+                    "campaign"
                 ) {
 
                     ensureHomeZoneSelected();
@@ -3112,7 +4336,8 @@
 
                     if (
                         pricingModel
-                        !== "campaign"
+                        !==
+                        "campaign"
                     ) {
 
                         return;
@@ -3123,11 +4348,13 @@
                     ensureHomeZoneSelected();
 
 
-                    let count =
+                    const count =
                         getSelectedZoneCount();
 
 
-                    if (count > 3) {
+                    if (
+                        count > 3
+                    ) {
 
                         const homeZoneId =
                             zoneSelect
@@ -3145,7 +4372,8 @@
 
                         if (
                             changedZoneId
-                            !== homeZoneId
+                            !==
+                            homeZoneId
                         ) {
 
                             checkbox.checked =
@@ -3179,9 +4407,26 @@
 
     if (categorySelect) {
 
-        updateContentTypes(true);
+        updateContentTypes(
+            true
+        );
 
     }
+
+
+    /*
+     * Important for locked zones:
+     *
+     * When someone entered from KwaMhlanga, zoneSelect
+     * is a hidden input. If the user later selects a
+     * Campaign, ensureHomeZoneSelected() can still read
+     * the hidden KwaMhlanga ID and automatically include
+     * KwaMhlanga in Campaign reach.
+     */
+
+    ensureHomeZoneSelected();
+
+    updatePackagePrice();
 
 
     // =====================================================
@@ -3370,13 +4615,16 @@
 
                                 return (
                                     existing.name
-                                    === file.name
+                                    ===
+                                    file.name
                                     &&
                                     existing.size
-                                    === file.size
+                                    ===
+                                    file.size
                                     &&
                                     existing.lastModified
-                                    === file.lastModified
+                                    ===
+                                    file.lastModified
                                 );
 
                             }
@@ -3440,4 +4688,3 @@
 </body>
 
 </html>
-                                    
