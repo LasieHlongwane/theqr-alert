@@ -2601,38 +2601,28 @@ def push_subscribe():
         or {}
     )
 
-
     # =====================================================
     # READ REQUEST
     # =====================================================
 
-    zone_id = data.get(
-        "zone_id"
-    )
+    zone_id = data.get("zone_id")
 
     subscription = (
-        data.get(
-            "subscription"
-        )
+        data.get("subscription")
         or {}
     )
 
     categories = (
-        data.get(
-            "categories"
-        )
+        data.get("categories")
         or []
     )
-
 
     endpoint = subscription.get(
         "endpoint"
     )
 
     keys = (
-        subscription.get(
-            "keys"
-        )
+        subscription.get("keys")
         or {}
     )
 
@@ -2644,18 +2634,38 @@ def push_subscribe():
         "auth"
     )
 
-
     # =====================================================
-    # VALIDATION
+    # VALIDATE ZONE ID
     # =====================================================
 
-    if not zone_id:
+    try:
+        zone_id = int(zone_id)
+
+    except (TypeError, ValueError):
 
         return jsonify({
             "ok": False,
-            "error": "Zone is required.",
+            "error": "A valid zone is required.",
         }), 400
 
+    zone = db.session.get(
+        Zone,
+        zone_id,
+    )
+
+    if (
+        not zone
+        or not zone.active
+    ):
+
+        return jsonify({
+            "ok": False,
+            "error": "The selected zone is unavailable.",
+        }), 400
+
+    # =====================================================
+    # VALIDATE PUSH SUBSCRIPTION
+    # =====================================================
 
     if not endpoint:
 
@@ -2664,14 +2674,12 @@ def push_subscribe():
             "error": "Push endpoint is required.",
         }), 400
 
-
     if not p256dh or not auth_key:
 
         return jsonify({
             "ok": False,
             "error": "Push subscription keys are missing.",
         }), 400
-
 
     if not isinstance(
         categories,
@@ -2683,37 +2691,33 @@ def push_subscribe():
             "error": "Categories must be a list.",
         }), 400
 
-
-    # -----------------------------------------------------
+    # =====================================================
     # CLEAN CATEGORY SLUGS
-    # -----------------------------------------------------
+    # =====================================================
 
     cleaned_categories = []
 
-
-    for category in categories:
+    for category_slug in categories:
 
         if not isinstance(
-            category,
+            category_slug,
             str,
         ):
             continue
 
-
-        category = category.strip()
-
+        category_slug = (
+            category_slug.strip()
+        )
 
         if (
-            category
-            and
-            category
+            category_slug
+            and category_slug
             not in cleaned_categories
         ):
 
             cleaned_categories.append(
-                category
+                category_slug
             )
-
 
     if not cleaned_categories:
 
@@ -2725,42 +2729,40 @@ def push_subscribe():
             ),
         }), 400
 
-
     # =====================================================
-    # VERIFY CATEGORIES
-    # =====================================================
+    # VERIFY CATEGORIES AGAINST LIVE CATEGORY SYSTEM
     #
-    # Your existing category system is the source of truth.
-    # This prevents clients from storing arbitrary category
-    # strings.
+    # IMPORTANT:
+    # Store the REAL public category slug.
+    #
+    # Example:
+    # upcoming-event-🥹🔥
+    #
+    # This ensures the saved preference matches
+    # ContentItem.category exactly during push targeting.
     # =====================================================
 
     active_categories = (
         Category.query
-        .filter_by(
-           active=True
+        .filter(
+            Category.active.is_(True)
         )
         .all()
     )
 
-
     valid_category_slugs = {
-        category.slug
-        for category in active_categories
+        category_record.slug
+        for category_record
+        in active_categories
     }
 
-
     cleaned_categories = [
-
-        category
-
-        for category in cleaned_categories
-
-        if category
+        category_slug
+        for category_slug
+        in cleaned_categories
+        if category_slug
         in valid_category_slugs
-
     ]
-
 
     if not cleaned_categories:
 
@@ -2771,7 +2773,6 @@ def push_subscribe():
                 "categories were selected."
             ),
         }), 400
-
 
     # =====================================================
     # CREATE / UPDATE SUBSCRIBER
@@ -2787,13 +2788,12 @@ def push_subscribe():
             .first()
         )
 
-
         if subscriber is None:
 
             subscriber = PushSubscriber(
 
                 zone_id=
-                    zone_id,
+                    zone.id,
 
                 endpoint=
                     endpoint,
@@ -2806,23 +2806,23 @@ def push_subscribe():
 
                 active=
                     True,
-
             )
 
             db.session.add(
                 subscriber
             )
 
-            # We need the subscriber ID before
-            # inserting preference rows.
-
+            # Need subscriber.id before creating
+            # preference rows.
             db.session.flush()
-
 
         else:
 
+            # The browser subscription already exists.
+            # Update its current zone and keys.
+
             subscriber.zone_id = (
-                zone_id
+                zone.id
             )
 
             subscriber.p256dh = (
@@ -2837,25 +2837,22 @@ def push_subscribe():
                 True
             )
 
-
         # =================================================
-        # REPLACE PREFERENCES
-        # =================================================
+        # REPLACE CATEGORY PREFERENCES
         #
-        # This also allows "Manage Preferences" later:
-        #
-        # old preferences are removed,
-        # current selections become the source of truth.
+        # Current selections become the source of truth.
         # =================================================
 
         PushSubscriberPreference.query.filter_by(
-            subscriber_id=subscriber.id
+            subscriber_id=
+                subscriber.id
         ).delete(
             synchronize_session=False
         )
 
-
-        for category in cleaned_categories:
+        for category_slug in (
+            cleaned_categories
+        ):
 
             preference = (
                 PushSubscriberPreference(
@@ -2864,8 +2861,7 @@ def push_subscribe():
                         subscriber.id,
 
                     category=
-                        category,
-
+                        category_slug,
                 )
             )
 
@@ -2873,12 +2869,14 @@ def push_subscribe():
                 preference
             )
 
+        # =================================================
+        # COMMIT SUBSCRIBER + PREFERENCES ATOMICALLY
+        # =================================================
 
         db.session.commit()
 
-
         current_app.logger.info(
-            "[LaC Push] Subscription saved "
+            "[Kalxa Push] Subscription preferences saved "
             "subscriber_id=%s "
             "zone_id=%s "
             "categories=%s",
@@ -2889,7 +2887,6 @@ def push_subscribe():
             ),
         )
 
-
         return jsonify({
 
             "ok":
@@ -2898,24 +2895,25 @@ def push_subscribe():
             "subscriber_id":
                 subscriber.id,
 
+            "zone_id":
+                subscriber.zone_id,
+
             "categories":
                 cleaned_categories,
 
         }), 200
 
-
     except Exception as exc:
 
         db.session.rollback()
 
-
         current_app.logger.exception(
-            "[LaC Push] Unable to save "
+            "[Kalxa Push] Unable to save "
             "subscription preferences "
-            "error=%s",
+            "zone_id=%s error=%s",
+            zone_id,
             exc,
         )
-
 
         return jsonify({
             "ok": False,
@@ -3853,12 +3851,18 @@ def submit_content():
 
     zones = (
         Zone.query
-        .filter_by(active=True)
-        .order_by(Zone.name)
+        .filter_by(
+            active=True
+        )
+        .order_by(
+            Zone.name
+        )
         .all()
     )
 
-    categories = get_active_categories()
+    categories = (
+        get_active_categories()
+    )
 
     # =====================================================
     # POST
@@ -4056,7 +4060,7 @@ def submit_content():
         #
         # Example:
         #
-        # Database/public route:
+        # Public/database:
         # upcoming-event-🥹🔥
         #
         # Internal workflow:
@@ -4066,24 +4070,41 @@ def submit_content():
         category_aliases = {
 
             # EVENTS
-            "event": "events",
-            "local-events": "events",
-            "local_events": "events",
-            "upcoming-event-🥹🔥": "events",
+            "event":
+                "events",
+
+            "local-events":
+                "events",
+
+            "local_events":
+                "events",
+
+            "upcoming-event-🥹🔥":
+                "events",
 
             # FOOD / RESTAURANTS
-            "restaurant": "local-restaurants",
-            "restaurants": "local-restaurants",
-            "foods": "local-restaurants",
+            "restaurant":
+                "local-restaurants",
+
+            "restaurants":
+                "local-restaurants",
+
+            "foods":
+                "local-restaurants",
+
             "check-out-our-specials":
                 "local-restaurants",
 
             # BEAUTY
-            "beauty": "beauty-salon",
-            "salon": "beauty-salon",
+            "beauty":
+                "beauty-salon",
+
+            "salon":
+                "beauty-salon",
 
             # OPPORTUNITIES
-            "opportunity": "opportunities",
+            "opportunity":
+                "opportunities",
         }
 
         workflow_category = (
@@ -4110,12 +4131,33 @@ def submit_content():
             )
         )
 
-        notification_eligible = bool(
-            workflow.get(
-                "notification_eligible",
-                False,
-            )
-        )
+        # =================================================
+        # NOTIFICATION ELIGIBILITY
+        #
+        # Every newly approved public submission is allowed
+        # to trigger the notification engine.
+        #
+        # This DOES NOT notify everybody.
+        #
+        # send_zone_push_notification() still requires:
+        #
+        #   active subscriber
+        #       +
+        #   matching zone
+        #       +
+        #   matching REAL public category
+        #
+        # Therefore:
+        #
+        # Restaurant subscriber -> restaurant notifications
+        # Event subscriber      -> event notifications
+        # Salon subscriber      -> salon notifications
+        #
+        # Commercial content is additionally blocked from
+        # push until it is actually paid/waived and live.
+        # =================================================
+
+        notification_eligible = True
 
         if (
             lifetime_type
@@ -4134,9 +4176,9 @@ def submit_content():
                 categories=categories,
             )
 
-        # Every new listing starts available.
-
-        availability_status = "available"
+        availability_status = (
+            "available"
+        )
 
         # =================================================
         # DETERMINE COMMERCIAL PRICING MODEL
@@ -4274,7 +4316,12 @@ def submit_content():
                 # MAXIMUM 3 ZONES
                 # -----------------------------------------
 
-                if len(distribution_zone_ids) > 3:
+                if (
+                    len(
+                        distribution_zone_ids
+                    )
+                    > 3
+                ):
 
                     flash(
                         "Kalxa Campaign currently supports "
@@ -4344,8 +4391,6 @@ def submit_content():
                 == PRICING_MODEL_PRESENCE
             ):
 
-                # Presence stays in home/origin zone.
-
                 distribution_zone_ids = []
 
                 zone_count = 1
@@ -4370,15 +4415,13 @@ def submit_content():
 
             # =============================================
             # SERVER-SIDE PRICE CALCULATION
-            #
-            # Never trust displayed_amount_due sent
-            # by JavaScript/browser.
             # =============================================
 
             try:
 
                 amount_due = (
                     calculate_kalxa_price(
+
                         pricing_model=
                             pricing_model,
 
@@ -4407,7 +4450,9 @@ def submit_content():
         # DATE PARSER
         # =================================================
 
-        def parse_form_date(field_name):
+        def parse_form_date(
+            field_name
+        ):
 
             value = (
                 request.form.get(
@@ -4668,12 +4713,14 @@ def submit_content():
             in uploaded_images
             if (
                 image
-                and
-                image.filename
+                and image.filename
             )
         ]
 
-        if len(uploaded_images) > 3:
+        if (
+            len(uploaded_images)
+            > 3
+        ):
 
             flash(
                 "You can upload a maximum "
@@ -4689,16 +4736,6 @@ def submit_content():
 
         # =================================================
         # CREATE PENDING SUBMISSION
-        #
-        # Public users cannot choose:
-        #
-        # paid
-        # waived
-        # refunded
-        # active
-        # featured
-        #
-        # Commercial submissions ALWAYS begin unpaid.
         # =================================================
 
         submission = PendingSubmission(
@@ -4800,27 +4837,11 @@ def submit_content():
             amount_due=
                 amount_due,
 
-            # CRITICAL:
-            #
-            # payment_status is NOT NULL in PostgreSQL.
-            #
-            # Commercial:
-            #     unpaid
-            #
-            # Non-commercial/community:
-            #     waived
-
             payment_status=(
                 "unpaid"
                 if pricing_model
                 else "waived"
             ),
-
-            # Campaign:
-            # [1], [1,2], [1,2,3]
-            #
-            # Presence:
-            # []
 
             distribution_zone_ids=
                 distribution_zone_ids,
@@ -4854,8 +4875,6 @@ def submit_content():
             db.session.add(
                 submission
             )
-
-            # Generate submission.id before images.
 
             db.session.flush()
 
@@ -4911,6 +4930,22 @@ def submit_content():
                 )
 
             db.session.commit()
+
+            current_app.logger.info(
+                "[Kalxa Submission] Created "
+                "submission_id=%s "
+                "zone_id=%s "
+                "category=%s "
+                "notification_eligible=%s "
+                "pricing_model=%s "
+                "payment_status=%s",
+                submission.id,
+                submission.zone_id,
+                submission.category,
+                submission.notification_eligible,
+                submission.pricing_model,
+                submission.payment_status,
+            )
 
         except ValueError as error:
 
@@ -4970,10 +5005,6 @@ def submit_content():
         zones=zones,
         categories=categories,
     )
-
-    
-
-         
            
 
 # =========================================================
