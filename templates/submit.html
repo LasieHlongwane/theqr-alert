@@ -289,18 +289,19 @@
                         >
 
                             <option value="">
-                                Select area
+                                Choose your area
                             </option>
 
                             {% for zone in zones %}
 
                                 <option
-                                    value="{{ zone.id }}"
-                                    {% if request.form.get('zone_id') == zone.id|string %}
+                                    
+                                    value="{{ zone_option.id }}"
+                                    {% if selected_zone_id == zone_option.id %}
                                         selected
                                     {% endif %}
                                 >
-                                    {{ zone.name }}
+                                    {{ zone_option.name }}
                                 </option>
 
                             {% endfor %}
