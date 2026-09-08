@@ -354,7 +354,6 @@ def pwa_app():
 # ============================================================
 # YOCO - CREATE CHECKOUT
 # ============================================================
-
 @app.route(
     "/payment/yoco/<code>",
     methods=["POST"],
@@ -468,12 +467,6 @@ def create_yoco_checkout(code):
 
     try:
 
-        # Example:
-        #
-        # Decimal("49.00") * 100
-        #          ↓
-        #        4900 cents
-
         amount_cents = int(
             submission.amount_due * 100
         )
@@ -536,7 +529,7 @@ def create_yoco_checkout(code):
         )
 
     # --------------------------------------------------------
-    # 6. RETURN URLS
+    # 6. BUILD RETURN URLS
     # --------------------------------------------------------
 
     success_url = url_for(
@@ -554,7 +547,7 @@ def create_yoco_checkout(code):
     )
 
     # --------------------------------------------------------
-    # 7. BUILD YOCO CHECKOUT
+    # 7. BUILD YOCO CHECKOUT PAYLOAD
     # --------------------------------------------------------
 
     package_name = (
@@ -602,15 +595,14 @@ def create_yoco_checkout(code):
         "Authorization": f"Bearer {YOCO_SECRET_KEY}",
         "Content-Type": "application/json",
 
-        # Prevent accidental duplicate checkout creation
-        # when the same POST is retried.
+        # Same Kalxa submission gets the same idempotency key.
         "Idempotency-Key": (
             f"kalxa-{submission.id}-{submission.tracking_code}"
         ),
     }
 
     # --------------------------------------------------------
-    # 9. CREATE CHECKOUT
+    # 9. CREATE YOCO CHECKOUT
     # --------------------------------------------------------
 
     try:
@@ -670,7 +662,7 @@ def create_yoco_checkout(code):
         )
 
     # --------------------------------------------------------
-    # 11. READ CHECKOUT RESPONSE
+    # 11. READ YOCO CHECKOUT RESPONSE
     # --------------------------------------------------------
 
     try:
@@ -698,8 +690,32 @@ def create_yoco_checkout(code):
         )
 
     redirect_url = checkout.get("redirectUrl")
-
     checkout_id = checkout.get("id")
+
+    # --------------------------------------------------------
+    # 12. VALIDATE CHECKOUT RESPONSE
+    # --------------------------------------------------------
+
+    if not checkout_id:
+
+        current_app.logger.error(
+            "[Kalxa Yoco] Missing checkout ID "
+            "submission_id=%s response=%s",
+            submission.id,
+            checkout,
+        )
+
+        flash(
+            "Yoco did not return a valid checkout reference.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "submission_success",
+                code=submission.tracking_code,
+            )
+        )
 
     if not redirect_url:
 
@@ -724,16 +740,68 @@ def create_yoco_checkout(code):
         )
 
     # --------------------------------------------------------
-    # 12. LOG CHECKOUT CREATION
+    # 13. SAVE YOCO CHECKOUT ID
+    # --------------------------------------------------------
+
+    # This creates the permanent link:
+    #
+    # Kalxa PendingSubmission
+    #       ↓
+    # yoco_checkout_id
+    #       ↓
+    # Yoco payment
+    #
+    # Later the webhook receives payment_id, retrieves the
+    # payment from Yoco, reads checkout_id, and finds this
+    # exact Kalxa submission.
+
+    try:
+
+        submission.yoco_checkout_id = checkout_id
+
+        db.session.commit()
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Kalxa Yoco] Unable to save checkout ID "
+            "submission_id=%s checkout_id=%s error=%s",
+            submission.id,
+            checkout_id,
+            exc,
+        )
+
+        flash(
+            "The payment was created, but Kalxa could not "
+            "save the payment reference. Please try again.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "submission_success",
+                code=submission.tracking_code,
+            )
+        )
+
+    # --------------------------------------------------------
+    # 14. LOG CHECKOUT CREATION
     # --------------------------------------------------------
 
     # IMPORTANT:
-    # We are NOT setting payment_status = "paid" here.
     #
-    # Creating a checkout is NOT proof that payment happened.
+    # Creating a Yoco checkout does NOT mean payment happened.
+    #
+    # payment_status stays:
+    #
+    #     unpaid
+    #
+    # The webhook will later verify the actual Yoco payment.
 
     current_app.logger.info(
-        "[Kalxa Yoco] Checkout created "
+        "[Kalxa Yoco] Checkout created and saved "
         "submission_id=%s reference=%s "
         "checkout_id=%s amount_cents=%s mode=%s",
         submission.id,
@@ -744,14 +812,13 @@ def create_yoco_checkout(code):
     )
 
     # --------------------------------------------------------
-    # 13. SEND CUSTOMER TO YOCO
+    # 15. SEND CUSTOMER TO YOCO
     # --------------------------------------------------------
 
     return redirect(
         redirect_url,
         code=303,
     )
-
 # ============================================================
 # YOCO - CUSTOMER RETURN
 # ============================================================
