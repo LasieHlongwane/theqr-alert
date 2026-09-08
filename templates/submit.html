@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,7 +16,7 @@
     >
 
     <title>
-        LaC | Local Access
+        Kalxa | Submit Local Content
     </title>
 
 
@@ -45,7 +44,7 @@
 
     <meta
         name="application-name"
-        content="LaC"
+        content="Kalxa"
     >
 
     <meta
@@ -60,7 +59,7 @@
 
     <meta
         name="apple-mobile-web-app-title"
-        content="LaC"
+        content="Kalxa"
     >
 
     <meta
@@ -83,9 +82,11 @@
 
 </head>
 
+
 <body class="lac-public-body">
 
 <div class="lac-page">
+
 
     <!-- =========================================
          HEADER
@@ -96,11 +97,11 @@
         <div class="public-brand-wrap">
 
             <div class="lac-brand">
-                LaC
+                Kalxa
             </div>
 
             <div class="lac-tagline">
-                LOCAL DIGITAL INFRASTRUCTURE.
+                POWERED BY LaC
             </div>
 
         </div>
@@ -114,6 +115,7 @@
 
     <main class="public-submit-container">
 
+
         <!-- =====================================
              INTRO
         ====================================== -->
@@ -121,17 +123,17 @@
         <section class="public-submit-hero">
 
             <p class="access-eyebrow">
-                SHARE INFO
+                GET DISCOVERED LOCALLY
             </p>
 
             <h1>
-                Submit Content
+                Add Your Content to Kalxa
             </h1>
 
             <p>
-                Add an event, deal, property listing,
-                service, job or other useful local
-                information for review.
+                List your business, event, special,
+                property, service, job or other useful
+                local information.
             </p>
 
 
@@ -148,9 +150,10 @@
                     </strong>
 
                     <p>
-                        Your listing will only appear
-                        publicly after LaC has reviewed
-                        and approved it.
+                        Your submission is reviewed before
+                        it becomes publicly visible on Kalxa.
+                        Commercial listings only become visible
+                        after payment has been confirmed.
                     </p>
 
                 </div>
@@ -187,8 +190,9 @@
             class="public-submit-form-new"
         >
 
+
             <!-- =================================
-                 YOUR DETAILS
+                 01 — YOUR DETAILS
             ================================== -->
 
             <section class="public-form-section">
@@ -202,11 +206,12 @@
                     <div>
 
                         <h2>
-                            Details
+                            Your Details
                         </h2>
 
                         <p>
-                            Who is submitting this listing.
+                            Tell us who is submitting
+                            this listing.
                         </p>
 
                     </div>
@@ -238,7 +243,7 @@
 
 
             <!-- =================================
-                 LOCATION + CATEGORY
+                 02 — HOME AREA + CATEGORY
             ================================== -->
 
             <section class="public-form-section">
@@ -252,13 +257,13 @@
                     <div>
 
                         <h2>
-                            Target Area
+                            What Are You Listing?
                         </h2>
 
                         <p>
-                            Choose where the listing
-                            should appear and what kind
-                            of information it contains.
+                            Choose where the listing comes
+                            from and what kind of information
+                            you want to publish.
                         </p>
 
                     </div>
@@ -268,21 +273,23 @@
 
                 <div class="public-form-grid">
 
-                    <!-- ZONE -->
+
+                    <!-- HOME ZONE -->
 
                     <label class="public-field">
 
                         <span>
-                            Zone *
+                            Home Area *
                         </span>
 
                         <select
                             name="zone_id"
+                            id="zone-select"
                             required
                         >
 
                             <option value="">
-                                Select zone
+                                Select area
                             </option>
 
                             {% for zone in zones %}
@@ -299,6 +306,11 @@
                             {% endfor %}
 
                         </select>
+
+                        <small>
+                            This is where your business,
+                            event or listing originates.
+                        </small>
 
                     </label>
 
@@ -347,9 +359,7 @@
                 </div>
 
 
-                <!-- =================================
-                     CONTENT TYPE
-                ================================== -->
+                <!-- CONTENT TYPE -->
 
                 <div
                     id="content-type-wrapper"
@@ -383,9 +393,7 @@
                 </div>
 
 
-                <!-- =================================
-                     WORKFLOW NOTE
-                ================================== -->
+                <!-- WORKFLOW NOTE -->
 
                 <div
                     id="listing-workflow-note"
@@ -413,7 +421,7 @@
 
 
             <!-- =================================
-                 LISTING DETAILS
+                 03 — LISTING DETAILS
             ================================== -->
 
             <section class="public-form-section">
@@ -431,9 +439,8 @@
                         </h2>
 
                         <p>
-                            Add the information customers
-                            will see when your listing
-                            is approved.
+                            Add the information people
+                            will see on Kalxa.
                         </p>
 
                     </div>
@@ -452,7 +459,7 @@
                         name="title"
                         required
                         value="{{ request.form.get('title', '') }}"
-                        placeholder="Example: Rooms to Rent"
+                        placeholder="Example: Weekend Grocery Special"
                     >
 
                 </label>
@@ -483,7 +490,7 @@
                     <textarea
                         name="description"
                         rows="5"
-                        placeholder="Tell customers what they need to know."
+                        placeholder="Tell people what they need to know."
                     >{{ request.form.get('description', '') }}</textarea>
 
                 </label>
@@ -501,7 +508,7 @@
                             type="text"
                             name="venue"
                             value="{{ request.form.get('venue', '') }}"
-                            placeholder="Example: Zakheni"
+                            placeholder="Example: KwaMhlanga"
                         >
 
                     </label>
@@ -510,7 +517,7 @@
                     <label class="public-field">
 
                         <span>
-                            Price
+                            Customer Price
                         </span>
 
                         <input
@@ -519,6 +526,12 @@
                             value="{{ request.form.get('price', '') }}"
                             placeholder="R750 / Free / Negotiable"
                         >
+
+                        <small>
+                            This is the price customers see.
+                            It is separate from the Kalxa
+                            listing package.
+                        </small>
 
                     </label>
 
@@ -539,9 +552,8 @@
                     >
 
                     <small>
-                        This number may appear on the
-                        public listing for WhatsApp
-                        and calls.
+                        This number may appear publicly for
+                        WhatsApp and calls.
                     </small>
 
                 </label>
@@ -550,7 +562,7 @@
 
 
             <!-- =================================
-                 PHOTOS
+                 04 — PHOTOS
             ================================== -->
 
             <section class="public-form-section">
@@ -569,8 +581,7 @@
 
                         <p>
                             Upload up to 3 photos or
-                            posters that represent
-                            the listing.
+                            posters.
                         </p>
 
                     </div>
@@ -616,7 +627,7 @@
 
 
             <!-- =================================
-                 EVENT DATES
+                 05 — EVENT DATES
             ================================== -->
 
             <section
@@ -638,8 +649,8 @@
                         </h2>
 
                         <p>
-                            Set when the event becomes
-                            visible and when it takes place.
+                            Tell Kalxa when the event
+                            takes place.
                         </p>
 
                     </div>
@@ -706,7 +717,7 @@
 
 
             <!-- =================================
-                 TIME-SPECIFIC DATES
+                 05 — NATURAL CONTENT DATES
             ================================== -->
 
             <section
@@ -724,12 +735,13 @@
                     <div>
 
                         <h2>
-                            Listing Dates
+                            Content Dates
                         </h2>
 
                         <p>
-                            Set how long this temporary
-                            listing should remain active.
+                            Tell Kalxa when this deal,
+                            special or opportunity naturally
+                            ends.
                         </p>
 
                     </div>
@@ -772,11 +784,17 @@
 
                 </div>
 
+                <small>
+                    These dates describe the content itself.
+                    Your paid Kalxa package duration is chosen
+                    separately below.
+                </small>
+
             </section>
 
 
             <!-- =================================
-                 ONGOING LISTING
+                 05 — ONGOING / UNTIL UNAVAILABLE
             ================================== -->
 
             <section
@@ -813,12 +831,13 @@
                     <div>
 
                         <strong id="status-card-title">
-                            No expiry date required
+                            No natural expiry date required
                         </strong>
 
                         <p id="status-card-text">
-                            This listing remains active
-                            until it is manually deactivated.
+                            Your Kalxa package still controls
+                            how long the listing is publicly
+                            discoverable.
                         </p>
 
                     </div>
@@ -829,7 +848,267 @@
 
 
             <!-- =================================
-                 SUBMIT
+                 06 — COMMERCIAL PACKAGE
+            ================================== -->
+
+            <section
+                id="kalxa-package-section"
+                class="public-form-section"
+                style="display: none;"
+            >
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        06
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Choose Your Kalxa Package
+                        </h2>
+
+                        <p>
+                            Choose how long you want your
+                            content discoverable. Campaigns
+                            can also reach additional areas.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HIDDEN PRICING MODEL -->
+
+                <input
+                    type="hidden"
+                    name="pricing_model"
+                    id="pricing-model"
+                    value="{{ request.form.get('pricing_model', '') }}"
+                >
+
+
+                <!-- PACKAGE TYPE -->
+
+                <div class="submit-review-note">
+
+                    <span class="submit-review-note-icon">
+                        ✓
+                    </span>
+
+                    <div>
+
+                        <strong id="package-model-title">
+                            Kalxa Package
+                        </strong>
+
+                        <p id="package-model-description">
+                            Select what you are listing first.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DURATION -->
+
+                <label class="public-field">
+
+                    <span>
+                        Visibility Duration *
+                    </span>
+
+                    <select
+                        name="commercial_duration_days"
+                        id="commercial-duration-days"
+                        data-previous-duration="{{ request.form.get('commercial_duration_days', '') }}"
+                    >
+
+                        <option value="">
+                            Select duration
+                        </option>
+
+                    </select>
+
+                    <small id="duration-help">
+                        Choose how long you want the listing
+                        visible on Kalxa.
+                    </small>
+
+                </label>
+
+
+                <!-- =================================
+                     CAMPAIGN REACH
+                ================================== -->
+
+                <div
+                    id="campaign-reach-section"
+                    style="display: none;"
+                >
+
+                    <div class="public-form-section-heading">
+
+                        <div>
+
+                            <h2 style="font-size: 1.15rem;">
+                                Choose Campaign Reach
+                            </h2>
+
+                            <p>
+                                Your home area is included.
+                                You can distribute this campaign
+                                to up to 3 areas.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            display: grid;
+                            gap: 10px;
+                            margin-top: 14px;
+                        "
+                    >
+
+                        {% for zone in zones %}
+
+                            <label
+                                class="public-field"
+                                style="
+                                    display: flex;
+                                    flex-direction: row;
+                                    align-items: center;
+                                    gap: 10px;
+                                "
+                            >
+
+                                <input
+                                    type="checkbox"
+                                    name="distribution_zone_ids"
+                                    value="{{ zone.id }}"
+                                    data-zone-id="{{ zone.id }}"
+                                    class="distribution-zone-checkbox"
+
+                                    {% if zone.id|string in request.form.getlist('distribution_zone_ids') %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <span>
+                                    {{ zone.name }}
+                                </span>
+
+                            </label>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div
+                        class="submit-review-note"
+                        style="margin-top: 16px;"
+                    >
+
+                        <span class="submit-review-note-icon">
+                            📍
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                <span id="campaign-zone-count">
+                                    0
+                                </span>
+                                zone(s) selected
+                            </strong>
+
+                            <p>
+                                More reach increases the
+                                campaign package price.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================
+                     PRICE SUMMARY
+                ================================== -->
+
+                <div
+                    style="
+                        margin-top: 22px;
+                        padding: 20px;
+                        border: 1px solid rgba(128,128,128,.35);
+                        border-radius: 14px;
+                    "
+                >
+
+                    <small>
+                        YOUR KALXA PACKAGE
+                    </small>
+
+                    <div
+                        id="kalxa-package-summary"
+                        style="
+                            margin-top: 8px;
+                            font-weight: 700;
+                        "
+                    >
+                        Select a package duration.
+                    </div>
+
+
+                    <div
+                        id="kalxa-price-display"
+                        style="
+                            font-size: 2rem;
+                            font-weight: 800;
+                            margin-top: 10px;
+                        "
+                    >
+                        —
+                    </div>
+
+
+                    <input
+                        type="hidden"
+                        id="displayed-amount-due"
+                        name="displayed_amount_due"
+                        value=""
+                    >
+
+
+                    <p
+                        style="
+                            margin-bottom: 0;
+                            margin-top: 10px;
+                        "
+                    >
+                        Your listing will be submitted for
+                        review. Kalxa will confirm payment
+                        before commercial content becomes
+                        publicly visible.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================
+                 FINAL SUBMIT
             ================================== -->
 
             <section class="public-submit-final">
@@ -841,14 +1120,15 @@
                     </span>
 
                     <h2>
-                        Send your listing for review.
+                        Send your listing to Kalxa.
                     </h2>
 
                     <p>
                         After submission, you'll receive
-                        a tracking reference you can use
-                        to check whether the listing has
-                        been approved.
+                        a tracking reference. Your listing
+                        will be reviewed and payment will
+                        be confirmed before paid content
+                        becomes publicly visible.
                     </p>
 
                 </div>
@@ -858,7 +1138,7 @@
                     type="submit"
                     class="public-submit-primary-button"
                 >
-                    Submit for Review →
+                    Submit Listing →
                 </button>
 
             </section>
@@ -875,11 +1155,11 @@
     <footer class="public-footer">
 
         <div class="footer-brand">
-            LaC
+            Kalxa
         </div>
 
         <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
+            POWERED BY LaC
         </div>
 
     </footer>
@@ -888,9 +1168,13 @@
 
 
 <script>
+
     // =====================================================
-    // FORM ELEMENTS
+    // ELEMENTS
     // =====================================================
+
+    const zoneSelect =
+        document.getElementById("zone-select");
 
     const categorySelect =
         document.getElementById("category-select");
@@ -942,24 +1226,142 @@
 
 
     // =====================================================
-    // LIFECYCLE RULE
-    //
-    // ONLY:
-    // property
-    // transport
-    // services
-    //
-    // are ongoing.
-    //
-    // Everything else automatically expires.
-    // Events use event-specific dates.
+    // COMMERCIAL ELEMENTS
     // =====================================================
 
-    const ongoingCategories = new Set([
-        "property",
-        "transport",
-        "services"
-    ]);
+    const packageSection =
+        document.getElementById("kalxa-package-section");
+
+    const pricingModelInput =
+        document.getElementById("pricing-model");
+
+    const packageModelTitle =
+        document.getElementById("package-model-title");
+
+    const packageModelDescription =
+        document.getElementById("package-model-description");
+
+    const durationSelect =
+        document.getElementById("commercial-duration-days");
+
+    const durationHelp =
+        document.getElementById("duration-help");
+
+    const campaignReachSection =
+        document.getElementById("campaign-reach-section");
+
+    const zoneCheckboxes =
+        document.querySelectorAll(
+            ".distribution-zone-checkbox"
+        );
+
+    const campaignZoneCount =
+        document.getElementById("campaign-zone-count");
+
+    const packageSummary =
+        document.getElementById("kalxa-package-summary");
+
+    const priceDisplay =
+        document.getElementById("kalxa-price-display");
+
+    const displayedAmountInput =
+        document.getElementById("displayed-amount-due");
+
+
+    // =====================================================
+    // PRICING
+    // =====================================================
+
+    const presencePricing = {
+        30: 49,
+        90: 99,
+        180: 169,
+        365: 249
+    };
+
+
+    const campaignPricing = {
+
+        7: {
+            1: 49,
+            2: 79,
+            3: 109
+        },
+
+        14: {
+            1: 79,
+            2: 119,
+            3: 159
+        },
+
+        30: {
+            1: 129,
+            2: 179,
+            3: 229
+        }
+
+    };
+
+
+    // =====================================================
+    // CATEGORY NORMALIZATION
+    //
+    // These aliases allow the commercial engine to work
+    // with your actual public Kalxa category slugs.
+    // =====================================================
+
+    function getRawCategory() {
+
+        if (!categorySelect) {
+            return "";
+        }
+
+        return String(
+            categorySelect.value || ""
+        )
+        .trim()
+        .toLowerCase();
+
+    }
+
+
+    function getNormalizedCategory() {
+
+        const rawCategory =
+            getRawCategory();
+
+
+        const aliases = {
+
+            // EVENTS
+            "event": "events",
+            "local-events": "events",
+            "local_events": "events",
+            "upcoming-event-🥹🔥": "events",
+
+            // FOOD / RESTAURANTS
+            "restaurant": "local-restaurants",
+            "restaurants": "local-restaurants",
+            "foods": "local-restaurants",
+            "check-out-our-specials": "local-restaurants",
+
+            // BEAUTY
+            "beauty": "beauty-salon",
+            "salon": "beauty-salon",
+
+            // OPPORTUNITIES
+            "opportunity": "opportunities"
+
+        };
+
+
+        return (
+            aliases[rawCategory]
+            ||
+            rawCategory
+        );
+
+    }
 
 
     // =====================================================
@@ -970,7 +1372,8 @@
 
         "property": {
 
-            label: "What are you listing?",
+            label:
+                "What are you listing?",
 
             options: [
 
@@ -996,7 +1399,7 @@
 
                 {
                     value: "accommodation_special",
-                    label: "🏷 Accommodation Listing / Special"
+                    label: "🏷 Accommodation Special"
                 }
 
             ]
@@ -1006,7 +1409,8 @@
 
         "transport": {
 
-            label: "What transport service are you listing?",
+            label:
+                "What transport service are you listing?",
 
             options: [
 
@@ -1037,7 +1441,8 @@
 
         "services": {
 
-            label: "What type of service is this?",
+            label:
+                "What type of service is this?",
 
             options: [
 
@@ -1078,7 +1483,8 @@
 
         "events": {
 
-            label: "What type of event is this?",
+            label:
+                "What type of event is this?",
 
             options: [
 
@@ -1119,7 +1525,8 @@
 
         "discount-deals": {
 
-            label: "What kind of deal is this?",
+            label:
+                "What kind of deal is this?",
 
             options: [
 
@@ -1150,7 +1557,8 @@
 
         "local-restaurants": {
 
-            label: "What are you listing?",
+            label:
+                "What are you listing?",
 
             options: [
 
@@ -1186,7 +1594,8 @@
 
         "jobs": {
 
-            label: "What kind of opportunity is this?",
+            label:
+                "What kind of opportunity is this?",
 
             options: [
 
@@ -1227,7 +1636,8 @@
 
         "opportunities": {
 
-            label: "What kind of opportunity is this?",
+            label:
+                "What kind of opportunity is this?",
 
             options: [
 
@@ -1268,7 +1678,8 @@
 
         "beauty-salon": {
 
-            label: "What are you listing?",
+            label:
+                "What are you listing?",
 
             options: [
 
@@ -1299,15 +1710,10 @@
     };
 
 
-    // =====================================================
-    // FALLBACK
-    //
-    // Unknown/new categories expire automatically.
-    // =====================================================
-
     const fallbackContentType = {
 
-        label: "What are you listing?",
+        label:
+            "What are you listing?",
 
         options: [
 
@@ -1322,7 +1728,7 @@
 
 
     // =====================================================
-    // RESTORE FORM AFTER VALIDATION ERROR
+    // PREVIOUS FORM VALUES
     // =====================================================
 
     const previousContentType =
@@ -1330,41 +1736,193 @@
 
 
     // =====================================================
-    // NORMALIZE CATEGORY
+    // EXACT PRICING OVERRIDES
     // =====================================================
 
-    function getNormalizedCategory() {
+    const pricingModelOverrides = {
 
-        if (!categorySelect) {
-            return "";
-        }
+        // PROPERTY
 
-        const rawCategory =
-            categorySelect.value
-                .trim()
-                .toLowerCase();
+        "property|room":
+            "campaign",
 
+        "property|rental":
+            "campaign",
 
-        const aliases = {
+        "property|property_sale":
+            "campaign",
 
-            "event": "events",
-            "local-events": "events",
-            "local_events": "events",
+        "property|hotel_lodge":
+            "presence",
 
-            "restaurant": "local-restaurants",
-            "restaurants": "local-restaurants",
-
-            "beauty": "beauty-salon",
-            "salon": "beauty-salon",
-
-            "opportunity": "opportunities"
-
-        };
+        "property|accommodation_special":
+            "campaign",
 
 
-        return aliases[rawCategory] || rawCategory;
+        // EVENTS
 
-    }
+        "events|event":
+            "campaign",
+
+        "events|entertainment":
+            "campaign",
+
+        "events|church_event":
+            "campaign",
+
+        "events|sports_event":
+            "campaign",
+
+        "events|community_event":
+            "campaign",
+
+        "events|business_event":
+            "campaign",
+
+
+        // STORE SPECIALS
+
+        "discount-deals|grocery_special":
+            "campaign",
+
+        "discount-deals|product_discount":
+            "campaign",
+
+        "discount-deals|weekend_special":
+            "campaign",
+
+        "discount-deals|clearance":
+            "campaign",
+
+
+        // FOOD
+
+        "local-restaurants|restaurant":
+            "presence",
+
+        "local-restaurants|takeaway":
+            "presence",
+
+        "local-restaurants|daily_special":
+            "campaign",
+
+        "local-restaurants|weekend_special":
+            "campaign",
+
+        "local-restaurants|food_deal":
+            "campaign",
+
+
+        // JOBS
+
+        "jobs|job":
+            "campaign",
+
+        "jobs|learnership":
+            "campaign",
+
+        "jobs|internship":
+            "campaign",
+
+        "jobs|training":
+            "campaign",
+
+        "jobs|tender":
+            "campaign",
+
+        "jobs|business_opportunity":
+            "campaign",
+
+
+        // OPPORTUNITIES
+
+        "opportunities|job":
+            "campaign",
+
+        "opportunities|learnership":
+            "campaign",
+
+        "opportunities|internship":
+            "campaign",
+
+        "opportunities|training":
+            "campaign",
+
+        "opportunities|tender":
+            "campaign",
+
+        "opportunities|business_opportunity":
+            "campaign",
+
+
+        // SERVICES
+
+        "services|service_provider":
+            "presence",
+
+        "services|plumber":
+            "presence",
+
+        "services|mechanic":
+            "presence",
+
+        "services|electrician":
+            "presence",
+
+        "services|builder":
+            "presence",
+
+        "services|cleaning_service":
+            "presence",
+
+
+        // BEAUTY
+
+        "beauty-salon|salon":
+            "presence",
+
+        "beauty-salon|barber":
+            "presence",
+
+        "beauty-salon|beauty_service":
+            "presence",
+
+        "beauty-salon|beauty_special":
+            "campaign"
+
+    };
+
+
+    // =====================================================
+    // CATEGORY FALLBACK PRICING
+    // =====================================================
+
+    const presenceCategories =
+        new Set([
+            "local-restaurants",
+            "beauty-salon",
+            "services"
+        ]);
+
+
+    const campaignCategories =
+        new Set([
+            "events",
+            "discount-deals",
+            "jobs",
+            "opportunities"
+        ]);
+
+
+    // =====================================================
+    // LIFETIME RULES
+    // =====================================================
+
+    const ongoingCategories =
+        new Set([
+            "transport",
+            "services"
+        ]);
 
 
     // =====================================================
@@ -1374,23 +1932,28 @@
     function hideLifetimeSections() {
 
         if (eventDateFields) {
-            eventDateFields.style.display = "none";
+            eventDateFields.style.display =
+                "none";
         }
 
         if (generalDateFields) {
-            generalDateFields.style.display = "none";
+            generalDateFields.style.display =
+                "none";
         }
 
         if (statusLifetimeSection) {
-            statusLifetimeSection.style.display = "none";
+            statusLifetimeSection.style.display =
+                "none";
         }
 
         if (eventDateInput) {
-            eventDateInput.required = false;
+            eventDateInput.required =
+                false;
         }
 
         if (endDateInput) {
-            endDateInput.required = false;
+            endDateInput.required =
+                false;
         }
 
     }
@@ -1409,14 +1972,20 @@
             return;
         }
 
-        listingWorkflowNote.style.display = "flex";
+
+        listingWorkflowNote.style.display =
+            "flex";
+
 
         if (workflowNoteTitle) {
-            workflowNoteTitle.textContent = title;
+            workflowNoteTitle.textContent =
+                title;
         }
 
+
         if (workflowNoteText) {
-            workflowNoteText.textContent = message;
+            workflowNoteText.textContent =
+                message;
         }
 
     }
@@ -1425,7 +1994,10 @@
     function hideWorkflowNote() {
 
         if (listingWorkflowNote) {
-            listingWorkflowNote.style.display = "none";
+
+            listingWorkflowNote.style.display =
+                "none";
+
         }
 
     }
@@ -1440,8 +2012,10 @@
     ) {
 
         if (
-            !categorySelect ||
-            !contentTypeSelect ||
+            !categorySelect
+            ||
+            !contentTypeSelect
+            ||
             !contentTypeWrapper
         ) {
             return;
@@ -1452,16 +2026,23 @@
             getNormalizedCategory();
 
 
-        contentTypeSelect.innerHTML = "";
+        contentTypeSelect.innerHTML =
+            "";
 
 
         const defaultOption =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
-        defaultOption.value = "";
+
+        defaultOption.value =
+            "";
+
 
         defaultOption.textContent =
             "Select listing type";
+
 
         contentTypeSelect.appendChild(
             defaultOption
@@ -1480,13 +2061,16 @@
 
             hideWorkflowNote();
 
+            updateCommercialPackage();
+
             return;
 
         }
 
 
         const config =
-            contentTypeConfig[category] ||
+            contentTypeConfig[category]
+            ||
             fallbackContentType;
 
 
@@ -1506,11 +2090,14 @@
                         "option"
                     );
 
+
                 option.value =
                     optionConfig.value;
 
+
                 option.textContent =
                     optionConfig.label;
+
 
                 contentTypeSelect.appendChild(
                     option
@@ -1523,23 +2110,27 @@
         contentTypeWrapper.style.display =
             "block";
 
+
         contentTypeSelect.required =
             true;
 
 
         if (
-            restorePrevious &&
+            restorePrevious
+            &&
             previousContentType
         ) {
 
             const previousExists =
                 Array.from(
                     contentTypeSelect.options
-                ).some(
+                )
+                .some(
                     function(option) {
 
                         return (
-                            option.value ===
+                            option.value
+                            ===
                             previousContentType
                         );
 
@@ -1572,7 +2163,8 @@
 
 
         if (
-            !categorySelect ||
+            !categorySelect
+            ||
             !contentTypeSelect
         ) {
             return;
@@ -1582,16 +2174,24 @@
         const category =
             getNormalizedCategory();
 
+
         const contentType =
-            contentTypeSelect.value;
+            String(
+                contentTypeSelect.value || ""
+            )
+            .trim()
+            .toLowerCase();
 
 
         if (
-            !category ||
+            !category
+            ||
             !contentType
         ) {
 
             hideWorkflowNote();
+
+            updateCommercialPackage();
 
             return;
 
@@ -1602,7 +2202,9 @@
         // EVENTS
         // =============================================
 
-        if (category === "events") {
+        if (
+            category === "events"
+        ) {
 
             if (eventDateFields) {
 
@@ -1622,8 +2224,72 @@
 
             showWorkflowNote(
                 "Event listing",
-                "This event will automatically expire after its event date or event end date."
+                "The event date describes when the event happens. Your Kalxa Campaign package controls how long it is promoted."
             );
+
+
+            updateCommercialPackage();
+
+            return;
+
+        }
+
+
+        // =============================================
+        // PROPERTY
+        // =============================================
+
+        if (
+            category === "property"
+        ) {
+
+            if (statusLifetimeSection) {
+
+                statusLifetimeSection.style.display =
+                    "block";
+
+            }
+
+
+            if (statusLifetimeTitle) {
+
+                statusLifetimeTitle.textContent =
+                    "Availability-based Listing";
+
+            }
+
+
+            if (statusLifetimeText) {
+
+                statusLifetimeText.textContent =
+                    "This listing remains relevant until the property, room or accommodation is no longer available.";
+
+            }
+
+
+            if (statusCardTitle) {
+
+                statusCardTitle.textContent =
+                    "No natural expiry date required";
+
+            }
+
+
+            if (statusCardText) {
+
+                statusCardText.textContent =
+                    "Your selected Kalxa package still controls how long the listing is publicly discoverable.";
+
+            }
+
+
+            showWorkflowNote(
+                "Availability-based listing",
+                "The listing remains relevant until unavailable, while your Kalxa package controls its paid visibility."
+            );
+
+
+            updateCommercialPackage();
 
             return;
 
@@ -1632,10 +2298,6 @@
 
         // =============================================
         // ONGOING
-        //
-        // Property
-        // Transport
-        // Services
         // =============================================
 
         if (
@@ -1663,7 +2325,7 @@
             if (statusLifetimeText) {
 
                 statusLifetimeText.textContent =
-                    "This listing does not automatically expire.";
+                    "This business or service does not have a natural expiry date.";
 
             }
 
@@ -1671,7 +2333,7 @@
             if (statusCardTitle) {
 
                 statusCardTitle.textContent =
-                    "No expiry date required";
+                    "Ongoing business information";
 
             }
 
@@ -1679,15 +2341,18 @@
             if (statusCardText) {
 
                 statusCardText.textContent =
-                    "The listing remains active until it is manually updated or deactivated.";
+                    "Your Kalxa Presence package determines how long the business remains publicly discoverable.";
 
             }
 
 
             showWorkflowNote(
                 "Ongoing listing",
-                "No expiry date is required for this category."
+                "Your selected Kalxa Presence package controls how long this listing stays publicly discoverable."
             );
+
+
+            updateCommercialPackage();
 
             return;
 
@@ -1695,7 +2360,7 @@
 
 
         // =============================================
-        // EVERYTHING ELSE EXPIRES
+        // EVERYTHING ELSE
         // =============================================
 
         if (generalDateFields) {
@@ -1716,14 +2381,643 @@
 
         showWorkflowNote(
             "Time-specific listing",
-            "This listing will automatically expire on its end date."
+            "This content has its own end date. The Kalxa Campaign package separately controls its paid distribution period."
+        );
+
+
+        updateCommercialPackage();
+
+    }
+
+
+    // =====================================================
+    // DETERMINE PRICING MODEL
+    // =====================================================
+
+    function getSelectedPricingModel() {
+
+        const category =
+            getNormalizedCategory();
+
+
+        const contentType =
+            String(
+                contentTypeSelect
+                    ? contentTypeSelect.value
+                    : ""
+            )
+            .trim()
+            .toLowerCase();
+
+
+        if (
+            !category
+            ||
+            !contentType
+        ) {
+
+            return "";
+
+        }
+
+
+        const key =
+            category
+            + "|"
+            + contentType;
+
+
+        if (
+            pricingModelOverrides[key]
+        ) {
+
+            return (
+                pricingModelOverrides[key]
+            );
+
+        }
+
+
+        if (
+            presenceCategories.has(
+                category
+            )
+        ) {
+
+            return "presence";
+
+        }
+
+
+        if (
+            campaignCategories.has(
+                category
+            )
+        ) {
+
+            return "campaign";
+
+        }
+
+
+        return "";
+
+    }
+
+
+    // =====================================================
+    // FORMAT PRICE
+    // =====================================================
+
+    function formatKalxaPrice(
+        amount
+    ) {
+
+        if (
+            amount === null
+            ||
+            amount === undefined
+            ||
+            amount === ""
+        ) {
+
+            return "—";
+
+        }
+
+
+        return (
+            "R"
+            +
+            Number(amount).toFixed(0)
         );
 
     }
 
 
     // =====================================================
-    // CATEGORY EVENTS
+    // CAMPAIGN ZONES
+    // =====================================================
+
+    function getSelectedZoneCount() {
+
+        let count = 0;
+
+
+        zoneCheckboxes.forEach(
+            function(checkbox) {
+
+                if (checkbox.checked) {
+                    count += 1;
+                }
+
+            }
+        );
+
+
+        return count;
+
+    }
+
+
+    function ensureHomeZoneSelected() {
+
+        if (!zoneSelect) {
+            return;
+        }
+
+
+        const homeZoneId =
+            String(
+                zoneSelect.value || ""
+            );
+
+
+        if (!homeZoneId) {
+            return;
+        }
+
+
+        zoneCheckboxes.forEach(
+            function(checkbox) {
+
+                if (
+                    String(
+                        checkbox.dataset.zoneId
+                    )
+                    ===
+                    homeZoneId
+                ) {
+
+                    checkbox.checked =
+                        true;
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // DURATION OPTIONS
+    // =====================================================
+
+    function rebuildDurationOptions(
+        pricingModel
+    ) {
+
+        if (!durationSelect) {
+            return;
+        }
+
+
+        const currentValue =
+            durationSelect.value
+            ||
+            durationSelect.dataset.previousDuration
+            ||
+            "";
+
+
+        durationSelect.innerHTML =
+            "";
+
+
+        const placeholder =
+            document.createElement(
+                "option"
+            );
+
+
+        placeholder.value =
+            "";
+
+
+        placeholder.textContent =
+            "Select duration";
+
+
+        durationSelect.appendChild(
+            placeholder
+        );
+
+
+        let durations = [];
+
+
+        if (
+            pricingModel === "presence"
+        ) {
+
+            durations = [
+                30,
+                90,
+                180,
+                365
+            ];
+
+        }
+
+
+        else if (
+            pricingModel === "campaign"
+        ) {
+
+            durations = [
+                7,
+                14,
+                30
+            ];
+
+        }
+
+
+        durations.forEach(
+            function(days) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    String(days);
+
+
+                if (
+                    pricingModel ===
+                    "presence"
+                ) {
+
+                    option.textContent =
+                        (
+                            days
+                            + " days — "
+                            + formatKalxaPrice(
+                                presencePricing[days]
+                            )
+                        );
+
+                }
+
+                else {
+
+                    option.textContent =
+                        days + " days";
+
+                }
+
+
+                durationSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        if (
+            currentValue
+            &&
+            durations.includes(
+                Number(currentValue)
+            )
+        ) {
+
+            durationSelect.value =
+                String(currentValue);
+
+        }
+
+
+        durationSelect.dataset.previousDuration =
+            "";
+
+    }
+
+
+    // =====================================================
+    // CALCULATE PRICE
+    // =====================================================
+
+    function updatePackagePrice() {
+
+        if (
+            !pricingModelInput
+            ||
+            !durationSelect
+            ||
+            !priceDisplay
+        ) {
+            return;
+        }
+
+
+        const pricingModel =
+            pricingModelInput.value;
+
+
+        const duration =
+            Number(
+                durationSelect.value || 0
+            );
+
+
+        const zoneCount =
+            getSelectedZoneCount();
+
+
+        if (campaignZoneCount) {
+
+            campaignZoneCount.textContent =
+                String(zoneCount);
+
+        }
+
+
+        let amount =
+            null;
+
+
+        if (
+            pricingModel === "presence"
+            &&
+            duration
+        ) {
+
+            amount =
+                presencePricing[duration];
+
+        }
+
+
+        if (
+            pricingModel === "campaign"
+            &&
+            duration
+            &&
+            zoneCount >= 1
+            &&
+            zoneCount <= 3
+        ) {
+
+            const durationPrices =
+                campaignPricing[duration];
+
+
+            if (
+                durationPrices
+                &&
+                durationPrices[zoneCount]
+                !== undefined
+            ) {
+
+                amount =
+                    durationPrices[zoneCount];
+
+            }
+
+        }
+
+
+        if (
+            amount === null
+            ||
+            amount === undefined
+        ) {
+
+            priceDisplay.textContent =
+                "—";
+
+
+            if (displayedAmountInput) {
+
+                displayedAmountInput.value =
+                    "";
+
+            }
+
+
+            if (packageSummary) {
+
+                packageSummary.textContent =
+                    "Select a package duration.";
+
+            }
+
+
+            return;
+
+        }
+
+
+        priceDisplay.textContent =
+            formatKalxaPrice(amount);
+
+
+        if (displayedAmountInput) {
+
+            displayedAmountInput.value =
+                String(amount);
+
+        }
+
+
+        if (packageSummary) {
+
+            if (
+                pricingModel === "presence"
+            ) {
+
+                packageSummary.textContent =
+                    (
+                        "Presence · "
+                        + duration
+                        + " days"
+                    );
+
+            }
+
+            else {
+
+                packageSummary.textContent =
+                    (
+                        "Campaign · "
+                        + duration
+                        + " days · "
+                        + zoneCount
+                        + " zone"
+                        + (
+                            zoneCount === 1
+                                ? ""
+                                : "s"
+                        )
+                    );
+
+            }
+
+        }
+
+    }
+
+
+    // =====================================================
+    // UPDATE COMMERCIAL PACKAGE
+    // =====================================================
+
+    function updateCommercialPackage() {
+
+        const pricingModel =
+            getSelectedPricingModel();
+
+
+        if (pricingModelInput) {
+
+            pricingModelInput.value =
+                pricingModel;
+
+        }
+
+
+        if (!pricingModel) {
+
+            if (packageSection) {
+
+                packageSection.style.display =
+                    "none";
+
+            }
+
+
+            if (durationSelect) {
+
+                durationSelect.required =
+                    false;
+
+            }
+
+
+            return;
+
+        }
+
+
+        if (packageSection) {
+
+            packageSection.style.display =
+                "block";
+
+        }
+
+
+        if (durationSelect) {
+
+            durationSelect.required =
+                true;
+
+        }
+
+
+        // =============================================
+        // PRESENCE
+        // =============================================
+
+        if (
+            pricingModel === "presence"
+        ) {
+
+            if (packageModelTitle) {
+
+                packageModelTitle.textContent =
+                    "Kalxa Presence";
+
+            }
+
+
+            if (packageModelDescription) {
+
+                packageModelDescription.textContent =
+                    "Keep your business discoverable in its local community. Presence pricing is based on duration.";
+
+            }
+
+
+            if (durationHelp) {
+
+                durationHelp.textContent =
+                    "Choose how long you want your business discoverable on Kalxa.";
+
+            }
+
+
+            if (campaignReachSection) {
+
+                campaignReachSection.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        // =============================================
+        // CAMPAIGN
+        // =============================================
+
+        else {
+
+            if (packageModelTitle) {
+
+                packageModelTitle.textContent =
+                    "Kalxa Campaign";
+
+            }
+
+
+            if (packageModelDescription) {
+
+                packageModelDescription.textContent =
+                    "Promote time-sensitive information for a selected period and geographic reach.";
+
+            }
+
+
+            if (durationHelp) {
+
+                durationHelp.textContent =
+                    "Choose how long you want this campaign distributed.";
+
+            }
+
+
+            if (campaignReachSection) {
+
+                campaignReachSection.style.display =
+                    "block";
+
+            }
+
+
+            ensureHomeZoneSelected();
+
+        }
+
+
+        rebuildDurationOptions(
+            pricingModel
+        );
+
+
+        updatePackagePrice();
+
+    }
+
+
+    // =====================================================
+    // CATEGORY CHANGE
     // =====================================================
 
     if (categorySelect) {
@@ -1740,17 +3034,147 @@
     }
 
 
+    // =====================================================
+    // CONTENT TYPE CHANGE
+    // =====================================================
+
     if (contentTypeSelect) {
 
         contentTypeSelect.addEventListener(
             "change",
-            updateLifetimeFields
+            function() {
+
+                updateLifetimeFields();
+
+            }
         );
 
     }
 
 
-    // Initial page load.
+    // =====================================================
+    // HOME ZONE CHANGE
+    // =====================================================
+
+    if (zoneSelect) {
+
+        zoneSelect.addEventListener(
+            "change",
+            function() {
+
+                if (
+                    getSelectedPricingModel()
+                    === "campaign"
+                ) {
+
+                    ensureHomeZoneSelected();
+
+                }
+
+
+                updatePackagePrice();
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // DURATION CHANGE
+    // =====================================================
+
+    if (durationSelect) {
+
+        durationSelect.addEventListener(
+            "change",
+            updatePackagePrice
+        );
+
+    }
+
+
+    // =====================================================
+    // DISTRIBUTION ZONE CHANGE
+    // =====================================================
+
+    zoneCheckboxes.forEach(
+        function(checkbox) {
+
+            checkbox.addEventListener(
+                "change",
+                function() {
+
+                    const pricingModel =
+                        getSelectedPricingModel();
+
+
+                    if (
+                        pricingModel
+                        !== "campaign"
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    ensureHomeZoneSelected();
+
+
+                    let count =
+                        getSelectedZoneCount();
+
+
+                    if (count > 3) {
+
+                        const homeZoneId =
+                            zoneSelect
+                                ? String(
+                                    zoneSelect.value
+                                )
+                                : "";
+
+
+                        const changedZoneId =
+                            String(
+                                checkbox.dataset.zoneId
+                            );
+
+
+                        if (
+                            changedZoneId
+                            !== homeZoneId
+                        ) {
+
+                            checkbox.checked =
+                                false;
+
+                        }
+
+
+                        alert(
+                            "Kalxa Campaign currently supports a maximum of 3 areas."
+                        );
+
+
+                        ensureHomeZoneSelected();
+
+                    }
+
+
+                    updatePackagePrice();
+
+                }
+            );
+
+        }
+    );
+
+
+    // =====================================================
+    // INITIAL PAGE LOAD
+    // =====================================================
 
     if (categorySelect) {
 
@@ -1768,10 +3192,12 @@
             "content-images"
         );
 
+
     const imagePreview =
         document.getElementById(
             "selected-images-preview"
         );
+
 
     let selectedImages = [];
 
@@ -1811,7 +3237,8 @@
         }
 
 
-        imagePreview.innerHTML = "";
+        imagePreview.innerHTML =
+            "";
 
 
         selectedImages.forEach(
@@ -1821,6 +3248,7 @@
                     document.createElement(
                         "div"
                     );
+
 
                 wrapper.className =
                     "selected-image-item";
@@ -1840,6 +3268,7 @@
 
                 image.src =
                     objectUrl;
+
 
                 image.alt =
                     file.name;
@@ -1862,11 +3291,14 @@
                         "button"
                     );
 
+
                 removeButton.type =
                     "button";
 
+
                 removeButton.textContent =
                     "×";
+
 
                 removeButton.className =
                     "remove-selected-image";
@@ -1881,6 +3313,7 @@
                             1
                         );
 
+
                         rebuildImageInput();
 
                         renderImagePreviews();
@@ -1893,9 +3326,11 @@
                     image
                 );
 
+
                 wrapper.appendChild(
                     removeButton
                 );
+
 
                 imagePreview.appendChild(
                     wrapper
@@ -1923,21 +3358,24 @@
                     false;
 
 
-                for (const file of newFiles) {
+                for (
+                    const file
+                    of newFiles
+                ) {
 
                     const duplicate =
                         selectedImages.some(
                             function(existing) {
 
                                 return (
-                                    existing.name ===
-                                        file.name
+                                    existing.name
+                                    === file.name
                                     &&
-                                    existing.size ===
-                                        file.size
+                                    existing.size
+                                    === file.size
                                     &&
-                                    existing.lastModified ===
-                                        file.lastModified
+                                    existing.lastModified
+                                    === file.lastModified
                                 );
 
                             }
@@ -1950,7 +3388,8 @@
 
 
                     if (
-                        selectedImages.length >= 3
+                        selectedImages.length
+                        >= 3
                     ) {
 
                         maximumExceeded =
@@ -1968,7 +3407,9 @@
                 }
 
 
-                if (maximumExceeded) {
+                if (
+                    maximumExceeded
+                ) {
 
                     alert(
                         "You can upload a maximum of 3 images."
@@ -1998,4 +3439,4 @@
 </body>
 
 </html>
-
+                                    
