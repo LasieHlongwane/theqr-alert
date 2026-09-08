@@ -265,9 +265,72 @@ def send_zone_push_notification(
     category=None,
 ):
 
-    # -----------------------------------------------------
-    # BASE QUERY
-    # -----------------------------------------------------
+    # =====================================================
+    # NORMALIZE / VALIDATE INPUT
+    # =====================================================
+
+    try:
+        zone_id = int(zone_id)
+
+    except (TypeError, ValueError):
+
+        current_app.logger.error(
+            "[Kalxa Push] Invalid zone_id=%s",
+            zone_id,
+        )
+
+        return {
+            "total": 0,
+            "sent": 0,
+            "failed": 0,
+        }
+
+    title = str(title or "").strip()
+    body = str(body or "").strip()
+    url = str(url or "/app").strip() or "/app"
+
+    if category is not None:
+
+        category = str(
+            category
+        ).strip()
+
+        if not category:
+            category = None
+
+    if tag is not None:
+
+        tag = str(
+            tag
+        ).strip() or None
+
+    # =====================================================
+    # REQUIRE NOTIFICATION CONTENT
+    # =====================================================
+
+    if not title:
+
+        current_app.logger.error(
+            "[Kalxa Push] Notification rejected because "
+            "title is empty. zone_id=%s category=%s",
+            zone_id,
+            category,
+        )
+
+        return {
+            "total": 0,
+            "sent": 0,
+            "failed": 0,
+        }
+
+    # =====================================================
+    # BASE SUBSCRIBER QUERY
+    #
+    # Every push recipient must:
+    #
+    # 1. belong to the target zone
+    # 2. still have an active push subscription
+    # =====================================================
 
     query = (
         PushSubscriber.query
@@ -277,25 +340,39 @@ def send_zone_push_notification(
         )
     )
 
-
-    # -----------------------------------------------------
+    # =====================================================
     # CATEGORY TARGETING
-    # -----------------------------------------------------
     #
-    # If category is supplied:
+    # When category is supplied:
     #
-    # zone
-    # +
-    # active subscriber
-    # +
-    # selected category
+    #     zone
+    #       +
+    #     active subscription
+    #       +
+    #     category preference
     #
-    # must all match.
+    # must ALL match.
     #
-    # If category is None, the function keeps the old
-    # behaviour and targets all active subscribers in
-    # the zone. This is useful for system/admin alerts.
-    # -----------------------------------------------------
+    # Example:
+    #
+    # Approved event:
+    #     zone = KwaMhlanga
+    #     category = upcoming-event-🥹🔥
+    #
+    # Only users who:
+    #
+    #     enabled notifications
+    #     +
+    #     belong to KwaMhlanga
+    #     +
+    #     selected upcoming-event-🥹🔥
+    #
+    # receive the notification.
+    #
+    # If category=None, all active subscribers in the
+    # zone are targeted. Keep this behaviour for future
+    # system/emergency/admin notifications.
+    # =====================================================
 
     if category:
 
@@ -312,22 +389,47 @@ def send_zone_push_notification(
             )
         )
 
+    # =====================================================
+    # LOAD MATCHING SUBSCRIBERS
+    # =====================================================
 
-    subscribers = (
-        query
-        .distinct()
-        .all()
-    )
+    try:
 
+        subscribers = (
+            query
+            .distinct()
+            .all()
+        )
 
-    # -----------------------------------------------------
+    except Exception as exc:
+
+        current_app.logger.exception(
+            "[Kalxa Push] Unable to load subscribers "
+            "zone_id=%s category=%s error=%s",
+            zone_id,
+            category,
+            exc,
+        )
+
+        return {
+            "total": 0,
+            "sent": 0,
+            "failed": 0,
+        }
+
+    # =====================================================
     # NO MATCHING SUBSCRIBERS
-    # -----------------------------------------------------
+    #
+    # This is NOT an error.
+    #
+    # It simply means nobody in this zone currently has
+    # notifications enabled for this category.
+    # =====================================================
 
     if not subscribers:
 
         current_app.logger.info(
-            "[LaC Push] No matching subscribers "
+            "[Kalxa Push] No matching subscribers "
             "zone_id=%s category=%s",
             zone_id,
             category,
@@ -339,44 +441,83 @@ def send_zone_push_notification(
             "failed": 0,
         }
 
-
-    # -----------------------------------------------------
-    # SEND TO EACH SUBSCRIBER
-    # -----------------------------------------------------
+    # =====================================================
+    # SEND NOTIFICATION
+    #
+    # IMPORTANT:
+    #
+    # Every subscriber is isolated.
+    #
+    # If subscriber #2 fails, subscriber #3 should still
+    # receive the notification.
+    # =====================================================
 
     sent_count = 0
     failed_count = 0
 
-
     for subscriber in subscribers:
 
-        success = send_push_notification(
+        try:
 
-            subscriber=subscriber,
+            success = send_push_notification(
 
-            title=title,
+                subscriber=subscriber,
 
-            body=body,
+                title=title,
 
-            url=url,
+                body=body,
 
-            tag=tag,
+                url=url,
 
-        )
+                tag=tag,
+            )
 
+            if success:
 
-        if success:
+                sent_count += 1
 
-            sent_count += 1
+            else:
 
-        else:
+                failed_count += 1
+
+                current_app.logger.warning(
+                    "[Kalxa Push] Delivery failed "
+                    "subscriber_id=%s "
+                    "zone_id=%s "
+                    "category=%s",
+                    subscriber.id,
+                    zone_id,
+                    category,
+                )
+
+        except Exception as exc:
 
             failed_count += 1
 
+            # ---------------------------------------------
+            # DO NOT STOP THE BATCH
+            #
+            # One invalid/expired/problematic browser
+            # subscription must not prevent notifications
+            # from reaching everybody else.
+            # ---------------------------------------------
 
-    # -----------------------------------------------------
+            current_app.logger.exception(
+                "[Kalxa Push] Subscriber delivery "
+                "raised an exception "
+                "subscriber_id=%s "
+                "zone_id=%s "
+                "category=%s "
+                "error=%s",
+                subscriber.id,
+                zone_id,
+                category,
+                exc,
+            )
+
+    # =====================================================
     # RESULT
-    # -----------------------------------------------------
+    # =====================================================
 
     result = {
 
@@ -388,12 +529,15 @@ def send_zone_push_notification(
 
         "failed":
             failed_count,
-
     }
 
+    # =====================================================
+    # DELIVERY SUMMARY
+    # =====================================================
 
     current_app.logger.info(
-        "[LaC Push] Zone/category notification "
+        "[Kalxa Push] Zone/category notification "
+        "completed "
         "zone_id=%s "
         "category=%s "
         "total=%s "
@@ -405,6 +549,5 @@ def send_zone_push_notification(
         result["sent"],
         result["failed"],
     )
-
 
     return result
