@@ -2858,19 +2858,6 @@ def submit_content():
             .lower()
         )
 
-        # -------------------------------------------------
-        # NEW:
-        # Type of content INSIDE the selected category.
-        #
-        # Example:
-        #
-        # category = property
-        # content_type = room
-        #
-        # category = property
-        # content_type = hotel_lodge
-        # -------------------------------------------------
-
         content_type = (
             request.form.get(
                 "content_type",
@@ -2955,7 +2942,6 @@ def submit_content():
             or not category_slug
             or not title
             or not submitter_name
-            
         ):
 
             flash(
@@ -2984,7 +2970,7 @@ def submit_content():
         ):
 
             flash(
-                "Please select a valid zone.",
+                "Please select a valid area.",
                 "error",
             )
 
@@ -3018,12 +3004,61 @@ def submit_content():
             )
 
         # =================================================
+        # NORMALIZE CATEGORY FOR WORKFLOW / PRICING
+        #
+        # IMPORTANT:
+        # We keep category_slug unchanged for storage.
+        #
+        # Example:
+        #
+        # stored:
+        # upcoming-event-🥹🔥
+        #
+        # workflow/pricing:
+        # events
+        #
+        # This allows the listing to appear in the correct
+        # real public Kalxa category while still using the
+        # Events commercial rules.
+        # =================================================
+
+        category_aliases = {
+
+            # EVENTS
+            "event": "events",
+            "local-events": "events",
+            "local_events": "events",
+            "upcoming-event-🥹🔥": "events",
+
+            # FOOD / RESTAURANTS
+            "restaurant": "local-restaurants",
+            "restaurants": "local-restaurants",
+            "foods": "local-restaurants",
+            "check-out-our-specials":
+                "local-restaurants",
+
+            # BEAUTY
+            "beauty": "beauty-salon",
+            "salon": "beauty-salon",
+
+            # OPPORTUNITIES
+            "opportunity": "opportunities",
+        }
+
+        workflow_category = (
+            category_aliases.get(
+                category_slug,
+                category_slug,
+            )
+        )
+
+        # =================================================
         # DETERMINE CONTENT WORKFLOW
         # =================================================
 
         workflow = (
             get_content_workflow(
-                category_slug,
+                workflow_category,
                 content_type,
             )
         )
@@ -3059,9 +3094,290 @@ def submit_content():
             )
 
         # Every new listing begins as available.
+
         availability_status = (
             "available"
         )
+
+        # =================================================
+        # COMMERCIAL PRICING MODEL
+        #
+        # NEVER trust pricing_model sent by JavaScript.
+        # Determine it again on the server.
+        # =================================================
+
+        pricing_model = (
+            _get_pricing_model(
+                workflow_category,
+                content_type,
+            )
+        )
+
+        # =================================================
+        # VALIDATE COMMERCIAL PACKAGE
+        # =================================================
+
+        commercial_duration_days = None
+
+        amount_due = None
+
+        distribution_zone_ids = []
+
+        if pricing_model:
+
+            raw_duration = (
+                request.form.get(
+                    "commercial_duration_days",
+                    "",
+                )
+                .strip()
+            )
+
+            try:
+
+                commercial_duration_days = int(
+                    raw_duration
+                )
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                flash(
+                    "Please select a valid Kalxa "
+                    "package duration.",
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
+
+            # =============================================
+            # CAMPAIGN
+            # =============================================
+
+            if (
+                pricing_model
+                == PRICING_MODEL_CAMPAIGN
+            ):
+
+                raw_distribution_zone_ids = (
+                    request.form.getlist(
+                        "distribution_zone_ids"
+                    )
+                )
+
+                for raw_zone_id in (
+                    raw_distribution_zone_ids
+                ):
+
+                    try:
+
+                        distribution_zone_id = int(
+                            raw_zone_id
+                        )
+
+                    except (
+                        TypeError,
+                        ValueError,
+                    ):
+
+                        continue
+
+                    if (
+                        distribution_zone_id
+                        not in distribution_zone_ids
+                    ):
+
+                        distribution_zone_ids.append(
+                            distribution_zone_id
+                        )
+
+                # -----------------------------------------
+                # Campaign must include its home zone.
+                # Do not rely on JavaScript.
+                # -----------------------------------------
+
+                if (
+                    zone.id
+                    not in distribution_zone_ids
+                ):
+
+                    flash(
+                        "Your campaign must include "
+                        "its home area.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                # -----------------------------------------
+                # Minimum one zone.
+                # -----------------------------------------
+
+                if not distribution_zone_ids:
+
+                    flash(
+                        "Please select at least one "
+                        "campaign area.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                # -----------------------------------------
+                # MVP maximum = 3 zones.
+                # -----------------------------------------
+
+                if (
+                    len(
+                        distribution_zone_ids
+                    )
+                    > 3
+                ):
+
+                    flash(
+                        "Kalxa Campaign currently supports "
+                        "a maximum of 3 areas.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                # -----------------------------------------
+                # Validate every selected zone against DB.
+                # -----------------------------------------
+
+                valid_distribution_zones = (
+                    Zone.query
+                    .filter(
+                        Zone.id.in_(
+                            distribution_zone_ids
+                        ),
+                        Zone.active.is_(True),
+                    )
+                    .all()
+                )
+
+                valid_distribution_zone_ids = {
+                    distribution_zone.id
+                    for distribution_zone
+                    in valid_distribution_zones
+                }
+
+                if (
+                    len(
+                        valid_distribution_zone_ids
+                    )
+                    !=
+                    len(
+                        distribution_zone_ids
+                    )
+                ):
+
+                    flash(
+                        "One or more selected campaign "
+                        "areas are invalid.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "submit.html",
+                        zones=zones,
+                        categories=categories,
+                    )
+
+                zone_count = len(
+                    distribution_zone_ids
+                )
+
+            # =============================================
+            # PRESENCE
+            # =============================================
+
+            elif (
+                pricing_model
+                == PRICING_MODEL_PRESENCE
+            ):
+
+                # Presence stays in its home zone.
+                #
+                # We intentionally do NOT store
+                # distribution zones for Presence.
+
+                distribution_zone_ids = []
+
+                zone_count = 1
+
+            # =============================================
+            # UNKNOWN PRICING MODEL
+            # =============================================
+
+            else:
+
+                flash(
+                    "The selected listing has an invalid "
+                    "Kalxa pricing model.",
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
+
+            # =============================================
+            # SERVER-SIDE PRICE CALCULATION
+            #
+            # IMPORTANT:
+            # displayed_amount_due from the browser is NOT
+            # trusted.
+            # =============================================
+
+            try:
+
+                amount_due = (
+                    calculate_kalxa_price(
+                        pricing_model=
+                            pricing_model,
+
+                        duration_days=
+                            commercial_duration_days,
+
+                        zone_count=
+                            zone_count,
+                    )
+                )
+
+            except KalxaPricingError as error:
+
+                flash(
+                    str(error),
+                    "error",
+                )
+
+                return render_template(
+                    "submit.html",
+                    zones=zones,
+                    categories=categories,
+                )
 
         # =================================================
         # DATE HELPER
@@ -3080,6 +3396,7 @@ def submit_content():
             )
 
             if not value:
+
                 return None
 
             return datetime.strptime(
@@ -3140,18 +3457,28 @@ def submit_content():
         # LIFETIME-SPECIFIC DATE VALIDATION
         # =================================================
 
-        if lifetime_type == "time_specific":
+        if (
+            lifetime_type
+            == "time_specific"
+        ):
 
-            # ---------------------------------------------
+            # =============================================
             # EVENTS
-            # ---------------------------------------------
+            #
+            # Use normalized workflow category so your
+            # actual public event slug also works.
+            # =============================================
 
-            if category_slug == "events":
+            if (
+                workflow_category
+                == "events"
+            ):
 
                 if not event_date:
 
                     flash(
-                        "Event Date is required for events.",
+                        "Event Date is required "
+                        "for events.",
                         "error",
                     )
 
@@ -3163,7 +3490,8 @@ def submit_content():
 
                 if (
                     publish_from
-                    and publish_from
+                    and
+                    publish_from
                     > event_date
                 ):
 
@@ -3181,7 +3509,8 @@ def submit_content():
 
                 if (
                     event_end_date
-                    and event_end_date
+                    and
+                    event_end_date
                     < event_date
                 ):
 
@@ -3198,12 +3527,14 @@ def submit_content():
                     )
 
                 # Events use event-specific dates.
+
                 start_date = None
+
                 end_date = None
 
-            # ---------------------------------------------
+            # =============================================
             # NON-EVENT TIME-SPECIFIC CONTENT
-            # ---------------------------------------------
+            # =============================================
 
             else:
 
@@ -3223,8 +3554,10 @@ def submit_content():
 
                 if (
                     start_date
-                    and end_date
-                    and end_date < start_date
+                    and
+                    end_date
+                    and
+                    end_date < start_date
                 ):
 
                     flash(
@@ -3239,10 +3572,10 @@ def submit_content():
                         categories=categories,
                     )
 
-                # Non-event content does not use
-                # event-specific fields.
                 publish_from = None
+
                 event_date = None
+
                 event_end_date = None
 
         # =================================================
@@ -3254,62 +3587,61 @@ def submit_content():
             == "until_unavailable"
         ):
 
-            # Examples:
-            # Room → until taken
-            # Property → until sold
-            # Job → until filled
-
             publish_from = None
+
             event_date = None
+
             event_end_date = None
 
-            # No artificial expiry date.
             start_date = None
+
             end_date = None
 
         # =================================================
         # ONGOING
         # =================================================
 
-        elif lifetime_type == "ongoing":
-
-            # Examples:
-            # Hotel
-            # Restaurant
-            # Salon
-            # Mechanic
-            # Plumber
+        elif (
+            lifetime_type
+            == "ongoing"
+        ):
 
             publish_from = None
+
             event_date = None
+
             event_end_date = None
+
             start_date = None
+
             end_date = None
 
         # =================================================
         # RECURRING
         # =================================================
 
-        elif lifetime_type == "recurring":
-
-            # Recurring schedule fields will be added later.
-            #
-            # For now start/end dates may optionally describe
-            # the overall period during which the recurring
-            # listing is valid.
+        elif (
+            lifetime_type
+            == "recurring"
+        ):
 
             publish_from = None
+
             event_date = None
+
             event_end_date = None
 
             if (
                 start_date
-                and end_date
-                and end_date < start_date
+                and
+                end_date
+                and
+                end_date < start_date
             ):
 
                 flash(
-                    "End date cannot be before start date.",
+                    "End date cannot be before "
+                    "start date.",
                     "error",
                 )
 
@@ -3331,19 +3663,25 @@ def submit_content():
 
         uploaded_images = [
             image
-            for image in uploaded_images
+            for image
+            in uploaded_images
             if (
                 image
-                and image.filename
+                and
+                image.filename
             )
         ]
 
-        if len(
-            uploaded_images
-        ) > 3:
+        if (
+            len(
+                uploaded_images
+            )
+            > 3
+        ):
 
             flash(
-                "You can upload a maximum of 3 images.",
+                "You can upload a maximum "
+                "of 3 images.",
                 "error",
             )
 
@@ -3355,6 +3693,18 @@ def submit_content():
 
         # =================================================
         # CREATE PENDING SUBMISSION
+        #
+        # IMPORTANT:
+        #
+        # Public users NEVER control:
+        #
+        # paid
+        # waived
+        # refunded
+        # active
+        # featured
+        #
+        # Every commercial public submission starts unpaid.
         # =================================================
 
         submission = PendingSubmission(
@@ -3362,10 +3712,17 @@ def submit_content():
             zone_id=
                 zone.id,
 
+            # IMPORTANT:
+            # Store the REAL public category slug.
+            #
+            # Example:
+            # upcoming-event-🥹🔥
+            #
+            # Do not store "events" here.
+
             category=
                 category_slug,
 
-            # NEW
             content_type=
                 content_type,
 
@@ -3414,6 +3771,38 @@ def submit_content():
             end_date=
                 end_date,
 
+            # =============================================
+            # COMMERCIAL REQUEST
+            # =============================================
+
+            pricing_model=
+                pricing_model,
+
+            commercial_duration_days=
+                commercial_duration_days,
+
+            amount_due=
+                amount_due,
+
+            # Public submission can never self-activate.
+            payment_status=
+                (
+                    "unpaid"
+                    if pricing_model
+                    else "waived"
+                ),
+
+            # Campaign only.
+            #
+            # Presence stores [].
+
+            distribution_zone_ids=
+                distribution_zone_ids,
+
+            # =============================================
+            # MODERATION
+            # =============================================
+
             status=
                 "pending",
         )
@@ -3461,6 +3850,7 @@ def submit_content():
                 )
 
                 if not image_url:
+
                     continue
 
                 if not first_image_url:
@@ -3514,8 +3904,8 @@ def submit_content():
 
             db.session.rollback()
 
-            print(
-                "Submission error:",
+            current_app.logger.exception(
+                "Submission error: %s",
                 error,
             )
 
@@ -3553,6 +3943,8 @@ def submit_content():
         categories=categories,
     )
 
+
+           
 
 # =========================================================
 # SUBMISSION SUCCESS
