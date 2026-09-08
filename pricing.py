@@ -500,3 +500,181 @@ def format_kalxa_price(
     return (
         f"R{amount:.2f}"
     )
+
+
+# ============================================================
+# KALXA COMMERCIAL CATEGORY CLASSIFICATION
+# ============================================================
+
+KALXA_PRESENCE_CATEGORIES = {
+    "local-restaurants",
+    "beauty-salon",
+    "services",
+}
+
+KALXA_CAMPAIGN_CATEGORIES = {
+    "events",
+    "discount-deals",
+    "jobs",
+    "opportunities",
+}
+
+
+# ============================================================
+# CONTENT-TYPE OVERRIDES
+# ============================================================
+
+KALXA_PRICING_MODEL_OVERRIDES = {
+
+    # --------------------------------------------------------
+    # PROPERTY
+    # --------------------------------------------------------
+
+    ("property", "room"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("property", "rental"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("property", "property_sale"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("property", "hotel_lodge"):
+        PRICING_MODEL_PRESENCE,
+
+    ("property", "accommodation_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    # --------------------------------------------------------
+    # EVENTS
+    # --------------------------------------------------------
+
+    ("events", "event"):
+        PRICING_MODEL_CAMPAIGN,
+
+    # --------------------------------------------------------
+    # STORE SPECIALS
+    # --------------------------------------------------------
+
+    ("discount-deals", "grocery_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("discount-deals", "retail_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("discount-deals", "special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    # --------------------------------------------------------
+    # RESTAURANTS / FOOD
+    # --------------------------------------------------------
+
+    ("local-restaurants", "restaurant"):
+        PRICING_MODEL_PRESENCE,
+
+    ("local-restaurants", "takeaway"):
+        PRICING_MODEL_PRESENCE,
+
+    ("local-restaurants", "general_listing"):
+        PRICING_MODEL_PRESENCE,
+
+    ("local-restaurants", "daily_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("local-restaurants", "weekend_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    ("local-restaurants", "food_deal"):
+        PRICING_MODEL_CAMPAIGN,
+
+    # --------------------------------------------------------
+    # BEAUTY
+    # --------------------------------------------------------
+
+    ("beauty-salon", "salon"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "barber"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "beauty_service"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "general_listing"):
+        PRICING_MODEL_PRESENCE,
+
+    ("beauty-salon", "beauty_special"):
+        PRICING_MODEL_CAMPAIGN,
+
+    # --------------------------------------------------------
+    # SERVICES
+    # --------------------------------------------------------
+
+    ("services", "general_listing"):
+        PRICING_MODEL_PRESENCE,
+}
+
+
+# ============================================================
+# GET PRICING MODEL
+# ============================================================
+
+def get_pricing_model(
+    category,
+    content_type=None,
+):
+    """
+    Determine whether Kalxa content uses:
+
+        presence
+        campaign
+        None
+
+    Exact content-type rules take priority over
+    category-level defaults.
+    """
+
+    category = (
+        str(category or "")
+        .strip()
+        .lower()
+    )
+
+    content_type = (
+        str(content_type or "")
+        .strip()
+        .lower()
+        or None
+    )
+
+    override_key = (
+        category,
+        content_type,
+    )
+
+    # Exact content type override.
+
+    if (
+        override_key
+        in KALXA_PRICING_MODEL_OVERRIDES
+    ):
+
+        return (
+            KALXA_PRICING_MODEL_OVERRIDES[
+                override_key
+            ]
+        )
+
+    # Category default.
+
+    if category in KALXA_PRESENCE_CATEGORIES:
+
+        return PRICING_MODEL_PRESENCE
+
+    if category in KALXA_CAMPAIGN_CATEGORIES:
+
+        return PRICING_MODEL_CAMPAIGN
+
+    # Community/non-commercial category.
+
+    return None
