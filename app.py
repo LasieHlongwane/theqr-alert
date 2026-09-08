@@ -4065,6 +4065,8 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
 
         # =================================================
