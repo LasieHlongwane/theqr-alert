@@ -48,64 +48,210 @@ def send_push_notification(
     tag=None,
 ):
 
-    # -----------------------------------------------------
+    # =====================================================
     # VALIDATE SUBSCRIBER
-    # -----------------------------------------------------
+    # =====================================================
 
     if not subscriber:
+
+        current_app.logger.warning(
+            "[Kalxa Push] Notification skipped: "
+            "subscriber is missing."
+        )
+
         return False
 
     if not subscriber.active:
+
+        current_app.logger.info(
+            "[Kalxa Push] Notification skipped: "
+            "subscriber is inactive "
+            "subscriber_id=%s",
+            getattr(
+                subscriber,
+                "id",
+                None,
+            ),
+        )
+
         return False
 
+    # =====================================================
+    # VALIDATE SUBSCRIPTION DATA
+    #
+    # A valid Web Push subscription requires:
+    #
+    # endpoint
+    # p256dh
+    # auth
+    # =====================================================
 
-    # -----------------------------------------------------
+    endpoint = (
+        str(
+            subscriber.endpoint
+            or ""
+        )
+        .strip()
+    )
+
+    p256dh = (
+        str(
+            subscriber.p256dh
+            or ""
+        )
+        .strip()
+    )
+
+    auth_key = (
+        str(
+            subscriber.auth_key
+            or ""
+        )
+        .strip()
+    )
+
+    if not endpoint:
+
+        current_app.logger.warning(
+            "[Kalxa Push] Subscriber has no "
+            "push endpoint "
+            "subscriber_id=%s",
+            subscriber.id,
+        )
+
+        return False
+
+    if not p256dh:
+
+        current_app.logger.warning(
+            "[Kalxa Push] Subscriber has no "
+            "p256dh key "
+            "subscriber_id=%s",
+            subscriber.id,
+        )
+
+        return False
+
+    if not auth_key:
+
+        current_app.logger.warning(
+            "[Kalxa Push] Subscriber has no "
+            "auth key "
+            "subscriber_id=%s",
+            subscriber.id,
+        )
+
+        return False
+
+    # =====================================================
     # VALIDATE VAPID CONFIGURATION
-    # -----------------------------------------------------
+    # =====================================================
 
     if not VAPID_PRIVATE_KEY:
 
         current_app.logger.error(
-            "[LaC Push] VAPID_PRIVATE_KEY is missing."
+            "[Kalxa Push] VAPID_PRIVATE_KEY "
+            "is missing."
         )
 
         return False
-
 
     if not VAPID_SUBJECT:
 
         current_app.logger.error(
-            "[LaC Push] VAPID_SUBJECT is missing."
+            "[Kalxa Push] VAPID_SUBJECT "
+            "is missing."
         )
 
         return False
 
+    # =====================================================
+    # NORMALIZE NOTIFICATION CONTENT
+    # =====================================================
 
-    # -----------------------------------------------------
-    # BUILD BROWSER SUBSCRIPTION
-    # -----------------------------------------------------
+    title = (
+        str(
+            title
+            or "Kalxa Local Alert"
+        )
+        .strip()
+    )
+
+    body = (
+        str(
+            body
+            or ""
+        )
+        .strip()
+    )
+
+    url = (
+        str(
+            url
+            or "/app"
+        )
+        .strip()
+    )
+
+    icon = (
+        str(
+            icon
+            or "/static/icons/lac-192.png"
+        )
+        .strip()
+    )
+
+    badge = (
+        str(
+            badge
+            or "/static/icons/lac-notification.png"
+        )
+        .strip()
+    )
+
+    if tag:
+
+        tag = str(
+            tag
+        ).strip()
+
+    if not tag:
+
+        tag = "kalxa-local-alert"
+
+    if not title:
+
+        title = "Kalxa Local Alert"
+
+    if not url:
+
+        url = "/app"
+
+    # =====================================================
+    # BUILD BROWSER PUSH SUBSCRIPTION
+    # =====================================================
 
     subscription_info = {
 
         "endpoint":
-            subscriber.endpoint,
+            endpoint,
 
         "keys": {
 
             "p256dh":
-                subscriber.p256dh,
+                p256dh,
 
             "auth":
-                subscriber.auth_key,
-
+                auth_key,
         },
-
     }
 
-
-    # -----------------------------------------------------
+    # =====================================================
     # BUILD NOTIFICATION PAYLOAD
-    # -----------------------------------------------------
+    #
+    # Your service worker receives this JSON and displays
+    # the actual browser / Android notification.
+    # =====================================================
 
     payload = {
 
@@ -125,14 +271,12 @@ def send_push_notification(
             badge,
 
         "tag":
-            tag or "lac-local-alert",
-
+            tag,
     }
 
-
-    # -----------------------------------------------------
+    # =====================================================
     # SEND WEB PUSH
-    # -----------------------------------------------------
+    # =====================================================
 
     try:
 
@@ -142,7 +286,10 @@ def send_push_notification(
                 subscription_info,
 
             data=
-                json.dumps(payload),
+                json.dumps(
+                    payload,
+                    ensure_ascii=False,
+                ),
 
             vapid_private_key=
                 VAPID_PRIVATE_KEY,
@@ -152,26 +299,31 @@ def send_push_notification(
                     VAPID_SUBJECT,
             },
 
+            # -------------------------------------------------
+            # Keep the push available for up to 24 hours if
+            # the user's device is temporarily offline.
+            # -------------------------------------------------
+
             ttl=86400,
-
         )
-
 
         current_app.logger.info(
-            "[LaC Push] SUCCESS "
+            "[Kalxa Push] SUCCESS "
             "subscriber_id=%s "
-            "zone_id=%s",
+            "zone_id=%s "
+            "tag=%s "
+            "url=%s",
             subscriber.id,
             subscriber.zone_id,
+            tag,
+            url,
         )
-
 
         return True
 
-
-    # -----------------------------------------------------
-    # WEB PUSH ERROR
-    # -----------------------------------------------------
+    # =====================================================
+    # WEB PUSH PROVIDER ERROR
+    # =====================================================
 
     except WebPushException as exc:
 
@@ -191,21 +343,27 @@ def send_push_notification(
             else None
         )
 
-
         current_app.logger.warning(
-            "[LaC Push] FAILED "
+            "[Kalxa Push] FAILED "
             "subscriber_id=%s "
+            "zone_id=%s "
             "status=%s "
             "error=%s",
             subscriber.id,
+            subscriber.zone_id,
             status_code,
             exc,
         )
 
-
-        # -------------------------------------------------
-        # SUBSCRIPTION EXPIRED / REMOVED
-        # -------------------------------------------------
+        # =================================================
+        # EXPIRED / REMOVED PUSH SUBSCRIPTION
+        #
+        # 404 / 410 means the browser push subscription
+        # should no longer be used.
+        #
+        # Deactivate it so future approval notifications
+        # don't repeatedly attempt delivery.
+        # =================================================
 
         if status_code in (
             404,
@@ -218,39 +376,58 @@ def send_push_notification(
 
                 db.session.commit()
 
+                current_app.logger.info(
+                    "[Kalxa Push] Expired subscriber "
+                    "deactivated "
+                    "subscriber_id=%s "
+                    "status=%s",
+                    subscriber.id,
+                    status_code,
+                )
+
             except Exception as db_exc:
 
                 db.session.rollback()
 
                 current_app.logger.exception(
-                    "[LaC Push] Unable to deactivate "
+                    "[Kalxa Push] Unable to deactivate "
                     "expired subscriber "
-                    "subscriber_id=%s error=%s",
+                    "subscriber_id=%s "
+                    "error=%s",
                     subscriber.id,
                     db_exc,
                 )
 
-
         return False
 
-
-    # -----------------------------------------------------
+    # =====================================================
     # UNEXPECTED ERROR
-    # -----------------------------------------------------
+    #
+    # Never allow one Web Push failure to crash the
+    # approval workflow.
+    # =====================================================
 
     except Exception as exc:
 
         current_app.logger.exception(
-            "[LaC Push] Unexpected error "
+            "[Kalxa Push] Unexpected delivery error "
             "subscriber_id=%s "
+            "zone_id=%s "
             "error=%s",
-            subscriber.id,
+            getattr(
+                subscriber,
+                "id",
+                None,
+            ),
+            getattr(
+                subscriber,
+                "zone_id",
+                None,
+            ),
             exc,
         )
 
-
         return False
-
 
 # =========================================================
 # SEND ZONE / CATEGORY PUSH NOTIFICATION
