@@ -2826,14 +2826,15 @@
             <div class="kalxa-menu-section-label">
                 FOR LOCAL BUSINESSES
             </div>
-
-
             <a
-                href="{{ url_for('submit_content') }}"
-                class="
-                    kalxa-menu-item
-                    kalxa-menu-item-primary
-                "
+              href="{{ url_for(
+               'submit_content',
+               zone_id=zone.id
+              ) }}"
+              class="
+               kalxa-menu-item
+               kalxa-menu-item-primary
+              "
             >
 
                 <span class="kalxa-menu-item-icon">
@@ -3557,9 +3558,11 @@
             are already discovering what is around them.
           </p>
 
-
           <a
-            href="{{ url_for('submit_content') }}"
+            href="{{ url_for(
+              'submit_content',
+              zone_id=zone.id
+            ) }}"
             class="kalxa-business-cta-primary"
           >
             <span>
@@ -3590,7 +3593,10 @@
 
 
           <a
-            href="{{ url_for('submit_content') }}"
+            href="{{ url_for(
+             'submit_content',
+             zone_id=zone.id
+            ) }}"
             class="kalxa-business-cta-secondary"
           >
             📣 Promote it on Kalxa
