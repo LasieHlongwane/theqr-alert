@@ -3961,7 +3961,6 @@ def submit_content():
 # =========================================================
 # SUBMISSION SUCCESS
 # =========================================================
-
 @app.route(
     "/submit/success/<code>"
 )
@@ -3975,11 +3974,32 @@ def submission_success(code):
         .first_or_404()
     )
 
+    # ---------------------------------------------
+    # COMMERCIAL PAYMENT INFORMATION
+    # ---------------------------------------------
+
+    is_commercial = (
+        submission.pricing_model in {
+            PRICING_MODEL_PRESENCE,
+            PRICING_MODEL_CAMPAIGN,
+        }
+        and submission.amount_due is not None
+    )
+
+    payment_required = (
+        is_commercial
+        and submission.payment_status == "unpaid"
+    )
+
+    amount_due = submission.amount_due
+
     return render_template(
         "submission_success.html",
         submission=submission,
+        is_commercial=is_commercial,
+        payment_required=payment_required,
+        amount_due=amount_due,
     )
-
 
 # =========================================================
 # SUBMISSION STATUS
