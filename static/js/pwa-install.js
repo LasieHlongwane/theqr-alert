@@ -3,17 +3,19 @@
 // Powered by LaC
 // =========================================================
 //
-// RULES:
+// GOALS:
 //
 // 1. Never flash the install card during page load.
 // 2. Hide the card when Kalxa is running as an installed PWA.
-// 3. Show the card in a normal browser.
-// 4. ALWAYS show the "Add Kalxa to Home Screen" button
-//    whenever the card is visible.
-// 5. Use the native install prompt when available.
-// 6. Otherwise show manual installation instructions.
-// 7. Allow the user to dismiss the card for this page.
-// 8. Support the early install-event capture from <head>.
+// 3. Show the Quick Access card in a normal browser.
+// 4. Use Chrome's native install prompt whenever available.
+// 5. On a first visit, give Chrome time to provide
+//    beforeinstallprompt before falling back to manual help.
+// 6. Do not require the user to refresh the page.
+// 7. Support the early install-event capture from <head>.
+// 8. Fall back to manual instructions when native install
+//    genuinely is not available.
+// 9. Allow the card to be dismissed for the current page.
 //
 // =========================================================
 
@@ -52,12 +54,10 @@ const lacInstallClose =
 // STATE
 // =========================================================
 //
-// If Chrome fired beforeinstallprompt while <head> was
-// loading, the early capture script stored the event in:
+// access.html may capture beforeinstallprompt before this
+// script loads and save it in:
 //
 // window.kalxaInstallPrompt
-//
-// Pick it up immediately.
 //
 // =========================================================
 
@@ -66,6 +66,25 @@ let deferredInstallPrompt =
 
 let installCardDismissed =
     false;
+
+let installButtonBusy =
+    false;
+
+
+// =========================================================
+// INSTALL PROMPT WAIT SETTINGS
+// =========================================================
+//
+// On a brand-new Chrome visit, the service worker / manifest
+// may still be becoming install-ready.
+//
+// If the user taps the button before Chrome has fired
+// beforeinstallprompt, wait briefly for the event.
+//
+// =========================================================
+
+const KALXA_INSTALL_PROMPT_WAIT_MS =
+    5000;
 
 
 // =========================================================
@@ -96,6 +115,23 @@ function isRunningStandalone() {
         standaloneDisplayMode
         ||
         iosStandalone
+    );
+
+}
+
+
+// =========================================================
+// IOS CHECK
+// =========================================================
+
+function isIOSDevice() {
+
+    const userAgent =
+        navigator.userAgent || "";
+
+
+    return /iPhone|iPad|iPod/i.test(
+        userAgent
     );
 
 }
@@ -185,17 +221,7 @@ function showInstallSection() {
 
 
 // =========================================================
-// SHOW INSTALL BUTTON
-// =========================================================
-//
-// IMPORTANT:
-//
-// Whenever the Quick Access card is visible, the button
-// remains visible.
-//
-// Whether Chrome supplied beforeinstallprompt determines
-// what happens after the button is clicked.
-//
+// NORMAL INSTALL BUTTON
 // =========================================================
 
 function showInstallButton() {
@@ -210,6 +236,89 @@ function showInstallButton() {
 
     lacInstallButton.disabled =
         false;
+
+    lacInstallButton.removeAttribute(
+        "aria-busy"
+    );
+
+
+    // Preserve the original label so we can restore it
+    // after the temporary loading state.
+
+    if (
+        !lacInstallButton.dataset
+            .kalxaOriginalText
+    ) {
+
+        lacInstallButton.dataset
+            .kalxaOriginalText =
+            lacInstallButton.textContent.trim();
+
+    }
+
+
+    lacInstallButton.textContent =
+        lacInstallButton.dataset
+            .kalxaOriginalText;
+
+}
+
+
+// =========================================================
+// INSTALL BUTTON BUSY STATE
+// =========================================================
+
+function showInstallPreparingState() {
+
+    if (!lacInstallButton) {
+        return;
+    }
+
+
+    if (
+        !lacInstallButton.dataset
+            .kalxaOriginalText
+    ) {
+
+        lacInstallButton.dataset
+            .kalxaOriginalText =
+            lacInstallButton.textContent.trim();
+
+    }
+
+
+    installButtonBusy =
+        true;
+
+
+    lacInstallButton.style.display =
+        "inline-flex";
+
+    lacInstallButton.disabled =
+        true;
+
+    lacInstallButton.setAttribute(
+        "aria-busy",
+        "true"
+    );
+
+    lacInstallButton.textContent =
+        "Preparing install…";
+
+}
+
+
+// =========================================================
+// RESTORE BUTTON
+// =========================================================
+
+function restoreInstallButton() {
+
+    installButtonBusy =
+        false;
+
+
+    showInstallButton();
 
 }
 
@@ -235,6 +344,26 @@ function showDefaultHelp() {
 
 
 // =========================================================
+// PREPARING HELP TEXT
+// =========================================================
+
+function showPreparingHelp() {
+
+    if (!lacInstallHelp) {
+        return;
+    }
+
+
+    lacInstallHelp.textContent =
+        "Preparing Kalxa for installation…";
+
+    lacInstallHelp.style.display =
+        "block";
+
+}
+
+
+// =========================================================
 // MANUAL INSTALL HELP
 // =========================================================
 
@@ -245,21 +374,13 @@ function showManualInstallHelp() {
     }
 
 
-    const userAgent =
-        navigator.userAgent || "";
-
-
     // -----------------------------------------------------
     // IOS / IPADOS
     // -----------------------------------------------------
 
-    const isIOS =
-        /iPhone|iPad|iPod/i.test(
-            userAgent
-        );
-
-
-    if (isIOS) {
+    if (
+        isIOSDevice()
+    ) {
 
         lacInstallHelp.innerHTML =
             "<strong>Install Kalxa:</strong><br>" +
@@ -280,7 +401,8 @@ function showManualInstallHelp() {
 
     lacInstallHelp.innerHTML =
         "<strong>Install Kalxa:</strong><br>" +
-        "Open your browser menu (⋮), then choose " +
+        "If the install window does not appear, open your " +
+        "browser menu (⋮), then choose " +
         "<strong>Install app</strong> or " +
         "<strong>Add to Home screen</strong>.";
 
@@ -292,13 +414,6 @@ function showManualInstallHelp() {
 
 // =========================================================
 // SYNC EARLY INSTALL PROMPT
-// =========================================================
-//
-// This is important.
-//
-// If the <head> script captured Chrome's event before this
-// file loaded, copy that event into our local variable.
-//
 // =========================================================
 
 function syncEarlyInstallPrompt() {
@@ -318,6 +433,200 @@ function syncEarlyInstallPrompt() {
         );
 
     }
+
+}
+
+
+// =========================================================
+// WAIT FOR NATIVE INSTALL PROMPT
+// =========================================================
+//
+// This fixes the important first-visit case:
+//
+// User opens Kalxa
+//      ↓
+// Chrome is still checking PWA installability
+//      ↓
+// User taps Add to Home Screen
+//      ↓
+// Instead of immediately telling them to use ⋮,
+// wait briefly for beforeinstallprompt.
+//
+// =========================================================
+
+function waitForNativeInstallPrompt(
+    timeoutMs =
+        KALXA_INSTALL_PROMPT_WAIT_MS
+) {
+
+    syncEarlyInstallPrompt();
+
+
+    // -----------------------------------------------------
+    // ALREADY AVAILABLE
+    // -----------------------------------------------------
+
+    if (
+        deferredInstallPrompt
+    ) {
+
+        return Promise.resolve(
+            deferredInstallPrompt
+        );
+
+    }
+
+
+    // -----------------------------------------------------
+    // WAIT FOR CHROME
+    // -----------------------------------------------------
+
+    return new Promise(
+        function(resolve) {
+
+            let finished =
+                false;
+
+
+            function finish(
+                promptEvent
+            ) {
+
+                if (
+                    finished
+                ) {
+                    return;
+                }
+
+
+                finished =
+                    true;
+
+
+                window.removeEventListener(
+                    "beforeinstallprompt",
+                    temporaryPromptListener
+                );
+
+
+                window.removeEventListener(
+                    "kalxainstallpromptready",
+                    temporaryEarlyListener
+                );
+
+
+                resolve(
+                    promptEvent || null
+                );
+
+            }
+
+
+            function temporaryPromptListener(
+                event
+            ) {
+
+                event.preventDefault();
+
+
+                deferredInstallPrompt =
+                    event;
+
+
+                window.kalxaInstallPrompt =
+                    event;
+
+
+                clearOldInstallMarker();
+
+
+                console.log(
+                    "[Kalxa PWA] Install prompt became ready while waiting."
+                );
+
+
+                finish(
+                    event
+                );
+
+            }
+
+
+            function temporaryEarlyListener() {
+
+                syncEarlyInstallPrompt();
+
+
+                if (
+                    deferredInstallPrompt
+                ) {
+
+                    console.log(
+                        "[Kalxa PWA] Early install prompt became ready while waiting."
+                    );
+
+
+                    finish(
+                        deferredInstallPrompt
+                    );
+
+                }
+
+            }
+
+
+            window.addEventListener(
+                "beforeinstallprompt",
+                temporaryPromptListener
+            );
+
+
+            window.addEventListener(
+                "kalxainstallpromptready",
+                temporaryEarlyListener
+            );
+
+
+            // -------------------------------------------------
+            // CHECK AGAIN AFTER LISTENERS ARE ATTACHED
+            // -------------------------------------------------
+
+            syncEarlyInstallPrompt();
+
+
+            if (
+                deferredInstallPrompt
+            ) {
+
+                finish(
+                    deferredInstallPrompt
+                );
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // TIMEOUT
+            // -------------------------------------------------
+
+            window.setTimeout(
+                function() {
+
+                    syncEarlyInstallPrompt();
+
+
+                    finish(
+                        deferredInstallPrompt
+                    );
+
+                },
+                timeoutMs
+            );
+
+        }
+    );
 
 }
 
@@ -373,10 +682,19 @@ function updateInstallUI() {
 
     showInstallSection();
 
-    showInstallButton();
+
+    if (
+        !installButtonBusy
+    ) {
+
+        showInstallButton();
+
+    }
 
 
-    if (lacInstalledMessage) {
+    if (
+        lacInstalledMessage
+    ) {
 
         lacInstalledMessage.style.display =
             "none";
@@ -384,7 +702,13 @@ function updateInstallUI() {
     }
 
 
-    showDefaultHelp();
+    if (
+        !installButtonBusy
+    ) {
+
+        showDefaultHelp();
+
+    }
 
 }
 
@@ -393,7 +717,9 @@ function updateInstallUI() {
 // CLOSE CARD
 // =========================================================
 
-if (lacInstallClose) {
+if (
+    lacInstallClose
+) {
 
     lacInstallClose.addEventListener(
         "click",
@@ -445,6 +771,41 @@ if (
                             registration.scope
                         );
 
+
+                        // -------------------------------------
+                        // Wait until the browser has finished
+                        // establishing service-worker readiness.
+                        //
+                        // This does not manufacture an install
+                        // prompt. It simply gives Chrome the
+                        // opportunity to finish its PWA setup.
+                        // -------------------------------------
+
+                        return navigator
+                            .serviceWorker
+                            .ready;
+
+                    }
+                )
+                .then(
+                    function(registration) {
+
+                        if (
+                            registration
+                        ) {
+
+                            console.log(
+                                "[Kalxa PWA] Service worker ready."
+                            );
+
+                        }
+
+
+                        syncEarlyInstallPrompt();
+
+
+                        updateInstallUI();
+
                     }
                 )
                 .catch(
@@ -454,6 +815,9 @@ if (
                             "[Kalxa PWA] Service worker registration failed:",
                             error
                         );
+
+
+                        updateInstallUI();
 
                     }
                 );
@@ -468,8 +832,8 @@ if (
 // RECEIVE EARLY INSTALL PROMPT
 // =========================================================
 //
-// access.html <head> dispatches this event immediately
-// after it captures beforeinstallprompt.
+// access.html <head> may dispatch this event after it
+// captures beforeinstallprompt.
 //
 // =========================================================
 
@@ -502,15 +866,7 @@ window.addEventListener(
 
 
 // =========================================================
-// FALLBACK NATIVE INSTALL PROMPT CAPTURE
-// =========================================================
-//
-// Keep this listener.
-//
-// It protects pages that do not yet have the early
-// <head> capture script and also gives us another chance
-// to receive the browser event.
-//
+// NATIVE INSTALL PROMPT CAPTURE
 // =========================================================
 
 window.addEventListener(
@@ -543,10 +899,133 @@ window.addEventListener(
 
 
 // =========================================================
+// OPEN NATIVE INSTALL PROMPT
+// =========================================================
+
+async function openNativeInstallPrompt() {
+
+    syncEarlyInstallPrompt();
+
+
+    if (
+        !deferredInstallPrompt
+    ) {
+
+        return false;
+
+    }
+
+
+    const promptToUse =
+        deferredInstallPrompt;
+
+
+    try {
+
+        console.log(
+            "[Kalxa PWA] Opening native install prompt."
+        );
+
+
+        await promptToUse.prompt();
+
+
+        const result =
+            await promptToUse.userChoice;
+
+
+        console.log(
+            "[Kalxa PWA] Install choice:",
+            result.outcome
+        );
+
+
+        // -------------------------------------------------
+        // PROMPT CAN ONLY BE USED ONCE
+        // -------------------------------------------------
+
+        deferredInstallPrompt =
+            null;
+
+
+        window.kalxaInstallPrompt =
+            null;
+
+
+        // -------------------------------------------------
+        // ACCEPTED
+        // -------------------------------------------------
+
+        if (
+            result.outcome ===
+            "accepted"
+        ) {
+
+            rememberKalxaInstalled();
+
+
+            hideInstallSection();
+
+
+            console.log(
+                "[Kalxa PWA] Installation accepted."
+            );
+
+
+            return true;
+
+        }
+
+
+        // -------------------------------------------------
+        // USER CANCELLED
+        // -------------------------------------------------
+
+        console.log(
+            "[Kalxa PWA] Installation dismissed."
+        );
+
+
+        return false;
+
+
+    } catch (error) {
+
+        console.error(
+            "[Kalxa PWA] Install error:",
+            error
+        );
+
+
+        deferredInstallPrompt =
+            null;
+
+
+        window.kalxaInstallPrompt =
+            null;
+
+
+        return false;
+
+    }
+
+}
+
+
+// =========================================================
 // INSTALL BUTTON
 // =========================================================
 
-if (lacInstallButton) {
+if (
+    lacInstallButton
+) {
+
+    // Save the original label immediately.
+
+    lacInstallButton.dataset
+        .kalxaOriginalText =
+        lacInstallButton.textContent.trim();
+
 
     lacInstallButton.addEventListener(
         "click",
@@ -558,120 +1037,75 @@ if (lacInstallButton) {
 
 
             // -------------------------------------------------
-            // CHECK EARLY CAPTURE ONE MORE TIME
+            // PREVENT DOUBLE TAPS
             // -------------------------------------------------
-            //
-            // This is deliberately done at click time.
-            //
-            // If Chrome supplied the event before the main
-            // script was ready, we still use it.
-            //
+
+            if (
+                installButtonBusy
+            ) {
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // ALREADY INSTALLED
+            // -------------------------------------------------
+
+            if (
+                isRunningStandalone()
+            ) {
+
+                rememberKalxaInstalled();
+
+                hideInstallSection();
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // CHECK EARLY CAPTURE
             // -------------------------------------------------
 
             syncEarlyInstallPrompt();
 
 
             // -------------------------------------------------
-            // NATIVE INSTALL PROMPT AVAILABLE
+            // NATIVE PROMPT ALREADY AVAILABLE
             // -------------------------------------------------
 
             if (
                 deferredInstallPrompt
             ) {
 
+                installButtonBusy =
+                    true;
+
+
                 lacInstallButton.disabled =
                     true;
 
 
-                try {
-
-                    console.log(
-                        "[Kalxa PWA] Opening native install prompt."
-                    );
+                const installed =
+                    await openNativeInstallPrompt();
 
 
-                    deferredInstallPrompt.prompt();
-
-
-                    const result =
-                        await deferredInstallPrompt
-                            .userChoice;
-
-
-                    console.log(
-                        "[Kalxa PWA] Install choice:",
-                        result.outcome
-                    );
-
-
-                    // -----------------------------------------
-                    // ACCEPTED
-                    // -----------------------------------------
-
-                    if (
-                        result.outcome ===
-                        "accepted"
-                    ) {
-
-                        rememberKalxaInstalled();
-
-
-                        hideInstallSection();
-
-
-                        console.log(
-                            "[Kalxa PWA] Installation accepted."
-                        );
-
-                    }
-
-
-                    // -----------------------------------------
-                    // DISMISSED
-                    // -----------------------------------------
-
-                    else {
-
-                        console.log(
-                            "[Kalxa PWA] Installation dismissed."
-                        );
-
-                    }
-
-
-                } catch (error) {
-
-                    console.error(
-                        "[Kalxa PWA] Install error:",
-                        error
-                    );
-
-                }
-
-
-                // ---------------------------------------------
-                // PROMPT CAN ONLY BE USED ONCE
-                // ---------------------------------------------
-
-                deferredInstallPrompt =
-                    null;
-
-
-                window.kalxaInstallPrompt =
-                    null;
-
-
-                lacInstallButton.disabled =
+                installButtonBusy =
                     false;
 
 
-                // ---------------------------------------------
-                // KEEP CARD AVAILABLE IF USER CANCELLED
-                // ---------------------------------------------
-
                 if (
+                    !installed
+                    &&
                     !isRunningStandalone()
                 ) {
+
+                    restoreInstallButton();
+
+                    showDefaultHelp();
 
                     updateInstallUI();
 
@@ -684,23 +1118,188 @@ if (lacInstallButton) {
 
 
             // -------------------------------------------------
-            // NO NATIVE PROMPT
+            // IOS
             // -------------------------------------------------
             //
-            // Chrome / browser did not provide
-            // beforeinstallprompt.
+            // iOS does not use beforeinstallprompt in the same
+            // way, so there is no reason to wait.
             //
-            // JavaScript cannot manufacture the browser's
-            // native installation event.
+            // -------------------------------------------------
+
+            if (
+                isIOSDevice()
+            ) {
+
+                showManualInstallHelp();
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // FIRST-VISIT CHROME / ANDROID CASE
+            // -------------------------------------------------
             //
-            // Keep the button/card visible and provide
-            // fallback instructions.
+            // Do NOT immediately show the three-dot message.
+            //
+            // Chrome may still be finishing the service worker
+            // and installability checks.
             //
             // -------------------------------------------------
 
             console.log(
-                "[Kalxa PWA] Native install prompt unavailable."
+                "[Kalxa PWA] Waiting for native install prompt."
             );
+
+
+            showInstallPreparingState();
+
+            showPreparingHelp();
+
+
+            // -------------------------------------------------
+            // WAIT FOR SERVICE WORKER READINESS
+            // -------------------------------------------------
+
+            if (
+                "serviceWorker" in navigator
+            ) {
+
+                try {
+
+                    await Promise.race(
+                        [
+
+                            navigator
+                                .serviceWorker
+                                .ready,
+
+                            new Promise(
+                                function(resolve) {
+
+                                    window.setTimeout(
+                                        resolve,
+                                        2500
+                                    );
+
+                                }
+                            )
+
+                        ]
+                    );
+
+                } catch (error) {
+
+                    console.warn(
+                        "[Kalxa PWA] Service worker readiness check failed:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            // -------------------------------------------------
+            // CHROME MAY HAVE FIRED THE EVENT WHILE WE WAITED
+            // -------------------------------------------------
+
+            syncEarlyInstallPrompt();
+
+
+            // -------------------------------------------------
+            // IF STILL MISSING, WAIT FOR EVENT
+            // -------------------------------------------------
+
+            if (
+                !deferredInstallPrompt
+            ) {
+
+                await waitForNativeInstallPrompt(
+                    KALXA_INSTALL_PROMPT_WAIT_MS
+                );
+
+            }
+
+
+            // -------------------------------------------------
+            // RESTORE BUTTON BEFORE OPENING PROMPT
+            // -------------------------------------------------
+
+            installButtonBusy =
+                false;
+
+
+            restoreInstallButton();
+
+
+            syncEarlyInstallPrompt();
+
+
+            // -------------------------------------------------
+            // NATIVE PROMPT NOW AVAILABLE
+            // -------------------------------------------------
+
+            if (
+                deferredInstallPrompt
+            ) {
+
+                console.log(
+                    "[Kalxa PWA] Native prompt ready after first-load wait."
+                );
+
+
+                installButtonBusy =
+                    true;
+
+
+                lacInstallButton.disabled =
+                    true;
+
+
+                const installed =
+                    await openNativeInstallPrompt();
+
+
+                installButtonBusy =
+                    false;
+
+
+                if (
+                    !installed
+                    &&
+                    !isRunningStandalone()
+                ) {
+
+                    restoreInstallButton();
+
+                    showDefaultHelp();
+
+                    updateInstallUI();
+
+                }
+
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // GENUINELY UNAVAILABLE
+            // -------------------------------------------------
+            //
+            // Only now do we show manual browser instructions.
+            //
+            // -------------------------------------------------
+
+            console.log(
+                "[Kalxa PWA] Native install prompt unavailable after waiting."
+            );
+
+
+            restoreInstallButton();
 
 
             showManualInstallHelp();
@@ -733,6 +1332,10 @@ window.addEventListener(
 
         window.kalxaInstallPrompt =
             null;
+
+
+        installButtonBusy =
+            false;
 
 
         hideInstallSection();
@@ -777,6 +1380,10 @@ if (
                     null;
 
 
+                installButtonBusy =
+                    false;
+
+
                 hideInstallSection();
 
             } else {
@@ -795,13 +1402,16 @@ if (
 // INITIAL PAGE LOAD
 // =========================================================
 //
-// access.html / qr_entry.html should begin with:
+// HTML should initially contain:
 //
 // <section
 //     id="lac-install-section"
 //     class="lac-install-section"
 //     hidden
 // >
+//
+// This prevents the install card flashing while JavaScript
+// initializes.
 //
 // =========================================================
 
@@ -810,11 +1420,6 @@ hideInstallSection();
 
 // =========================================================
 // INITIAL EARLY-PROMPT CHECK
-// =========================================================
-//
-// The early event may already have been captured before this
-// script loaded.
-//
 // =========================================================
 
 syncEarlyInstallPrompt();
