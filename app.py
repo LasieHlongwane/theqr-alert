@@ -5040,9 +5040,11 @@ def submit_content():
     # =====================================================
 
     return render_template(
-        "submit.html",
-        zones=zones,
-        categories=categories,
+      "submit.html",
+      zones=zones,
+      categories=categories,
+      selected_zone_id=selected_zone_id,
+      selected_zone=selected_zone,
     )
            
 
