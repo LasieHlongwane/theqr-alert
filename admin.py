@@ -10952,7 +10952,517 @@ def approve_submission(submission_id):
         url_for("admin.submissions")
     )
 
+@admin_bp.route(
+    "/submissions/<int:submission_id>/confirm-payment",
+    methods=["POST"],
+)
+def confirm_submission_payment(submission_id):
 
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+    # =====================================================
+    # FIND SUBMISSION
+    # =====================================================
+
+    submission = (
+        PendingSubmission.query
+        .get_or_404(submission_id)
+    )
+
+    # =====================================================
+    # MUST ALREADY BE APPROVED
+    # =====================================================
+
+    if submission.status != "approved":
+
+        flash(
+            "Only approved submissions can have "
+            "payment confirmed.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    # =====================================================
+    # MUST HAVE PUBLISHED CONTENT
+    # =====================================================
+
+    if not submission.published_content_id:
+
+        flash(
+            "This submission does not have a "
+            "published content record.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    content = db.session.get(
+        ContentItem,
+        submission.published_content_id,
+    )
+
+    if not content:
+
+        flash(
+            "The published listing could not be found.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    # =====================================================
+    # MUST BE COMMERCIAL CONTENT
+    # =====================================================
+
+    if content.pricing_model not in {
+        PRICING_MODEL_PRESENCE,
+        PRICING_MODEL_CAMPAIGN,
+    }:
+
+        flash(
+            "This listing does not use a Kalxa "
+            "commercial package.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    # =====================================================
+    # DUPLICATE PAYMENT PROTECTION
+    # =====================================================
+
+    if content.payment_status == "paid":
+
+        flash(
+            "Payment has already been confirmed "
+            "for this listing.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    if content.payment_status == "waived":
+
+        flash(
+            "Payment for this listing has been waived.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    # =====================================================
+    # PAYMENT MUST CURRENTLY BE UNPAID
+    # =====================================================
+
+    if content.payment_status != "unpaid":
+
+        flash(
+            "Payment cannot be confirmed from its "
+            "current status.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    # =====================================================
+    # VALIDATE PACKAGE
+    # =====================================================
+
+    if not content.commercial_duration_days:
+
+        flash(
+            "This listing has no commercial "
+            "package duration.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    if content.amount_due is None:
+
+        flash(
+            "This listing has no amount due.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    try:
+
+        duration_days = int(
+            content.commercial_duration_days
+        )
+
+        if duration_days <= 0:
+            raise ValueError(
+                "Invalid commercial duration."
+            )
+
+        # =================================================
+        # ACTIVATE COMMERCIAL PACKAGE
+        #
+        # The purchased time starts NOW, not when the
+        # submission was originally approved.
+        # =================================================
+
+        now = datetime.utcnow()
+
+        content.payment_status = "paid"
+
+        content.amount_paid = (
+            content.amount_due
+        )
+
+        content.paid_at = now
+
+        content.commercial_starts_at = now
+
+        content.commercial_expires_at = (
+            now
+            + timedelta(
+                days=duration_days
+            )
+        )
+
+        # Keep the PendingSubmission in sync.
+        submission.payment_status = "paid"
+
+        db.session.commit()
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Kalxa Payment] Unable to confirm payment "
+            "submission_id=%s "
+            "content_id=%s "
+            "error=%s",
+            submission.id,
+            content.id,
+            exc,
+        )
+
+        flash(
+            "Unable to confirm payment.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+    # =====================================================
+    # PUSH NOTIFICATION AFTER ACTIVATION
+    #
+    # The listing was previously hidden while unpaid.
+    # This is the moment it actually becomes commercially
+    # visible, so notification can happen now.
+    # =====================================================
+
+    if (
+        content.active
+        and content.notification_eligible
+    ):
+
+        try:
+
+            # =============================================
+            # DUPLICATE PROTECTION
+            # =============================================
+
+            existing_notification = (
+                PushNotification.query
+                .filter_by(
+                    content_item_id=content.id
+                )
+                .first()
+            )
+
+            if not existing_notification:
+
+                zone = db.session.get(
+                    Zone,
+                    content.zone_id,
+                )
+
+                zone_name = (
+                    zone.name
+                    if zone
+                    else "your area"
+                )
+
+                category_label = (
+                    content.category
+                    .replace("-", " ")
+                    .replace("_", " ")
+                    .title()
+                )
+
+                notification_title = (
+                    f"New {category_label} "
+                    f"in {zone_name}"
+                )
+
+                notification_body = (
+                    content.title
+                )
+
+                notification_url = (
+                    f"/listing/{content.id}"
+                )
+
+                # =========================================
+                # CREATE PUSH HISTORY RECORD
+                # =========================================
+
+                push_record = PushNotification(
+
+                    content_item_id=
+                        content.id,
+
+                    zone_id=
+                        content.zone_id,
+
+                    title=
+                        notification_title,
+
+                    body=
+                        notification_body,
+
+                    target_url=
+                        notification_url,
+
+                    status=
+                        "pending",
+
+                    total_subscribers=
+                        0,
+
+                    sent_count=
+                        0,
+
+                    failed_count=
+                        0,
+
+                    attempts=
+                        0,
+                )
+
+                db.session.add(
+                    push_record
+                )
+
+                db.session.commit()
+
+                # =========================================
+                # SEND PUSH
+                # =========================================
+
+                push_record.attempts += 1
+
+                push_result = (
+                    send_zone_push_notification(
+
+                        zone_id=
+                            content.zone_id,
+
+                        category=
+                            content.category,
+
+                        title=
+                            notification_title,
+
+                        body=
+                            notification_body,
+
+                        url=
+                            notification_url,
+
+                        tag=
+                            f"content-{content.id}",
+                    )
+                )
+
+                push_record.total_subscribers = (
+                    push_result["total"]
+                )
+
+                push_record.sent_count = (
+                    push_result["sent"]
+                )
+
+                push_record.failed_count = (
+                    push_result["failed"]
+                )
+
+                # =========================================
+                # SAVE PUSH RESULT
+                # =========================================
+
+                if (
+                    push_result["sent"] > 0
+                    and
+                    push_result["failed"] == 0
+                ):
+
+                    push_record.status = "sent"
+
+                    push_record.sent_at = (
+                        datetime.utcnow()
+                    )
+
+                    push_record.last_error = None
+
+                elif (
+                    push_result["sent"] > 0
+                    and
+                    push_result["failed"] > 0
+                ):
+
+                    push_record.status = (
+                        "partial_failure"
+                    )
+
+                    push_record.sent_at = (
+                        datetime.utcnow()
+                    )
+
+                    push_record.last_error = (
+                        f"{push_result['failed']} "
+                        "subscriber delivery failures."
+                    )
+
+                elif push_result["total"] == 0:
+
+                    push_record.status = (
+                        "no_subscribers"
+                    )
+
+                    push_record.last_error = (
+                        "No active subscribers "
+                        "were found for this zone."
+                    )
+
+                else:
+
+                    push_record.status = "failed"
+
+                    push_record.last_error = (
+                        "Push delivery failed for "
+                        "all subscribers."
+                    )
+
+                db.session.commit()
+
+                current_app.logger.info(
+                    "[Kalxa Payment] Payment confirmed "
+                    "and listing activated "
+                    "submission_id=%s "
+                    "content_id=%s "
+                    "amount=%s "
+                    "expires_at=%s",
+                    submission.id,
+                    content.id,
+                    content.amount_paid,
+                    content.commercial_expires_at,
+                )
+
+            else:
+
+                current_app.logger.info(
+                    "[Kalxa Push] Notification already "
+                    "exists for content_id=%s. "
+                    "Payment activation push skipped.",
+                    content.id,
+                )
+
+        except Exception as exc:
+
+            # Payment is ALREADY successfully committed.
+            #
+            # A push failure must never undo or invalidate
+            # a customer's payment.
+            db.session.rollback()
+
+            current_app.logger.exception(
+                "[Kalxa Push] Payment activation "
+                "notification failed "
+                "submission_id=%s "
+                "content_id=%s "
+                "error=%s",
+                submission.id,
+                content.id,
+                exc,
+            )
+
+    # =====================================================
+    # SUCCESS
+    # =====================================================
+
+    flash(
+        "Payment confirmed. The Kalxa listing is now live.",
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "admin.submissions",
+            status="approved",
+        )
+    )
             
 @admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
 def reject_submission(submission_id):
