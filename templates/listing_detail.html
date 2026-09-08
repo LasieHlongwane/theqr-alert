@@ -15,13 +15,11 @@
         content="#0b0c0e"
     >
 
-    <title>
-        {{ item.title }} | Kalxa
-    </title>
+    <title>{{ item.title }} | Kalxa</title>
 
 
     <!-- =========================================
-         PWA / ADD TO HOME SCREEN
+         PWA
     ========================================== -->
 
     <link
@@ -82,56 +80,147 @@
 
 
     <!-- =========================================
-         BUSINESS / CLAIM LISTING CSS
+         LISTING DETAIL ENHANCEMENTS
     ========================================== -->
 
     <style>
+
+        /* =========================================
+           PAGE
+        ========================================== */
+
+        .listing-detail-container {
+            padding-bottom: 100px;
+        }
+
+
+        /* =========================================
+           LOCAL CONTEXT
+        ========================================== */
+
+        .listing-local-context {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 10px 0 16px;
+        }
+
+        .listing-local-context .location-label {
+            margin: 0;
+        }
+
+        .listing-local-label {
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
 
         /* =========================================
            BADGES
         ========================================== */
 
         .verified-business-badge {
-
             display: inline-flex;
-
             align-items: center;
-
             gap: 4px;
 
-            padding:
-                6px
-                9px;
+            padding: 6px 9px;
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.16
-                );
+                rgba(255, 244, 223, 0.16);
 
             border-radius: 999px;
 
             background:
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.08
-                );
+                rgba(255, 244, 223, 0.08);
 
             color: #fff4df;
 
             font-size: 9px;
-
             font-weight: 900;
-
             letter-spacing: 0.5px;
-
             text-transform: uppercase;
+        }
 
+
+        .local-business-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            padding: 6px 9px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            border-radius: 999px;
+
+            background:
+                rgba(255, 255, 255, 0.04);
+
+            color: #b9bdc3;
+
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+
+        /* =========================================
+           BUSINESS IDENTITY
+        ========================================== */
+
+        .business-identity {
+            margin-top: 14px;
+            padding: 14px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.07);
+
+            border-radius: 15px;
+
+            background:
+                rgba(255, 255, 255, 0.025);
+        }
+
+        .business-identity-label {
+            margin-bottom: 5px;
+
+            color: #858a91;
+
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .business-identity-name {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            color: #fff4df;
+
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1.35;
+        }
+
+        .business-identity-location {
+            margin-top: 5px;
+
+            color: #9fa4ab;
+
+            font-size: 11px;
+            font-weight: 700;
         }
 
 
@@ -140,134 +229,81 @@
         ========================================== */
 
         .business-information {
-
-            margin-top: 22px;
-
+            margin-top: 24px;
         }
-
 
         .business-information-header {
-
             margin-bottom: 12px;
-
         }
 
-
         .business-information-eyebrow {
-
-            margin:
-                0
-                0
-                4px;
+            margin: 0 0 4px;
 
             color: #858a91;
 
             font-size: 9px;
-
             font-weight: 900;
-
             letter-spacing: 1px;
-
             text-transform: uppercase;
-
         }
 
-
         .business-information-title {
-
             margin: 0;
 
             color: #fff4df;
 
             font-size: 18px;
-
             font-weight: 900;
-
         }
 
-
         .business-information-grid {
-
             display: grid;
 
             grid-template-columns:
-                repeat(
-                    2,
-                    minmax(0, 1fr)
-                );
+                repeat(2, minmax(0, 1fr));
 
             gap: 10px;
-
         }
 
-
         .business-info-card {
-
             padding: 14px;
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.08
-                );
+                rgba(255, 255, 255, 0.08);
 
             border-radius: 14px;
 
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.035
-                );
-
+                rgba(255, 255, 255, 0.035);
         }
-
 
         .business-info-card.full {
-
-            grid-column:
-                1 / -1;
-
+            grid-column: 1 / -1;
         }
 
-
         .business-info-label {
-
             display: block;
-
             margin-bottom: 6px;
 
             color: #858a91;
 
             font-size: 9px;
-
             font-weight: 900;
-
             letter-spacing: 0.6px;
-
             text-transform: uppercase;
-
         }
 
-
         .business-info-value {
-
             margin: 0;
 
             color: #e7e8ea;
 
             font-size: 13px;
-
             font-weight: 700;
-
-            line-height: 1.55;
+            line-height: 1.6;
 
             white-space: pre-line;
-
         }
 
 
@@ -276,64 +312,79 @@
         ========================================== */
 
         .listing-special-offer {
+            position: relative;
+            overflow: hidden;
 
             margin-top: 18px;
-
-            padding: 16px;
+            padding: 17px;
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.15
-                );
+                rgba(255, 244, 223, 0.16);
 
             border-radius: 16px;
 
             background:
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.06
-                );
-
+                rgba(255, 244, 223, 0.065);
         }
 
+        .listing-special-offer::before {
+            content: "";
+
+            position: absolute;
+            top: 0;
+            left: 0;
+
+            width: 4px;
+            height: 100%;
+
+            background: #fff4df;
+        }
 
         .listing-special-offer-label {
-
-            margin-bottom: 6px;
+            margin-bottom: 7px;
 
             color: #fff4df;
 
             font-size: 10px;
-
             font-weight: 900;
-
             letter-spacing: 0.8px;
-
             text-transform: uppercase;
-
         }
 
-
         .listing-special-offer-text {
-
             margin: 0;
 
             color: #f0ede6;
 
             font-size: 14px;
-
-            font-weight: 700;
-
+            font-weight: 800;
             line-height: 1.55;
 
             white-space: pre-line;
+        }
 
+
+        /* =========================================
+           ACTION INTRODUCTION
+        ========================================== */
+
+        .listing-action-intro {
+            margin: 0 0 14px;
+
+            color: #9fa4ab;
+
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+
+        /* =========================================
+           SHARE
+        ========================================== */
+
+        .listing-share-section {
+            margin-top: 20px;
         }
 
 
@@ -342,82 +393,49 @@
         ========================================== */
 
         .claim-listing-box {
-
             margin-top: 24px;
-
             padding: 18px;
 
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.045
-                );
+                rgba(255, 255, 255, 0.045);
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.09
-                );
+                rgba(255, 255, 255, 0.09);
 
             border-radius: 18px;
-
         }
 
-
         .claim-listing-label {
-
             margin-bottom: 6px;
 
             color: #fff4df;
 
             font-size: 15px;
-
             font-weight: 900;
-
             line-height: 1.3;
-
         }
 
-
         .claim-listing-text {
-
-            margin:
-                0
-                0
-                14px;
+            margin: 0 0 14px;
 
             color: #9fa4ab;
 
             font-size: 12px;
-
             line-height: 1.55;
-
         }
 
-
         .claim-listing-button {
-
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
-
             gap: 12px;
 
             width: 100%;
 
-            padding:
-                13px
-                14px;
+            padding: 13px 14px;
 
             background: #fff4df;
-
             color: #111317;
 
             border-radius: 12px;
@@ -425,113 +443,142 @@
             text-decoration: none;
 
             font-size: 12px;
-
             font-weight: 900;
 
             transition:
                 transform 0.12s ease,
                 opacity 0.12s ease;
-
         }
-
 
         .claim-listing-button:active {
-
-            transform:
-                scale(0.985);
-
+            transform: scale(0.985);
         }
 
-
         .claim-listing-arrow {
-
             flex-shrink: 0;
 
             font-size: 16px;
-
             line-height: 1;
-
         }
-
-
-        /* -----------------------------------------
-           PENDING CLAIM
-        ------------------------------------------ */
 
         .claim-listing-box.pending {
-
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.035
-                );
-
+                rgba(255, 255, 255, 0.035);
         }
 
-
         .claim-pending-status {
-
             display: inline-flex;
-
             align-items: center;
-
             gap: 6px;
 
             margin-top: 2px;
 
-            padding:
-                6px
-                9px;
+            padding: 6px 9px;
 
             border:
                 1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.09
-                );
+                rgba(255, 255, 255, 0.09);
 
             border-radius: 999px;
 
             background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.055
-                );
+                rgba(255, 255, 255, 0.055);
 
             color: #c6c9ce;
 
             font-size: 10px;
-
             font-weight: 900;
-
             letter-spacing: 0.4px;
-
             text-transform: uppercase;
-
         }
 
 
-        @media (
-            max-width: 600px
-        ) {
+        /* =========================================
+           MOBILE QUICK ACTION BAR
+
+           BUSINESS / PROMOTION ONLY
+        ========================================== */
+
+        .mobile-business-actions {
+            display: none;
+        }
+
+
+        @media (max-width: 600px) {
 
             .business-information-grid {
-
                 grid-template-columns: 1fr;
-
             }
 
-
             .business-info-card.full {
-
                 grid-column: auto;
+            }
 
+            .listing-local-context {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .mobile-business-actions {
+                position: fixed;
+
+                left: 0;
+                right: 0;
+                bottom: 0;
+
+                z-index: 80;
+
+                display: flex;
+                gap: 8px;
+
+                padding:
+                    10px
+                    12px
+                    calc(10px + env(safe-area-inset-bottom));
+
+                border-top:
+                    1px solid
+                    rgba(255, 255, 255, 0.08);
+
+                background:
+                    rgba(11, 12, 14, 0.96);
+
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+            }
+
+            .mobile-business-action {
+                flex: 1;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+
+                min-height: 45px;
+
+                padding: 10px;
+
+                border:
+                    1px solid
+                    rgba(255, 255, 255, 0.08);
+
+                border-radius: 12px;
+
+                background:
+                    rgba(255, 255, 255, 0.055);
+
+                color: #f2f2f2;
+
+                text-decoration: none;
+
+                font-size: 11px;
+                font-weight: 900;
+            }
+
+            .mobile-business-action.primary {
+                background: #fff4df;
+                color: #111317;
             }
 
         }
@@ -570,20 +617,30 @@
     <main class="listing-detail-container">
 
 
-        <div class="location-label">
-            📍 {{ zone.name }}
+        <!-- =========================================
+             LOCAL CONTEXT
+        ========================================== -->
+
+        <div class="listing-local-context">
+
+            <div class="location-label">
+                📍 {{ zone.name }}
+            </div>
+
+            {% if item.can_use_business_features() %}
+
+            <div class="listing-local-label">
+                LOCAL BUSINESS
+            </div>
+
+            {% endif %}
+
         </div>
 
 
-        <!-- =====================================
+        <!-- =========================================
              GALLERY
-
-             DISCOVERY:
-             Maximum one image.
-
-             BUSINESS / PROMOTION:
-             Up to three images.
-        ====================================== -->
+        ========================================== -->
 
         {% if item.can_use_business_features() %}
 
@@ -611,6 +668,7 @@
                     <img
                         src="{{ image.image_url }}"
                         alt="{{ item.title }}"
+                        loading="eager"
                     >
 
                 </button>
@@ -632,7 +690,14 @@
                 item.image_url_3
             ] %}
 
-            <div class="listing-detail-gallery">
+            <div
+                class="
+                    listing-detail-gallery
+                    {% if business_gallery|select|list|length == 1 %}
+                        single
+                    {% endif %}
+                "
+            >
 
                 {% for image_url in business_gallery %}
 
@@ -648,6 +713,7 @@
                         <img
                             src="{{ image_url }}"
                             alt="{{ item.title }}"
+                            loading="eager"
                         >
 
                     </button>
@@ -664,10 +730,6 @@
         {% else %}
 
 
-            <!-- =================================
-                 LEVEL 1 — DISCOVERY
-            ================================== -->
-
             {% if item.image_url %}
 
             <div class="listing-detail-gallery single">
@@ -682,6 +744,7 @@
                     <img
                         src="{{ item.image_url }}"
                         alt="{{ item.title }}"
+                        loading="eager"
                     >
 
                 </button>
@@ -707,6 +770,7 @@
                         <img
                             src="{{ discovery_image.image_url }}"
                             alt="{{ item.title }}"
+                            loading="eager"
                         >
 
                     </button>
@@ -721,21 +785,19 @@
         {% endif %}
 
 
-        <!-- =====================================
-             LISTING
-        ====================================== -->
+        <!-- =========================================
+             MAIN LISTING
+        ========================================== -->
 
         <article class="listing-detail-main">
 
 
-            <!-- =================================
+            <!-- =====================================
                  BADGES
-            ================================== -->
+            ====================================== -->
 
             <div class="listing-badge-row">
 
-
-                <!-- LEVEL 3 — PROMOTION -->
 
                 {% if
                     item.can_use_promotion_features()
@@ -749,8 +811,6 @@
                 {% endif %}
 
 
-                <!-- VERIFIED BUSINESS -->
-
                 {% if
                     item.can_use_business_features()
                     and item.is_verified
@@ -763,48 +823,65 @@
                 {% endif %}
 
 
-                <!-- CATEGORY -->
+                {% if item.can_use_business_features() %}
+
+                <span class="local-business-badge">
+                    📍 LOCAL
+                </span>
+
+                {% endif %}
+
 
                 <span class="listing-detail-category-badge">
 
-                   {% if category %}
+                    {% if category %}
 
-                    {% if category.icon %}
-                     {{ category.icon }}
+                        {% if category.icon %}
+                            {{ category.icon }}
+                        {% endif %}
+
+                        {{ category.name }}
+
+                    {% else %}
+
+                        {{ item.category | replace("_", " ") | title }}
+
                     {% endif %}
-
-                    {{ category.name }}
-
-                   {% else %}
-
-                    {{ item.category | replace("_", " ") | title }}
-
-                   {% endif %}
 
                 </span>
 
             </div>
 
 
-            <!-- =================================
+            <!-- =====================================
                  TITLE
-            ================================== -->
+            ====================================== -->
 
             <h1>
                 {{ item.title }}
             </h1>
 
 
+            <!-- =====================================
+                 BUSINESS IDENTITY
+            ====================================== -->
+
             {% if item.business_name %}
 
-            <div class="listing-detail-business">
+            <div class="business-identity">
 
-                {{ item.business_name }}
+                <div class="business-identity-label">
+                    Listed by
+                </div>
 
-                {% if
-                    item.can_use_business_features()
-                    and item.is_verified
-                %}
+                <div class="business-identity-name">
+
+                    {{ item.business_name }}
+
+                    {% if
+                        item.can_use_business_features()
+                        and item.is_verified
+                    %}
 
                     <span
                         title="Verified by Kalxa"
@@ -812,6 +889,22 @@
                     >
                         ✓
                     </span>
+
+                    {% endif %}
+
+                </div>
+
+                {% if item.venue %}
+
+                <div class="business-identity-location">
+                    📍 {{ item.venue }}, {{ zone.name }}
+                </div>
+
+                {% else %}
+
+                <div class="business-identity-location">
+                    📍 {{ zone.name }}
+                </div>
 
                 {% endif %}
 
@@ -829,14 +922,12 @@
             {% endif %}
 
 
-            <!-- =================================
+            <!-- =====================================
                  CORE DETAILS
-            ================================== -->
+            ====================================== -->
 
             <div class="listing-detail-info-grid">
 
-
-                <!-- LOCATION -->
 
                 {% if item.venue %}
 
@@ -855,8 +946,6 @@
                 {% endif %}
 
 
-                <!-- PRICE -->
-
                 {% if
                     item.can_use_business_features()
                     and item.price
@@ -866,11 +955,20 @@
 
                     <span>
 
-                        {% if category.slug == "property" %}
+                        {% if
+                            category
+                            and category.slug == "property"
+                        %}
 
                             🏠 Rent
 
-                        {% elif category.slug == "events" %}
+                        {% elif
+                            category
+                            and category.slug in [
+                                "events",
+                                "upcoming-event-🥹🔥"
+                            ]
+                        %}
 
                             🎟️ Entry
 
@@ -890,8 +988,6 @@
 
                 {% endif %}
 
-
-                <!-- OPENING HOURS -->
 
                 {% if
                     item.can_use_business_features()
@@ -914,10 +1010,16 @@
 
 
                 <!-- =================================
-                     PUBLIC DATES
+                     DATES
                 ================================== -->
 
-                {% if category.slug == "events" %}
+                {% if
+                    category
+                    and category.slug in [
+                        "events",
+                        "upcoming-event-🥹🔥"
+                    ]
+                %}
 
 
                     {% if item.event_date %}
@@ -997,18 +1099,40 @@
             </div>
 
 
-            <!-- =================================
-                 BUSINESS INFORMATION
+            <!-- =====================================
+                 SPECIAL OFFER
 
-                 BUSINESS + PROMOTION ONLY
-            ================================== -->
+                 Put this high on the page because
+                 it is commercially important.
+            ====================================== -->
 
             {% if
                 item.can_use_business_features()
-                and (
-                    item.menu_highlights
-                    or item.special_offer
-                )
+                and item.special_offer
+            %}
+
+            <div class="listing-special-offer">
+
+                <div class="listing-special-offer-label">
+                    🔥 CURRENT OFFER
+                </div>
+
+                <p class="listing-special-offer-text">
+                    {{ item.special_offer }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- =====================================
+                 BUSINESS INFORMATION
+            ====================================== -->
+
+            {% if
+                item.can_use_business_features()
+                and item.menu_highlights
             %}
 
             <section class="business-information">
@@ -1028,24 +1152,41 @@
 
                 <div class="business-information-grid">
 
-
-                    {% if item.menu_highlights %}
-
                     <div class="business-info-card full">
 
                         <span class="business-info-label">
 
-                            {% if category.slug == "food" %}
+                            {% if
+                                category
+                                and category.slug in [
+                                    "food",
+                                    "foods",
+                                    "check-out-our-specials"
+                                ]
+                            %}
 
                                 🍽️ Menu Highlights
 
-                            {% elif category.slug == "services" %}
+                            {% elif
+                                category
+                                and category.slug == "services"
+                            %}
 
                                 🛠️ Services
 
-                            {% elif category.slug == "property" %}
+                            {% elif
+                                category
+                                and category.slug == "property"
+                            %}
 
                                 🏠 Highlights
+
+                            {% elif
+                                category
+                                and category.slug == "beauty-salon"
+                            %}
+
+                                ✂️ Services
 
                             {% else %}
 
@@ -1061,42 +1202,16 @@
 
                     </div>
 
-                    {% endif %}
-
-
                 </div>
-
-
-                <!-- =============================
-                     SPECIAL OFFER
-                ============================== -->
-
-                {% if item.special_offer %}
-
-                <div class="listing-special-offer">
-
-                    <div class="listing-special-offer-label">
-                        🔥 Current Offer
-                    </div>
-
-                    <p class="listing-special-offer-text">
-                        {{ item.special_offer }}
-                    </p>
-
-                </div>
-
-                {% endif %}
 
             </section>
 
             {% endif %}
 
 
-            <!-- =================================
+            <!-- =====================================
                  BUSINESS ACTIONS
-
-                 BUSINESS + PROMOTION ONLY
-            ================================== -->
+            ====================================== -->
 
             {% if
                 item.can_use_business_features()
@@ -1115,8 +1230,12 @@
                 </p>
 
                 <h2>
-                    Take action
+                    Connect with this business
                 </h2>
+
+                <p class="listing-action-intro">
+                    Contact the business directly or get directions.
+                </p>
 
 
                 {% if
@@ -1144,12 +1263,7 @@
                 <div class="listing-actions">
 
 
-                    <!-- =============================
-                         WHATSAPP
-
-                         Dedicated WhatsApp number
-                         takes priority over contact.
-                    ============================== -->
+                    <!-- WHATSAPP -->
 
                     {% if
                         item.whatsapp_number
@@ -1179,12 +1293,7 @@
                     {% endif %}
 
 
-                    <!-- =============================
-                         PHONE CALL
-
-                         General contact remains the
-                         primary phone number.
-                    ============================== -->
+                    <!-- CALL -->
 
                     {% if item.contact %}
 
@@ -1202,11 +1311,7 @@
                     {% endif %}
 
 
-                    <!-- =============================
-                         DIRECTIONS
-
-                         Dedicated URL takes priority.
-                    ============================== -->
+                    <!-- DIRECTIONS -->
 
                     {% if item.directions_url %}
 
@@ -1249,34 +1354,33 @@
             {% endif %}
 
 
-            <!-- =================================
+            <!-- =====================================
                  SHARE
+            ====================================== -->
 
-                 AVAILABLE TO ALL LEVELS
-            ================================== -->
+            <section class="listing-share-section">
 
-            <button
-                type="button"
-                id="share-listing"
-                class="listing-share-button"
-                data-lac-event="share_click"
-                onclick="shareListing()"
-            >
-                ↗ Share Listing
-            </button>
+                <button
+                    type="button"
+                    id="share-listing"
+                    class="listing-share-button"
+                    data-lac-event="share_click"
+                    onclick="shareListing()"
+                >
+                    ↗ Share Listing
+                </button>
+
+                <div
+                    id="share-feedback"
+                    class="listing-share-feedback"
+                ></div>
+
+            </section>
 
 
-            <div
-                id="share-feedback"
-                class="listing-share-feedback"
-            ></div>
-
-
-            <!-- =================================
+            <!-- =====================================
                  CLAIM LISTING
-
-                 DISCOVERY + UNCLAIMED ONLY
-            ================================== -->
+            ====================================== -->
 
             {% if
                 item.can_be_claimed()
@@ -1291,8 +1395,8 @@
 
                 <p class="claim-listing-text">
                     Claim this listing to manage your
-                    business information and unlock richer
-                    listing features on Kalxa.
+                    business information and create a richer
+                    presence on Kalxa.
                 </p>
 
                 <a
@@ -1371,6 +1475,97 @@
 
 
 <!-- =========================================
+     MOBILE BUSINESS ACTION BAR
+========================================== -->
+
+{% if
+    item.can_use_business_features()
+    and (
+        item.whatsapp_number
+        or item.contact
+        or item.directions_url
+        or item.venue
+    )
+%}
+
+<div class="mobile-business-actions">
+
+
+    {% if
+        item.whatsapp_number
+        or item.contact
+    %}
+
+    <a
+        href="{{
+            (
+                item.whatsapp_number
+                if item.whatsapp_number
+                else item.contact
+            )
+            | whatsapp_link
+        }}"
+        class="
+            mobile-business-action
+            primary
+        "
+        target="_blank"
+        rel="noopener noreferrer"
+        data-lac-event="whatsapp_click"
+    >
+        💬 WhatsApp
+    </a>
+
+    {% endif %}
+
+
+    {% if item.contact %}
+
+    <a
+        href="{{ item.contact|phone_link }}"
+        class="mobile-business-action"
+        data-lac-event="call_click"
+    >
+        📞 Call
+    </a>
+
+    {% endif %}
+
+
+    {% if item.directions_url %}
+
+    <a
+        href="{{ item.directions_url }}"
+        class="mobile-business-action"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-lac-event="directions_click"
+    >
+        🧭 Go
+    </a>
+
+
+    {% elif item.venue %}
+
+    <a
+        href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
+        class="mobile-business-action"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-lac-event="directions_click"
+    >
+        🧭 Go
+    </a>
+
+    {% endif %}
+
+
+</div>
+
+{% endif %}
+
+
+<!-- =========================================
      IMAGE MODAL
 ========================================== -->
 
@@ -1417,19 +1612,15 @@
                 "image-modal-content"
             );
 
-
         image.src =
             button.dataset.imageUrl;
-
 
         image.alt =
             button.dataset.imageAlt || "";
 
-
         modal.classList.add(
             "show"
         );
-
 
         document.body.style.overflow =
             "hidden";
@@ -1449,18 +1640,13 @@
                 "image-modal-content"
             );
 
-
         modal.classList.remove(
             "show"
         );
 
+        image.src = "";
 
-        image.src =
-            "";
-
-
-        document.body.style.overflow =
-            "";
+        document.body.style.overflow = "";
 
     }
 
@@ -1469,12 +1655,8 @@
         "keydown",
         function(event) {
 
-            if (
-                event.key === "Escape"
-            ) {
-
+            if (event.key === "Escape") {
                 closeImageModal();
-
             }
 
         }
@@ -1492,14 +1674,13 @@
                 "share-feedback"
             );
 
-
         const shareData = {
 
             title:
                 document.title,
 
             text:
-                "View this listing on Kalxa.",
+                "Check this out on Kalxa.",
 
             url:
                 window.location.href
@@ -1509,13 +1690,7 @@
 
         try {
 
-            // -------------------------------------
-            // MOBILE NATIVE SHARE
-            // -------------------------------------
-
-            if (
-                navigator.share
-            ) {
+            if (navigator.share) {
 
                 await navigator.share(
                     shareData
@@ -1523,40 +1698,25 @@
 
             }
 
-
-            // -------------------------------------
-            // FALLBACK - COPY LINK
-            // -------------------------------------
-
-            else if (
-                navigator.clipboard
-            ) {
+            else if (navigator.clipboard) {
 
                 await navigator.clipboard.writeText(
                     window.location.href
                 );
 
-
                 feedback.textContent =
                     "Listing link copied ✓";
-
 
                 setTimeout(
                     function() {
 
-                        feedback.textContent =
-                            "";
+                        feedback.textContent = "";
 
                     },
                     2500
                 );
 
             }
-
-
-            // -------------------------------------
-            // FINAL FALLBACK
-            // -------------------------------------
 
             else {
 
@@ -1565,12 +1725,11 @@
 
             }
 
+        }
 
-        } catch (error) {
+        catch (error) {
 
-            if (
-                error.name !== "AbortError"
-            ) {
+            if (error.name !== "AbortError") {
 
                 feedback.textContent =
                     "Unable to share this listing.";
@@ -1635,9 +1794,7 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        if (
-            window.LaCTrack
-        ) {
+        if (window.LaCTrack) {
 
             window.LaCTrack(
                 "listing_view"
