@@ -10035,9 +10035,7 @@ def edit_submission(submission_id):
     "/submissions/<int:submission_id>/approve",
     methods=["POST"],
 )
-def approve_submission(
-    submission_id,
-):
+def approve_submission(submission_id):
 
     auth = require_admin()
 
@@ -10046,9 +10044,7 @@ def approve_submission(
 
     submission = (
         PendingSubmission.query
-        .get_or_404(
-            submission_id
-        )
+        .get_or_404(submission_id)
     )
 
     # =====================================================
@@ -10063,13 +10059,11 @@ def approve_submission(
         )
 
         return redirect(
-            url_for(
-                "admin.submissions"
-            )
+            url_for("admin.submissions")
         )
 
     # =====================================================
-    # VALIDATE ZONE
+    # VALIDATE HOME / ORIGIN ZONE
     # =====================================================
 
     zone = db.session.get(
@@ -10085,19 +10079,23 @@ def approve_submission(
         )
 
         return redirect(
-            url_for(
-                "admin.submissions"
-            )
+            url_for("admin.submissions")
         )
 
     # =====================================================
     # VALIDATE CATEGORY
+    #
+    # Keep the REAL public category slug.
+    #
+    # Examples:
+    # discount-deals
+    # upcoming-event-🥹🔥
+    # beauty-salon
+    # property
     # =====================================================
 
-    category = (
-        get_category_by_slug(
-            submission.category
-        )
+    category = get_category_by_slug(
+        submission.category
     )
 
     if not category:
@@ -10108,9 +10106,7 @@ def approve_submission(
         )
 
         return redirect(
-            url_for(
-                "admin.submissions"
-            )
+            url_for("admin.submissions")
         )
 
     try:
@@ -10127,28 +10123,21 @@ def approve_submission(
 
         if submission_images:
 
-            first_image = (
-                submission_images[0]
-            )
+            first_image = submission_images[0]
 
             if first_image.image_url:
-
                 first_image_url = (
                     first_image.image_url
                 )
 
-        # Prefer explicitly stored cover image if available.
+        # Explicit cover image takes priority.
         if submission.image_url:
-
             first_image_url = (
                 submission.image_url
             )
 
         # =================================================
-        # LEGACY / SAFETY FALLBACK
-        #
-        # Older pending submissions may not yet have the
-        # new lifecycle fields populated.
+        # LIFECYCLE / WORKFLOW FIELDS
         # =================================================
 
         content_type = (
@@ -10166,30 +10155,28 @@ def approve_submission(
             or "available"
         )
 
-        if submission.category in ONGOING_CATEGORIES:
-
-          notification_eligible = False
-
-        else:
-
-          notification_eligible = True
+        # Prefer the value determined during public
+        # submission.
+        notification_eligible = bool(
+            submission.notification_eligible
+        )
 
         # -------------------------------------------------
-        # For old submissions created before lifecycle
-        # support existed.
+        # Legacy fallback
         # -------------------------------------------------
 
         if not lifetime_type:
 
-            if submission.category == "events":
+            if submission.category in {
+                "events",
+                "upcoming-event-🥹🔥",
+            }:
 
                 lifetime_type = (
                     "time_specific"
                 )
 
-                notification_eligible = (
-                    True
-                )
+                notification_eligible = True
 
             elif submission.end_date:
 
@@ -10204,10 +10191,250 @@ def approve_submission(
                 )
 
         # =================================================
+        # COMMERCIAL PACKAGE
+        # =================================================
+
+        pricing_model = (
+            submission.pricing_model
+            or None
+        )
+
+        commercial_duration_days = (
+            submission.commercial_duration_days
+        )
+
+        amount_due = (
+            submission.amount_due
+        )
+
+        payment_status = (
+            submission.payment_status
+            or (
+                "unpaid"
+                if pricing_model
+                else "waived"
+            )
+        )
+
+        allowed_payment_statuses = {
+            "unpaid",
+            "paid",
+            "waived",
+            "refunded",
+        }
+
+        if payment_status not in allowed_payment_statuses:
+            payment_status = "unpaid"
+
+        # =================================================
+        # VALIDATE COMMERCIAL SUBMISSION
+        # =================================================
+
+        if pricing_model:
+
+            if pricing_model not in {
+                PRICING_MODEL_PRESENCE,
+                PRICING_MODEL_CAMPAIGN,
+            }:
+
+                raise ValueError(
+                    "Unsupported Kalxa pricing model."
+                )
+
+            if not commercial_duration_days:
+
+                raise ValueError(
+                    "Commercial submission has no "
+                    "package duration."
+                )
+
+            try:
+                commercial_duration_days = int(
+                    commercial_duration_days
+                )
+
+            except (TypeError, ValueError):
+
+                raise ValueError(
+                    "Commercial submission has an "
+                    "invalid package duration."
+                )
+
+            if amount_due is None:
+
+                raise ValueError(
+                    "Commercial submission has no "
+                    "calculated amount due."
+                )
+
+        # =================================================
+        # CAMPAIGN DISTRIBUTION ZONES
+        # =================================================
+
+        distribution_zone_ids = []
+
+        if (
+            pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            raw_zone_ids = (
+                submission.distribution_zone_ids
+                or []
+            )
+
+            # ---------------------------------------------
+            # Normalize IDs
+            # ---------------------------------------------
+
+            for raw_zone_id in raw_zone_ids:
+
+                try:
+                    zone_id = int(raw_zone_id)
+
+                except (TypeError, ValueError):
+                    continue
+
+                if (
+                    zone_id
+                    not in distribution_zone_ids
+                ):
+                    distribution_zone_ids.append(
+                        zone_id
+                    )
+
+            # ---------------------------------------------
+            # Home/origin zone MUST be part of campaign
+            # reach.
+            # ---------------------------------------------
+
+            if (
+                submission.zone_id
+                not in distribution_zone_ids
+            ):
+
+                distribution_zone_ids.insert(
+                    0,
+                    submission.zone_id,
+                )
+
+            # ---------------------------------------------
+            # Current MVP supports maximum 3 zones.
+            # ---------------------------------------------
+
+            if len(distribution_zone_ids) > 3:
+
+                raise ValueError(
+                    "Campaign submission exceeds "
+                    "the current 3-zone limit."
+                )
+
+            if not distribution_zone_ids:
+
+                raise ValueError(
+                    "Campaign submission has no "
+                    "distribution zones."
+                )
+
+            # ---------------------------------------------
+            # Verify all requested zones still exist.
+            # ---------------------------------------------
+
+            valid_zone_ids = {
+                row.id
+                for row in (
+                    Zone.query
+                    .filter(
+                        Zone.id.in_(
+                            distribution_zone_ids
+                        )
+                    )
+                    .all()
+                )
+            }
+
+            if (
+                len(valid_zone_ids)
+                != len(distribution_zone_ids)
+            ):
+
+                raise ValueError(
+                    "One or more campaign "
+                    "distribution zones no longer exist."
+                )
+
+        # =================================================
+        # PRESENCE
+        #
+        # Presence stays in its home/origin zone.
+        # It does not create distribution links.
+        # =================================================
+
+        elif (
+            pricing_model
+            == PRICING_MODEL_PRESENCE
+        ):
+
+            distribution_zone_ids = []
+
+        # =================================================
+        # COMMERCIAL ACTIVATION
+        #
+        # IMPORTANT:
+        #
+        # Approval and payment are separate concepts.
+        #
+        # paid / waived:
+        #     start commercial period now
+        #
+        # unpaid / refunded:
+        #     no commercial period
+        #     content remains hidden by public visibility
+        #     gate.
+        # =================================================
+
+        commercial_starts_at = None
+        commercial_expires_at = None
+
+        amount_paid = None
+        paid_at = None
+
+        if (
+            pricing_model
+            and payment_status in {
+                "paid",
+                "waived",
+            }
+        ):
+
+            commercial_starts_at = (
+                datetime.utcnow()
+            )
+
+            commercial_expires_at = (
+                commercial_starts_at
+                + timedelta(
+                    days=commercial_duration_days
+                )
+            )
+
+            if payment_status == "paid":
+
+                amount_paid = amount_due
+
+                paid_at = (
+                    commercial_starts_at
+                )
+
+        # =================================================
         # CREATE LIVE CONTENT
         # =================================================
 
         content = ContentItem(
+
+            # ---------------------------------------------
+            # ORIGIN
+            # ---------------------------------------------
 
             zone_id=
                 submission.zone_id,
@@ -10216,7 +10443,7 @@ def approve_submission(
                 submission.category,
 
             # ---------------------------------------------
-            # NEW LIFECYCLE FIELDS
+            # CONTENT WORKFLOW
             # ---------------------------------------------
 
             content_type=
@@ -10230,6 +10457,34 @@ def approve_submission(
 
             notification_eligible=
                 notification_eligible,
+
+            # ---------------------------------------------
+            # COMMERCIAL PACKAGE
+            # ---------------------------------------------
+
+            pricing_model=
+                pricing_model,
+
+            commercial_duration_days=
+                commercial_duration_days,
+
+            commercial_starts_at=
+                commercial_starts_at,
+
+            commercial_expires_at=
+                commercial_expires_at,
+
+            payment_status=
+                payment_status,
+
+            amount_due=
+                amount_due,
+
+            amount_paid=
+                amount_paid,
+
+            paid_at=
+                paid_at,
 
             # ---------------------------------------------
             # LISTING DATA
@@ -10257,7 +10512,7 @@ def approve_submission(
                 first_image_url,
 
             # ---------------------------------------------
-            # DATES
+            # NATURAL CONTENT DATES
             # ---------------------------------------------
 
             publish_from=
@@ -10277,6 +10532,12 @@ def approve_submission(
 
             # ---------------------------------------------
             # STATUS
+            #
+            # active=True means approved/published at the
+            # moderation layer.
+            #
+            # Commercial visibility is separately blocked
+            # by payment + commercial dates.
             # ---------------------------------------------
 
             featured=False,
@@ -10286,15 +10547,46 @@ def approve_submission(
             archived=False,
         )
 
-        db.session.add(
-            content
-        )
+        db.session.add(content)
 
         # Generate content.id
         db.session.flush()
 
         # =================================================
-        # LINK SUBMISSION TO PUBLISHED CONTENT
+        # CREATE CAMPAIGN DISTRIBUTION LINKS
+        #
+        # ONE ContentItem.
+        # Multiple ContentDistributionZone records.
+        #
+        # No duplicate ContentItem rows.
+        # =================================================
+
+        if (
+            pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            for distribution_zone_id in (
+                distribution_zone_ids
+            ):
+
+                distribution_link = (
+                    ContentDistributionZone(
+
+                        content_item_id=
+                            content.id,
+
+                        zone_id=
+                            distribution_zone_id,
+                    )
+                )
+
+                db.session.add(
+                    distribution_link
+                )
+
+        # =================================================
+        # LINK SUBMISSION TO CONTENT
         # =================================================
 
         submission.published_content_id = (
@@ -10330,27 +10622,26 @@ def approve_submission(
         # MARK SUBMISSION APPROVED
         # =================================================
 
-        submission.status = (
-            "approved"
-        )
+        submission.status = "approved"
 
         submission.reviewed_at = (
             datetime.utcnow()
         )
 
         # =================================================
-        # SAVE
+        # SAVE CONTENT + DISTRIBUTION ATOMICALLY
         # =================================================
 
         db.session.commit()
-
 
     except Exception as exc:
 
         db.session.rollback()
 
-        print(
-            "Approve submission error:",
+        current_app.logger.exception(
+            "[Kalxa] Approve submission failed "
+            "submission_id=%s error=%s",
+            submission_id,
             exc,
         )
 
@@ -10360,20 +10651,43 @@ def approve_submission(
         )
 
         return redirect(
-            url_for(
-                "admin.submissions"
-            )
+            url_for("admin.submissions")
         )
 
     # =====================================================
-    # SUCCESS
+    # PUSH NOTIFICATION
+    #
+    # IMPORTANT:
+    #
+    # Commercial content only receives a push when it is
+    # actually commercially active.
+    #
+    # Therefore an approved-but-unpaid submission cannot
+    # advertise itself through push while being hidden
+    # from the public feed.
     # =====================================================
-        # =====================================================
-    # PUSH NOTIFICATION AFTER SUCCESSFUL CONTENT COMMIT
-    # =====================================================
+
+    commercial_is_visible = (
+        content.pricing_model is None
+        or (
+            content.payment_status
+            in {
+                "paid",
+                "waived",
+            }
+            and
+            content.commercial_starts_at
+            is not None
+            and
+            content.commercial_expires_at
+            is not None
+        )
+    )
+
     if (
         content.active
         and content.notification_eligible
+        and commercial_is_visible
     ):
 
         try:
@@ -10386,7 +10700,8 @@ def approve_submission(
             )
 
             notification_title = (
-                f"New {category_label} in {zone.name}"
+                f"New {category_label} "
+                f"in {zone.name}"
             )
 
             notification_body = (
@@ -10404,7 +10719,8 @@ def approve_submission(
             existing_notification = (
                 PushNotification.query
                 .filter_by(
-                    content_item_id=content.id
+                    content_item_id=
+                        content.id
                 )
                 .first()
             )
@@ -10412,8 +10728,10 @@ def approve_submission(
             if existing_notification:
 
                 current_app.logger.info(
-                    "[LaC Push] Duplicate notification skipped "
-                    "content_id=%s notification_id=%s",
+                    "[Kalxa Push] Duplicate "
+                    "notification skipped "
+                    "content_id=%s "
+                    "notification_id=%s",
                     content.id,
                     existing_notification.id,
                 )
@@ -10455,7 +10773,6 @@ def approve_submission(
 
                     attempts=
                         0,
-
                 )
 
                 db.session.add(
@@ -10463,7 +10780,6 @@ def approve_submission(
                 )
 
                 db.session.commit()
-
 
                 # =============================================
                 # ATTEMPT DELIVERY
@@ -10477,7 +10793,8 @@ def approve_submission(
                         zone_id=
                             content.zone_id,
 
-                        category=content.category,
+                        category=
+                            content.category,
 
                         title=
                             notification_title,
@@ -10490,10 +10807,8 @@ def approve_submission(
 
                         tag=
                             f"content-{content.id}",
-
                     )
                 )
-
 
                 # =============================================
                 # SAVE RESULT
@@ -10511,7 +10826,6 @@ def approve_submission(
                     push_result["failed"]
                 )
 
-
                 if (
                     push_result["sent"] > 0
                     and
@@ -10525,7 +10839,6 @@ def approve_submission(
                     )
 
                     push_record.last_error = None
-
 
                 elif (
                     push_result["sent"] > 0
@@ -10546,7 +10859,6 @@ def approve_submission(
                         "subscriber delivery failures."
                     )
 
-
                 elif push_result["total"] == 0:
 
                     push_record.status = (
@@ -10558,7 +10870,6 @@ def approve_submission(
                         "were found for this zone."
                     )
 
-
                 else:
 
                     push_record.status = "failed"
@@ -10568,12 +10879,11 @@ def approve_submission(
                         "all subscribers."
                     )
 
-
                 db.session.commit()
 
-
                 current_app.logger.info(
-                    "[LaC Push] Approval notification processed "
+                    "[Kalxa Push] Approval notification "
+                    "processed "
                     "notification_id=%s "
                     "content_id=%s "
                     "zone_id=%s "
@@ -10590,13 +10900,13 @@ def approve_submission(
                     push_record.status,
                 )
 
-
         except Exception as exc:
 
             db.session.rollback()
 
             current_app.logger.exception(
-                "[LaC Push] Approval notification failed "
+                "[Kalxa Push] Approval notification "
+                "failed "
                 "content_id=%s "
                 "zone_id=%s "
                 "error=%s",
@@ -10605,17 +10915,41 @@ def approve_submission(
                 exc,
             )
 
+    # =====================================================
+    # SUCCESS MESSAGE
+    # =====================================================
 
+    if (
+        content.pricing_model
+        and content.payment_status == "unpaid"
+    ):
 
-    flash(
-        "Submission approved and published.",
-        "success",
-    )
+        flash(
+            "Submission approved, but the listing is "
+            "hidden until payment is confirmed.",
+            "success",
+        )
+
+    elif (
+        content.pricing_model
+        and content.payment_status == "refunded"
+    ):
+
+        flash(
+            "Submission approved, but the listing is "
+            "hidden because its payment is refunded.",
+            "success",
+        )
+
+    else:
+
+        flash(
+            "Submission approved and published.",
+            "success",
+        )
 
     return redirect(
-        url_for(
-            "admin.submissions"
-        )
+        url_for("admin.submissions")
     )
 
 
