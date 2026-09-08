@@ -3865,6 +3865,45 @@ def submit_content():
     )
 
     # =====================================================
+    # PRESELECT ZONE
+    #
+    # Example:
+    #
+    # /submit?zone_id=1
+    #
+    # If the visitor entered the submission form from a
+    # Kalxa zone page, that zone becomes the default area.
+    # =====================================================
+
+    selected_zone_id = (
+        request.args.get(
+            "zone_id",
+            type=int,
+        )
+    )
+
+    selected_zone = None
+
+    if selected_zone_id:
+
+        selected_zone = (
+            db.session.get(
+                Zone,
+                selected_zone_id,
+            )
+        )
+
+        # Never trust the URL alone.
+        # The zone must exist and still be active.
+
+        if (
+            not selected_zone
+            or not selected_zone.active
+        ):
+
+            selected_zone_id = None
+            selected_zone = None
+    # =====================================================
     # POST
     # =====================================================
 
