@@ -10085,6 +10085,7 @@ def approve_submission(submission_id):
     # =====================================================
     # VALIDATE CATEGORY
     #
+    # IMPORTANT:
     # Keep the REAL public category slug.
     #
     # Examples:
@@ -10109,6 +10110,13 @@ def approve_submission(submission_id):
             url_for("admin.submissions")
         )
 
+    # =====================================================
+    # VALUES NEEDED AFTER COMMIT
+    # =====================================================
+
+    content = None
+    notification_zone_ids = []
+
     try:
 
         # =================================================
@@ -10126,12 +10134,14 @@ def approve_submission(submission_id):
             first_image = submission_images[0]
 
             if first_image.image_url:
+
                 first_image_url = (
                     first_image.image_url
                 )
 
         # Explicit cover image takes priority.
         if submission.image_url:
+
             first_image_url = (
                 submission.image_url
             )
@@ -10155,8 +10165,6 @@ def approve_submission(submission_id):
             or "available"
         )
 
-        # Prefer the value determined during public
-        # submission.
         notification_eligible = bool(
             submission.notification_eligible
         )
@@ -10223,7 +10231,11 @@ def approve_submission(submission_id):
             "refunded",
         }
 
-        if payment_status not in allowed_payment_statuses:
+        if (
+            payment_status
+            not in allowed_payment_statuses
+        ):
+
             payment_status = "unpaid"
 
         # =================================================
@@ -10249,6 +10261,7 @@ def approve_submission(submission_id):
                 )
 
             try:
+
                 commercial_duration_days = int(
                     commercial_duration_days
                 )
@@ -10284,28 +10297,32 @@ def approve_submission(submission_id):
             )
 
             # ---------------------------------------------
-            # Normalize IDs
+            # NORMALIZE ZONE IDs
             # ---------------------------------------------
 
             for raw_zone_id in raw_zone_ids:
 
                 try:
-                    zone_id = int(raw_zone_id)
+
+                    zone_id = int(
+                        raw_zone_id
+                    )
 
                 except (TypeError, ValueError):
+
                     continue
 
                 if (
                     zone_id
                     not in distribution_zone_ids
                 ):
+
                     distribution_zone_ids.append(
                         zone_id
                     )
 
             # ---------------------------------------------
-            # Home/origin zone MUST be part of campaign
-            # reach.
+            # ORIGIN ZONE MUST BE INCLUDED
             # ---------------------------------------------
 
             if (
@@ -10319,7 +10336,7 @@ def approve_submission(submission_id):
                 )
 
             # ---------------------------------------------
-            # Current MVP supports maximum 3 zones.
+            # MVP MAXIMUM: 3 ZONES
             # ---------------------------------------------
 
             if len(distribution_zone_ids) > 3:
@@ -10337,7 +10354,7 @@ def approve_submission(submission_id):
                 )
 
             # ---------------------------------------------
-            # Verify all requested zones still exist.
+            # VERIFY ZONES STILL EXIST
             # ---------------------------------------------
 
             valid_zone_ids = {
@@ -10366,8 +10383,7 @@ def approve_submission(submission_id):
         # =================================================
         # PRESENCE
         #
-        # Presence stays in its home/origin zone.
-        # It does not create distribution links.
+        # Presence remains in home/origin zone.
         # =================================================
 
         elif (
@@ -10382,15 +10398,14 @@ def approve_submission(submission_id):
         #
         # IMPORTANT:
         #
-        # Approval and payment are separate concepts.
+        # The paid duration begins when admin approves.
         #
-        # paid / waived:
-        #     start commercial period now
+        # PAID / WAIVED:
+        #     commercial period begins now
         #
-        # unpaid / refunded:
-        #     no commercial period
-        #     content remains hidden by public visibility
-        #     gate.
+        # UNPAID / REFUNDED:
+        #     approved at moderation layer,
+        #     but remains commercially hidden.
         # =================================================
 
         commercial_starts_at = None
@@ -10422,8 +10437,17 @@ def approve_submission(submission_id):
 
                 amount_paid = amount_due
 
+                commercial_payment_time = (
+                    getattr(
+                        submission,
+                        "paid_at",
+                        None,
+                    )
+                )
+
                 paid_at = (
-                    commercial_starts_at
+                    commercial_payment_time
+                    or commercial_starts_at
                 )
 
         # =================================================
@@ -10531,13 +10555,7 @@ def approve_submission(submission_id):
                 submission.end_date,
 
             # ---------------------------------------------
-            # STATUS
-            #
-            # active=True means approved/published at the
-            # moderation layer.
-            #
-            # Commercial visibility is separately blocked
-            # by payment + commercial dates.
+            # MODERATION STATUS
             # ---------------------------------------------
 
             featured=False,
@@ -10547,18 +10565,18 @@ def approve_submission(submission_id):
             archived=False,
         )
 
-        db.session.add(content)
+        db.session.add(
+            content
+        )
 
-        # Generate content.id
+        # Generate content.id.
         db.session.flush()
 
         # =================================================
         # CREATE CAMPAIGN DISTRIBUTION LINKS
         #
         # ONE ContentItem.
-        # Multiple ContentDistributionZone records.
-        #
-        # No duplicate ContentItem rows.
+        # MULTIPLE geographic distribution records.
         # =================================================
 
         if (
@@ -10594,7 +10612,7 @@ def approve_submission(submission_id):
         )
 
         # =================================================
-        # COPY CLOUDINARY IMAGE URLS
+        # COPY CLOUDINARY IMAGES
         # =================================================
 
         for image in submission_images:
@@ -10629,7 +10647,38 @@ def approve_submission(submission_id):
         )
 
         # =================================================
-        # SAVE CONTENT + DISTRIBUTION ATOMICALLY
+        # DETERMINE NOTIFICATION GEOGRAPHY
+        #
+        # PRESENCE:
+        #     home zone only
+        #
+        # CAMPAIGN:
+        #     every purchased distribution zone
+        #
+        # NON-COMMERCIAL:
+        #     home zone
+        # =================================================
+
+        if (
+            pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            notification_zone_ids = list(
+                distribution_zone_ids
+            )
+
+        else:
+
+            notification_zone_ids = [
+                content.zone_id
+            ]
+
+        # =================================================
+        # COMMIT APPROVAL FIRST
+        #
+        # Push must NEVER happen before the content exists
+        # publicly.
         # =================================================
 
         db.session.commit()
@@ -10655,16 +10704,19 @@ def approve_submission(submission_id):
         )
 
     # =====================================================
-    # PUSH NOTIFICATION
+    # PUSH NOTIFICATION ELIGIBILITY
     #
-    # IMPORTANT:
+    # CRITICAL:
     #
-    # Commercial content only receives a push when it is
-    # actually commercially active.
+    # Do NOT notify users about commercially hidden content.
     #
-    # Therefore an approved-but-unpaid submission cannot
-    # advertise itself through push while being hidden
-    # from the public feed.
+    # Commercial content must be:
+    #
+    # paid/waived
+    # + commercially activated
+    # + approved
+    #
+    # before a push is sent.
     # =====================================================
 
     commercial_is_visible = (
@@ -10684,6 +10736,10 @@ def approve_submission(submission_id):
         )
     )
 
+    # =====================================================
+    # SEND INSTANT APPROVAL NOTIFICATION
+    # =====================================================
+
     if (
         content.active
         and content.notification_eligible
@@ -10692,16 +10748,25 @@ def approve_submission(submission_id):
 
         try:
 
-            category_label = (
-                content.category
-                .replace("-", " ")
-                .replace("_", " ")
-                .title()
-            )
+            # =================================================
+            # HUMAN-FRIENDLY CATEGORY NAME
+            #
+            # Prefer configured Category.name instead of
+            # exposing production slugs such as:
+            #
+            # upcoming-event-🥹🔥
+            # check-out-our-specials
+            # =================================================
 
-            notification_title = (
-                f"New {category_label} "
-                f"in {zone.name}"
+            category_label = (
+                category.name
+                if category
+                else (
+                    content.category
+                    .replace("-", " ")
+                    .replace("_", " ")
+                    .title()
+                )
             )
 
             notification_body = (
@@ -10713,33 +10778,90 @@ def approve_submission(submission_id):
             )
 
             # =================================================
-            # DUPLICATE PROTECTION
+            # ONE PUSH RECORD PER TARGET ZONE
+            #
+            # This matters for campaigns.
+            #
+            # Example:
+            #
+            # KwaMhlanga
+            # Siyabuswa
+            # Kwaggafontein
+            #
+            # each receives its own delivery record.
             # =================================================
 
-            existing_notification = (
-                PushNotification.query
-                .filter_by(
-                    content_item_id=
-                        content.id
-                )
-                .first()
-            )
+            for notification_zone_id in (
+                notification_zone_ids
+            ):
 
-            if existing_notification:
-
-                current_app.logger.info(
-                    "[Kalxa Push] Duplicate "
-                    "notification skipped "
-                    "content_id=%s "
-                    "notification_id=%s",
-                    content.id,
-                    existing_notification.id,
+                notification_zone = (
+                    db.session.get(
+                        Zone,
+                        notification_zone_id,
+                    )
                 )
 
-            else:
+                if not notification_zone:
+
+                    current_app.logger.warning(
+                        "[Kalxa Push] Notification "
+                        "zone missing "
+                        "content_id=%s "
+                        "zone_id=%s",
+                        content.id,
+                        notification_zone_id,
+                    )
+
+                    continue
 
                 # =============================================
-                # CREATE HISTORY / OUTBOX RECORD
+                # NOTIFICATION TITLE
+                # =============================================
+
+                notification_title = (
+                    f"New {category_label} "
+                    f"in {notification_zone.name}"
+                )
+
+                # =============================================
+                # DUPLICATE PROTECTION
+                #
+                # IMPORTANT:
+                # A campaign may legitimately have multiple
+                # PushNotification rows for one ContentItem,
+                # one per zone.
+                # =============================================
+
+                existing_notification = (
+                    PushNotification.query
+                    .filter_by(
+                        content_item_id=
+                            content.id,
+
+                        zone_id=
+                            notification_zone_id,
+                    )
+                    .first()
+                )
+
+                if existing_notification:
+
+                    current_app.logger.info(
+                        "[Kalxa Push] Duplicate "
+                        "notification skipped "
+                        "content_id=%s "
+                        "zone_id=%s "
+                        "notification_id=%s",
+                        content.id,
+                        notification_zone_id,
+                        existing_notification.id,
+                    )
+
+                    continue
+
+                # =============================================
+                # CREATE PUSH HISTORY / OUTBOX RECORD
                 # =============================================
 
                 push_record = PushNotification(
@@ -10748,7 +10870,7 @@ def approve_submission(submission_id):
                         content.id,
 
                     zone_id=
-                        content.zone_id,
+                        notification_zone_id,
 
                     title=
                         notification_title,
@@ -10791,7 +10913,7 @@ def approve_submission(submission_id):
                     send_zone_push_notification(
 
                         zone_id=
-                            content.zone_id,
+                            notification_zone_id,
 
                         category=
                             content.category,
@@ -10806,33 +10928,74 @@ def approve_submission(submission_id):
                             notification_url,
 
                         tag=
-                            f"content-{content.id}",
+                            (
+                                f"content-"
+                                f"{content.id}-"
+                                f"zone-"
+                                f"{notification_zone_id}"
+                            ),
                     )
                 )
 
                 # =============================================
-                # SAVE RESULT
+                # DEFENSIVE RESULT NORMALIZATION
+                # =============================================
+
+                if not isinstance(
+                    push_result,
+                    dict,
+                ):
+
+                    push_result = {}
+
+                total = int(
+                    push_result.get(
+                        "total",
+                        0,
+                    )
+                    or 0
+                )
+
+                sent = int(
+                    push_result.get(
+                        "sent",
+                        0,
+                    )
+                    or 0
+                )
+
+                failed = int(
+                    push_result.get(
+                        "failed",
+                        0,
+                    )
+                    or 0
+                )
+
+                # =============================================
+                # SAVE DELIVERY RESULT
                 # =============================================
 
                 push_record.total_subscribers = (
-                    push_result["total"]
+                    total
                 )
 
                 push_record.sent_count = (
-                    push_result["sent"]
+                    sent
                 )
 
                 push_record.failed_count = (
-                    push_result["failed"]
+                    failed
                 )
 
                 if (
-                    push_result["sent"] > 0
-                    and
-                    push_result["failed"] == 0
+                    sent > 0
+                    and failed == 0
                 ):
 
-                    push_record.status = "sent"
+                    push_record.status = (
+                        "sent"
+                    )
 
                     push_record.sent_at = (
                         datetime.utcnow()
@@ -10841,9 +11004,8 @@ def approve_submission(submission_id):
                     push_record.last_error = None
 
                 elif (
-                    push_result["sent"] > 0
-                    and
-                    push_result["failed"] > 0
+                    sent > 0
+                    and failed > 0
                 ):
 
                     push_record.status = (
@@ -10855,11 +11017,11 @@ def approve_submission(submission_id):
                     )
 
                     push_record.last_error = (
-                        f"{push_result['failed']} "
-                        "subscriber delivery failures."
+                        f"{failed} subscriber "
+                        "delivery failures."
                     )
 
-                elif push_result["total"] == 0:
+                elif total == 0:
 
                     push_record.status = (
                         "no_subscribers"
@@ -10867,12 +11029,15 @@ def approve_submission(submission_id):
 
                     push_record.last_error = (
                         "No active subscribers "
-                        "were found for this zone."
+                        "were found for this zone "
+                        "and category."
                     )
 
                 else:
 
-                    push_record.status = "failed"
+                    push_record.status = (
+                        "failed"
+                    )
 
                     push_record.last_error = (
                         "Push delivery failed for "
@@ -10882,18 +11047,20 @@ def approve_submission(submission_id):
                 db.session.commit()
 
                 current_app.logger.info(
-                    "[Kalxa Push] Approval notification "
-                    "processed "
+                    "[Kalxa Push] Approval "
+                    "notification processed "
                     "notification_id=%s "
                     "content_id=%s "
                     "zone_id=%s "
+                    "category=%s "
                     "total=%s "
                     "sent=%s "
                     "failed=%s "
                     "status=%s",
                     push_record.id,
                     content.id,
-                    content.zone_id,
+                    notification_zone_id,
+                    content.category,
                     push_record.total_subscribers,
                     push_record.sent_count,
                     push_record.failed_count,
@@ -10902,16 +11069,23 @@ def approve_submission(submission_id):
 
         except Exception as exc:
 
+            # =================================================
+            # DO NOT UNDO APPROVAL
+            #
+            # The ContentItem has already been committed.
+            #
+            # A push failure must not make a successfully
+            # approved listing disappear.
+            # =================================================
+
             db.session.rollback()
 
             current_app.logger.exception(
                 "[Kalxa Push] Approval notification "
                 "failed "
                 "content_id=%s "
-                "zone_id=%s "
                 "error=%s",
                 content.id,
-                content.zone_id,
                 exc,
             )
 
@@ -10951,6 +11125,12 @@ def approve_submission(submission_id):
     return redirect(
         url_for("admin.submissions")
     )
+
+
+            
+
+   
+
 
 @admin_bp.route(
     "/submissions/<int:submission_id>/confirm-payment",
