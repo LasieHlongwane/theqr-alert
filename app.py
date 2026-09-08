@@ -64,6 +64,7 @@ from pricing import (
 
 YOCO_SECRET_KEY = os.getenv("YOCO_SECRET_KEY")
 YOCO_PUBLIC_KEY = os.getenv("YOCO_PUBLIC_KEY")
+YOCO_WEBHOOK_SECRET = os.getenv("YOCO_WEBHOOK_SECRET")
 YOCO_MODE = os.getenv("YOCO_MODE", "test")
 
 YOCO_CHECKOUT_URL = "https://payments.yoco.com/api/checkouts"
