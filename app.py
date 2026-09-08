@@ -819,6 +819,10 @@ def create_yoco_checkout(code):
         redirect_url,
         code=303,
     )
+
+
+
+
 # ============================================================
 # YOCO - CUSTOMER RETURN
 # ============================================================
@@ -860,6 +864,39 @@ def yoco_payment_return(code):
             code=submission.tracking_code,
         )
     )
+
+
+@app.route(
+    "/webhooks/yoco",
+    methods=["POST"],
+)
+def yoco_webhook():
+
+    # --------------------------------------------------------
+    # TEMPORARY YOCO WEBHOOK ENDPOINT
+    # --------------------------------------------------------
+    #
+    # For now this ONLY proves that:
+    #
+    # Yoco
+    #   ↓
+    # can reach
+    #   ↓
+    # Kalxa
+    #
+    # We will add signature verification and automatic payment
+    # confirmation after registration is working.
+    #
+    # DO NOT mark anything as paid here yet.
+
+    raw_body = request.get_data(as_text=True)
+
+    current_app.logger.info(
+        "[Kalxa Yoco Webhook] Event received body=%s",
+        raw_body[:2000],
+    )
+
+    return "", 200
 # =========================================================
 # CATEGORY HELPERS
 # =========================================================
