@@ -636,8 +636,18 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
+    start_time = db.Column(
+        db.Time,
+        nullable=True,
+    )
+
     end_date = db.Column(
         db.Date,
+        nullable=True,
+    )
+
+    end_time = db.Column(
+        db.Time,
         nullable=True,
     )
 
