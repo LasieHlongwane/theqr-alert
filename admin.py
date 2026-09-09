@@ -7121,7 +7121,10 @@ def _validate_and_normalize_content_dates(
     }, None
 
 
-
+@admin_bp.route(
+    "/content/new",
+    methods=["GET", "POST"],
+)
 def create_content():
 
     # =====================================================
