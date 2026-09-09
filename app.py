@@ -57,6 +57,13 @@ from models import (
     ListingClaim,
     EngagementEvent,
 )
+from categories import (
+    BUSINESS_CATEGORIES,
+    CONSUMER_CATEGORIES,
+    get_business_category,
+    get_consumer_category,
+    get_business_category_choices,
+)
 from admin import admin_bp
 from pricing import (
     calculate_kalxa_price,
