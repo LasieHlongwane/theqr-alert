@@ -83,7 +83,6 @@
 
     <!-- =========================================
          KALXA SUBMISSION PAGE
-         WHITE / BLACK DESIGN
     ========================================== -->
 
     <style>
@@ -177,7 +176,7 @@
 
 
         /* =========================================
-           MAIN CONTAINER
+           MAIN
         ========================================== */
 
         .public-submit-container {
@@ -256,7 +255,7 @@
 
 
         /* =========================================
-           REVIEW / INFORMATION NOTE
+           REVIEW NOTE
         ========================================== */
 
         .submit-review-note {
@@ -485,6 +484,7 @@
 
         .public-field input[type="text"],
         .public-field input[type="tel"],
+        .public-field input[type="url"],
         .public-field input[type="date"],
         .public-field select,
         .public-field textarea {
@@ -553,6 +553,51 @@
             margin-top: 6px;
 
             color: #777777 !important;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           ACTION FIELD CARD
+        ========================================== */
+
+        .kalxa-action-field {
+            padding: 15px;
+
+            border:
+                1px solid #e3e3e3;
+
+            border-radius: 14px;
+
+            background: #fafafa;
+        }
+
+
+        .kalxa-action-field .public-field {
+            margin-bottom: 0;
+        }
+
+
+        .kalxa-action-icon {
+            margin-right: 5px;
+        }
+
+
+        .kalxa-event-ticket-note {
+            display: none;
+
+            margin-top: 8px;
+
+            padding: 10px 12px;
+
+            border-radius: 10px;
+
+            background: #f7f7f7;
+
+            color: #555555;
 
             font-size: 10px;
 
@@ -1319,16 +1364,6 @@
                 <div class="public-form-grid">
 
 
-                    <!-- =================================
-                         HOME ZONE
-
-                         If opened from a Kalxa zone page:
-                         locked location.
-
-                         If /submit opened directly:
-                         normal dropdown.
-                    ================================== -->
-
                     {% if selected_zone %}
 
                         <div class="kalxa-locked-zone-wrapper">
@@ -1370,11 +1405,6 @@
                                 event or listing originates.
                             </small>
 
-
-                            <!--
-                                IMPORTANT:
-                                Still submit zone_id to Flask.
-                            -->
 
                             <input
                                 type="hidden"
@@ -1437,10 +1467,6 @@
 
                     {% endif %}
 
-
-                    <!-- =================================
-                         CATEGORY
-                    ================================== -->
 
                     <label class="public-field">
 
@@ -1640,7 +1666,7 @@
                             type="text"
                             name="venue"
                             value="{{ request.form.get('venue', '') }}"
-                            placeholder="Example: KwaMhlanga"
+                            placeholder="Example: KwaMhlanga Community Hall"
                         >
 
                     </label>
@@ -1669,32 +1695,11 @@
 
                 </div>
 
-
-                <label class="public-field">
-
-                    <span>
-                        Public Contact Number
-                    </span>
-
-                    <input
-                        type="tel"
-                        name="contact"
-                        value="{{ request.form.get('contact', '') }}"
-                        placeholder="Number customers should contact"
-                    >
-
-                    <small>
-                        This number may appear publicly for
-                        WhatsApp and calls.
-                    </small>
-
-                </label>
-
             </section>
 
 
             <!-- =================================
-                 04 — PHOTOS
+                 04 — CONTACT & ACTION DETAILS
             ================================== -->
 
             <section class="public-form-section">
@@ -1703,6 +1708,209 @@
 
                     <span class="public-form-number">
                         04
+                    </span>
+
+                    <div>
+
+                        <h2>
+                            Contact & Action Details
+                        </h2>
+
+                        <p>
+                            Give people direct ways to call,
+                            WhatsApp, find the location or
+                            get tickets.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-form-grid">
+
+
+                    <!-- PHONE -->
+
+                    <div class="kalxa-action-field">
+
+                        <label class="public-field">
+
+                            <span>
+                                <span class="kalxa-action-icon">
+                                    📞
+                                </span>
+                                Public Phone Number
+                            </span>
+
+                            <input
+                                type="tel"
+                                name="contact"
+                                value="{{ request.form.get('contact', '') }}"
+                                placeholder="Example: 079 123 4567"
+                            >
+
+                            <small>
+                                This number can be displayed
+                                publicly and used for the Call
+                                button.
+                            </small>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- WHATSAPP -->
+
+                    <div class="kalxa-action-field">
+
+                        <label class="public-field">
+
+                            <span>
+                                <span class="kalxa-action-icon">
+                                    💬
+                                </span>
+                                WhatsApp Number
+                            </span>
+
+                            <input
+                                type="tel"
+                                name="whatsapp_number"
+                                value="{{ request.form.get('whatsapp_number', '') }}"
+                                placeholder="Example: 079 123 4567"
+                            >
+
+                            <small>
+                                Add the number customers should
+                                use for WhatsApp.
+                            </small>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-form-grid">
+
+
+                    <!-- DIRECTIONS -->
+
+                    <div class="kalxa-action-field">
+
+                        <label class="public-field">
+
+                            <span>
+                                <span class="kalxa-action-icon">
+                                    📍
+                                </span>
+                                Directions / Location Link
+                            </span>
+
+                            <input
+                                type="url"
+                                name="directions_url"
+                                value="{{ request.form.get('directions_url', '') }}"
+                                placeholder="https://maps.google.com/..."
+                            >
+
+                            <small>
+                                Paste a Google Maps or other
+                                location link. Kalxa can use
+                                this for the Directions button.
+                            </small>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- TICKETS -->
+
+                    <div
+                        class="kalxa-action-field"
+                        id="ticket-url-field"
+                    >
+
+                        <label class="public-field">
+
+                            <span>
+                                <span class="kalxa-action-icon">
+                                    🎟️
+                                </span>
+                                Ticket / Booking Link
+                            </span>
+
+                            <input
+                                type="url"
+                                name="ticket_url"
+                                id="ticket-url"
+                                value="{{ request.form.get('ticket_url', '') }}"
+                                placeholder="https://..."
+                            >
+
+                            <small>
+                                Optional. Add the website where
+                                people can buy, reserve or book
+                                tickets.
+                            </small>
+
+                        </label>
+
+
+                        <div
+                            class="kalxa-event-ticket-note"
+                            id="event-ticket-note"
+                        >
+                            🎟️ This is an event. If tickets are
+                            available online, add the ticket link
+                            so Kalxa can display a Get Tickets
+                            button.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="submit-review-note">
+
+                    <span class="submit-review-note-icon">
+                        ↗
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Share is automatic
+                        </strong>
+
+                        <p>
+                            You do not need to enter a share
+                            link. Once the listing is approved,
+                            Kalxa can share the listing's own
+                            public URL.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================
+                 05 — PHOTOS
+            ================================== -->
+
+            <section class="public-form-section">
+
+                <div class="public-form-section-heading">
+
+                    <span class="public-form-number">
+                        05
                     </span>
 
                     <div>
@@ -1758,7 +1966,7 @@
 
 
             <!-- =================================
-                 05 — EVENT DATES
+                 06 — EVENT DATES
             ================================== -->
 
             <section
@@ -1770,7 +1978,7 @@
                 <div class="public-form-section-heading">
 
                     <span class="public-form-number">
-                        05
+                        06
                     </span>
 
                     <div>
@@ -1781,7 +1989,7 @@
 
                         <p>
                             Tell Kalxa when the event
-                            takes place.
+                            starts and ends.
                         </p>
 
                     </div>
@@ -1804,13 +2012,19 @@
                             value="{{ request.form.get('publish_from', '') }}"
                         >
 
+                        <small>
+                            Optional. Choose when Kalxa should
+                            begin treating the event as
+                            publishable content.
+                        </small>
+
                     </label>
 
 
                     <label class="public-field">
 
                         <span>
-                            Event Date *
+                            Event Start Date *
                         </span>
 
                         <input
@@ -1840,6 +2054,8 @@
 
                     <small>
                         Leave empty for a one-day event.
+                        Multi-day events can show both the
+                        start and end date on the listing.
                     </small>
 
                 </label>
@@ -1848,7 +2064,7 @@
 
 
             <!-- =================================
-                 05 — NATURAL CONTENT DATES
+                 06 — NATURAL CONTENT DATES
             ================================== -->
 
             <section
@@ -1860,7 +2076,7 @@
                 <div class="public-form-section-heading">
 
                     <span class="public-form-number">
-                        05
+                        06
                     </span>
 
                     <div>
@@ -1926,7 +2142,7 @@
 
 
             <!-- =================================
-                 05 — ONGOING
+                 06 — ONGOING
             ================================== -->
 
             <section
@@ -1938,7 +2154,7 @@
                 <div class="public-form-section-heading">
 
                     <span class="public-form-number">
-                        05
+                        06
                     </span>
 
                     <div>
@@ -1980,7 +2196,7 @@
 
 
             <!-- =================================
-                 06 — COMMERCIAL PACKAGE
+                 07 — COMMERCIAL PACKAGE
             ================================== -->
 
             <section
@@ -1992,7 +2208,7 @@
                 <div class="public-form-section-heading">
 
                     <span class="public-form-number">
-                        06
+                        07
                     </span>
 
                     <div>
@@ -2356,6 +2572,11 @@
             "end-date"
         );
 
+    const eventTicketNote =
+        document.getElementById(
+            "event-ticket-note"
+        );
+
 
     // =====================================================
     // COMMERCIAL ELEMENTS
@@ -2425,6 +2646,7 @@
     // =====================================================
     // PRICING
     // =====================================================
+
     const presencePricing = {
         30: 99,
         90: 179,
@@ -2436,21 +2658,21 @@
     const campaignPricing = {
 
         7: {
-          1: 79,
-          2: 99,
-          3: 119
+            1: 79,
+            2: 99,
+            3: 119
         },
 
         14: {
-          1: 99,
-          2: 119,
-          3: 159
+            1: 99,
+            2: 119,
+            3: 159
         },
 
         30: {
-          1: 179,
-          2: 199,
-          3: 249
+            1: 179,
+            2: 199,
+            3: 249
         }
 
     };
@@ -2511,6 +2733,38 @@
             ||
             rawCategory
         );
+
+    }
+
+
+    // =====================================================
+    // TICKET FIELD CONTEXT
+    // =====================================================
+
+    function updateTicketContext() {
+
+        if (!eventTicketNote) {
+            return;
+        }
+
+
+        const category =
+            getNormalizedCategory();
+
+
+        if (category === "events") {
+
+            eventTicketNote.style.display =
+                "block";
+
+        }
+
+        else {
+
+            eventTicketNote.style.display =
+                "none";
+
+        }
 
     }
 
@@ -2895,8 +3149,6 @@
 
     const pricingModelOverrides = {
 
-        // PROPERTY
-
         "property|room":
             "campaign",
 
@@ -2912,8 +3164,6 @@
         "property|accommodation_special":
             "campaign",
 
-
-        // EVENTS
 
         "events|event":
             "campaign",
@@ -2934,8 +3184,6 @@
             "campaign",
 
 
-        // STORE SPECIALS
-
         "discount-deals|grocery_special":
             "campaign",
 
@@ -2948,8 +3196,6 @@
         "discount-deals|clearance":
             "campaign",
 
-
-        // FOOD / RESTAURANTS
 
         "local-restaurants|restaurant":
             "presence",
@@ -2966,8 +3212,6 @@
         "local-restaurants|food_deal":
             "campaign",
 
-
-        // JOBS
 
         "jobs|job":
             "campaign",
@@ -2988,8 +3232,6 @@
             "campaign",
 
 
-        // OPPORTUNITIES
-
         "opportunities|job":
             "campaign",
 
@@ -3009,8 +3251,6 @@
             "campaign",
 
 
-        // SERVICES
-
         "services|service_provider":
             "presence",
 
@@ -3029,8 +3269,6 @@
         "services|cleaning_service":
             "presence",
 
-
-        // BEAUTY
 
         "beauty-salon|salon":
             "presence",
@@ -3200,6 +3438,9 @@
             getNormalizedCategory();
 
 
+        updateTicketContext();
+
+
         contentTypeSelect.innerHTML =
             "";
 
@@ -3337,6 +3578,8 @@
 
         hideLifetimeSections();
 
+        updateTicketContext();
+
 
         if (
             !categorySelect
@@ -3402,7 +3645,7 @@
 
             showWorkflowNote(
                 "Event listing",
-                "The event date describes when the event happens. Your Kalxa Campaign package controls how long it is promoted."
+                "The event dates describe when the event happens. Your Kalxa Campaign package controls how long it is promoted."
             );
 
 
@@ -4236,6 +4479,8 @@
             "change",
             function() {
 
+                updateTicketContext();
+
                 updateContentTypes(
                     false
                 );
@@ -4266,9 +4511,6 @@
 
     // =====================================================
     // HOME ZONE CHANGE
-    //
-    // This also works when zone-select is the hidden
-    // input used by the locked Kalxa location.
     // =====================================================
 
     if (
@@ -4411,15 +4653,7 @@
     }
 
 
-    /*
-     * Important for locked zones:
-     *
-     * When someone entered from KwaMhlanga, zoneSelect
-     * is a hidden input. If the user later selects a
-     * Campaign, ensureHomeZoneSelected() can still read
-     * the hidden KwaMhlanga ID and automatically include
-     * KwaMhlanga in Campaign reach.
-     */
+    updateTicketContext();
 
     ensureHomeZoneSelected();
 
