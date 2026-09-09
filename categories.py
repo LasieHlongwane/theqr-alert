@@ -284,3 +284,102 @@ def get_business_category_choices():
         for key, config
         in BUSINESS_CATEGORIES.items()
     ]
+
+
+# ============================================================
+# LEGACY CATEGORY MAPPING
+# ============================================================
+#
+# Temporary compatibility layer for existing Kalxa data.
+#
+# Old database/category slugs continue to work while the
+# application gradually moves toward stable taxonomy keys.
+# ============================================================
+
+LEGACY_CATEGORY_MAP = {
+
+    "upcoming-event-🥹🔥":
+        "events",
+
+    "local-events":
+        "events",
+
+    "events":
+        "events",
+
+
+    "check-out-our-specials":
+        "restaurants",
+
+    "foods":
+        "restaurants",
+
+    "local-restaurants":
+        "restaurants",
+
+    "restaurants":
+        "restaurants",
+
+
+    "beauty-salon":
+        "beauty",
+
+    "beauty":
+        "beauty",
+
+
+    "discount-deals":
+        "retail_specials",
+
+    "retail_specials":
+        "retail_specials",
+
+
+    "property":
+        "rentals",
+
+    "rentals":
+        "rentals",
+
+
+    "transport":
+        "delivery",
+
+    "delivery":
+        "delivery",
+
+
+    "services":
+        "services",
+
+
+    "jobs":
+        "jobs",
+
+
+    "build":
+        "building",
+
+
+    "emergency":
+        "emergency",
+
+
+    "announcemnent":
+        "announcements",
+
+    "announcements":
+        "announcements",
+
+}
+
+
+def normalize_category(category_key):
+
+    if not category_key:
+        return None
+
+    return LEGACY_CATEGORY_MAP.get(
+        category_key,
+        category_key,
+    )
