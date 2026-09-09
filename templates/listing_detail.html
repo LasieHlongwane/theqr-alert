@@ -90,7 +90,7 @@
         ========================================== */
 
         .listing-detail-container {
-            padding-bottom: 100px;
+            padding-bottom: 110px;
         }
 
 
@@ -366,7 +366,7 @@
 
 
         /* =========================================
-           ACTION INTRODUCTION
+           CONTACT / ACTION SECTION
         ========================================== */
 
         .listing-action-intro {
@@ -376,6 +376,45 @@
 
             font-size: 12px;
             line-height: 1.55;
+        }
+
+        .listing-public-phone {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            margin: 12px 0 16px;
+            padding: 11px 12px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            border-radius: 12px;
+
+            background:
+                rgba(255, 255, 255, 0.035);
+
+            color: #f0ede6;
+
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .listing-public-phone a {
+            color: #fff4df;
+            text-decoration: none;
+            word-break: break-word;
+        }
+
+
+        /* =========================================
+           TICKET BUTTON
+        ========================================== */
+
+        .listing-action-button.ticket-button {
+            background: #fff4df;
+            color: #111317;
         }
 
 
@@ -495,8 +534,6 @@
 
         /* =========================================
            MOBILE QUICK ACTION BAR
-
-           BUSINESS / PROMOTION ONLY
         ========================================== */
 
         .mobile-business-actions {
@@ -536,6 +573,8 @@
                     12px
                     calc(10px + env(safe-area-inset-bottom));
 
+                overflow-x: auto;
+
                 border-top:
                     1px solid
                     rgba(255, 255, 255, 0.08);
@@ -548,13 +587,14 @@
             }
 
             .mobile-business-action {
-                flex: 1;
+                flex: 1 0 auto;
 
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
 
+                min-width: 82px;
                 min-height: 45px;
 
                 padding: 10px;
@@ -799,10 +839,7 @@
             <div class="listing-badge-row">
 
 
-                {% if
-                    item.can_use_promotion_features()
-                    and item.featured
-                %}
+                {% if item.featured %}
 
                 <span class="featured">
                     ⭐ FEATURED
@@ -946,10 +983,7 @@
                 {% endif %}
 
 
-                {% if
-                    item.can_use_business_features()
-                    and item.price
-                %}
+                {% if item.price %}
 
                 <div>
 
@@ -1101,9 +1135,6 @@
 
             <!-- =====================================
                  SPECIAL OFFER
-
-                 Put this high on the page because
-                 it is commercially important.
             ====================================== -->
 
             {% if
@@ -1210,17 +1241,20 @@
 
 
             <!-- =====================================
-                 BUSINESS ACTIONS
+                 CONTACT + ACTIONS
+
+                 IMPORTANT:
+                 These are intentionally field-driven.
+
+                 They are NOT restricted by listing_level.
             ====================================== -->
 
             {% if
-                item.can_use_business_features()
-                and (
-                    item.whatsapp_number
-                    or item.contact
-                    or item.directions_url
-                    or item.venue
-                )
+                item.contact
+                or item.whatsapp_number
+                or item.directions_url
+                or item.venue
+                or item.ticket_url
             %}
 
             <section class="listing-detail-contact">
@@ -1230,32 +1264,63 @@
                 </p>
 
                 <h2>
-                    Connect with this business
+                    Connect directly
                 </h2>
 
                 <p class="listing-action-intro">
-                    Contact the business directly or get directions.
-                </p>
 
+                    {% if item.ticket_url %}
 
-                {% if
-                    item.whatsapp_number
-                    or item.contact
-                %}
-
-                <p>
-
-                    {% if item.whatsapp_number %}
-
-                        {{ item.whatsapp_number }}
+                        Contact, visit or get tickets directly.
 
                     {% else %}
 
-                        {{ item.contact }}
+                        Contact directly or get directions.
 
                     {% endif %}
 
                 </p>
+
+
+                <!-- =================================
+                     PUBLIC PHONE NUMBER
+                ================================== -->
+
+                {% if item.contact %}
+
+                <div class="listing-public-phone">
+
+                    <span>
+                        📞
+                    </span>
+
+                    <a
+                        href="{{ item.contact|phone_link }}"
+                        data-lac-event="call_click"
+                    >
+                        {{ item.contact }}
+                    </a>
+
+                </div>
+
+                {% elif item.whatsapp_number %}
+
+                <div class="listing-public-phone">
+
+                    <span>
+                        💬
+                    </span>
+
+                    <a
+                        href="{{ item.whatsapp_number|whatsapp_link }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-lac-event="whatsapp_click"
+                    >
+                        {{ item.whatsapp_number }}
+                    </a>
+
+                </div>
 
                 {% endif %}
 
@@ -1263,7 +1328,29 @@
                 <div class="listing-actions">
 
 
-                    <!-- WHATSAPP -->
+                    <!-- =============================
+                         CALL
+                    ============================== -->
+
+                    {% if item.contact %}
+
+                    <a
+                        href="{{ item.contact|phone_link }}"
+                        class="
+                            listing-action-button
+                            call-button
+                        "
+                        data-lac-event="call_click"
+                    >
+                        📞 Call
+                    </a>
+
+                    {% endif %}
+
+
+                    <!-- =============================
+                         WHATSAPP
+                    ============================== -->
 
                     {% if
                         item.whatsapp_number
@@ -1293,25 +1380,9 @@
                     {% endif %}
 
 
-                    <!-- CALL -->
-
-                    {% if item.contact %}
-
-                    <a
-                        href="{{ item.contact|phone_link }}"
-                        class="
-                            listing-action-button
-                            call-button
-                        "
-                        data-lac-event="call_click"
-                    >
-                        📞 Call
-                    </a>
-
-                    {% endif %}
-
-
-                    <!-- DIRECTIONS -->
+                    <!-- =============================
+                         DIRECTIONS
+                    ============================== -->
 
                     {% if item.directions_url %}
 
@@ -1325,7 +1396,7 @@
                         rel="noopener noreferrer"
                         data-lac-event="directions_click"
                     >
-                        🧭 Directions
+                        📍 Directions
                     </a>
 
 
@@ -1341,7 +1412,28 @@
                         rel="noopener noreferrer"
                         data-lac-event="directions_click"
                     >
-                        🧭 Directions
+                        📍 Directions
+                    </a>
+
+                    {% endif %}
+
+
+                    <!-- =============================
+                         TICKETS
+                    ============================== -->
+
+                    {% if item.ticket_url %}
+
+                    <a
+                        href="{{ item.ticket_url }}"
+                        class="
+                            listing-action-button
+                            ticket-button
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        🎟 Get Tickets
                     </a>
 
                     {% endif %}
@@ -1475,21 +1567,25 @@
 
 
 <!-- =========================================
-     MOBILE BUSINESS ACTION BAR
+     MOBILE QUICK ACTION BAR
+
+     FIELD-DRIVEN — NOT LISTING-LEVEL DRIVEN
 ========================================== -->
 
 {% if
-    item.can_use_business_features()
-    and (
-        item.whatsapp_number
-        or item.contact
-        or item.directions_url
-        or item.venue
-    )
+    item.whatsapp_number
+    or item.contact
+    or item.directions_url
+    or item.venue
+    or item.ticket_url
 %}
 
 <div class="mobile-business-actions">
 
+
+    <!-- =====================================
+         WHATSAPP
+    ====================================== -->
 
     {% if
         item.whatsapp_number
@@ -1507,7 +1603,9 @@
         }}"
         class="
             mobile-business-action
-            primary
+            {% if not item.ticket_url %}
+                primary
+            {% endif %}
         "
         target="_blank"
         rel="noopener noreferrer"
@@ -1518,6 +1616,10 @@
 
     {% endif %}
 
+
+    <!-- =====================================
+         CALL
+    ====================================== -->
 
     {% if item.contact %}
 
@@ -1532,6 +1634,10 @@
     {% endif %}
 
 
+    <!-- =====================================
+         DIRECTIONS
+    ====================================== -->
+
     {% if item.directions_url %}
 
     <a
@@ -1541,7 +1647,7 @@
         rel="noopener noreferrer"
         data-lac-event="directions_click"
     >
-        🧭 Go
+        📍 Go
     </a>
 
 
@@ -1554,7 +1660,28 @@
         rel="noopener noreferrer"
         data-lac-event="directions_click"
     >
-        🧭 Go
+        📍 Go
+    </a>
+
+    {% endif %}
+
+
+    <!-- =====================================
+         GET TICKETS
+    ====================================== -->
+
+    {% if item.ticket_url %}
+
+    <a
+        href="{{ item.ticket_url }}"
+        class="
+            mobile-business-action
+            primary
+        "
+        target="_blank"
+        rel="noopener noreferrer"
+    >
+        🎟 Tickets
     </a>
 
     {% endif %}
@@ -1677,7 +1804,7 @@
         const shareData = {
 
             title:
-                document.title,
+                {{ item.title | tojson }},
 
             text:
                 "Check this out on Kalxa.",
@@ -1729,7 +1856,10 @@
 
         catch (error) {
 
-            if (error.name !== "AbortError") {
+            if (
+                error.name
+                !== "AbortError"
+            ) {
 
                 feedback.textContent =
                     "Unable to share this listing.";
@@ -1811,3 +1941,8 @@ document.addEventListener(
 </body>
 
 </html>
+
+
+       
+
+    
