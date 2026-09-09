@@ -7415,26 +7415,38 @@ def create_content():
             == "on"
         )
 
+        item.featured = (
+           request.form.get(
+             "featured"
+           )
+           == "on"
+        )
 
-        if listing_level == "promotion":
 
-            promotion_notification_requested = (
-                request.form.get(
-                    "notification_eligible"
-                )
-                == "on"
+        if (
+          listing_level
+          == "promotion"
+        ):
+
+          promotion_notification_requested = (
+            request.form.get(
+              "notification_eligible"
             )
+            == "on"
+          )
 
-            notification_eligible = (
-                workflow_notification_eligible
-                and
-                promotion_notification_requested
-            )
+
+          item.notification_eligible = (
+            workflow_notification_eligible
+            and
+            promotion_notification_requested
+          )
+
 
         else:
 
-            notification_eligible = False
-
+          item.notification_eligible = False
+        
 
         # =================================================
         # BUSINESS FIELDS
