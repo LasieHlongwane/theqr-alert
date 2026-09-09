@@ -23,9 +23,9 @@ from flask import (
 )
 
 from categories import (
-    BUSINESS_CATEGORIES,
-    LEGACY_CATEGORY_MAP,
     normalize_category,
+    get_category_aliases,
+    get_consumer_category,
 )
 
 from sqlalchemy import func
