@@ -1418,10 +1418,10 @@ def get_active_content(
 
 
     # =====================================================
-    # NORMALIZE CATEGORY SLUG
+    # NORMALIZE INPUT CATEGORY
     # =====================================================
 
-    category_slug = (
+    requested_category = (
         str(
             category_slug
             or ""
@@ -1430,86 +1430,104 @@ def get_active_content(
         .lower()
     )
 
+    if not requested_category:
+        return []
+
 
     # =====================================================
-    # NORMALIZE CATEGORY FOR WORKFLOW RULES
+    # CANONICAL BUSINESS TAXONOMY
     #
-    # IMPORTANT:
+    # Examples:
     #
-    # Keep category_slug as the REAL database/public slug.
+    # upcoming-event-🥹🔥
+    #       -> events
     #
-    # workflow_category is used only when applying special
-    # lifecycle rules such as Events.
+    # check-out-our-specials
+    # foods
+    # local-restaurants
+    #       -> restaurants
+    #
+    # beauty-salon
+    #       -> beauty
+    #
+    # property
+    #       -> rentals
+    #
+    # transport
+    #       -> delivery
+    # =====================================================
+
+    canonical_category = normalize_category(
+        requested_category
+    )
+
+
+    # =====================================================
+    # CATEGORY COMPATIBILITY SET
+    #
+    # During migration ContentItem.category may contain
+    # either:
+    #
+    #     old production slug
+    #
+    # OR
+    #
+    #     new canonical taxonomy key
+    #
+    # We therefore query ALL equivalent values.
     # =====================================================
 
     category_aliases = {
-
-        # EVENTS
-        "event":
-            "events",
-
-        "events":
-            "events",
-
-        "local-events":
-            "events",
-
-        "local_events":
-            "events",
-
-        "upcoming-event-🥹🔥":
-            "events",
-
-        # FOOD / RESTAURANTS
-        "restaurant":
-            "local-restaurants",
-
-        "restaurants":
-            "local-restaurants",
-
-        "foods":
-            "local-restaurants",
-
-        "check-out-our-specials":
-            "local-restaurants",
-
-        # BEAUTY
-        "beauty":
-            "beauty-salon",
-
-        "salon":
-            "beauty-salon",
-
-        # OPPORTUNITIES
-        "opportunity":
-            "opportunities",
+        canonical_category,
+        requested_category,
     }
 
 
+    for (
+        legacy_slug,
+        mapped_category,
+    ) in LEGACY_CATEGORY_MAP.items():
+
+        if (
+            normalize_category(mapped_category)
+            == canonical_category
+        ):
+
+            category_aliases.add(
+                legacy_slug
+            )
+
+
+    category_aliases.discard(None)
+    category_aliases.discard("")
+
+
+    # =====================================================
+    # WORKFLOW CATEGORY
+    #
+    # Lifecycle/business rules now operate on the
+    # canonical taxonomy, NOT public presentation slugs.
+    # =====================================================
+
     workflow_category = (
-        category_aliases.get(
-            category_slug,
-            category_slug,
-        )
+        canonical_category
     )
 
 
     # =====================================================
     # PROMOTION PRIORITY
+    #
+    # Featured is now independent of listing_level.
+    #
+    # Therefore any featured listing may receive
+    # featured ordering priority.
     # =====================================================
 
-    promotion_priority = db.case(
+    featured_priority = db.case(
 
         (
-            (
-                ContentItem.listing_level
-                == "promotion"
-            )
-            &
-            (
-                ContentItem.featured.is_(
-                    True
-                )
+            ContentItem.featured.is_(
+                True
             ),
             1,
         ),
@@ -1557,36 +1575,6 @@ def get_active_content(
     # =====================================================
     # COMMERCIAL VISIBILITY
     # =====================================================
-    #
-    # THREE TYPES CAN APPEAR:
-    #
-    # 1. LEGACY / COMMUNITY / NON-COMMERCIAL
-    #
-    #    pricing_model = NULL
-    #
-    #
-    # 2. ADMIN / WAIVED CONTENT
-    #
-    #    payment_status = waived
-    #
-    #    This allows content created directly by Kalxa
-    #    Admin to remain visible without requiring Yoco
-    #    payment or commercial start/expiry dates.
-    #
-    #
-    # 3. PAID COMMERCIAL CONTENT
-    #
-    #    Must be paid AND inside its purchased commercial
-    #    visibility period.
-    #
-    # IMPORTANT:
-    #
-    # "waived" is deliberately handled separately from
-    # "paid".
-    #
-    # Paid public submissions still require their valid
-    # commercial period.
-    # =====================================================
 
     commercial_visibility = db.or_(
 
@@ -1601,8 +1589,6 @@ def get_active_content(
 
         # -------------------------------------------------
         # ADMIN / WAIVED CONTENT
-        #
-        # No commercial clock required.
         # -------------------------------------------------
 
         ContentItem.payment_status
@@ -1654,19 +1640,34 @@ def get_active_content(
         ContentItem.query
         .filter(
 
-            # Must actually be published/active.
+            # Must be published.
             ContentItem.active.is_(
                 True
             ),
 
-            # Keep REAL public category slug matching.
-            ContentItem.category
-            == category_slug,
+
+            # -------------------------------------------------
+            # TAXONOMY COMPATIBILITY
+            #
+            # Previously:
+            #
+            # ContentItem.category == category_slug
+            #
+            # Now:
+            #
+            # ContentItem.category may be canonical OR legacy.
+            # -------------------------------------------------
+
+            ContentItem.category.in_(
+                category_aliases
+            ),
+
 
             # Must belong to or be distributed into zone.
             zone_visibility,
 
-            # Must pass commercial/free visibility rules.
+
+            # Must pass commercial/free visibility.
             commercial_visibility,
 
         )
@@ -1675,31 +1676,6 @@ def get_active_content(
 
     # =====================================================
     # EVENTS
-    # =====================================================
-    #
-    # IMPORTANT:
-    #
-    # We use workflow_category here instead of checking:
-    #
-    #     category_slug == "events"
-    #
-    # because the real production event slug can be:
-    #
-    #     upcoming-event-🥹🔥
-    #
-    #
-    # Upcoming events should appear BEFORE the event date.
-    #
-    # Natural expiry:
-    #
-    # 1. end_date exists:
-    #       end_date >= today
-    #
-    # 2. otherwise event_date exists:
-    #       event_date >= today
-    #
-    # 3. neither exists:
-    #       preserve legacy/admin content.
     # =====================================================
 
     if workflow_category == "events":
@@ -1772,7 +1748,7 @@ def get_active_content(
         # =================================================
         # EVENT ORDERING
         #
-        # 1. Featured Promotion
+        # 1. Featured
         # 2. Closest upcoming event
         # 3. Newest listing
         # =================================================
@@ -1781,7 +1757,7 @@ def get_active_content(
             query
             .order_by(
 
-                promotion_priority.desc(),
+                featured_priority.desc(),
 
                 ContentItem.event_date
                 .asc()
@@ -1796,7 +1772,7 @@ def get_active_content(
 
 
     # =====================================================
-    # NON-EVENT CONTENT
+    # NON-EVENT NATURAL VISIBILITY
     # =====================================================
 
     natural_content_visibility = db.and_(
@@ -1846,7 +1822,7 @@ def get_active_content(
     # =====================================================
     # NON-EVENT ORDERING
     #
-    # 1. Featured Promotion
+    # 1. Featured
     # 2. Earliest start date
     # 3. Newest listing
     # =====================================================
@@ -1855,7 +1831,7 @@ def get_active_content(
         query
         .order_by(
 
-            promotion_priority.desc(),
+            featured_priority.desc(),
 
             ContentItem.start_date
             .asc()
