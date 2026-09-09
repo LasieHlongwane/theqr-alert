@@ -274,6 +274,22 @@ def get_consumer_category(category_key):
     )
 
 
+
+def get_category_aliases(category_key):
+    canonical = normalize_category(category_key)
+
+    if not canonical:
+        return set()
+
+    aliases = {
+        key
+        for key, value in LEGACY_CATEGORY_MAP.items()
+        if normalize_category(value) == canonical
+    }
+
+    aliases.add(canonical)
+
+    return aliases
 def get_business_category_choices():
 
     return [
