@@ -1402,6 +1402,7 @@ def get_active_category_by_slug(
         .first()
     )
 
+
 def get_active_content(
     zone_id,
     category_slug,
@@ -1412,11 +1413,12 @@ def get_active_content(
     # =====================================================
 
     today = date.today()
+
     now = datetime.utcnow()
 
 
     # =====================================================
-    # NORMALIZE INPUT CATEGORY
+    # CLEAN REQUESTED CATEGORY
     # =====================================================
 
     requested_category = (
@@ -1438,73 +1440,98 @@ def get_active_content(
     # Examples:
     #
     # upcoming-event-🥹🔥
-    #       -> events
+    #     -> events
     #
     # check-out-our-specials
     # foods
     # local-restaurants
-    #       -> restaurants
+    #     -> restaurants
     #
     # beauty-salon
-    #       -> beauty
+    #     -> beauty
+    #
+    # discount-deals
+    # liqour-specials🔥
+    #     -> retail_specials
     #
     # property
-    #       -> rentals
+    #     -> rentals
     #
     # transport
-    #       -> delivery
+    #     -> delivery
+    #
     # =====================================================
 
-    canonical_category = normalize_category(
-        requested_category
+    canonical_category = (
+        normalize_category(
+            requested_category
+        )
     )
+
+    if not canonical_category:
+        return []
 
 
     # =====================================================
     # CATEGORY COMPATIBILITY SET
     #
-    # During migration ContentItem.category may contain
-    # either:
+    # This comes from categories.py.
     #
-    #     old production slug
+    # It allows old and new ContentItem.category values
+    # to coexist during migration.
     #
-    # OR
+    # Example:
     #
-    #     new canonical taxonomy key
+    # requested:
+    #     check-out-our-specials
     #
-    # We therefore query ALL equivalent values.
+    # canonical:
+    #     restaurants
+    #
+    # aliases:
+    #     {
+    #         "check-out-our-specials",
+    #         "foods",
+    #         "local-restaurants",
+    #         "restaurants",
+    #     }
+    #
     # =====================================================
 
-    category_aliases = {
-        canonical_category,
-        requested_category,
-    }
+    category_aliases = (
+        get_category_aliases(
+            canonical_category
+        )
+    )
 
+    # Defensive fallback.
+    #
+    # Even if a future category has not yet been added to
+    # LEGACY_CATEGORY_MAP, its requested and canonical
+    # values should still be queryable.
 
-    for (
-        legacy_slug,
-        mapped_category,
-    ) in LEGACY_CATEGORY_MAP.items():
-
-        if (
-            normalize_category(mapped_category)
-            == canonical_category
-        ):
-
-            category_aliases.add(
-                legacy_slug
-            )
-
+    category_aliases.update(
+        {
+            requested_category,
+            canonical_category,
+        }
+    )
 
     category_aliases.discard(None)
     category_aliases.discard("")
 
 
+    if not category_aliases:
+        return []
+
+
     # =====================================================
     # WORKFLOW CATEGORY
     #
-    # Lifecycle/business rules now operate on the
-    # canonical taxonomy, NOT public presentation slugs.
+    # All lifecycle rules below use canonical taxonomy.
+    #
+    # Consumer wording and legacy public slugs must not
+    # control business logic.
     # =====================================================
 
     workflow_category = (
@@ -1513,12 +1540,12 @@ def get_active_content(
 
 
     # =====================================================
-    # PROMOTION PRIORITY
+    # FEATURED PRIORITY
     #
-    # Featured is now independent of listing_level.
+    # Featured is independent of listing_level.
     #
-    # Therefore any featured listing may receive
-    # featured ordering priority.
+    # Discovery, Business and Promotion listings may all
+    # be featured.
     # =====================================================
 
     featured_priority = db.case(
@@ -1537,6 +1564,16 @@ def get_active_content(
 
     # =====================================================
     # ZONE VISIBILITY
+    #
+    # A listing is visible when:
+    #
+    # 1. The zone is its home/origin zone.
+    #
+    # OR
+    #
+    # 2. It is a Campaign distributed into this zone.
+    #
+    # Presence listings remain tied to their home zone.
     # =====================================================
 
     zone_visibility = db.or_(
@@ -1550,7 +1587,7 @@ def get_active_content(
 
 
         # -------------------------------------------------
-        # PAID CAMPAIGN DISTRIBUTION
+        # CAMPAIGN DISTRIBUTION
         # -------------------------------------------------
 
         db.and_(
@@ -1572,6 +1609,15 @@ def get_active_content(
 
     # =====================================================
     # COMMERCIAL VISIBILITY
+    #
+    # Three valid visibility paths:
+    #
+    # 1. Legacy/non-commercial content
+    #
+    # 2. Admin/waived content
+    #
+    # 3. Paid Presence/Campaign inside its commercial
+    #    visibility period
     # =====================================================
 
     commercial_visibility = db.or_(
@@ -1635,10 +1681,15 @@ def get_active_content(
     # =====================================================
 
     query = (
+
         ContentItem.query
+
         .filter(
 
-            # Must be published.
+            # -------------------------------------------------
+            # MUST BE PUBLISHED
+            # -------------------------------------------------
+
             ContentItem.active.is_(
                 True
             ),
@@ -1647,13 +1698,8 @@ def get_active_content(
             # -------------------------------------------------
             # TAXONOMY COMPATIBILITY
             #
-            # Previously:
-            #
-            # ContentItem.category == category_slug
-            #
-            # Now:
-            #
-            # ContentItem.category may be canonical OR legacy.
+            # ContentItem.category may contain either an old
+            # production slug or the new canonical key.
             # -------------------------------------------------
 
             ContentItem.category.in_(
@@ -1661,28 +1707,51 @@ def get_active_content(
             ),
 
 
-            # Must belong to or be distributed into zone.
+            # -------------------------------------------------
+            # ZONE VISIBILITY
+            # -------------------------------------------------
+
             zone_visibility,
 
 
-            # Must pass commercial/free visibility.
+            # -------------------------------------------------
+            # COMMERCIAL VISIBILITY
+            # -------------------------------------------------
+
             commercial_visibility,
 
         )
+
     )
 
 
     # =====================================================
     # EVENTS
+    #
+    # Events are special because future events SHOULD
+    # appear before the event happens.
+    #
+    # An event remains naturally visible while:
+    #
+    # - its explicit end_date has not passed
+    #
+    # OR
+    #
+    # - if no end_date exists, event_date has not passed
+    #
+    # OR
+    #
+    # - it is a legacy/admin event without dates
+    #
     # =====================================================
 
     if workflow_category == "events":
 
         event_natural_visibility = db.or_(
 
-            # ---------------------------------------------
+            # -------------------------------------------------
             # EXPLICIT END DATE
-            # ---------------------------------------------
+            # -------------------------------------------------
 
             db.and_(
 
@@ -1696,9 +1765,9 @@ def get_active_content(
             ),
 
 
-            # ---------------------------------------------
+            # -------------------------------------------------
             # EVENT DATE AS NATURAL EXPIRY
-            # ---------------------------------------------
+            # -------------------------------------------------
 
             db.and_(
 
@@ -1716,9 +1785,9 @@ def get_active_content(
             ),
 
 
-            # ---------------------------------------------
+            # -------------------------------------------------
             # LEGACY / ADMIN EVENT WITHOUT DATES
-            # ---------------------------------------------
+            # -------------------------------------------------
 
             db.and_(
 
@@ -1746,13 +1815,17 @@ def get_active_content(
         # =================================================
         # EVENT ORDERING
         #
-        # 1. Featured
-        # 2. Closest upcoming event
+        # 1. Featured first
+        # 2. Closest upcoming event first
         # 3. Newest listing
+        #
+        # Future events are intentionally NOT filtered out.
         # =================================================
 
         return (
+
             query
+
             .order_by(
 
                 featured_priority.desc(),
@@ -1765,18 +1838,29 @@ def get_active_content(
                 .desc(),
 
             )
+
             .all()
+
         )
 
 
     # =====================================================
     # NON-EVENT NATURAL VISIBILITY
+    #
+    # Normal content:
+    #
+    # - cannot appear before start_date
+    # - cannot remain after end_date
+    #
+    # NULL dates mean there is no natural restriction.
+    #
+    # Commercial expiry is handled independently above.
     # =====================================================
 
     natural_content_visibility = db.and_(
 
         # -------------------------------------------------
-        # NOT STARTED IN FUTURE
+        # START DATE
         # -------------------------------------------------
 
         db.or_(
@@ -1792,7 +1876,7 @@ def get_active_content(
 
 
         # -------------------------------------------------
-        # NOT NATURALLY EXPIRED
+        # END DATE
         # -------------------------------------------------
 
         db.or_(
@@ -1820,13 +1904,15 @@ def get_active_content(
     # =====================================================
     # NON-EVENT ORDERING
     #
-    # 1. Featured
-    # 2. Earliest start date
+    # 1. Featured first
+    # 2. Earliest applicable start date
     # 3. Newest listing
     # =====================================================
 
     return (
+
         query
+
         .order_by(
 
             featured_priority.desc(),
@@ -1839,9 +1925,10 @@ def get_active_content(
             .desc(),
 
         )
-        .all()
-    )
 
+        .all()
+
+    )
 
 # CONTENT EXPIRY HELPERS
 # =========================================================
