@@ -7515,6 +7515,7 @@ def create_content():
             opening_hours = None
             whatsapp_number = None
             directions_url = None
+            ticket_url = None
             menu_highlights = None
             special_offer = None
 
