@@ -334,7 +334,6 @@ class AccessPoint(db.Model):
 # ============================================================
 # CONTENT ITEM
 # ============================================================
-
 class ContentItem(db.Model):
 
     __tablename__ = "content_items"
@@ -832,16 +831,16 @@ class ContentItem(db.Model):
         Other campaigns count down toward start_date.
         """
 
-          canonical_category = normalize_category(
+        canonical_category = normalize_category(
             self.category
-          )
+        )
 
 
     # ========================================================
     # EVENTS
     # ========================================================
 
-          if canonical_category == "events":
+        if canonical_category == "events":
 
             return (
               self.event_date
@@ -853,34 +852,34 @@ class ContentItem(db.Model):
     # OTHER CAMPAIGNS
     # ========================================================
 
-          return self.start_date
+        return self.start_date
 
     def get_campaign_start_datetime(self):
-    """
-    Build the campaign's effective start datetime.
+        """
+        Build the campaign's effective start datetime.
 
-    Events use event_date as their primary target date.
-    Other campaigns use start_date.
+        Events use event_date as their primary target date.
+        Other campaigns use start_date.
 
-    If no start_time exists, midnight is used temporarily.
-    """
+        If no start_time exists, midnight is used temporarily.
+        """
 
-    target_date = self.get_campaign_target_date()
+        target_date = self.get_campaign_target_date()
 
-    if not target_date:
-        return None
-
-
-    effective_time = (
-        self.start_time
-        or time.min
-    )
+        if not target_date:
+            return None
 
 
-    return datetime.combine(
-        target_date,
-        effective_time,
-    )
+        effective_time = (
+            self.start_time
+            or time.min
+        )
+
+
+        return datetime.combine(
+            target_date,
+            effective_time,
+        )
 
     def get_campaign_end_datetime(self):
         """
