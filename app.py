@@ -1425,9 +1425,70 @@ def get_active_content(
 
 
     # =====================================================
-    # PROMOTION PRIORITY
+    # NORMALIZE CATEGORY FOR WORKFLOW RULES
     #
-    # Only Promotion + Featured receives ranking priority.
+    # IMPORTANT:
+    #
+    # Keep category_slug as the REAL database/public slug.
+    #
+    # workflow_category is used only when applying special
+    # lifecycle rules such as Events.
+    # =====================================================
+
+    category_aliases = {
+
+        # EVENTS
+        "event":
+            "events",
+
+        "events":
+            "events",
+
+        "local-events":
+            "events",
+
+        "local_events":
+            "events",
+
+        "upcoming-event-🥹🔥":
+            "events",
+
+        # FOOD / RESTAURANTS
+        "restaurant":
+            "local-restaurants",
+
+        "restaurants":
+            "local-restaurants",
+
+        "foods":
+            "local-restaurants",
+
+        "check-out-our-specials":
+            "local-restaurants",
+
+        # BEAUTY
+        "beauty":
+            "beauty-salon",
+
+        "salon":
+            "beauty-salon",
+
+        # OPPORTUNITIES
+        "opportunity":
+            "opportunities",
+    }
+
+
+    workflow_category = (
+        category_aliases.get(
+            category_slug,
+            category_slug,
+        )
+    )
+
+
+    # =====================================================
+    # PROMOTION PRIORITY
     # =====================================================
 
     promotion_priority = db.case(
@@ -1453,17 +1514,6 @@ def get_active_content(
 
     # =====================================================
     # ZONE VISIBILITY
-    #
-    # Content appears when:
-    #
-    # 1. The requested zone is its home/origin zone
-    #
-    # OR
-    #
-    # 2. It is a Campaign distributed into that zone.
-    #
-    # One Campaign remains one ContentItem even when
-    # distributed into several zones.
     # =====================================================
 
     zone_visibility = db.or_(
@@ -1477,7 +1527,7 @@ def get_active_content(
 
 
         # -------------------------------------------------
-        # PURCHASED CAMPAIGN DISTRIBUTION
+        # PAID CAMPAIGN DISTRIBUTION
         # -------------------------------------------------
 
         db.and_(
@@ -1499,38 +1549,42 @@ def get_active_content(
 
     # =====================================================
     # COMMERCIAL VISIBILITY
+    # =====================================================
     #
-    # LEGACY / COMMUNITY CONTENT
+    # THREE TYPES CAN APPEAR:
     #
-    # pricing_model = NULL
+    # 1. LEGACY / COMMUNITY / NON-COMMERCIAL
     #
-    # These listings continue using their normal natural
-    # content lifecycle.
+    #    pricing_model = NULL
     #
     #
-    # COMMERCIAL CONTENT
+    # 2. ADMIN / WAIVED CONTENT
     #
-    # Must be:
+    #    payment_status = waived
     #
-    # paid OR waived
+    #    This allows content created directly by Kalxa
+    #    Admin to remain visible without requiring Yoco
+    #    payment or commercial start/expiry dates.
     #
-    # AND
     #
-    # inside the purchased commercial visibility period.
+    # 3. PAID COMMERCIAL CONTENT
+    #
+    #    Must be paid AND inside its purchased commercial
+    #    visibility period.
     #
     # IMPORTANT:
     #
-    # Once commercial_expires_at is earlier than "now",
-    # the listing automatically disappears from Kalxa.
+    # "waived" is deliberately handled separately from
+    # "paid".
     #
-    # No scheduled cleanup job is required for public
-    # visibility.
+    # Paid public submissions still require their valid
+    # commercial period.
     # =====================================================
 
     commercial_visibility = db.or_(
 
         # -------------------------------------------------
-        # LEGACY / COMMUNITY CONTENT
+        # NON-COMMERCIAL / LEGACY CONTENT
         # -------------------------------------------------
 
         ContentItem.pricing_model.is_(
@@ -1539,7 +1593,17 @@ def get_active_content(
 
 
         # -------------------------------------------------
-        # VALID COMMERCIAL CONTENT
+        # ADMIN / WAIVED CONTENT
+        #
+        # No commercial clock required.
+        # -------------------------------------------------
+
+        ContentItem.payment_status
+        == "waived",
+
+
+        # -------------------------------------------------
+        # PAID COMMERCIAL CONTENT
         # -------------------------------------------------
 
         db.and_(
@@ -1553,14 +1617,8 @@ def get_active_content(
 
             ),
 
-            ContentItem.payment_status.in_(
-
-                (
-                    "paid",
-                    "waived",
-                )
-
-            ),
+            ContentItem.payment_status
+            == "paid",
 
             ContentItem.commercial_starts_at.is_not(
                 None
@@ -1583,28 +1641,25 @@ def get_active_content(
 
     # =====================================================
     # BASE QUERY
-    #
-    # Every public listing must:
-    #
-    # - be active
-    # - match the requested category
-    # - be visible in the requested zone
-    # - satisfy commercial visibility rules
     # =====================================================
 
     query = (
         ContentItem.query
         .filter(
 
+            # Must actually be published/active.
             ContentItem.active.is_(
                 True
             ),
 
+            # Keep REAL public category slug matching.
             ContentItem.category
             == category_slug,
 
+            # Must belong to or be distributed into zone.
             zone_visibility,
 
+            # Must pass commercial/free visibility rules.
             commercial_visibility,
 
         )
@@ -1613,39 +1668,39 @@ def get_active_content(
 
     # =====================================================
     # EVENTS
+    # =====================================================
     #
-    # Events are slightly different from normal content.
+    # IMPORTANT:
     #
-    # Upcoming events SHOULD be visible before the event
-    # happens.
+    # We use workflow_category here instead of checking:
     #
-    # Therefore:
+    #     category_slug == "events"
     #
-    # We DO NOT require start_date <= today.
+    # because the real production event slug can be:
+    #
+    #     upcoming-event-🥹🔥
     #
     #
-    # EXPIRY RULE:
+    # Upcoming events should appear BEFORE the event date.
     #
-    # 1. If end_date exists:
-    #       end_date must be today or later.
+    # Natural expiry:
     #
-    # 2. If end_date does NOT exist but event_date exists:
-    #       event_date must be today or later.
+    # 1. end_date exists:
+    #       end_date >= today
     #
-    # 3. If neither exists:
-    #       keep the listing visible because there is no
-    #       natural event expiry information available.
+    # 2. otherwise event_date exists:
+    #       event_date >= today
     #
-    # Commercial expiry is still independently enforced
-    # by commercial_visibility above.
+    # 3. neither exists:
+    #       preserve legacy/admin content.
     # =====================================================
 
-    if category_slug == "events":
+    if workflow_category == "events":
 
         event_natural_visibility = db.or_(
 
             # ---------------------------------------------
-            # MULTI-DAY / EXPLICIT END DATE EVENT
+            # EXPLICIT END DATE
             # ---------------------------------------------
 
             db.and_(
@@ -1661,10 +1716,7 @@ def get_active_content(
 
 
             # ---------------------------------------------
-            # ONE-DAY EVENT
-            #
-            # No end_date means event_date becomes the
-            # natural expiry boundary.
+            # EVENT DATE AS NATURAL EXPIRY
             # ---------------------------------------------
 
             db.and_(
@@ -1684,10 +1736,7 @@ def get_active_content(
 
 
             # ---------------------------------------------
-            # LEGACY EVENT WITHOUT DATES
-            #
-            # Preserve existing legacy/community content
-            # that has no natural date information.
+            # LEGACY / ADMIN EVENT WITHOUT DATES
             # ---------------------------------------------
 
             db.and_(
@@ -1716,9 +1765,9 @@ def get_active_content(
         # =================================================
         # EVENT ORDERING
         #
-        # 1. Featured promotions
+        # 1. Featured Promotion
         # 2. Closest upcoming event
-        # 3. Newest content
+        # 3. Newest listing
         # =================================================
 
         return (
@@ -1741,28 +1790,13 @@ def get_active_content(
 
     # =====================================================
     # NON-EVENT CONTENT
-    #
-    # Natural content lifecycle:
-    #
-    # start_date = NULL
-    # OR
-    # start_date <= today
-    #
-    # AND
-    #
-    # end_date = NULL
-    # OR
-    # end_date >= today
-    #
-    #
-    # Therefore once end_date passes, the content
-    # automatically disappears from public Kalxa pages.
-    #
-    # Commercial content must ALSO pass the commercial
-    # expiry rules above.
     # =====================================================
 
     natural_content_visibility = db.and_(
+
+        # -------------------------------------------------
+        # NOT STARTED IN FUTURE
+        # -------------------------------------------------
 
         db.or_(
 
@@ -1774,6 +1808,11 @@ def get_active_content(
             <= today,
 
         ),
+
+
+        # -------------------------------------------------
+        # NOT NATURALLY EXPIRED
+        # -------------------------------------------------
 
         db.or_(
 
@@ -1800,9 +1839,9 @@ def get_active_content(
     # =====================================================
     # NON-EVENT ORDERING
     #
-    # 1. Featured promotions
+    # 1. Featured Promotion
     # 2. Earliest start date
-    # 3. Newest content
+    # 3. Newest listing
     # =====================================================
 
     return (
@@ -1821,6 +1860,7 @@ def get_active_content(
         )
         .all()
     )
+
 
 # CONTENT EXPIRY HELPERS
 # =========================================================
