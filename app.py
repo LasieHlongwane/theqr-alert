@@ -3885,22 +3885,66 @@ def get_content_workflow(
     content_type,
 ):
 
+    # =====================================================
+    # CLEAN INPUT
+    # =====================================================
+
     category_slug = (
-        category_slug
-        or ""
-    ).strip().lower()
+        str(
+            category_slug
+            or ""
+        )
+        .strip()
+        .lower()
+    )
 
     content_type = (
-        content_type
-        or ""
-    ).strip().lower()
+        str(
+            content_type
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    # =====================================================
+    # NORMALIZE TO BUSINESS TAXONOMY
+    #
+    # Examples:
+    #
+    # upcoming-event-🥹🔥
+    #       -> events
+    #
+    # check-out-our-specials
+    #       -> restaurants
+    #
+    # beauty-salon
+    #       -> beauty
+    #
+    # property
+    #       -> rentals
+    #
+    # transport
+    #       -> delivery
+    # =====================================================
+
+    canonical_category = normalize_category(
+        category_slug
+    )
+
+
+    # =====================================================
+    # CATEGORY WORKFLOW
+    # =====================================================
 
     category_workflows = (
         CONTENT_WORKFLOWS.get(
-            category_slug,
+            canonical_category,
             {},
         )
     )
+
 
     workflow = (
         category_workflows.get(
@@ -3908,33 +3952,110 @@ def get_content_workflow(
         )
     )
 
-    # -----------------------------------------------------
-    # Backward-compatible fallback.
-    #
-    # Unknown content types are allowed for now because
-    # categories are still dynamic in the database.
-    # -----------------------------------------------------
 
     if workflow:
         return workflow
 
-    # Existing Events behaviour should remain safe.
-    if category_slug == "events":
+
+    # =====================================================
+    # SAFE CATEGORY FALLBACKS
+    # =====================================================
+
+
+    # -----------------------------------------------------
+    # EVENTS
+    # -----------------------------------------------------
+
+    if canonical_category == "events":
 
         return {
             "lifetime_type":
                 "time_specific",
+
             "notification_eligible":
                 True,
         }
 
+
+    # -----------------------------------------------------
+    # RETAIL SPECIALS
+    # -----------------------------------------------------
+
+    if canonical_category == "retail_specials":
+
+        return {
+            "lifetime_type":
+                "time_specific",
+
+            "notification_eligible":
+                True,
+        }
+
+
+    # -----------------------------------------------------
+    # RENTALS
+    # -----------------------------------------------------
+
+    if canonical_category == "rentals":
+
+        return {
+            "lifetime_type":
+                "availability_based",
+
+            "notification_eligible":
+                False,
+        }
+
+
+    # -----------------------------------------------------
+    # JOBS / OPPORTUNITIES
+    # -----------------------------------------------------
+
+    if canonical_category == "jobs":
+
+        return {
+            "lifetime_type":
+                "time_specific",
+
+            "notification_eligible":
+                True,
+        }
+
+
+    # -----------------------------------------------------
+    # ANNOUNCEMENTS
+    # -----------------------------------------------------
+
+    if canonical_category == "announcements":
+
+        return {
+            "lifetime_type":
+                "time_specific",
+
+            "notification_eligible":
+                False,
+        }
+
+
+    # -----------------------------------------------------
+    # DEFAULT ONGOING BUSINESS PRESENCE
+    #
+    # restaurants
+    # beauty
+    # accommodation
+    # delivery
+    # services
+    # building
+    # emergency
+    # -----------------------------------------------------
+
     return {
         "lifetime_type":
             "ongoing",
+
         "notification_eligible":
             False,
     }
-
 
 def get_legacy_lifetime_type(
     item,
