@@ -2386,23 +2386,28 @@ def get_active_content(
     #
     # Then newest listing.
     # =====================================================
+    items = (
+      query
+      .order_by(
 
-    return (
-        query
-        .order_by(
+        featured_priority.desc(),
 
-            featured_priority.desc(),
+        ContentItem.event_date
+        .asc()
+        .nullslast(),
 
-            ContentItem.start_date
-            .asc()
-            .nullslast(),
+        ContentItem.created_at
+        .desc(),
 
-            ContentItem.created_at
-            .desc(),
-
-        )
-        .all()
+      )
+      .all()
     )
+
+
+return attach_campaign_states(
+    items
+)
+
 
 # CONTENT EXPIRY HELPERS
 # =========================================================
