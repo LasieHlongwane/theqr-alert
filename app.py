@@ -4017,6 +4017,7 @@ def submit_content():
         get_active_categories()
     )
 
+
     # =====================================================
     # PRESELECT ZONE
     #
@@ -4037,6 +4038,7 @@ def submit_content():
 
     selected_zone = None
 
+
     if selected_zone_id:
 
         selected_zone = (
@@ -4056,6 +4058,8 @@ def submit_content():
 
             selected_zone_id = None
             selected_zone = None
+
+
     # =====================================================
     # POST
     # =====================================================
@@ -4134,6 +4138,11 @@ def submit_content():
             or None
         )
 
+
+        # =================================================
+        # PUBLIC CONTACT / ACTION INFORMATION
+        # =================================================
+
         contact = (
             request.form.get(
                 "contact",
@@ -4142,6 +4151,34 @@ def submit_content():
             .strip()
             or None
         )
+
+        whatsapp_number = (
+            request.form.get(
+                "whatsapp_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        directions_url = (
+            request.form.get(
+                "directions_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        ticket_url = (
+            request.form.get(
+                "ticket_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
 
         # =================================================
         # SUBMITTER INFORMATION
@@ -4173,6 +4210,7 @@ def submit_content():
             or None
         )
 
+
         # =================================================
         # REQUIRED FIELDS
         # =================================================
@@ -4193,7 +4231,10 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         # =================================================
         # VALIDATE HOME ZONE
@@ -4222,6 +4263,19 @@ def submit_content():
                 selected_zone=selected_zone,
             )
 
+
+        # =================================================
+        # IMPORTANT:
+        # RECONSTRUCT SELECTED ZONE FROM POST
+        #
+        # This keeps the locked-zone display correct if
+        # validation later returns the user to the form.
+        # =================================================
+
+        selected_zone_id = zone.id
+        selected_zone = zone
+
+
         # =================================================
         # VALIDATE REAL PUBLIC CATEGORY
         # =================================================
@@ -4243,7 +4297,10 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         # =================================================
         # NORMALIZE CATEGORY FOR INTERNAL WORKFLOW/PRICING
@@ -4264,6 +4321,7 @@ def submit_content():
         category_aliases = {
 
             # EVENTS
+
             "event":
                 "events",
 
@@ -4276,7 +4334,9 @@ def submit_content():
             "upcoming-event-🥹🔥":
                 "events",
 
+
             # FOOD / RESTAURANTS
+
             "restaurant":
                 "local-restaurants",
 
@@ -4289,17 +4349,22 @@ def submit_content():
             "check-out-our-specials":
                 "local-restaurants",
 
+
             # BEAUTY
+
             "beauty":
                 "beauty-salon",
 
             "salon":
                 "beauty-salon",
 
+
             # OPPORTUNITIES
+
             "opportunity":
                 "opportunities",
         }
+
 
         workflow_category = (
             category_aliases.get(
@@ -4307,6 +4372,7 @@ def submit_content():
                 category_slug,
             )
         )
+
 
         # =================================================
         # DETERMINE WORKFLOW
@@ -4325,6 +4391,7 @@ def submit_content():
             )
         )
 
+
         # =================================================
         # NOTIFICATION ELIGIBILITY
         #
@@ -4335,23 +4402,18 @@ def submit_content():
         #
         # send_zone_push_notification() still requires:
         #
-        #   active subscriber
+        # active subscriber
         #       +
-        #   matching zone
+        # matching zone
         #       +
-        #   matching REAL public category
-        #
-        # Therefore:
-        #
-        # Restaurant subscriber -> restaurant notifications
-        # Event subscriber      -> event notifications
-        # Salon subscriber      -> salon notifications
+        # matching REAL public category
         #
         # Commercial content is additionally blocked from
         # push until it is actually paid/waived and live.
         # =================================================
 
         notification_eligible = True
+
 
         if (
             lifetime_type
@@ -4368,11 +4430,15 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         availability_status = (
             "available"
         )
+
 
         # =================================================
         # DETERMINE COMMERCIAL PRICING MODEL
@@ -4388,6 +4454,7 @@ def submit_content():
         commercial_duration_days = None
         amount_due = None
         distribution_zone_ids = []
+
 
         # =================================================
         # COMMERCIAL PACKAGE
@@ -4424,7 +4491,10 @@ def submit_content():
                     "submit.html",
                     zones=zones,
                     categories=categories,
+                    selected_zone_id=selected_zone_id,
+                    selected_zone=selected_zone,
                 )
+
 
             # =============================================
             # CAMPAIGN
@@ -4458,6 +4528,7 @@ def submit_content():
 
                         continue
 
+
                     if (
                         distribution_zone_id
                         not in distribution_zone_ids
@@ -4466,6 +4537,7 @@ def submit_content():
                         distribution_zone_ids.append(
                             distribution_zone_id
                         )
+
 
                 # -----------------------------------------
                 # HOME ZONE MUST BE INCLUDED
@@ -4486,7 +4558,10 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 # -----------------------------------------
                 # AT LEAST ONE ZONE
@@ -4504,7 +4579,10 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 # -----------------------------------------
                 # MAXIMUM 3 ZONES
@@ -4527,7 +4605,10 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 # -----------------------------------------
                 # VALIDATE SELECTED ZONES
@@ -4550,6 +4631,7 @@ def submit_content():
                     in valid_distribution_zones
                 }
 
+
                 if (
                     len(
                         valid_distribution_zone_ids
@@ -4570,11 +4652,15 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 zone_count = len(
                     distribution_zone_ids
                 )
+
 
             # =============================================
             # PRESENCE
@@ -4588,6 +4674,7 @@ def submit_content():
                 distribution_zone_ids = []
 
                 zone_count = 1
+
 
             # =============================================
             # INVALID PRICING MODEL
@@ -4605,7 +4692,10 @@ def submit_content():
                     "submit.html",
                     zones=zones,
                     categories=categories,
+                    selected_zone_id=selected_zone_id,
+                    selected_zone=selected_zone,
                 )
+
 
             # =============================================
             # SERVER-SIDE PRICE CALCULATION
@@ -4638,7 +4728,10 @@ def submit_content():
                     "submit.html",
                     zones=zones,
                     categories=categories,
+                    selected_zone_id=selected_zone_id,
+                    selected_zone=selected_zone,
                 )
+
 
         # =================================================
         # DATE PARSER
@@ -4663,6 +4756,7 @@ def submit_content():
                 value,
                 "%Y-%m-%d",
             ).date()
+
 
         # =================================================
         # PARSE DATES
@@ -4711,7 +4805,10 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         # =================================================
         # TIME-SPECIFIC CONTENT
@@ -4743,7 +4840,10 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 if (
                     publish_from
@@ -4761,7 +4861,10 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 if (
                     event_end_date
@@ -4779,10 +4882,14 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 start_date = None
                 end_date = None
+
 
             # =============================================
             # OTHER TIME-SPECIFIC CONTENT
@@ -4802,7 +4909,10 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 if (
                     start_date
@@ -4822,11 +4932,15 @@ def submit_content():
                         "submit.html",
                         zones=zones,
                         categories=categories,
+                        selected_zone_id=selected_zone_id,
+                        selected_zone=selected_zone,
                     )
+
 
                 publish_from = None
                 event_date = None
                 event_end_date = None
+
 
         # =================================================
         # UNTIL UNAVAILABLE
@@ -4843,6 +4957,7 @@ def submit_content():
             start_date = None
             end_date = None
 
+
         # =================================================
         # ONGOING
         # =================================================
@@ -4857,6 +4972,7 @@ def submit_content():
             event_end_date = None
             start_date = None
             end_date = None
+
 
         # =================================================
         # RECURRING
@@ -4889,7 +5005,10 @@ def submit_content():
                     "submit.html",
                     zones=zones,
                     categories=categories,
+                    selected_zone_id=selected_zone_id,
+                    selected_zone=selected_zone,
                 )
+
 
         # =================================================
         # IMAGE UPLOADS
@@ -4911,6 +5030,7 @@ def submit_content():
             )
         ]
 
+
         if (
             len(uploaded_images)
             > 3
@@ -4926,7 +5046,10 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         # =================================================
         # CREATE PENDING SUBMISSION
@@ -4941,12 +5064,14 @@ def submit_content():
             zone_id=
                 zone.id,
 
+
             # ---------------------------------------------
             # REAL PUBLIC CATEGORY
             # ---------------------------------------------
 
             category=
                 category_slug,
+
 
             # ---------------------------------------------
             # WORKFLOW
@@ -4963,6 +5088,7 @@ def submit_content():
 
             notification_eligible=
                 notification_eligible,
+
 
             # ---------------------------------------------
             # LISTING DATA
@@ -4986,6 +5112,21 @@ def submit_content():
             contact=
                 contact,
 
+
+            # ---------------------------------------------
+            # PUBLIC ACTION / CONTACT DATA
+            # ---------------------------------------------
+
+            whatsapp_number=
+                whatsapp_number,
+
+            directions_url=
+                directions_url,
+
+            ticket_url=
+                ticket_url,
+
+
             # ---------------------------------------------
             # SUBMITTER
             # ---------------------------------------------
@@ -4998,6 +5139,7 @@ def submit_content():
 
             submitter_phone=
                 submitter_phone,
+
 
             # ---------------------------------------------
             # NATURAL CONTENT DATES
@@ -5017,6 +5159,7 @@ def submit_content():
 
             end_date=
                 end_date,
+
 
             # ---------------------------------------------
             # COMMERCIAL PACKAGE
@@ -5040,6 +5183,7 @@ def submit_content():
             distribution_zone_ids=
                 distribution_zone_ids,
 
+
             # ---------------------------------------------
             # MODERATION
             # ---------------------------------------------
@@ -5047,6 +5191,7 @@ def submit_content():
             status=
                 "pending",
         )
+
 
         # =================================================
         # TRACKING CODE
@@ -5059,6 +5204,7 @@ def submit_content():
                 .hex[:12]
                 .upper()
             )
+
 
         # =================================================
         # SAVE SUBMISSION + IMAGES
@@ -5073,6 +5219,7 @@ def submit_content():
             db.session.flush()
 
             first_image_url = None
+
 
             for (
                 index,
@@ -5090,14 +5237,17 @@ def submit_content():
                     )
                 )
 
+
                 if not image_url:
                     continue
+
 
                 if not first_image_url:
 
                     first_image_url = (
                         image_url
                     )
+
 
                 submission_image = (
                     PendingSubmissionImage(
@@ -5117,13 +5267,16 @@ def submit_content():
                     submission_image
                 )
 
+
             if first_image_url:
 
                 submission.image_url = (
                     first_image_url
                 )
 
+
             db.session.commit()
+
 
             current_app.logger.info(
                 "[Kalxa Submission] Created "
@@ -5141,6 +5294,7 @@ def submit_content():
                 submission.payment_status,
             )
 
+
         except ValueError as error:
 
             db.session.rollback()
@@ -5154,7 +5308,10 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         except Exception as error:
 
@@ -5176,7 +5333,10 @@ def submit_content():
                 "submit.html",
                 zones=zones,
                 categories=categories,
+                selected_zone_id=selected_zone_id,
+                selected_zone=selected_zone,
             )
+
 
         # =================================================
         # SUCCESS
@@ -5190,19 +5350,18 @@ def submit_content():
             )
         )
 
+
     # =====================================================
     # GET
     # =====================================================
 
     return render_template(
-      "submit.html",
-      zones=zones,
-      categories=categories,
-      selected_zone_id=selected_zone_id,
-      selected_zone=selected_zone,
+        "submit.html",
+        zones=zones,
+        categories=categories,
+        selected_zone_id=selected_zone_id,
+        selected_zone=selected_zone,
     )
-           
-
 # =========================================================
 # SUBMISSION SUCCESS
 # =========================================================
