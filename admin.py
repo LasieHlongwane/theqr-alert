@@ -7121,10 +7121,7 @@ def _validate_and_normalize_content_dates(
     }, None
 
 
-@admin_bp.route(
-    "/content/new",
-    methods=["GET", "POST"],
-)
+
 def create_content():
 
     # =====================================================
@@ -7179,7 +7176,6 @@ def create_content():
             type=int,
         )
 
-
         category = (
             request.form.get(
                 "category",
@@ -7188,7 +7184,6 @@ def create_content():
             .strip()
             .lower()
         )
-
 
         content_type = (
             request.form.get(
@@ -7199,7 +7194,6 @@ def create_content():
             .lower()
             or None
         )
-
 
         title = (
             request.form.get(
@@ -7240,7 +7234,6 @@ def create_content():
             Zone,
             zone_id,
         )
-
 
         if not zone:
 
@@ -7288,13 +7281,11 @@ def create_content():
             )
         )
 
-
         lifetime_type = (
             workflow[
                 "lifetime_type"
             ]
         )
-
 
         workflow_notification_eligible = bool(
             workflow.get(
@@ -7302,7 +7293,6 @@ def create_content():
                 False,
             )
         )
-
 
         pricing_model = (
             workflow.get(
@@ -7313,13 +7303,6 @@ def create_content():
 
         # =================================================
         # VALIDATE + NORMALIZE CONTENT DATES
-        #
-        # These are the natural content lifecycle dates.
-        #
-        # They are separate from:
-        #
-        # commercial_starts_at
-        # commercial_expires_at
         # =================================================
 
         try:
@@ -7328,11 +7311,9 @@ def create_content():
                 _validate_and_normalize_content_dates(
                     category,
                     request.form,
-                    lifetime_type=
-                        lifetime_type,
+                    lifetime_type=lifetime_type,
                 )
             )
-
 
         except ValueError:
 
@@ -7375,45 +7356,32 @@ def create_content():
             .lower()
         )
 
-
         allowed_listing_levels = {
             "discovery",
             "business",
             "promotion",
         }
 
-
         if (
             listing_level
             not in allowed_listing_levels
         ):
 
-            listing_level = (
-                "discovery"
-            )
+            listing_level = "discovery"
 
 
         # =================================================
         # OWNERSHIP + VERIFICATION
         # =================================================
 
-        if (
-            listing_level
-            == "discovery"
-        ):
+        if listing_level == "discovery":
 
-            ownership_status = (
-                "unclaimed"
-            )
-
+            ownership_status = "unclaimed"
             is_verified = False
-
 
         else:
 
-            ownership_status = (
-                "claimed"
-            )
+            ownership_status = "claimed"
 
             is_verified = (
                 request.form.get(
@@ -7424,21 +7392,31 @@ def create_content():
 
 
         # =================================================
-        # PROMOTION RULES
+        # FEATURED + NOTIFICATION RULES
+        #
+        # IMPORTANT:
+        #
+        # Featured is now independent of listing_level.
+        #
+        # This means Admin can feature:
+        #
+        # - Discovery
+        # - Business
+        # - Promotion
+        #
+        # Notification eligibility remains controlled
+        # separately by the Promotion workflow.
         # =================================================
 
-        if (
-            listing_level
-            == "promotion"
-        ):
-
-            featured = (
-                request.form.get(
-                    "featured"
-                )
-                == "on"
+        featured = (
+            request.form.get(
+                "featured"
             )
+            == "on"
+        )
 
+
+        if listing_level == "promotion":
 
             promotion_notification_requested = (
                 request.form.get(
@@ -7447,17 +7425,13 @@ def create_content():
                 == "on"
             )
 
-
             notification_eligible = (
                 workflow_notification_eligible
                 and
                 promotion_notification_requested
             )
 
-
         else:
-
-            featured = False
 
             notification_eligible = False
 
@@ -7483,7 +7457,6 @@ def create_content():
                 or None
             )
 
-
             whatsapp_number = (
                 request.form.get(
                     "whatsapp_number",
@@ -7492,7 +7465,6 @@ def create_content():
                 .strip()
                 or None
             )
-
 
             directions_url = (
                 request.form.get(
@@ -7503,7 +7475,6 @@ def create_content():
                 or None
             )
 
-
             menu_highlights = (
                 request.form.get(
                     "menu_highlights",
@@ -7512,7 +7483,6 @@ def create_content():
                 .strip()
                 or None
             )
-
 
             special_offer = (
                 request.form.get(
@@ -7523,39 +7493,21 @@ def create_content():
                 or None
             )
 
-
         else:
 
             opening_hours = None
-
             whatsapp_number = None
-
             directions_url = None
-
             menu_highlights = None
-
             special_offer = None
 
 
         # =================================================
         # IMAGE UPLOADS
-        #
-        # ContentItem columns:
-        #
-        # image_url
-        # image_url_2
-        # image_url_3
-        #
-        # Discovery = maximum 1
-        # Business / Promotion = maximum 3
         # =================================================
 
         uploaded_images = []
 
-
-        # -------------------------------------------------
-        # MULTI-IMAGE FIELD
-        # -------------------------------------------------
 
         for uploaded_file in request.files.getlist(
             "images"
@@ -7563,8 +7515,7 @@ def create_content():
 
             if (
                 uploaded_file
-                and
-                uploaded_file.filename
+                and uploaded_file.filename
             ):
 
                 uploaded_images.append(
@@ -7582,13 +7533,10 @@ def create_content():
             )
         )
 
-
         if (
             legacy_image
-            and
-            legacy_image.filename
-            and
-            not uploaded_images
+            and legacy_image.filename
+            and not uploaded_images
         ):
 
             uploaded_images.append(
@@ -7600,29 +7548,18 @@ def create_content():
         # IMAGE LIMIT
         # =================================================
 
-        if (
-            listing_level
-            == "discovery"
-        ):
-
+        if listing_level == "discovery":
             maximum_images = 1
-
         else:
-
             maximum_images = 3
 
 
         if (
-            len(
-                uploaded_images
-            )
+            len(uploaded_images)
             > maximum_images
         ):
 
-            if (
-                listing_level
-                == "discovery"
-            ):
+            if listing_level == "discovery":
 
                 message = (
                     "Discovery listings can have "
@@ -7635,7 +7572,6 @@ def create_content():
                     "You can upload a maximum "
                     "of 3 images."
                 )
-
 
             flash(
                 message,
@@ -7655,7 +7591,6 @@ def create_content():
 
         uploaded_image_urls = []
 
-
         try:
 
             for uploaded_file in uploaded_images:
@@ -7666,13 +7601,11 @@ def create_content():
                     )
                 )
 
-
                 if image_url:
 
                     uploaded_image_urls.append(
                         image_url
                     )
-
 
         except Exception as error:
 
@@ -7685,12 +7618,10 @@ def create_content():
                 error,
             )
 
-
             flash(
                 f"Image upload failed: {error}",
                 "error",
             )
-
 
             return _render_content_form(
                 zones,
@@ -7699,76 +7630,42 @@ def create_content():
             )
 
 
-        # =================================================
-        # ASSIGN IMAGE URLS
-        # =================================================
-
         primary_image_url = (
             uploaded_image_urls[0]
-            if len(
-                uploaded_image_urls
-            ) >= 1
+            if len(uploaded_image_urls) >= 1
             else None
         )
-
 
         second_image_url = (
             uploaded_image_urls[1]
-            if len(
-                uploaded_image_urls
-            ) >= 2
+            if len(uploaded_image_urls) >= 2
             else None
         )
 
-
         third_image_url = (
             uploaded_image_urls[2]
-            if len(
-                uploaded_image_urls
-            ) >= 3
+            if len(uploaded_image_urls) >= 3
             else None
         )
 
 
         # =================================================
         # CREATE CONTENT ITEM
-        #
-        # IMPORTANT:
-        #
-        # Commercial configuration is NOT called inside
-        # this constructor.
-        #
-        # We first create the Python ContentItem object.
         # =================================================
 
         item = ContentItem(
 
-            # =============================================
-            # LOCATION / CLASSIFICATION
-            # =============================================
+            zone_id=zone_id,
 
-            zone_id=
-                zone_id,
+            category=category,
 
-            category=
-                category,
+            content_type=content_type,
 
-            content_type=
-                content_type,
+            lifetime_type=lifetime_type,
 
-            lifetime_type=
-                lifetime_type,
+            availability_status="available",
 
-            availability_status=
-                "available",
-
-
-            # =============================================
-            # BASIC CONTENT
-            # =============================================
-
-            title=
-                title,
+            title=title,
 
             description=(
                 request.form.get(
@@ -7815,47 +7712,23 @@ def create_content():
                 or None
             ),
 
+            listing_level=listing_level,
 
-            # =============================================
-            # LISTING LEVEL
-            # =============================================
+            ownership_status=ownership_status,
 
-            listing_level=
-                listing_level,
+            is_verified=is_verified,
 
-            ownership_status=
-                ownership_status,
+            opening_hours=opening_hours,
 
-            is_verified=
-                is_verified,
+            whatsapp_number=whatsapp_number,
 
+            directions_url=directions_url,
 
-            # =============================================
-            # BUSINESS FIELDS
-            # =============================================
+            menu_highlights=menu_highlights,
 
-            opening_hours=
-                opening_hours,
+            special_offer=special_offer,
 
-            whatsapp_number=
-                whatsapp_number,
-
-            directions_url=
-                directions_url,
-
-            menu_highlights=
-                menu_highlights,
-
-            special_offer=
-                special_offer,
-
-
-            # =============================================
-            # IMAGES
-            # =============================================
-
-            image_url=
-                primary_image_url,
+            image_url=primary_image_url,
 
             image_url_2=(
                 second_image_url
@@ -7877,21 +7750,15 @@ def create_content():
                 else None
             ),
 
-
             # =============================================
-            # PROMOTION
+            # FEATURED
+            #
+            # No longer restricted to Promotion.
             # =============================================
 
-            featured=
-                featured,
+            featured=featured,
 
-            notification_eligible=
-                notification_eligible,
-
-
-            # =============================================
-            # STATUS
-            # =============================================
+            notification_eligible=notification_eligible,
 
             active=(
                 request.form.get(
@@ -7899,7 +7766,6 @@ def create_content():
                 )
                 == "on"
             ),
-
         )
 
 
@@ -7918,27 +7784,6 @@ def create_content():
 
         # =================================================
         # CONFIGURE KALXA COMMERCIAL PACKAGE
-        #
-        # This determines:
-        #
-        # pricing_model
-        # commercial_duration_days
-        # amount_due
-        # payment_status
-        # payment_reference
-        # amount_paid
-        # paid_at
-        # commercial_starts_at
-        # commercial_expires_at
-        #
-        # For Campaigns it also returns the selected
-        # distribution zone IDs.
-        #
-        # IMPORTANT:
-        #
-        # Price is calculated on the SERVER.
-        #
-        # We do NOT trust displayed_amount_due sent by JS.
         # =================================================
 
         try:
@@ -7951,19 +7796,14 @@ def create_content():
                 )
             )
 
-
         except ValueError as error:
 
             db.session.rollback()
 
-
             flash(
-                str(
-                    error
-                ),
+                str(error),
                 "error",
             )
-
 
             return _render_content_form(
                 zones,
@@ -7973,33 +7813,13 @@ def create_content():
 
 
         # =================================================
-        # ENFORCE CAMPAIGN HOME-ZONE RULE
-        #
-        # The content's origin/home zone counts as part of
-        # campaign reach.
-        #
-        # Example:
-        #
-        # KwaMhlanga event:
-        #
-        # 1 zone = KwaMhlanga
-        #
-        # 2 zones =
-        # KwaMhlanga + another zone
-        #
-        # 3 zones =
-        # KwaMhlanga + two other zones
-        #
+        # CAMPAIGN HOME-ZONE RULE
         # =================================================
 
         if (
             pricing_model
             == PRICING_MODEL_CAMPAIGN
         ):
-
-            # ---------------------------------------------
-            # Home zone MUST be selected.
-            # ---------------------------------------------
 
             if (
                 zone_id
@@ -8014,7 +7834,6 @@ def create_content():
                     "error",
                 )
 
-
                 return _render_content_form(
                     zones,
                     categories,
@@ -8022,14 +7841,8 @@ def create_content():
                 )
 
 
-            # ---------------------------------------------
-            # Defensive maximum.
-            # ---------------------------------------------
-
             if (
-                len(
-                    distribution_zone_ids
-                )
+                len(distribution_zone_ids)
                 > 3
             ):
 
@@ -8041,17 +7854,12 @@ def create_content():
                     "error",
                 )
 
-
                 return _render_content_form(
                     zones,
                     categories,
                     None,
                 )
 
-
-        # =================================================
-        # PRESENCE MUST NOT HAVE DISTRIBUTION ZONES
-        # =================================================
 
         elif (
             pricing_model
@@ -8063,33 +7871,16 @@ def create_content():
 
         # =================================================
         # SAVE CONTENT + DISTRIBUTION
-        #
-        # This happens in one database transaction.
         # =================================================
 
         try:
-
-            # ---------------------------------------------
-            # ADD CONTENT ITEM
-            # ---------------------------------------------
 
             db.session.add(
                 item
             )
 
-
-            # ---------------------------------------------
-            # FLUSH
-            #
-            # Gives item.id without committing yet.
-            # ---------------------------------------------
-
             db.session.flush()
 
-
-            # =============================================
-            # CAMPAIGN DISTRIBUTION ZONES
-            # =============================================
 
             for distribution_zone_id in (
                 distribution_zone_ids
@@ -8098,24 +7889,17 @@ def create_content():
                 distribution_link = (
                     ContentDistributionZone(
 
-                        content_item_id=
-                            item.id,
+                        content_item_id=item.id,
 
-                        zone_id=
-                            distribution_zone_id,
+                        zone_id=distribution_zone_id,
 
                     )
                 )
-
 
                 db.session.add(
                     distribution_link
                 )
 
-
-            # =============================================
-            # COMMIT EVERYTHING TOGETHER
-            # =============================================
 
             db.session.commit()
 
@@ -8123,7 +7907,6 @@ def create_content():
         except Exception as error:
 
             db.session.rollback()
-
 
             current_app.logger.exception(
                 (
@@ -8134,7 +7917,6 @@ def create_content():
                 error,
             )
 
-
             flash(
                 (
                     "Content could not be published. "
@@ -8142,7 +7924,6 @@ def create_content():
                 ),
                 "error",
             )
-
 
             return _render_content_form(
                 zones,
@@ -8171,7 +7952,6 @@ def create_content():
                 "success",
             )
 
-
         elif (
             item.pricing_model
             == PRICING_MODEL_PRESENCE
@@ -8185,7 +7965,6 @@ def create_content():
                 ),
                 "success",
             )
-
 
         else:
 
