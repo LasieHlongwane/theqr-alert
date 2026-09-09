@@ -7208,6 +7208,47 @@ def create_content():
 
 
         # =================================================
+        # CONTACT + ACTION FIELDS
+        # =================================================
+
+        contact = (
+            request.form.get(
+                "contact",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        whatsapp_number = (
+            request.form.get(
+                "whatsapp_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        directions_url = (
+            request.form.get(
+                "directions_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        ticket_url = (
+            request.form.get(
+                "ticket_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        # =================================================
         # REQUIRED FIELDS
         # =================================================
 
@@ -7395,20 +7436,14 @@ def create_content():
 
 
         # =================================================
-        # FEATURED + NOTIFICATION RULES
+        # FEATURED
         #
-        # IMPORTANT:
-        #
-        # Featured is now independent of listing_level.
-        #
-        # This means Admin can feature:
+        # Featured is independent of listing_level.
+        # Admin can feature:
         #
         # - Discovery
         # - Business
         # - Promotion
-        #
-        # Notification eligibility remains controlled
-        # separately by the Promotion workflow.
         # =================================================
 
         featured = (
@@ -7419,33 +7454,34 @@ def create_content():
         )
 
 
-        if (
-          listing_level
-          == "promotion"
-        ):
+        # =================================================
+        # NOTIFICATION ELIGIBILITY
+        #
+        # Notifications remain Promotion-only.
+        # =================================================
 
-          promotion_notification_requested = (
-            request.form.get(
-              "notification_eligible"
+        if listing_level == "promotion":
+
+            promotion_notification_requested = (
+                request.form.get(
+                    "notification_eligible"
+                )
+                == "on"
             )
-            == "on"
-          )
 
-
-          notification_eligible = (
-            workflow_notification_eligible
-            and
-            promotion_notification_requested
-          )
-
+            notification_eligible = (
+                workflow_notification_eligible
+                and
+                promotion_notification_requested
+            )
 
         else:
 
-          notification_eligible = False
-        
+            notification_eligible = False
+
 
         # =================================================
-        # BUSINESS FIELDS
+        # BUSINESS / RICH LISTING FIELDS
         # =================================================
 
         if (
@@ -7459,33 +7495,6 @@ def create_content():
             opening_hours = (
                 request.form.get(
                     "opening_hours",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-            whatsapp_number = (
-                request.form.get(
-                    "whatsapp_number",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-            directions_url = (
-                request.form.get(
-                    "directions_url",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-            ticket_url = (
-                request.form.get(
-                    "ticket_url",
                     "",
                 )
                 .strip()
@@ -7513,9 +7522,6 @@ def create_content():
         else:
 
             opening_hours = None
-            whatsapp_number = None
-            directions_url = None
-            ticket_url = None
             menu_highlights = None
             special_offer = None
 
@@ -7525,7 +7531,6 @@ def create_content():
         # =================================================
 
         uploaded_images = []
-
 
         for uploaded_file in request.files.getlist(
             "images"
@@ -7721,22 +7726,11 @@ def create_content():
                 or None
             ),
 
-            contact=(
-                request.form.get(
-                    "contact",
-                    "",
-                )
-                .strip()
-                or None
-            ),
+            # =============================================
+            # PUBLIC CONTACT / ACTION DATA
+            # =============================================
 
-            listing_level=listing_level,
-
-            ownership_status=ownership_status,
-
-            is_verified=is_verified,
-
-            opening_hours=opening_hours,
+            contact=contact,
 
             whatsapp_number=whatsapp_number,
 
@@ -7744,9 +7738,29 @@ def create_content():
 
             ticket_url=ticket_url,
 
+            # =============================================
+            # LISTING LEVEL
+            # =============================================
+
+            listing_level=listing_level,
+
+            ownership_status=ownership_status,
+
+            is_verified=is_verified,
+
+            # =============================================
+            # BUSINESS FIELDS
+            # =============================================
+
+            opening_hours=opening_hours,
+
             menu_highlights=menu_highlights,
 
             special_offer=special_offer,
+
+            # =============================================
+            # IMAGES
+            # =============================================
 
             image_url=primary_image_url,
 
@@ -7772,13 +7786,19 @@ def create_content():
 
             # =============================================
             # FEATURED
-            #
-            # No longer restricted to Promotion.
             # =============================================
 
             featured=featured,
 
+            # =============================================
+            # NOTIFICATIONS
+            # =============================================
+
             notification_eligible=notification_eligible,
+
+            # =============================================
+            # ACTIVE
+            # =============================================
 
             active=(
                 request.form.get(
@@ -8011,6 +8031,7 @@ def create_content():
         None,
     )
 
+
 @admin_bp.route(
     "/content/<int:item_id>/edit",
     methods=["GET", "POST"],
@@ -8076,50 +8097,39 @@ def edit_content(
 
         # =================================================
         # SNAPSHOT EXISTING COMMERCIAL PACKAGE
-        #
-        # We need these values so that normal content edits
-        # do NOT restart an existing paid package.
         # =================================================
 
         old_pricing_model = (
             item.pricing_model
         )
 
-
         old_duration_days = (
             item.commercial_duration_days
         )
-
 
         old_payment_status = (
             item.payment_status
         )
 
-
         old_amount_due = (
             item.amount_due
         )
-
 
         old_amount_paid = (
             item.amount_paid
         )
 
-
         old_payment_reference = (
             item.payment_reference
         )
-
 
         old_paid_at = (
             item.paid_at
         )
 
-
         old_commercial_starts_at = (
             item.commercial_starts_at
         )
-
 
         old_commercial_expires_at = (
             item.commercial_expires_at
@@ -8150,7 +8160,6 @@ def edit_content(
             type=int,
         )
 
-
         category = (
             request.form.get(
                 "category",
@@ -8159,7 +8168,6 @@ def edit_content(
             .strip()
             .lower()
         )
-
 
         content_type = (
             request.form.get(
@@ -8171,13 +8179,53 @@ def edit_content(
             or None
         )
 
-
         title = (
             request.form.get(
                 "title",
                 "",
             )
             .strip()
+        )
+
+
+        # =================================================
+        # CONTACT + ACTION FIELDS
+        # =================================================
+
+        contact = (
+            request.form.get(
+                "contact",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        whatsapp_number = (
+            request.form.get(
+                "whatsapp_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        directions_url = (
+            request.form.get(
+                "directions_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        ticket_url = (
+            request.form.get(
+                "ticket_url",
+                "",
+            )
+            .strip()
+            or None
         )
 
 
@@ -8211,7 +8259,6 @@ def edit_content(
             Zone,
             zone_id,
         )
-
 
         if not zone:
 
@@ -8259,13 +8306,11 @@ def edit_content(
             )
         )
 
-
         lifetime_type = (
             workflow[
                 "lifetime_type"
             ]
         )
-
 
         workflow_notification_eligible = bool(
             workflow.get(
@@ -8273,7 +8318,6 @@ def edit_content(
                 False,
             )
         )
-
 
         pricing_model = (
             workflow.get(
@@ -8292,11 +8336,9 @@ def edit_content(
                 _validate_and_normalize_content_dates(
                     category,
                     request.form,
-                    lifetime_type=
-                        lifetime_type,
+                    lifetime_type=lifetime_type,
                 )
             )
-
 
         except ValueError:
 
@@ -8340,22 +8382,18 @@ def edit_content(
             .lower()
         )
 
-
         allowed_listing_levels = {
             "discovery",
             "business",
             "promotion",
         }
 
-
         if (
             listing_level
             not in allowed_listing_levels
         ):
 
-            listing_level = (
-                "discovery"
-            )
+            listing_level = "discovery"
 
 
         # =================================================
@@ -8366,21 +8404,17 @@ def edit_content(
             zone_id
         )
 
-
         item.category = (
             category
         )
-
 
         item.content_type = (
             content_type
         )
 
-
         item.lifetime_type = (
             lifetime_type
         )
-
 
         if not item.availability_status:
 
@@ -8388,11 +8422,9 @@ def edit_content(
                 "available"
             )
 
-
         item.title = (
             title
         )
-
 
         item.description = (
             request.form.get(
@@ -8403,7 +8435,6 @@ def edit_content(
             or None
         )
 
-
         item.business_name = (
             request.form.get(
                 "business_name",
@@ -8413,7 +8444,6 @@ def edit_content(
             or None
         )
 
-
         item.venue = (
             request.form.get(
                 "venue",
@@ -8422,7 +8452,6 @@ def edit_content(
             .strip()
             or None
         )
-
 
         item.price = (
             request.form.get(
@@ -8434,13 +8463,32 @@ def edit_content(
         )
 
 
+        # =================================================
+        # PUBLIC CONTACT + ACTION DATA
+        #
+        # These are stored independently so the listing
+        # detail page can show:
+        #
+        # 📞 Call
+        # 💬 WhatsApp
+        # 📍 Directions
+        # 🎟 Get Tickets
+        # =================================================
+
         item.contact = (
-            request.form.get(
-                "contact",
-                "",
-            )
-            .strip()
-            or None
+            contact
+        )
+
+        item.whatsapp_number = (
+            whatsapp_number
+        )
+
+        item.directions_url = (
+            directions_url
+        )
+
+        item.ticket_url = (
+            ticket_url
         )
 
 
@@ -8465,7 +8513,6 @@ def edit_content(
             item.is_verified = (
                 False
             )
-
 
         else:
 
@@ -8502,37 +8549,6 @@ def edit_content(
                 or None
             )
 
-
-            item.whatsapp_number = (
-                request.form.get(
-                    "whatsapp_number",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            item.directions_url = (
-                request.form.get(
-                    "directions_url",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-            item.ticket_url = (
-                request.form.get(
-                    "ticket_url",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-
             item.menu_highlights = (
                 request.form.get(
                     "menu_highlights",
@@ -8541,7 +8557,6 @@ def edit_content(
                 .strip()
                 or None
             )
-
 
             item.special_offer = (
                 request.form.get(
@@ -8552,21 +8567,13 @@ def edit_content(
                 or None
             )
 
-
         else:
 
             item.opening_hours = None
 
-            item.whatsapp_number = None
-
-            item.directions_url = None
-
-            item.ticket_url = None
-
             item.menu_highlights = None
 
             item.special_offer = None
-
 
             # =============================================
             # DISCOVERY ONLY SUPPORTS PRIMARY IMAGE
@@ -8578,21 +8585,34 @@ def edit_content(
 
 
         # =================================================
-        # PROMOTION RULES
+        # FEATURED
+        #
+        # IMPORTANT:
+        #
+        # Featured is independent of listing_level.
+        #
+        # Discovery, Business and Promotion can all
+        # be featured by Admin.
+        # =================================================
+
+        item.featured = (
+            request.form.get(
+                "featured"
+            )
+            == "on"
+        )
+
+
+        # =================================================
+        # NOTIFICATION ELIGIBILITY
+        #
+        # Notifications remain Promotion-only.
         # =================================================
 
         if (
             listing_level
             == "promotion"
         ):
-
-            item.featured = (
-                request.form.get(
-                    "featured"
-                )
-                == "on"
-            )
-
 
             promotion_notification_requested = (
                 request.form.get(
@@ -8601,17 +8621,13 @@ def edit_content(
                 == "on"
             )
 
-
             item.notification_eligible = (
                 workflow_notification_eligible
                 and
                 promotion_notification_requested
             )
 
-
         else:
-
-            item.featured = False
 
             item.notification_eligible = False
 
@@ -8647,7 +8663,6 @@ def edit_content(
 
         uploaded_images = []
 
-
         for uploaded_file in request.files.getlist(
             "images"
         ):
@@ -8673,13 +8688,10 @@ def edit_content(
             )
         )
 
-
         if (
             legacy_image
-            and
-            legacy_image.filename
-            and
-            not uploaded_images
+            and legacy_image.filename
+            and not uploaded_images
         ):
 
             uploaded_images.append(
@@ -8733,7 +8745,6 @@ def edit_content(
                 "error",
             )
 
-
             return _render_content_form(
                 zones,
                 categories,
@@ -8755,7 +8766,6 @@ def edit_content(
 
             uploaded_image_urls = []
 
-
             try:
 
                 for uploaded_file in uploaded_images:
@@ -8766,18 +8776,15 @@ def edit_content(
                         )
                     )
 
-
                     if image_url:
 
                         uploaded_image_urls.append(
                             image_url
                         )
 
-
             except Exception as error:
 
                 db.session.rollback()
-
 
                 current_app.logger.exception(
                     (
@@ -8788,12 +8795,10 @@ def edit_content(
                     error,
                 )
 
-
                 flash(
                     f"Image upload failed: {error}",
                     "error",
                 )
-
 
                 return _render_content_form(
                     zones,
@@ -8801,10 +8806,6 @@ def edit_content(
                     item,
                 )
 
-
-            # =============================================
-            # PRIMARY IMAGE
-            # =============================================
 
             item.image_url = (
                 uploaded_image_urls[0]
@@ -8835,7 +8836,6 @@ def edit_content(
                     else None
                 )
 
-
                 item.image_url_3 = (
                     uploaded_image_urls[2]
                     if len(
@@ -8843,7 +8843,6 @@ def edit_content(
                     ) >= 3
                     else None
                 )
-
 
             else:
 
@@ -8868,15 +8867,6 @@ def edit_content(
 
         # =================================================
         # CONFIGURE COMMERCIAL PACKAGE
-        #
-        # This recalculates the official package price from:
-        #
-        # Presence:
-        #     duration
-        #
-        # Campaign:
-        #     duration × zones
-        #
         # =================================================
 
         try:
@@ -8889,11 +8879,9 @@ def edit_content(
                 )
             )
 
-
         except ValueError as error:
 
             db.session.rollback()
-
 
             flash(
                 str(
@@ -8901,7 +8889,6 @@ def edit_content(
                 ),
                 "error",
             )
-
 
             return _render_content_form(
                 zones,
@@ -8926,7 +8913,6 @@ def edit_content(
 
                 db.session.rollback()
 
-
                 flash(
                     (
                         "A campaign must include its "
@@ -8934,7 +8920,6 @@ def edit_content(
                     ),
                     "error",
                 )
-
 
                 return _render_content_form(
                     zones,
@@ -8952,7 +8937,6 @@ def edit_content(
 
                 db.session.rollback()
 
-
                 flash(
                     (
                         "Kalxa campaign packages currently "
@@ -8960,7 +8944,6 @@ def edit_content(
                     ),
                     "error",
                 )
-
 
                 return _render_content_form(
                     zones,
@@ -9024,19 +9007,7 @@ def edit_content(
 
 
         # =================================================
-        # PRESERVE EXISTING PAID PERIOD
-        #
-        # Example:
-        #
-        # Existing:
-        # 90-day Restaurant Presence
-        # Paid
-        #
-        # Admin edits:
-        # title / phone / image
-        #
-        # Result:
-        # original paid_at/start/expiry remain untouched.
+        # PRESERVE EXISTING PAID / WAIVED PERIOD
         # =================================================
 
         if (
@@ -9056,7 +9027,6 @@ def edit_content(
                 old_commercial_starts_at
             )
 
-
             item.commercial_expires_at = (
                 old_commercial_expires_at
             )
@@ -9074,7 +9044,6 @@ def edit_content(
                 item.paid_at = (
                     old_paid_at
                 )
-
 
                 item.amount_paid = (
                     old_amount_paid
@@ -9094,9 +9063,6 @@ def edit_content(
 
         # =================================================
         # PRESERVE PAYMENT REFERENCE WHEN FORM LEFT EMPTY
-        #
-        # Avoid accidentally deleting a real payment
-        # reference while editing unrelated fields.
         # =================================================
 
         if (
@@ -9113,33 +9079,6 @@ def edit_content(
 
 
         # =================================================
-        # PAYMENT / PACKAGE CHANGE SEMANTICS
-        #
-        # _configure_commercial_content() already handles:
-        #
-        # unpaid:
-        #     no active commercial period
-        #
-        # paid:
-        #     start now + duration
-        #
-        # waived:
-        #     start now + duration
-        #
-        # refunded:
-        #     no active commercial period
-        #
-        # Therefore:
-        #
-        # package changed + Paid
-        #     -> begins newly confirmed package
-        #
-        # unchanged Paid
-        #     -> preserved above
-        # =================================================
-
-
-        # =================================================
         # SAVE EVERYTHING AS ONE TRANSACTION
         # =================================================
 
@@ -9147,20 +9086,12 @@ def edit_content(
 
             # =============================================
             # REMOVE OLD DISTRIBUTION LINKS
-            #
-            # We recreate them from the current package.
-            #
-            # This avoids:
-            # - duplicate rows
-            # - old zones remaining attached
-            # - stale reach after an edit
             # =============================================
 
             (
                 ContentDistributionZone.query
                 .filter_by(
-                    content_item_id=
-                        item.id
+                    content_item_id=item.id
                 )
                 .delete(
                     synchronize_session=False
@@ -9179,11 +9110,9 @@ def edit_content(
                 db.session.add(
                     ContentDistributionZone(
 
-                        content_item_id=
-                            item.id,
+                        content_item_id=item.id,
 
-                        zone_id=
-                            distribution_zone_id,
+                        zone_id=distribution_zone_id,
 
                     )
                 )
@@ -9200,7 +9129,6 @@ def edit_content(
 
             db.session.rollback()
 
-
             current_app.logger.exception(
                 (
                     "Failed to update content item. "
@@ -9210,7 +9138,6 @@ def edit_content(
                 error,
             )
 
-
             flash(
                 (
                     "Content could not be updated. "
@@ -9218,7 +9145,6 @@ def edit_content(
                 ),
                 "error",
             )
-
 
             return _render_content_form(
                 zones,
@@ -9247,7 +9173,6 @@ def edit_content(
                 "success",
             )
 
-
         elif (
             item.pricing_model
             == PRICING_MODEL_PRESENCE
@@ -9261,7 +9186,6 @@ def edit_content(
                 ),
                 "success",
             )
-
 
         else:
 
@@ -9287,7 +9211,7 @@ def edit_content(
         categories,
         item,
     )
-    
+
 @admin_bp.route(
     "/content/<int:item_id>/toggle",
     methods=["POST"],
