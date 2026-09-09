@@ -483,6 +483,7 @@
 
 
         .public-field input[type="text"],
+        .public-field input[type="email"],
         .public-field input[type="tel"],
         .public-field input[type="url"],
         .public-field input[type="date"],
@@ -1333,7 +1334,7 @@
 
 
             <!-- =================================
-                 02 — HOME AREA + CATEGORY
+                 02 — HOME AREA + BUSINESS CATEGORY
             ================================== -->
 
             <section class="public-form-section">
@@ -1351,9 +1352,9 @@
                         </h2>
 
                         <p>
-                            Choose where the listing comes
-                            from and what kind of information
-                            you want to publish.
+                            Select your business/content
+                            category and the area where
+                            the listing originates.
                         </p>
 
                     </div>
@@ -1468,10 +1469,14 @@
                     {% endif %}
 
 
+                    <!-- =================================
+                         STABLE BUSINESS TAXONOMY
+                    ================================== -->
+
                     <label class="public-field">
 
                         <span>
-                            Category *
+                            Business / Content Category *
                         </span>
 
                         <select
@@ -1485,27 +1490,27 @@
                             </option>
 
 
-                            {% for category in categories %}
+                            {% for category_key, category_config in business_categories.items() %}
 
                                 <option
-                                    value="{{ category.slug }}"
+                                    value="{{ category_key }}"
 
-                                    {% if request.form.get('category') == category.slug %}
+                                    {% if request.form.get('category') == category_key %}
                                         selected
                                     {% endif %}
                                 >
-
-                                    {% if category.icon %}
-                                        {{ category.icon }}
-                                    {% endif %}
-
-                                    {{ category.name }}
-
+                                    {{ category_config["label"] }}
                                 </option>
 
                             {% endfor %}
 
                         </select>
+
+
+                        <small>
+                            Choose the category that best
+                            describes your business or content.
+                        </small>
 
                     </label>
 
@@ -2679,10 +2684,25 @@
 
 
     // =====================================================
-    // CATEGORY NORMALIZATION
+    // STABLE CATEGORY TAXONOMY
+    // =====================================================
+    //
+    // categorySelect now ALREADY contains canonical keys.
+    //
+    // Examples:
+    //
+    // events
+    // restaurants
+    // beauty
+    // retail_specials
+    // accommodation
+    // rentals
+    // delivery
+    //
+    // No consumer labels or legacy slugs are used here.
     // =====================================================
 
-    function getRawCategory() {
+    function getSelectedCategory() {
 
         if (!categorySelect) {
             return "";
@@ -2694,45 +2714,6 @@
         )
         .trim()
         .toLowerCase();
-
-    }
-
-
-    function getNormalizedCategory() {
-
-        const rawCategory =
-            getRawCategory();
-
-
-        const aliases = {
-
-            // EVENTS
-            "event": "events",
-            "local-events": "events",
-            "local_events": "events",
-            "upcoming-event-🥹🔥": "events",
-
-            // FOOD / RESTAURANTS
-            "restaurant": "local-restaurants",
-            "restaurants": "local-restaurants",
-            "foods": "local-restaurants",
-            "check-out-our-specials": "local-restaurants",
-
-            // BEAUTY
-            "beauty": "beauty-salon",
-            "salon": "beauty-salon",
-
-            // OPPORTUNITIES
-            "opportunity": "opportunities"
-
-        };
-
-
-        return (
-            aliases[rawCategory]
-            ||
-            rawCategory
-        );
 
     }
 
@@ -2749,7 +2730,7 @@
 
 
         const category =
-            getNormalizedCategory();
+            getSelectedCategory();
 
 
         if (category === "events") {
@@ -2775,116 +2756,10 @@
 
     const contentTypeConfig = {
 
-        "property": {
 
-            label:
-                "What are you listing?",
-
-            options: [
-
-                {
-                    value: "room",
-                    label: "🏠 Room to Rent"
-                },
-
-                {
-                    value: "rental",
-                    label: "🏘 House / Apartment to Rent"
-                },
-
-                {
-                    value: "property_sale",
-                    label: "🏡 Property for Sale"
-                },
-
-                {
-                    value: "hotel_lodge",
-                    label: "🛏 Hotel / Lodge / Guest House"
-                },
-
-                {
-                    value: "accommodation_special",
-                    label: "🏷 Accommodation Special"
-                }
-
-            ]
-
-        },
-
-
-        "transport": {
-
-            label:
-                "What transport service are you listing?",
-
-            options: [
-
-                {
-                    value: "transport_service",
-                    label: "🚌 Transport Service"
-                },
-
-                {
-                    value: "taxi_service",
-                    label: "🚕 Taxi Service"
-                },
-
-                {
-                    value: "shuttle_service",
-                    label: "🚐 Shuttle Service"
-                },
-
-                {
-                    value: "delivery_service",
-                    label: "📦 Delivery Service"
-                }
-
-            ]
-
-        },
-
-
-        "services": {
-
-            label:
-                "What type of service is this?",
-
-            options: [
-
-                {
-                    value: "service_provider",
-                    label: "🛠 General Service"
-                },
-
-                {
-                    value: "plumber",
-                    label: "🔧 Plumber"
-                },
-
-                {
-                    value: "mechanic",
-                    label: "🚗 Mechanic"
-                },
-
-                {
-                    value: "electrician",
-                    label: "⚡ Electrician"
-                },
-
-                {
-                    value: "builder",
-                    label: "🧱 Builder"
-                },
-
-                {
-                    value: "cleaning_service",
-                    label: "🧹 Cleaning Service"
-                }
-
-            ]
-
-        },
-
+        // =============================================
+        // EVENTS
+        // =============================================
 
         "events": {
 
@@ -2928,39 +2803,11 @@
         },
 
 
-        "discount-deals": {
+        // =============================================
+        // RESTAURANTS
+        // =============================================
 
-            label:
-                "What kind of deal is this?",
-
-            options: [
-
-                {
-                    value: "grocery_special",
-                    label: "🛒 Grocery Special"
-                },
-
-                {
-                    value: "product_discount",
-                    label: "🏷 Product Discount"
-                },
-
-                {
-                    value: "weekend_special",
-                    label: "📆 Weekend Special"
-                },
-
-                {
-                    value: "clearance",
-                    label: "🔥 Clearance Deal"
-                }
-
-            ]
-
-        },
-
-
-        "local-restaurants": {
+        "restaurants": {
 
             label:
                 "What are you listing?",
@@ -2996,6 +2843,241 @@
 
         },
 
+
+        // =============================================
+        // BEAUTY
+        // =============================================
+
+        "beauty": {
+
+            label:
+                "What are you listing?",
+
+            options: [
+
+                {
+                    value: "salon",
+                    label: "💇 Salon"
+                },
+
+                {
+                    value: "barber",
+                    label: "💈 Barber"
+                },
+
+                {
+                    value: "beauty_service",
+                    label: "💅 Beauty Service"
+                },
+
+                {
+                    value: "beauty_special",
+                    label: "🏷 Beauty / Salon Special"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // RETAIL & SPECIALS
+        // =============================================
+
+        "retail_specials": {
+
+            label:
+                "What kind of retail listing is this?",
+
+            options: [
+
+                {
+                    value: "store",
+                    label: "🏪 Retail Store"
+                },
+
+                {
+                    value: "grocery_special",
+                    label: "🛒 Grocery Special"
+                },
+
+                {
+                    value: "product_discount",
+                    label: "🏷 Product Discount"
+                },
+
+                {
+                    value: "weekend_special",
+                    label: "📆 Weekend Special"
+                },
+
+                {
+                    value: "clearance",
+                    label: "🔥 Clearance Deal"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // ACCOMMODATION
+        // =============================================
+
+        "accommodation": {
+
+            label:
+                "What type of accommodation is this?",
+
+            options: [
+
+                {
+                    value: "hotel",
+                    label: "🏨 Hotel"
+                },
+
+                {
+                    value: "lodge",
+                    label: "🛏 Lodge"
+                },
+
+                {
+                    value: "guest_house",
+                    label: "🏡 Guest House"
+                },
+
+                {
+                    value: "bnb",
+                    label: "🛌 B&B / Short Stay"
+                },
+
+                {
+                    value: "accommodation_special",
+                    label: "🏷 Accommodation Special"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // PROPERTY RENTALS
+        // =============================================
+
+        "rentals": {
+
+            label:
+                "What property are you listing?",
+
+            options: [
+
+                {
+                    value: "room",
+                    label: "🏠 Room to Rent"
+                },
+
+                {
+                    value: "rental",
+                    label: "🏘 House / Apartment to Rent"
+                },
+
+                {
+                    value: "property_sale",
+                    label: "🏡 Property for Sale"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // DELIVERY
+        // =============================================
+
+        "delivery": {
+
+            label:
+                "What delivery service are you listing?",
+
+            options: [
+
+                {
+                    value: "delivery_service",
+                    label: "🛵 Delivery Service"
+                },
+
+                {
+                    value: "pickup_service",
+                    label: "📦 Pickup Service"
+                },
+
+                {
+                    value: "courier_service",
+                    label: "🚚 Courier Service"
+                },
+
+                {
+                    value: "local_delivery",
+                    label: "📍 Local Delivery"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // SERVICES
+        // =============================================
+
+        "services": {
+
+            label:
+                "What type of service is this?",
+
+            options: [
+
+                {
+                    value: "service_provider",
+                    label: "🛠 General Service"
+                },
+
+                {
+                    value: "plumber",
+                    label: "🔧 Plumber"
+                },
+
+                {
+                    value: "mechanic",
+                    label: "🚗 Mechanic"
+                },
+
+                {
+                    value: "electrician",
+                    label: "⚡ Electrician"
+                },
+
+                {
+                    value: "builder",
+                    label: "🧱 Builder"
+                },
+
+                {
+                    value: "cleaning_service",
+                    label: "🧹 Cleaning Service"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // JOBS
+        // =============================================
 
         "jobs": {
 
@@ -3039,41 +3121,40 @@
         },
 
 
-        "opportunities": {
+        // =============================================
+        // EMERGENCY
+        // =============================================
+
+        "emergency": {
 
             label:
-                "What kind of opportunity is this?",
+                "What type of emergency information is this?",
 
             options: [
 
                 {
-                    value: "job",
-                    label: "💼 Job Vacancy"
+                    value: "emergency_service",
+                    label: "🚨 Emergency Service"
                 },
 
                 {
-                    value: "learnership",
-                    label: "🎓 Learnership"
+                    value: "police",
+                    label: "👮 Police"
                 },
 
                 {
-                    value: "internship",
-                    label: "🧑‍💻 Internship"
+                    value: "medical",
+                    label: "🚑 Medical / Ambulance"
                 },
 
                 {
-                    value: "training",
-                    label: "📚 Training Programme"
+                    value: "fire",
+                    label: "🚒 Fire & Rescue"
                 },
 
                 {
-                    value: "tender",
-                    label: "📄 Tender"
-                },
-
-                {
-                    value: "business_opportunity",
-                    label: "🤝 Business Opportunity"
+                    value: "safety_alert",
+                    label: "⚠️ Safety Alert"
                 }
 
             ]
@@ -3081,7 +3162,47 @@
         },
 
 
-        "beauty-salon": {
+        // =============================================
+        // COMMUNITY ANNOUNCEMENTS
+        // =============================================
+
+        "announcements": {
+
+            label:
+                "What kind of announcement is this?",
+
+            options: [
+
+                {
+                    value: "community_notice",
+                    label: "📢 Community Notice"
+                },
+
+                {
+                    value: "service_notice",
+                    label: "ℹ️ Service Notice"
+                },
+
+                {
+                    value: "public_update",
+                    label: "📍 Public Update"
+                },
+
+                {
+                    value: "community_meeting",
+                    label: "👥 Community Meeting"
+                }
+
+            ]
+
+        },
+
+
+        // =============================================
+        // BUILDING & HARDWARE
+        // =============================================
+
+        "building": {
 
             label:
                 "What are you listing?",
@@ -3089,23 +3210,23 @@
             options: [
 
                 {
-                    value: "salon",
-                    label: "💇 Salon"
+                    value: "hardware_store",
+                    label: "🧱 Hardware Store"
                 },
 
                 {
-                    value: "barber",
-                    label: "💈 Barber"
+                    value: "building_materials",
+                    label: "🏗 Building Materials"
                 },
 
                 {
-                    value: "beauty_service",
-                    label: "💅 Beauty Service"
+                    value: "builder",
+                    label: "👷 Builder / Contractor"
                 },
 
                 {
-                    value: "beauty_special",
-                    label: "🏷 Beauty / Salon Special"
+                    value: "hardware_special",
+                    label: "🏷 Hardware Special"
                 }
 
             ]
@@ -3146,24 +3267,18 @@
     // =====================================================
     // EXACT PRICING OVERRIDES
     // =====================================================
+    //
+    // IMPORTANT:
+    //
+    // These now use stable taxonomy keys.
+    // =====================================================
 
     const pricingModelOverrides = {
 
-        "property|room":
-            "campaign",
 
-        "property|rental":
-            "campaign",
-
-        "property|property_sale":
-            "campaign",
-
-        "property|hotel_lodge":
-            "presence",
-
-        "property|accommodation_special":
-            "campaign",
-
+        // =============================================
+        // EVENTS
+        // =============================================
 
         "events|event":
             "campaign",
@@ -3184,72 +3299,117 @@
             "campaign",
 
 
-        "discount-deals|grocery_special":
-            "campaign",
+        // =============================================
+        // RESTAURANTS
+        // =============================================
 
-        "discount-deals|product_discount":
-            "campaign",
-
-        "discount-deals|weekend_special":
-            "campaign",
-
-        "discount-deals|clearance":
-            "campaign",
-
-
-        "local-restaurants|restaurant":
+        "restaurants|restaurant":
             "presence",
 
-        "local-restaurants|takeaway":
+        "restaurants|takeaway":
             "presence",
 
-        "local-restaurants|daily_special":
+        "restaurants|daily_special":
             "campaign",
 
-        "local-restaurants|weekend_special":
+        "restaurants|weekend_special":
             "campaign",
 
-        "local-restaurants|food_deal":
-            "campaign",
-
-
-        "jobs|job":
-            "campaign",
-
-        "jobs|learnership":
-            "campaign",
-
-        "jobs|internship":
-            "campaign",
-
-        "jobs|training":
-            "campaign",
-
-        "jobs|tender":
-            "campaign",
-
-        "jobs|business_opportunity":
+        "restaurants|food_deal":
             "campaign",
 
 
-        "opportunities|job":
+        // =============================================
+        // BEAUTY
+        // =============================================
+
+        "beauty|salon":
+            "presence",
+
+        "beauty|barber":
+            "presence",
+
+        "beauty|beauty_service":
+            "presence",
+
+        "beauty|beauty_special":
             "campaign",
 
-        "opportunities|learnership":
+
+        // =============================================
+        // RETAIL
+        // =============================================
+
+        "retail_specials|store":
+            "presence",
+
+        "retail_specials|grocery_special":
             "campaign",
 
-        "opportunities|internship":
+        "retail_specials|product_discount":
             "campaign",
 
-        "opportunities|training":
+        "retail_specials|weekend_special":
             "campaign",
 
-        "opportunities|tender":
+        "retail_specials|clearance":
             "campaign",
 
-        "opportunities|business_opportunity":
+
+        // =============================================
+        // ACCOMMODATION
+        // =============================================
+
+        "accommodation|hotel":
+            "presence",
+
+        "accommodation|lodge":
+            "presence",
+
+        "accommodation|guest_house":
+            "presence",
+
+        "accommodation|bnb":
+            "presence",
+
+        "accommodation|accommodation_special":
             "campaign",
 
+
+        // =============================================
+        // RENTALS
+        // =============================================
+
+        "rentals|room":
+            "campaign",
+
+        "rentals|rental":
+            "campaign",
+
+        "rentals|property_sale":
+            "campaign",
+
+
+        // =============================================
+        // DELIVERY
+        // =============================================
+
+        "delivery|delivery_service":
+            "presence",
+
+        "delivery|pickup_service":
+            "presence",
+
+        "delivery|courier_service":
+            "presence",
+
+        "delivery|local_delivery":
+            "presence",
+
+
+        // =============================================
+        // SERVICES
+        // =============================================
 
         "services|service_provider":
             "presence",
@@ -3270,16 +3430,43 @@
             "presence",
 
 
-        "beauty-salon|salon":
+        // =============================================
+        // JOBS
+        // =============================================
+
+        "jobs|job":
+            "campaign",
+
+        "jobs|learnership":
+            "campaign",
+
+        "jobs|internship":
+            "campaign",
+
+        "jobs|training":
+            "campaign",
+
+        "jobs|tender":
+            "campaign",
+
+        "jobs|business_opportunity":
+            "campaign",
+
+
+        // =============================================
+        // BUILDING
+        // =============================================
+
+        "building|hardware_store":
             "presence",
 
-        "beauty-salon|barber":
+        "building|building_materials":
             "presence",
 
-        "beauty-salon|beauty_service":
+        "building|builder":
             "presence",
 
-        "beauty-salon|beauty_special":
+        "building|hardware_special":
             "campaign"
 
     };
@@ -3291,18 +3478,38 @@
 
     const presenceCategories =
         new Set([
-            "local-restaurants",
-            "beauty-salon",
-            "services"
+            "restaurants",
+            "beauty",
+            "accommodation",
+            "delivery",
+            "services",
+            "building"
         ]);
 
 
     const campaignCategories =
         new Set([
             "events",
-            "discount-deals",
-            "jobs",
-            "opportunities"
+            "retail_specials",
+            "rentals",
+            "jobs"
+        ]);
+
+
+    // =====================================================
+    // NON-COMMERCIAL / COMMUNITY CATEGORIES
+    // =====================================================
+    //
+    // These currently do not automatically receive a paid
+    // Presence or Campaign package in this browser UI.
+    //
+    // Backend pricing remains authoritative.
+    // =====================================================
+
+    const nonCommercialCategories =
+        new Set([
+            "emergency",
+            "announcements"
         ]);
 
 
@@ -3312,8 +3519,13 @@
 
     const ongoingCategories =
         new Set([
-            "transport",
-            "services"
+            "restaurants",
+            "beauty",
+            "accommodation",
+            "delivery",
+            "services",
+            "building",
+            "emergency"
         ]);
 
 
@@ -3435,7 +3647,7 @@
 
 
         const category =
-            getNormalizedCategory();
+            getSelectedCategory();
 
 
         updateTicketContext();
@@ -3593,7 +3805,7 @@
 
 
         const category =
-            getNormalizedCategory();
+            getSelectedCategory();
 
 
         const contentType =
@@ -3657,11 +3869,11 @@
 
 
         // =============================================
-        // PROPERTY
+        // PROPERTY RENTALS
         // =============================================
 
         if (
-            category === "property"
+            category === "rentals"
         ) {
 
             if (statusLifetimeSection) {
@@ -3683,7 +3895,7 @@
             if (statusLifetimeText) {
 
                 statusLifetimeText.textContent =
-                    "This listing remains relevant until the property, room or accommodation is no longer available.";
+                    "This listing remains relevant until the room or property is no longer available.";
 
             }
 
@@ -3718,7 +3930,44 @@
 
 
         // =============================================
-        // ONGOING
+        // COMMUNITY ANNOUNCEMENTS
+        // =============================================
+
+        if (
+            category === "announcements"
+        ) {
+
+            if (generalDateFields) {
+
+                generalDateFields.style.display =
+                    "block";
+
+            }
+
+
+            if (endDateInput) {
+
+                endDateInput.required =
+                    true;
+
+            }
+
+
+            showWorkflowNote(
+                "Community information",
+                "Set an end date so outdated community information can stop appearing automatically."
+            );
+
+
+            updateCommercialPackage();
+
+            return;
+
+        }
+
+
+        // =============================================
+        // ONGOING BUSINESS / SERVICE
         // =============================================
 
         if (
@@ -3746,7 +3995,7 @@
             if (statusLifetimeText) {
 
                 statusLifetimeText.textContent =
-                    "This business or service does not have a natural expiry date.";
+                    "This business, service or information does not have a natural expiry date.";
 
             }
 
@@ -3754,7 +4003,7 @@
             if (statusCardTitle) {
 
                 statusCardTitle.textContent =
-                    "Ongoing business information";
+                    "Ongoing local information";
 
             }
 
@@ -3762,14 +4011,14 @@
             if (statusCardText) {
 
                 statusCardText.textContent =
-                    "Your Kalxa Presence package determines how long the business remains publicly discoverable.";
+                    "If this is commercial content, your Kalxa Presence package determines how long it remains publicly discoverable.";
 
             }
 
 
             showWorkflowNote(
                 "Ongoing listing",
-                "Your selected Kalxa Presence package controls how long this listing stays publicly discoverable."
+                "This listing does not need a natural end date. Commercial visibility is controlled separately by its Kalxa package."
             );
 
 
@@ -3818,7 +4067,7 @@
     function getSelectedPricingModel() {
 
         const category =
-            getNormalizedCategory();
+            getSelectedCategory();
 
 
         const contentType =
@@ -3857,6 +4106,17 @@
             return (
                 pricingModelOverrides[key]
             );
+
+        }
+
+
+        if (
+            nonCommercialCategories.has(
+                category
+            )
+        ) {
+
+            return "";
 
         }
 
@@ -4919,3 +5179,33 @@
 </body>
 
 </html>
+
+
+    
+        
+          
+
+                          
+
+           
+
+
+                 
+
+                               
+
+    
+
+              
+
+
+       
+
+         
+
+
+    
+
+      
+
+  
