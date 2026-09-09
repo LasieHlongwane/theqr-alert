@@ -7418,13 +7418,6 @@ def create_content():
             == "on"
         )
 
-        item.featured = (
-           request.form.get(
-             "featured"
-           )
-           == "on"
-        )
-
 
         if (
           listing_level
@@ -7439,7 +7432,7 @@ def create_content():
           )
 
 
-          item.notification_eligible = (
+          notification_eligible = (
             workflow_notification_eligible
             and
             promotion_notification_requested
@@ -7448,7 +7441,7 @@ def create_content():
 
         else:
 
-          item.notification_eligible = False
+          notification_eligible = False
         
 
         # =================================================
