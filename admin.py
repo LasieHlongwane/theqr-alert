@@ -364,130 +364,281 @@ def get_category_by_slug(
     active_only=True,
 ):
     """
-    Find a Category database row.
+    Find a Category database row while supporting both:
 
-    Supports:
-    1. Existing production/public slugs.
-    2. Canonical business taxonomy keys.
+    1. Existing production/public category slugs.
+    2. New canonical business taxonomy keys.
 
-    Example:
+    Examples:
+
+        upcoming-event-🥹🔥
+                ↓
+              events
 
         check-out-our-specials
                 ↓
-            restaurants
+           restaurants
 
-    If "restaurants" is supplied but the database still contains
-    "check-out-our-specials", this function can resolve that legacy
-    Category row during the transition.
+        beauty-salon
+                ↓
+              beauty
+
+    During the taxonomy transition, the Category table may
+    still contain legacy slugs while new ContentItem records
+    may use canonical category keys.
+
+    This helper allows both systems to coexist.
     """
 
-    slug = (
-        str(slug or "")
+    # =====================================================
+    # CLEAN INPUT
+    # =====================================================
+
+    requested_slug = (
+        str(
+            slug
+            or ""
+        )
         .strip()
         .lower()
     )
 
-    if not slug:
+    if not requested_slug:
         return None
 
 
     # =====================================================
     # 1. TRY EXACT DATABASE SLUG FIRST
+    #
+    # This is important for existing public routes.
+    #
+    # Example:
+    #
+    #     /q/KWM-TAXI-001/check-out-our-specials
+    #
+    # If that exact Category row exists, use it.
+    #
+    # This also preserves the correct:
+    #
+    # - category image
+    # - icon
+    # - display order
+    # - ZoneCategoryAppearance relationship
+    #
     # =====================================================
 
-    query = Category.query.filter(
-        Category.slug == slug
+    exact_query = (
+        Category.query
+        .filter(
+            Category.slug
+            == requested_slug
+        )
     )
 
     if active_only:
-        query = query.filter(
-            Category.active.is_(True)
+
+        exact_query = (
+            exact_query
+            .filter(
+                Category.active.is_(
+                    True
+                )
+            )
         )
 
-    category = query.first()
 
-    if category:
-        return category
+    exact_category = (
+        exact_query.first()
+    )
+
+
+    if exact_category:
+        return exact_category
 
 
     # =====================================================
     # 2. NORMALIZE TO CANONICAL TAXONOMY
+    #
+    # Example:
+    #
+    # check-out-our-specials
+    #       -> restaurants
+    #
+    # foods
+    #       -> restaurants
+    #
+    # restaurants
+    #       -> restaurants
+    #
     # =====================================================
 
-    canonical_category = normalize_category(
-        slug
+    canonical_category = (
+        normalize_category(
+            requested_slug
+        )
     )
+
 
     if not canonical_category:
         return None
 
 
     # =====================================================
-    # 3. FIND ALL LEGACY SLUGS BELONGING TO THE
-    #    SAME CANONICAL CATEGORY
+    # 3. GET ALL EQUIVALENT CATEGORY SLUGS
+    #
+    # Example for restaurants:
+    #
+    # {
+    #     "restaurants",
+    #     "check-out-our-specials",
+    #     "foods",
+    #     "local-restaurants",
+    # }
+    #
+    # get_category_aliases() is now the central source
+    # of truth for taxonomy compatibility.
     # =====================================================
 
-    equivalent_slugs = {
-        canonical_category,
-    }
-
-    for (
-        legacy_slug,
-        mapped_category,
-    ) in LEGACY_CATEGORY_MAP.items():
-
-        if (
-            normalize_category(mapped_category)
-            == canonical_category
-        ):
-            equivalent_slugs.add(
-                legacy_slug
-            )
-
-
-    query = Category.query.filter(
-        Category.slug.in_(
-            equivalent_slugs
+    equivalent_slugs = (
+        get_category_aliases(
+            canonical_category
         )
     )
 
+
+    # Defensive fallback.
+    #
+    # This ensures a future canonical category can still
+    # resolve even if it has no legacy aliases.
+
+    equivalent_slugs.update(
+        {
+            requested_slug,
+            canonical_category,
+        }
+    )
+
+    equivalent_slugs.discard(None)
+    equivalent_slugs.discard("")
+
+
+    if not equivalent_slugs:
+        return None
+
+
+    # =====================================================
+    # 4. FIND MATCHING CATEGORY DATABASE ROWS
+    # =====================================================
+
+    equivalent_query = (
+        Category.query
+        .filter(
+            Category.slug.in_(
+                equivalent_slugs
+            )
+        )
+    )
+
+
     if active_only:
-        query = query.filter(
-            Category.active.is_(True)
+
+        equivalent_query = (
+            equivalent_query
+            .filter(
+                Category.active.is_(
+                    True
+                )
+            )
         )
 
 
-    # =====================================================
-    # PREFER CANONICAL ROW IF ONE EXISTS
-    # =====================================================
+    categories = (
+        equivalent_query.all()
+    )
 
-    categories = query.all()
 
     if not categories:
         return None
 
-    for category in categories:
+
+    # =====================================================
+    # 5. PREFER CANONICAL DATABASE ROW
+    #
+    # Eventually your Category table can contain:
+    #
+    #     restaurants
+    #     events
+    #     beauty
+    #     retail_specials
+    #     rentals
+    #     ...
+    #
+    # Once those rows exist, they automatically become
+    # preferred without breaking old URLs.
+    # =====================================================
+
+    for category_record in categories:
 
         if (
-            category.slug
+            category_record.slug
             == canonical_category
         ):
-            return category
+
+            return category_record
 
 
     # =====================================================
-    # OTHERWISE RETURN EXISTING LEGACY ROW
+    # 6. LEGACY FALLBACK
+    #
+    # The database may currently contain several old rows
+    # that now belong to one canonical category.
+    #
+    # Example:
+    #
+    # check-out-our-specials
+    # foods
+    #
+    # both belong to:
+    #
+    # restaurants
+    #
+    # Until the Category table itself is migrated, choose
+    # the first active legacy Category according to its
+    # existing display order.
+    #
+    # IMPORTANT:
+    #
+    # This is only the representative Category DB object.
+    # It does NOT determine which ContentItem rows are
+    # visible.
+    #
+    # get_active_content() combines all equivalent aliases.
     # =====================================================
 
-    return sorted(
-        categories,
-        key=lambda category: (
-            category.display_order
-            if category.display_order is not None
-            else 999999,
-            category.name or "",
-        ),
-    )[0]
+    categories.sort(
+        key=lambda category_record: (
+
+            (
+                category_record.display_order
+                if (
+                    category_record.display_order
+                    is not None
+                )
+                else 999999
+            ),
+
+            (
+                category_record.name
+                or ""
+            ),
+
+            category_record.id,
+
+        )
+    )
+
+
+    return categories[0]
 
 
 def get_content_status(
