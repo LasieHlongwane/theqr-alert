@@ -3059,9 +3059,30 @@
 
 
                             <div class="lac-new-card-title">
-                                {{ item.title }}
+                              {{ item.title }}
                             </div>
 
+
+                            <!-- =================================
+                              CAMPAIGN STATE
+                            ================================== -->
+
+                            {% if
+                              item.campaign_state
+                              and item.campaign_state.label
+                            %}
+
+                            <span
+                              class="
+                                lac-campaign-state
+                                {{ item.campaign_state.css_class }}
+                              "
+                            >
+                              {{ item.campaign_state.label }}
+                            </span>
+
+                            {% endif %}
+         
 
                             {% if item.business_name %}
 
