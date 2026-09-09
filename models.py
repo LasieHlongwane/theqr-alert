@@ -809,15 +809,17 @@ class ContentItem(db.Model):
         )
         
     def has_campaign_dates(self):
-    """
-    Return True when the content has enough date information
-    to participate in Kalxa's campaign-state system.
-    """
+        """
+        Return True when the content has date/time information
+        that can participate in Kalxa's Campaign State Engine.
+        """
 
         return bool(
-          self.start_date
-          or self.event_date
-          or self.end_date
+            self.start_date
+            or self.event_date
+            or self.end_date
+            or self.start_time
+            or self.end_time
         )
 
 
