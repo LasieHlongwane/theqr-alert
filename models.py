@@ -960,6 +960,10 @@ class ListingClaim(db.Model):
 # ============================================================
 # PENDING SUBMISSION IMAGE
 # ============================================================
+# ============================================================
+# PENDING SUBMISSION
+# ============================================================
+
 class PendingSubmission(db.Model):
 
     __tablename__ = "pending_submissions"
@@ -980,6 +984,7 @@ class PendingSubmission(db.Model):
         nullable=False,
         index=True,
     )
+
 
     # --------------------------------------------------------
     # CONTENT WORKFLOW
@@ -1009,6 +1014,7 @@ class PendingSubmission(db.Model):
         nullable=False,
         default=False,
     )
+
 
     # --------------------------------------------------------
     # COMMERCIAL PACKAGE
@@ -1044,6 +1050,7 @@ class PendingSubmission(db.Model):
         index=True,
     )
 
+
     # --------------------------------------------------------
     # REQUESTED CAMPAIGN DISTRIBUTION
     #
@@ -1066,22 +1073,27 @@ class PendingSubmission(db.Model):
         nullable=True,
         default=list,
     )
-    
-    
+
+
+    # --------------------------------------------------------
+    # YOCO PAYMENT
+    # --------------------------------------------------------
+
     yoco_checkout_id = db.Column(
-       db.String(150),
-       nullable=True,
-       unique=True,
-       index=True,
+        db.String(150),
+        nullable=True,
+        unique=True,
+        index=True,
     )
 
     yoco_payment_id = db.Column(
-       db.String(150),
-       nullable=True,
-       unique=True,
-       index=True,
+        db.String(150),
+        nullable=True,
+        unique=True,
+        index=True,
     )
- 
+
+
     # --------------------------------------------------------
     # LISTING INFORMATION
     # --------------------------------------------------------
@@ -1111,15 +1123,41 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+
+    # --------------------------------------------------------
+    # PUBLIC CONTACT / ACTION INFORMATION
+    # --------------------------------------------------------
+
     contact = db.Column(
         db.String(100),
         nullable=True,
     )
 
+    whatsapp_number = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    directions_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    ticket_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+
+    # --------------------------------------------------------
+    # IMAGE
+    # --------------------------------------------------------
+
     image_url = db.Column(
         db.String(500),
         nullable=True,
     )
+
 
     # --------------------------------------------------------
     # SUBMITTER INFORMATION
@@ -1140,6 +1178,7 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+
     # --------------------------------------------------------
     # EVENT DATES
     # --------------------------------------------------------
@@ -1159,6 +1198,7 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+
     # --------------------------------------------------------
     # GENERAL VALIDITY DATES
     # --------------------------------------------------------
@@ -1173,6 +1213,7 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+
     # --------------------------------------------------------
     # MODERATION STATUS
     # --------------------------------------------------------
@@ -1183,7 +1224,6 @@ class PendingSubmission(db.Model):
         default="pending",
         index=True,
     )
-    
 
     tracking_code = db.Column(
         db.String(40),
@@ -1218,6 +1258,7 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+
     # --------------------------------------------------------
     # RELATIONSHIPS
     # --------------------------------------------------------
@@ -1226,8 +1267,6 @@ class PendingSubmission(db.Model):
         "Zone",
         backref="pending_submissions",
     )
-
-
 # ============================================================
 # PENDING SUBMISSION IMAGE
 # ============================================================
