@@ -2021,6 +2021,24 @@ def qr_access(access_code):
 
     # =====================================================
     # CATEGORY-SPECIFIC QR
+    #
+    # IMPORTANT:
+    #
+    # Existing access points may still contain legacy
+    # category slugs.
+    #
+    # Example:
+    #
+    #     upcoming-event-🥹🔥
+    #     check-out-our-specials
+    #     foods
+    #
+    # We validate them through the compatibility-aware
+    # category lookup, then redirect using the original
+    # stored slug.
+    #
+    # qr_category() can resolve both legacy and canonical
+    # category URLs.
     # =====================================================
 
     if access_point.default_category:
@@ -2035,8 +2053,9 @@ def qr_access(access_code):
         )
 
         category_record = (
-            get_active_category_by_slug(
-                category_slug
+            get_category_by_slug(
+                category_slug,
+                active_only=True,
             )
         )
 
@@ -2055,76 +2074,21 @@ def qr_access(access_code):
     # =====================================================
     # GENERAL QR
     #
-    # IMPORTANT:
+    # Keep the REAL active Category database rows.
     #
-    # These remain the REAL Category database rows.
-    #
-    # We do not replace them with BUSINESS_CATEGORIES
-    # because:
+    # These are still required because:
     #
     # - category images depend on Category.id
-    # - zone appearances depend on Category.id
-    # - existing QR routes use Category.slug
+    # - zone appearance depends on Category.id
     # - existing admin configuration uses Category rows
+    # - legacy QR/category URLs still exist
     #
-    # Consumer presentation is layered on top.
+    # Consumer navigation is built as a separate layer.
     # =====================================================
 
     categories = get_active_categories()
 
     today = date.today()
-
-
-    # =====================================================
-    # CONSUMER PRESENTATION LOOKUP
-    #
-    # Key:
-    #     REAL database/public category slug
-    #
-    # Value:
-    #     {
-    #         "key": "restaurants",
-    #         "title": "HUNGRY?",
-    #         "subtitle": "...",
-    #         "icon": "🍔"
-    #     }
-    #
-    # This lets access.html display consumer language
-    # without changing the URL or database category.
-    # =====================================================
-
-    consumer_category_lookup = {}
-
-
-    for category in categories:
-
-        canonical_key = normalize_category(
-            category.slug
-        )
-
-        presentation = (
-            get_consumer_category(
-                canonical_key
-            )
-        )
-
-        consumer_category_lookup[
-            category.slug
-        ] = {
-
-            "key":
-                canonical_key,
-
-            "title":
-                presentation["title"],
-
-            "subtitle":
-                presentation["subtitle"],
-
-            "icon":
-                presentation["icon"],
-
-        }
 
 
     # =====================================================
@@ -2144,7 +2108,7 @@ def qr_access(access_code):
     # APPEARANCE LOOKUP
     #
     # Key:
-    #     category_id
+    #     real Category.id
     #
     # Value:
     #     ZoneCategoryAppearance
@@ -2165,11 +2129,10 @@ def qr_access(access_code):
     #
     # Priority:
     #
-    # 1. Zone-specific image
+    # 1. Zone-specific category image
     # 2. Default Category image
     #
-    # We deliberately continue indexing these by the REAL
-    # Category.id.
+    # Images remain attached to REAL Category.id values.
     # =====================================================
 
     category_background_images = {}
@@ -2235,10 +2198,6 @@ def qr_access(access_code):
         )
 
 
-        # -------------------------------------------------
-        # REMOVE EMPTY IMAGE POSITIONS
-        # -------------------------------------------------
-
         category_background_images[
             category.id
         ] = [
@@ -2256,23 +2215,155 @@ def qr_access(access_code):
 
 
     # =====================================================
-    # CATEGORY STATS
+    # CATEGORY LOOKUP
+    #
+    # Allows listings using either:
+    #
+    #     old public slug
+    #
+    # or:
+    #
+    #     canonical taxonomy key
+    #
+    # to resolve back to a real Category row.
     # =====================================================
 
-    category_stats = {}
+    category_lookup = {}
 
 
-    # -----------------------------------------------------
-    # NEW LISTING CUTOFF
+    for category in categories:
+
+        # -------------------------------------------------
+        # REAL / LEGACY SLUG
+        # -------------------------------------------------
+
+        category_lookup[
+            category.slug
+        ] = category
+
+
+        # -------------------------------------------------
+        # CANONICAL TAXONOMY KEY
+        # -------------------------------------------------
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        if canonical_key not in category_lookup:
+
+            category_lookup[
+                canonical_key
+            ] = category
+
+
+    # =====================================================
+    # CONSUMER CATEGORY LOOKUP
     #
-    # A listing is NEW when created during the
-    # last 7 days.
-    # -----------------------------------------------------
+    # This remains useful for Featured and What's New
+    # cards because those listings may contain either
+    # legacy or canonical category values.
+    #
+    # Example:
+    #
+    #     check-out-our-specials
+    #
+    # becomes:
+    #
+    #     {
+    #         "key": "restaurants",
+    #         "title": "HUNGRY?",
+    #         "subtitle": "Find something good to eat",
+    #         "icon": "🍔"
+    #     }
+    # =====================================================
 
-    new_cutoff = (
-        datetime.utcnow()
-        - timedelta(days=7)
-    )
+    consumer_category_lookup = {}
+
+
+    for category in categories:
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        presentation = get_consumer_category(
+            canonical_key
+        )
+
+        presentation_data = {
+
+            "key":
+                canonical_key,
+
+            "title":
+                presentation["title"],
+
+            "subtitle":
+                presentation["subtitle"],
+
+            "icon":
+                presentation["icon"],
+        }
+
+
+        # -------------------------------------------------
+        # REAL DATABASE SLUG
+        # -------------------------------------------------
+
+        consumer_category_lookup[
+            category.slug
+        ] = presentation_data
+
+
+        # -------------------------------------------------
+        # CANONICAL KEY
+        #
+        # This is important for newly submitted listings
+        # whose ContentItem.category may already contain
+        # the canonical taxonomy.
+        # -------------------------------------------------
+
+        if (
+            canonical_key
+            not in consumer_category_lookup
+        ):
+
+            consumer_category_lookup[
+                canonical_key
+            ] = presentation_data
+
+
+    # =====================================================
+    # BUILD UNIQUE CONSUMER CATEGORY DIRECTORY
+    #
+    # This is the important taxonomy separation.
+    #
+    # DATABASE:
+    #
+    #     foods
+    #     check-out-our-specials
+    #
+    # CONSUMER:
+    #
+    #     HUNGRY?
+    #
+    # Only ONE consumer card is created for each canonical
+    # category.
+    #
+    # The first active Category row encountered becomes
+    # the representative database row for:
+    #
+    # - images
+    # - zone appearance
+    # - fallback icon
+    #
+    # The public link itself uses the CANONICAL key.
+    # =====================================================
+
+    consumer_categories = []
+
+    seen_consumer_category_keys = set()
 
 
     for category in categories:
@@ -2282,11 +2373,115 @@ def qr_access(access_code):
         )
 
 
+        if (
+            canonical_key
+            in seen_consumer_category_keys
+        ):
+
+            continue
+
+
+        seen_consumer_category_keys.add(
+            canonical_key
+        )
+
+
+        presentation = get_consumer_category(
+            canonical_key
+        )
+
+
+        consumer_categories.append({
+
+            # ---------------------------------------------
+            # CANONICAL DATABASE / BUSINESS TAXONOMY
+            # ---------------------------------------------
+
+            "key":
+                canonical_key,
+
+
+            # ---------------------------------------------
+            # REAL REPRESENTATIVE CATEGORY ROW
+            # ---------------------------------------------
+
+            "category":
+                category,
+
+
+            # ---------------------------------------------
+            # CONSUMER PRESENTATION
+            # ---------------------------------------------
+
+            "title":
+                presentation["title"],
+
+            "subtitle":
+                presentation["subtitle"],
+
+            "icon":
+                presentation["icon"],
+
+
+            # ---------------------------------------------
+            # CANONICAL PUBLIC CATEGORY URL
+            # ---------------------------------------------
+
+            "url":
+                url_for(
+                    "qr_category",
+                    code=access_point.code,
+                    category=canonical_key,
+                ),
+
+        })
+
+
+    # =====================================================
+    # CATEGORY STATS
+    #
+    # Stats are calculated ONCE per canonical consumer
+    # category.
+    #
+    # Because get_active_content() is alias-aware,
+    # asking for "restaurants" can include:
+    #
+    #     restaurants
+    #     foods
+    #     check-out-our-specials
+    #
+    # without displaying duplicate category cards.
+    # =====================================================
+
+    category_stats = {}
+
+
+    # -----------------------------------------------------
+    # NEW LISTING CUTOFF
+    # -----------------------------------------------------
+
+    new_cutoff = (
+        datetime.utcnow()
+        - timedelta(days=7)
+    )
+
+
+    for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category["key"]
+        )
+
+        representative_category = (
+            consumer_category["category"]
+        )
+
+
         try:
 
             active_items = get_active_content(
                 zone_id=zone.id,
-                category_slug=category.slug,
+                category_slug=canonical_key,
             )
 
         except Exception as exc:
@@ -2295,7 +2490,7 @@ def qr_access(access_code):
                 "Unable to calculate category stats. "
                 "zone=%s category=%s error=%s",
                 zone.id,
-                category.slug,
+                canonical_key,
                 exc,
             )
 
@@ -2303,11 +2498,34 @@ def qr_access(access_code):
 
 
         # -------------------------------------------------
-        # TOTAL ACTIVE ITEMS
+        # REMOVE ANY DUPLICATE ITEMS
+        #
+        # Normally get_active_content() should already
+        # return unique ContentItem rows, but this keeps
+        # the home stats defensive during migration.
         # -------------------------------------------------
 
+        unique_active_items = []
+
+        seen_active_item_ids = set()
+
+
+        for item in active_items:
+
+            if item.id in seen_active_item_ids:
+                continue
+
+            seen_active_item_ids.add(
+                item.id
+            )
+
+            unique_active_items.append(
+                item
+            )
+
+
         item_count = len(
-            active_items
+            unique_active_items
         )
 
 
@@ -2318,7 +2536,7 @@ def qr_access(access_code):
         new_count = 0
 
 
-        for item in active_items:
+        for item in unique_active_items:
 
             created_at = getattr(
                 item,
@@ -2336,9 +2554,6 @@ def qr_access(access_code):
 
         # -------------------------------------------------
         # CONSUMER-AWARE BADGE WORDING
-        #
-        # Rules operate on the canonical taxonomy rather
-        # than old database/public slugs.
         # -------------------------------------------------
 
         if canonical_key == "events":
@@ -2383,21 +2598,7 @@ def qr_access(access_code):
             badge_label = "LIVE"
 
 
-        # -------------------------------------------------
-        # IMPORTANT:
-        #
-        # Stats stay indexed by the REAL public slug.
-        #
-        # This means existing access.html code such as:
-        #
-        # category_stats[category.slug]
-        #
-        # continues to work.
-        # -------------------------------------------------
-
-        category_stats[
-            category.slug
-        ] = {
+        stats_data = {
 
             "count":
                 item_count,
@@ -2416,43 +2617,58 @@ def qr_access(access_code):
         }
 
 
+        # -------------------------------------------------
+        # CANONICAL LOOKUP
+        #
+        # New access.html can use:
+        #
+        # category_stats["restaurants"]
+        # -------------------------------------------------
+
+        category_stats[
+            canonical_key
+        ] = stats_data
+
+
+        # -------------------------------------------------
+        # REPRESENTATIVE LEGACY LOOKUP
+        #
+        # Keep this temporarily so existing template code
+        # using category.slug does not immediately break.
+        # -------------------------------------------------
+
+        category_stats[
+            representative_category.slug
+        ] = stats_data
+
+
     # =====================================================
     # NEW NEAR YOU
+    #
+    # Iterate through canonical consumer categories rather
+    # than every legacy Category row.
+    #
+    # This reduces duplicate queries and duplicate results.
     # =====================================================
 
     new_items_pool = []
 
-
-    # -----------------------------------------------------
-    # PREVENT DUPLICATES
-    #
-    # This becomes important now because multiple old
-    # Category rows may normalize to the same taxonomy.
-    #
-    # Example:
-    #
-    # foods
-    # check-out-our-specials
-    #
-    # both normalize to:
-    #
-    # restaurants
-    #
-    # get_active_content() can therefore return overlapping
-    # results for both Category rows.
-    # -----------------------------------------------------
-
     seen_new_item_ids = set()
 
 
-    for category in categories:
+    for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category["key"]
+        )
+
 
         try:
 
             category_items = (
                 get_active_content(
                     zone_id=zone.id,
-                    category_slug=category.slug,
+                    category_slug=canonical_key,
                 )
             )
 
@@ -2462,7 +2678,7 @@ def qr_access(access_code):
                 "Unable to load New Near You items. "
                 "zone=%s category=%s error=%s",
                 zone.id,
-                category.slug,
+                canonical_key,
                 exc,
             )
 
@@ -2483,9 +2699,9 @@ def qr_access(access_code):
             )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # SORT NEWEST FIRST
-    # -----------------------------------------------------
+    # =====================================================
 
     new_items_pool.sort(
 
@@ -2498,9 +2714,9 @@ def qr_access(access_code):
     )
 
 
-    # -----------------------------------------------------
-    # LIMIT HOME RAIL
-    # -----------------------------------------------------
+    # =====================================================
+    # LIMIT HOME "WHAT'S NEW" RAIL
+    # =====================================================
 
     new_items = (
         new_items_pool[:8]
@@ -2508,39 +2724,15 @@ def qr_access(access_code):
 
 
     # =====================================================
-    # CATEGORY LOOKUP
-    #
-    # Keep legacy/public slug lookup for compatibility.
-    #
-    # Also add canonical keys so a ContentItem stored as
-    # "restaurants" can still resolve a Category object
-    # while older rows remain "check-out-our-specials".
-    # =====================================================
-
-    category_lookup = {}
-
-
-    for category in categories:
-
-        # Existing public slug.
-        category_lookup[
-            category.slug
-        ] = category
-
-        # Canonical taxonomy key.
-        canonical_key = normalize_category(
-            category.slug
-        )
-
-        if canonical_key not in category_lookup:
-
-            category_lookup[
-                canonical_key
-            ] = category
-
-
-    # =====================================================
     # FEATURED LOCAL CONTENT
+    #
+    # Featured is intentionally independent from:
+    #
+    # - listing_level
+    # - promotion
+    # - notification eligibility
+    #
+    # Any visible listing can be featured.
     # =====================================================
 
     featured_items_pool = []
@@ -2548,14 +2740,19 @@ def qr_access(access_code):
     seen_featured_item_ids = set()
 
 
-    for category in categories:
+    for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category["key"]
+        )
+
 
         try:
 
             category_items = (
                 get_active_content(
                     zone_id=zone.id,
-                    category_slug=category.slug,
+                    category_slug=canonical_key,
                 )
             )
 
@@ -2565,7 +2762,7 @@ def qr_access(access_code):
                 "Unable to load featured items. "
                 "zone=%s category=%s error=%s",
                 zone.id,
-                category.slug,
+                canonical_key,
                 exc,
             )
 
@@ -2589,9 +2786,9 @@ def qr_access(access_code):
             )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # NEWEST FEATURED CONTENT FIRST
-    # -----------------------------------------------------
+    # =====================================================
 
     featured_items_pool.sort(
 
@@ -2604,9 +2801,9 @@ def qr_access(access_code):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # LIMIT FEATURED CAROUSEL
-    # -----------------------------------------------------
+    # =====================================================
 
     featured_items = (
         featured_items_pool[:6]
@@ -2625,39 +2822,95 @@ def qr_access(access_code):
 
         access_point=access_point,
 
+
         # -------------------------------------------------
         # REAL DATABASE CATEGORY ROWS
+        #
+        # Keep these because notification subscriptions
+        # still use existing real category slugs during
+        # the migration.
         # -------------------------------------------------
 
         categories=categories,
 
+
         # -------------------------------------------------
-        # CONSUMER PRESENTATION
+        # UNIQUE CONSUMER NAVIGATION
         #
-        # access.html will use:
+        # This is now the preferred source for the main
+        # Explore section.
         #
-        # consumer_category_lookup[category.slug]
+        # Each entry contains:
         #
-        # to display:
+        # {
+        #     "key": "restaurants",
+        #     "category": <Category>,
+        #     "title": "HUNGRY?",
+        #     "subtitle": "...",
+        #     "icon": "🍔",
+        #     "url": "/q/.../restaurants"
+        # }
+        # -------------------------------------------------
+
+        consumer_categories=(
+            consumer_categories
+        ),
+
+
+        # -------------------------------------------------
+        # CONSUMER PRESENTATION LOOKUP
         #
-        # WHAT'S ON?
-        # HUNGRY?
-        # GET FRESH
-        # SPECIALS TODAY
-        # etc.
+        # Used by Featured / What's New cards.
+        # Supports both old slugs and canonical keys.
         # -------------------------------------------------
 
         consumer_category_lookup=(
             consumer_category_lookup
         ),
 
-        category_stats=category_stats,
 
-        new_items=new_items,
+        # -------------------------------------------------
+        # CATEGORY STATS
+        # -------------------------------------------------
 
-        category_lookup=category_lookup,
+        category_stats=(
+            category_stats
+        ),
 
-        featured_items=featured_items,
+
+        # -------------------------------------------------
+        # WHAT'S NEW
+        # -------------------------------------------------
+
+        new_items=(
+            new_items
+        ),
+
+
+        # -------------------------------------------------
+        # CATEGORY OBJECT LOOKUP
+        # -------------------------------------------------
+
+        category_lookup=(
+            category_lookup
+        ),
+
+
+        # -------------------------------------------------
+        # FEATURED
+        # -------------------------------------------------
+
+        featured_items=(
+            featured_items
+        ),
+
+
+        # -------------------------------------------------
+        # CATEGORY IMAGES
+        #
+        # Still keyed by the representative real
+        # Category.id.
+        # -------------------------------------------------
 
         category_background_images=(
             category_background_images
