@@ -1286,6 +1286,116 @@ def get_campaign_state(
         "ends_at": end_datetime,
     }
 
+
+def should_show_campaign_state(item):
+    """
+    Decide whether a ContentItem should display Kalxa's
+    dynamic Campaign State badge.
+
+    Campaign states are intended for:
+
+    1. Paid/waived campaign content.
+    2. Time-specific categories such as events.
+    3. Legacy/admin campaign-style content that has
+       meaningful campaign dates.
+
+    Ordinary long-lived Presence / Discovery listings
+    should not receive urgency badges simply because they
+    happen to contain a date.
+    """
+
+    if not item:
+        return False
+
+
+    canonical_category = normalize_category(
+        item.category
+    )
+
+
+    # ========================================================
+    # EVENTS
+    #
+    # Events are inherently time-specific, including older
+    # admin-created events that predate pricing_model.
+    # ========================================================
+
+    if canonical_category == "events":
+
+        return bool(
+            item.event_date
+            or item.start_date
+        )
+
+
+    # ========================================================
+    # COMMERCIAL CAMPAIGNS
+    # ========================================================
+
+    if (
+        item.pricing_model
+        == PRICING_MODEL_CAMPAIGN
+    ):
+
+        return bool(
+            item.start_date
+            or item.end_date
+        )
+
+
+    # ========================================================
+    # EVERYTHING ELSE
+    # ========================================================
+
+    return False
+
+
+def attach_campaign_state(item):
+    """
+    Attach a calculated campaign state to a ContentItem for
+    template presentation.
+
+    This does NOT write anything to PostgreSQL.
+
+    campaign_state exists only on the Python object for the
+    current request.
+    """
+
+    if not item:
+        return item
+
+
+    if should_show_campaign_state(item):
+
+        item.campaign_state = (
+            get_campaign_state(item)
+        )
+
+    else:
+
+        item.campaign_state = None
+
+
+    return item
+
+def attach_campaign_states(items):
+    """
+    Attach campaign state information to a collection of
+    ContentItems.
+    """
+
+    if not items:
+        return []
+
+
+    for item in items:
+
+        attach_campaign_state(
+            item
+        )
+
+
+    return items
 # ============================================================
 # YOCO - CUSTOMER RETURN
 # ============================================================
