@@ -2963,233 +2963,343 @@
              CANONICAL CONSUMER CATEGORY SECTION
         ========================================== -->
 
-        <section class="category-section">
+       <!-- =========================================
+     CATEGORY SECTION
+========================================== -->
 
-            <div class="category-section-heading">
+       <section class="category-section">
 
-                <h2>
-                    EXPLORE {{ zone.name | upper }}
-                </h2>
+         <div class="category-section-heading">
 
-            </div>
+          <h2>
+            EXPLORE {{ zone.name | upper }}
+          </h2>
 
-
-            <div class="lac-category-list">
-
-                {#
-                    consumer_categories is prepared by qr_access().
-
-                    Each entry represents ONE canonical consumer
-                    category, even when multiple legacy Category
-                    rows map to it.
-
-                    Example:
-
-                        foods
-                        check-out-our-specials
-
-                    become one:
-
-                        restaurants
-                        ↓
-                        🍔 HUNGRY?
-
-                    The representative Category DB row is still
-                    retained for images and existing admin data.
-                #}
-
-                {% for consumer_entry in consumer_categories %}
-
-                    {% set category =
-                        consumer_entry.category
-                    %}
-
-                    {% set canonical_key =
-                        consumer_entry.key
-                    %}
-
-                    {% set category_images =
-                        consumer_entry.images
-                    %}
-
-                    {% set stats =
-                        consumer_entry.stats
-                    %}
+         </div>
 
 
-                    <a
+         <div class="lac-category-list">
+
+          {#
+            consumer_categories is already deduplicated
+            by qr_access().
+
+            Example:
+
+                foods
+                check-out-our-specials
+
+            are represented by ONE consumer category:
+
+                restaurants
+                ↓
+                🍔 HUNGRY?
+
+            We therefore do NOT perform another
+            deduplication inside the template.
+          #}
+
+          {% for consumer in consumer_categories %}
+
+            {# =========================================
+               REPRESENTATIVE DATABASE CATEGORY
+            ========================================== #}
+
+            {% set category =
+                consumer.get(
+                    "category"
+                )
+            %}
+
+
+            {# =========================================
+               CANONICAL CATEGORY KEY
+            ========================================== #}
+
+            {% set canonical_key =
+                consumer.get(
+                    "key",
+                    ""
+                )
+            %}
+
+
+            {# =========================================
+               CATEGORY IMAGES
+
+               category may theoretically be missing
+               during migration, so never allow an
+               Undefined value to reach |tojson.
+            ========================================== #}
+
+            {% if category %}
+
+                {% set category_images =
+                    category_background_images.get(
+                        category.id,
+                        []
+                    ) or []
+                %}
+
+            {% else %}
+
+                {% set category_images = [] %}
+
+            {% endif %}
+
+
+            {# =========================================
+               CATEGORY STATS
+
+               qr_access() now stores stats under the
+               canonical taxonomy key.
+            ========================================== #}
+
+            {% set stats =
+                category_stats.get(
+                    canonical_key,
+                    {}
+                ) or {}
+            %}
+
+
+            <!-- =====================================
+                 CATEGORY CARD
+            ====================================== -->
+
+            <a
+                class="
+                    lac-category-row
+                    {% if not category_images %}
+                        no-category-image
+                    {% endif %}
+                "
+
+                href="{{
+                    consumer.get(
+                        'url',
+                        '#'
+                    )
+                }}"
+
+                data-category-images='{{
+                    category_images
+                    | tojson
+                    | forceescape
+                }}'
+            >
+
+
+                <!-- =================================
+                     CATEGORY BACKGROUND
+                ================================== -->
+
+                {% if category_images %}
+
+                    <div
                         class="
-                            lac-category-row
-                            {% if not category_images %}
-                                no-category-image
-                            {% endif %}
+                            lac-category-background
+                            lac-category-background-a
+                            is-visible
                         "
+                        style="
+                            background-image:
+                                url('{{ category_images[0] | e }}');
+                        "
+                    ></div>
 
-                        href="{{ url_for(
-                            'qr_category',
-                            code=access_point.code,
-                            category=canonical_key
-                        ) }}"
 
-                        data-category-images='{{ category_images | tojson | forceescape }}'
+                    <div
+                        class="
+                            lac-category-background
+                            lac-category-background-b
+                        "
+                    ></div>
+
+
+                    <div
+                        class="
+                            lac-category-light-overlay
+                        "
+                    ></div>
+
+
+                {% else %}
+
+                    <!-- =============================
+                         FALLBACK ICON
+                    ============================== -->
+
+                    <div
+                        class="lac-category-fallback-large"
+                        aria-hidden="true"
                     >
 
+                        {{
+                            consumer.get(
+                                "icon",
+                                (
+                                    category.icon
+                                    if (
+                                        category
+                                        and category.icon
+                                    )
+                                    else "📌"
+                                )
+                            )
+                        }}
 
-                        {% if category_images %}
+                    </div>
 
-                            <div
-                                class="
-                                    lac-category-background
-                                    lac-category-background-a
-                                    is-visible
-                                "
-                                style="
-                                    background-image:
-                                        url('{{ category_images[0] | e }}');
-                                "
-                            ></div>
-
-
-                            <div
-                                class="
-                                    lac-category-background
-                                    lac-category-background-b
-                                "
-                            ></div>
+                {% endif %}
 
 
-                            <div
-                                class="
-                                    lac-category-light-overlay
-                                "
-                            ></div>
+                <!-- =================================
+                     CATEGORY INFORMATION
+                ================================== -->
+
+                <div class="lac-category-info">
+
+
+                    <!-- =============================
+                         CONSUMER SUBTITLE
+                    ============================== -->
+
+                    <div class="lac-category-subtitle">
+
+                        {{
+                            consumer.get(
+                                "subtitle",
+                                ""
+                            )
+                        }}
+
+                    </div>
+
+
+                    <!-- =============================
+                         CONSUMER TITLE
+                    ============================== -->
+
+                    <div class="lac-category-title">
+
+                        {{
+                            consumer.get(
+                                "title",
+                                (
+                                    category.name
+                                    if category
+                                    else canonical_key
+                                )
+                            )
+                        }}
+
+                    </div>
+
+
+                    <!-- =============================
+                         STATUS BADGES
+                    ============================== -->
+
+                    <div class="lac-category-status">
+
+
+                        {% if stats.get("count", 0) > 0 %}
+
+                            <span class="lac-status-badge">
+
+                                <span>
+                                    {{
+                                        stats.get(
+                                            "icon",
+                                            "🔥"
+                                        )
+                                    }}
+                                </span>
+
+                                <span>
+
+                                    {{
+                                        stats.get(
+                                            "count",
+                                            0
+                                        )
+                                    }}
+
+                                    {{
+                                        stats.get(
+                                            "label",
+                                            "LIVE"
+                                        )
+                                    }}
+
+                                </span>
+
+                            </span>
+
 
                         {% else %}
 
-                            <div
-                                class="
-                                    lac-category-fallback-large
-                                "
-                                aria-hidden="true"
-                            >
-                                {{
-                                    consumer_entry.icon
-                                    or category.icon
-                                    or "📌"
-                                }}
-                            </div>
+                            <span class="lac-status-badge">
+
+                                <span>
+                                    📍
+                                </span>
+
+                                <span>
+                                    EXPLORE
+                                </span>
+
+                            </span>
 
                         {% endif %}
 
 
-                        <div class="lac-category-info">
+                        {% if stats.get("new_count", 0) > 0 %}
+
+                            <span
+                                class="
+                                    lac-status-badge
+                                    lac-status-badge-new
+                                "
+                            >
+
+                                ✨
+                                {{
+                                    stats.get(
+                                        "new_count",
+                                        0
+                                    )
+                                }}
+                                NEW
+
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
 
 
-                            <!-- =============================
-                                 CONSUMER SUBTITLE
-                            ============================== -->
+                <!-- =================================
+                     ARROW
+                ================================== -->
 
-                            <div class="lac-category-subtitle">
-                                {{ consumer_entry.subtitle }}
-                            </div>
+                <div
+                    class="lac-category-chevron"
+                    aria-hidden="true"
+                >
+                    ›
+                </div>
 
+            </a>
 
-                            <!-- =============================
-                                 CONSUMER TITLE
-                            ============================== -->
+           {% endfor %}
 
-                            <div class="lac-category-title">
-                                {{ consumer_entry.title }}
-                            </div>
+        </div>
 
-
-                            <!-- =============================
-                                 STATUS
-                            ============================== -->
-
-                            <div class="lac-category-status">
-
-                                {% if stats.get("count", 0) > 0 %}
-
-                                    <span class="lac-status-badge">
-
-                                        <span>
-                                            {{
-                                                stats.get(
-                                                    "icon",
-                                                    "🔥"
-                                                )
-                                            }}
-                                        </span>
-
-                                        <span>
-                                            {{
-                                                stats.get(
-                                                    "count",
-                                                    0
-                                                )
-                                            }}
-                                            {{
-                                                stats.get(
-                                                    "label",
-                                                    "LIVE"
-                                                )
-                                            }}
-                                        </span>
-
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="lac-status-badge">
-
-                                        <span>
-                                            📍
-                                        </span>
-
-                                        <span>
-                                            EXPLORE
-                                        </span>
-
-                                    </span>
-
-                                {% endif %}
-
-
-                                {% if stats.get("new_count", 0) > 0 %}
-
-                                    <span
-                                        class="
-                                            lac-status-badge
-                                            lac-status-badge-new
-                                        "
-                                    >
-                                        ✨
-                                        {{ stats.get("new_count") }}
-                                        NEW
-                                    </span>
-
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                        <div
-                            class="lac-category-chevron"
-                            aria-hidden="true"
-                        >
-                            ›
-                        </div>
-
-                    </a>
-
-                {% endfor %}
-
-            </div>
-
-        </section>
+     </section>
 
 
         <!-- =========================================
