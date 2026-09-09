@@ -8522,6 +8522,16 @@ def edit_content(
                 or None
             )
 
+            item.ticket_url = (
+                request.form.get(
+                    "ticket_url",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
+
 
             item.menu_highlights = (
                 request.form.get(
@@ -8550,6 +8560,8 @@ def edit_content(
             item.whatsapp_number = None
 
             item.directions_url = None
+
+            item.ticket_url = None
 
             item.menu_highlights = None
 
