@@ -22,6 +22,12 @@ from flask import (
     current_app,
 )
 
+from categories import (
+    BUSINESS_CATEGORIES,
+    LEGACY_CATEGORY_MAP,
+    normalize_category,
+)
+
 from sqlalchemy import func
 
 from cloud_storage import upload_listing_image
@@ -326,17 +332,162 @@ def clean_slug(value):
 
 
 def get_categories(active_only=True):
+    """
+    Return the physical/public Category rows stored in the database.
+
+    IMPORTANT:
+    Category rows are still used by the existing public navigation,
+    QR routes and admin configuration.
+
+    We are NOT migrating those database rows yet.
+    """
+
     query = Category.query
+
     if active_only:
-        query = query.filter(Category.active.is_(True))
-    return query.order_by(Category.display_order.asc(), Category.name.asc()).all()
+        query = query.filter(
+            Category.active.is_(True)
+        )
+
+    return (
+        query
+        .order_by(
+            Category.display_order.asc(),
+            Category.name.asc(),
+        )
+        .all()
+    )
 
 
-def get_category_by_slug(slug, active_only=True):
-    query = Category.query.filter(Category.slug == slug)
+def get_category_by_slug(
+    slug,
+    active_only=True,
+):
+    """
+    Find a Category database row.
+
+    Supports:
+    1. Existing production/public slugs.
+    2. Canonical business taxonomy keys.
+
+    Example:
+
+        check-out-our-specials
+                ↓
+            restaurants
+
+    If "restaurants" is supplied but the database still contains
+    "check-out-our-specials", this function can resolve that legacy
+    Category row during the transition.
+    """
+
+    slug = (
+        str(slug or "")
+        .strip()
+        .lower()
+    )
+
+    if not slug:
+        return None
+
+
+    # =====================================================
+    # 1. TRY EXACT DATABASE SLUG FIRST
+    # =====================================================
+
+    query = Category.query.filter(
+        Category.slug == slug
+    )
+
     if active_only:
-        query = query.filter(Category.active.is_(True))
-    return query.first()
+        query = query.filter(
+            Category.active.is_(True)
+        )
+
+    category = query.first()
+
+    if category:
+        return category
+
+
+    # =====================================================
+    # 2. NORMALIZE TO CANONICAL TAXONOMY
+    # =====================================================
+
+    canonical_category = normalize_category(
+        slug
+    )
+
+    if not canonical_category:
+        return None
+
+
+    # =====================================================
+    # 3. FIND ALL LEGACY SLUGS BELONGING TO THE
+    #    SAME CANONICAL CATEGORY
+    # =====================================================
+
+    equivalent_slugs = {
+        canonical_category,
+    }
+
+    for (
+        legacy_slug,
+        mapped_category,
+    ) in LEGACY_CATEGORY_MAP.items():
+
+        if (
+            normalize_category(mapped_category)
+            == canonical_category
+        ):
+            equivalent_slugs.add(
+                legacy_slug
+            )
+
+
+    query = Category.query.filter(
+        Category.slug.in_(
+            equivalent_slugs
+        )
+    )
+
+    if active_only:
+        query = query.filter(
+            Category.active.is_(True)
+        )
+
+
+    # =====================================================
+    # PREFER CANONICAL ROW IF ONE EXISTS
+    # =====================================================
+
+    categories = query.all()
+
+    if not categories:
+        return None
+
+    for category in categories:
+
+        if (
+            category.slug
+            == canonical_category
+        ):
+            return category
+
+
+    # =====================================================
+    # OTHERWISE RETURN EXISTING LEGACY ROW
+    # =====================================================
+
+    return sorted(
+        categories,
+        key=lambda category: (
+            category.display_order
+            if category.display_order is not None
+            else 999999,
+            category.name or "",
+        ),
+    )[0]
 
 
 def get_content_status(
