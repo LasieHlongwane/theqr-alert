@@ -237,68 +237,34 @@ CONSUMER_CATEGORIES = {
 
 
 # ============================================================
-# HELPERS
-# ============================================================
-
-def get_business_category(category_key):
-
-    return BUSINESS_CATEGORIES.get(
-        category_key,
-        {
-            "label":
-                category_key
-                .replace("_", " ")
-                .title()
-        },
-    )
-
-
-def get_consumer_category(category_key):
-
-    business_category = get_business_category(
-        category_key
-    )
-
-    return CONSUMER_CATEGORIES.get(
-        category_key,
-        {
-            "title":
-                business_category["label"],
-
-            "subtitle":
-                "Discover what's available around you",
-
-            "icon":
-                "📍",
-        },
-    )
-
-
-
-
-def get_business_category_choices():
-
-    return [
-        (
-            key,
-            config["label"],
-        )
-        for key, config
-        in BUSINESS_CATEGORIES.items()
-    ]
-
-
-# ============================================================
 # LEGACY CATEGORY MAPPING
 # ============================================================
 #
 # Temporary compatibility layer for existing Kalxa data.
 #
-# Old database/category slugs continue to work while the
-# application gradually moves toward stable taxonomy keys.
+# IMPORTANT:
+#
+# Existing production ContentItem.category values must
+# continue to work while Kalxa moves toward the new stable
+# business taxonomy.
+#
+# Example:
+#
+#     foods
+#     check-out-our-specials
+#     local-restaurants
+#
+# all belong to:
+#
+#     restaurants
+#
 # ============================================================
 
 LEGACY_CATEGORY_MAP = {
+
+    # ========================================================
+    # EVENTS
+    # ========================================================
 
     "upcoming-event-🥹🔥":
         "events",
@@ -309,6 +275,10 @@ LEGACY_CATEGORY_MAP = {
     "events":
         "events",
 
+
+    # ========================================================
+    # RESTAURANTS / FOOD
+    # ========================================================
 
     "check-out-our-specials":
         "restaurants",
@@ -323,6 +293,10 @@ LEGACY_CATEGORY_MAP = {
         "restaurants",
 
 
+    # ========================================================
+    # BEAUTY
+    # ========================================================
+
     "beauty-salon":
         "beauty",
 
@@ -330,12 +304,34 @@ LEGACY_CATEGORY_MAP = {
         "beauty",
 
 
+    # ========================================================
+    # RETAIL / STORE / DRINK SPECIALS
+    # ========================================================
+
     "discount-deals":
+        "retail_specials",
+
+    "liqour-specials🔥":
         "retail_specials",
 
     "retail_specials":
         "retail_specials",
 
+
+    # ========================================================
+    # ACCOMMODATION
+    #
+    # No known older production slug currently needs to be
+    # mapped here.
+    # ========================================================
+
+    "accommodation":
+        "accommodation",
+
+
+    # ========================================================
+    # PROPERTY RENTALS
+    # ========================================================
 
     "property":
         "rentals",
@@ -344,6 +340,10 @@ LEGACY_CATEGORY_MAP = {
         "rentals",
 
 
+    # ========================================================
+    # DELIVERY / PICKUP
+    # ========================================================
+
     "transport":
         "delivery",
 
@@ -351,21 +351,46 @@ LEGACY_CATEGORY_MAP = {
         "delivery",
 
 
+    # ========================================================
+    # LOCAL SERVICES
+    # ========================================================
+
     "services":
         "services",
 
+
+    # ========================================================
+    # JOBS
+    # ========================================================
 
     "jobs":
         "jobs",
 
 
+    # ========================================================
+    # BUILDING / HARDWARE
+    # ========================================================
+
     "build":
         "building",
 
+    "building":
+        "building",
+
+
+    # ========================================================
+    # EMERGENCY
+    # ========================================================
 
     "emergency":
         "emergency",
 
+
+    # ========================================================
+    # COMMUNITY ANNOUNCEMENTS
+    #
+    # Keep the misspelled production slug for compatibility.
+    # ========================================================
 
     "announcemnent":
         "announcements",
@@ -376,28 +401,235 @@ LEGACY_CATEGORY_MAP = {
 }
 
 
+# ============================================================
+# CATEGORY NORMALIZATION
+# ============================================================
+
 def normalize_category(category_key):
+    """
+    Convert a legacy or canonical category value into the
+    stable Kalxa business taxonomy key.
+
+    Examples:
+
+        foods
+            -> restaurants
+
+        check-out-our-specials
+            -> restaurants
+
+        upcoming-event-🥹🔥
+            -> events
+
+        discount-deals
+            -> retail_specials
+
+        restaurants
+            -> restaurants
+    """
 
     if not category_key:
         return None
 
-    return LEGACY_CATEGORY_MAP.get(
-        category_key,
-        category_key,
+
+    # --------------------------------------------------------
+    # Normalize incoming values consistently.
+    #
+    # This protects against accidental whitespace or casing
+    # differences coming from forms/routes/database values.
+    # --------------------------------------------------------
+
+    cleaned_category = (
+        str(category_key)
+        .strip()
+        .lower()
     )
 
-def get_category_aliases(category_key):
-    canonical = normalize_category(category_key)
 
-    if not canonical:
+    if not cleaned_category:
+        return None
+
+
+    return LEGACY_CATEGORY_MAP.get(
+        cleaned_category,
+        cleaned_category,
+    )
+
+
+# ============================================================
+# CATEGORY ALIASES
+# ============================================================
+
+def get_category_aliases(category_key):
+    """
+    Return every legacy + canonical category value belonging
+    to the same Kalxa business taxonomy category.
+
+    Example:
+
+        get_category_aliases("restaurants")
+
+    returns:
+
+        {
+            "restaurants",
+            "foods",
+            "check-out-our-specials",
+            "local-restaurants",
+        }
+
+    This allows old ContentItem rows and new canonical rows
+    to appear together without immediately migrating the
+    production database.
+    """
+
+    canonical_category = normalize_category(
+        category_key
+    )
+
+
+    if not canonical_category:
         return set()
 
-    aliases = {
-        key
-        for key, value in LEGACY_CATEGORY_MAP.items()
-        if normalize_category(value) == canonical
-    }
 
-    aliases.add(canonical)
+    aliases = set()
+
+
+    # --------------------------------------------------------
+    # Find every legacy key that resolves to this canonical
+    # category.
+    # --------------------------------------------------------
+
+    for legacy_key, mapped_category in LEGACY_CATEGORY_MAP.items():
+
+        mapped_canonical = normalize_category(
+            mapped_category
+        )
+
+
+        if mapped_canonical == canonical_category:
+
+            aliases.add(
+                legacy_key
+            )
+
+
+    # --------------------------------------------------------
+    # Always include canonical key itself.
+    #
+    # This supports new ContentItem rows already using the
+    # stable taxonomy.
+    # --------------------------------------------------------
+
+    aliases.add(
+        canonical_category
+    )
+
 
     return aliases
+
+
+# ============================================================
+# BUSINESS CATEGORY HELPER
+# ============================================================
+
+def get_business_category(category_key):
+    """
+    Return the business-facing category configuration.
+    """
+
+    canonical_category = normalize_category(
+        category_key
+    )
+
+
+    if not canonical_category:
+
+        return {
+            "label": "Category",
+        }
+
+
+    return BUSINESS_CATEGORIES.get(
+        canonical_category,
+        {
+            "label":
+                canonical_category
+                .replace("_", " ")
+                .title(),
+        },
+    )
+
+
+# ============================================================
+# CONSUMER CATEGORY HELPER
+# ============================================================
+
+def get_consumer_category(category_key):
+    """
+    Return consumer-facing Kalxa presentation information.
+
+    Legacy category values are normalized first.
+
+    Example:
+
+        foods
+
+    will therefore receive the same consumer presentation as:
+
+        restaurants
+    """
+
+    canonical_category = normalize_category(
+        category_key
+    )
+
+
+    business_category = get_business_category(
+        canonical_category
+    )
+
+
+    return CONSUMER_CATEGORIES.get(
+        canonical_category,
+        {
+            "title":
+                business_category["label"],
+
+            "subtitle":
+                "Discover what's available around you",
+
+            "icon":
+                "📍",
+        },
+    )
+
+
+# ============================================================
+# BUSINESS CATEGORY CHOICES
+# ============================================================
+
+def get_business_category_choices():
+    """
+    Return stable taxonomy choices for forms.
+
+    Example:
+
+        [
+            ("events", "Events & Entertainment"),
+            ("restaurants", "Restaurant & Food"),
+            ...
+        ]
+    """
+
+    return [
+
+        (
+            key,
+            config["label"],
+        )
+
+        for key, config
+        in BUSINESS_CATEGORIES.items()
+
+    ]
