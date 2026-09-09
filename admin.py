@@ -7483,6 +7483,15 @@ def create_content():
                 or None
             )
 
+            ticket_url = (
+                request.form.get(
+                    "ticket_url",
+                    "",
+                )
+                .strip()
+                or None
+            )
+
             menu_highlights = (
                 request.form.get(
                     "menu_highlights",
