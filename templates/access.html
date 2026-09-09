@@ -93,6 +93,7 @@
     <!-- =========================================
          ACCESS PAGE REDESIGN
     ========================================== -->
+
     <style>
 
     /* =========================================
@@ -392,7 +393,6 @@
 
     /* =========================================
        CATEGORY TITLE
-       CREAMY WHITE + BOTTOM BASE CENTER
     ========================================== */
 
     .lac-category-title {
@@ -430,11 +430,45 @@
 
 
     /* =========================================
-       EXPLORE TEXT
-       TOP-RIGHT CORNER
+       CATEGORY SUBTITLE
     ========================================== */
 
-    .lac-category-meta {
+    .lac-category-subtitle {
+        position: absolute;
+
+        left: 50%;
+        bottom: 32px;
+
+        transform: translateX(-50%);
+
+        z-index: 8;
+
+        width: calc(100% - 32px);
+
+        margin: 0;
+
+        color: #fff4df;
+
+        font-size: 10px;
+        font-weight: 700;
+
+        line-height: 1.3;
+
+        text-align: center;
+
+        text-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.90),
+            0 3px 8px rgba(0, 0, 0, 0.55);
+
+        pointer-events: none;
+    }
+
+
+    /* =========================================
+       CATEGORY STATUS
+    ========================================== */
+
+    .lac-category-status {
         position: absolute !important;
 
         top: 6px !important;
@@ -445,14 +479,46 @@
 
         transform: none !important;
 
-        z-index: 20;
+        z-index: 25;
 
         width: auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+
+        gap: 5px;
 
         margin: 0;
         padding: 0;
 
-        color: #3f4348;
+        pointer-events: none;
+    }
+
+
+    .lac-status-badge {
+        position: relative !important;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 5px;
+
+        margin: 0;
+
+        padding: 6px 9px;
+
+        border-radius: 999px;
+
+        background: #ffffff !important;
+
+        border:
+            1px solid
+            rgba(0, 0, 0, 0.08) !important;
+
+        color: #3f4348 !important;
 
         font-size: 10px;
         font-weight: 800;
@@ -461,9 +527,20 @@
 
         letter-spacing: 0.25px;
 
-        text-shadow: none;
+        white-space: nowrap;
 
-        pointer-events: none;
+        box-shadow:
+            0 2px 8px
+            rgba(0, 0, 0, 0.12);
+
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+
+    .lac-status-badge-new {
+        background: #ffffff !important;
+        color: #3f4348 !important;
     }
 
 
@@ -516,8 +593,7 @@
 
     .lac-category-row:hover
     .lac-category-chevron {
-        transform:
-            translateX(3px);
+        transform: translateX(3px);
 
         background:
             rgba(
@@ -530,140 +606,167 @@
 
 
     /* =========================================
-       CATEGORY STATUS
-       LIVE / NEW — TOP-RIGHT CORNER
+       MOBILE
     ========================================== */
 
-    .lac-category-status {
-        position: absolute !important;
+    @media (max-width: 480px) {
 
-        top: 6px !important;
-        right: 6px !important;
-
-        bottom: auto !important;
-        left: auto !important;
-
-        transform: none !important;
-
-        z-index: 25;
-
-        width: auto;
-
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-
-        gap: 5px;
-
-        margin: 0;
-        padding: 0;
-
-        pointer-events: none;
-    }
+        .lac-category-list {
+            gap: 15px;
+        }
 
 
-    .lac-status-badge {
-        position: relative !important;
+        .lac-category-row {
+            min-height: 195px;
 
-        top: auto !important;
-        right: auto !important;
-        bottom: auto !important;
-        left: auto !important;
+            padding: 19px;
 
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+            gap: 13px;
 
-        gap: 5px;
-
-        margin: 0;
-
-        padding: 6px 9px;
-
-        border-radius: 999px;
-
-        background: #ffffff !important;
-
-        border:
-            1px solid
-            rgba(0, 0, 0, 0.08) !important;
-
-        color: #3f4348 !important;
-
-        font-size: 10px;
-        font-weight: 800;
-
-        line-height: 1;
-
-        letter-spacing: 0.25px;
-
-        white-space: nowrap;
-
-        box-shadow:
-            0 2px 8px
-            rgba(0, 0, 0, 0.12);
-
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
+            border-radius: 20px;
+        }
 
 
-    .lac-status-badge-new {
-        background: #ffffff !important;
+        .lac-category-title {
+            bottom: 3px;
 
-        border-color:
-            rgba(0, 0, 0, 0.08) !important;
+            font-size: 19px;
+        }
 
-        color: #3f4348 !important;
+
+        .lac-category-subtitle {
+            bottom: 29px;
+
+            font-size: 9px;
+        }
+
+
+        .lac-category-status {
+            top: 5px !important;
+            right: 5px !important;
+        }
+
+
+        .lac-status-badge {
+            padding: 5px 8px;
+
+            font-size: 9px;
+        }
+
+
+        .lac-category-chevron {
+            width: 37px;
+            height: 37px;
+
+            flex: 0 0 37px;
+
+            font-size: 23px;
+        }
+
     }
 
 
     /* =========================================
-       FORCE CATEGORY POSITIONING
+       VERY SMALL DEVICES
     ========================================== */
 
-    .lac-category-row .lac-category-title {
-        position: absolute !important;
+    @media (max-width: 360px) {
 
-        left: 50% !important;
-        right: auto !important;
+        .lac-category-row {
+            min-height: 175px;
 
-        top: auto !important;
-        bottom: 4px !important;
+            padding: 17px;
 
-        transform:
-            translateX(-50%) !important;
+            border-radius: 18px;
+        }
 
-        text-align: center !important;
 
-        color: #fff4df !important;
+        .lac-category-title {
+            bottom: 3px;
+
+            font-size: 17px;
+        }
+
+
+        .lac-category-subtitle {
+            bottom: 27px;
+
+            font-size: 8px;
+        }
+
+
+        .lac-category-status {
+            top: 4px !important;
+            right: 4px !important;
+        }
+
+
+        .lac-status-badge {
+            padding: 5px 7px;
+
+            font-size: 8px;
+        }
+
+
+        .lac-category-chevron {
+            width: 34px;
+            height: 34px;
+
+            flex: 0 0 34px;
+
+            font-size: 21px;
+        }
+
     }
 
 
-    .lac-category-row .lac-category-meta {
-        position: absolute !important;
+    /* =========================================
+       DESKTOP
+    ========================================== */
 
-        top: 6px !important;
-        right: 6px !important;
+    @media (min-width: 700px) {
 
-        bottom: auto !important;
-        left: auto !important;
-
-        transform: none !important;
-    }
+        .lac-category-list {
+            gap: 18px;
+        }
 
 
-    .lac-category-row .lac-category-status {
-        position: absolute !important;
+        .lac-category-row {
+            min-height: 250px;
 
-        top: 6px !important;
-        right: 6px !important;
+            padding: 26px;
 
-        bottom: auto !important;
-        left: auto !important;
+            border-radius: 24px;
+        }
 
-        transform: none !important;
+
+        .lac-category-title {
+            bottom: 5px;
+
+            font-size: 24px;
+        }
+
+
+        .lac-category-subtitle {
+            bottom: 37px;
+
+            font-size: 11px;
+        }
+
+
+        .lac-category-status {
+            top: 7px !important;
+            right: 7px !important;
+        }
+
+
+        .lac-category-chevron {
+            width: 42px;
+            height: 42px;
+
+            flex: 0 0 42px;
+        }
+
     }
 
 
@@ -689,22 +792,6 @@
 
     .lac-new-nearby-heading {
         min-width: 0;
-    }
-
-
-    .lac-new-nearby-eyebrow {
-        margin:
-            0
-            0
-            5px;
-
-        color:
-            rgba(255, 255, 255, 0.43);
-
-        font-size: 9px;
-        font-weight: 800;
-
-        letter-spacing: 1px;
     }
 
 
@@ -826,10 +913,6 @@
     }
 
 
-    /* =========================================
-       NEW CARD IMAGE
-    ========================================== */
-
     .lac-new-card-image {
         position: relative;
 
@@ -876,16 +959,11 @@
     }
 
 
-    /* =========================================
-       NEW LABEL
-    ========================================== */
-
     .lac-new-card-badge {
         position: absolute;
 
         top: 10px;
         right: 10px;
-        left: auto;
 
         padding: 6px 9px;
 
@@ -912,10 +990,6 @@
         -webkit-backdrop-filter: blur(8px);
     }
 
-
-    /* =========================================
-       NEW CARD CONTENT
-    ========================================== */
 
     .lac-new-card-content {
         padding:
@@ -975,259 +1049,6 @@
     }
 
 
-    /* =========================================
-       MOBILE
-    ========================================== */
-
-    @media (max-width: 480px) {
-
-        .lac-category-list {
-            gap: 15px;
-        }
-
-
-        .lac-category-row {
-            min-height: 195px;
-
-            padding: 19px;
-
-            gap: 13px;
-
-            border-radius: 20px;
-        }
-
-
-        .lac-category-title,
-        .lac-category-row .lac-category-title {
-            bottom: 3px !important;
-
-            font-size: 19px;
-
-            font-weight: 900;
-        }
-
-
-        .lac-category-meta,
-        .lac-category-row .lac-category-meta {
-            top: 5px !important;
-            right: 5px !important;
-
-            bottom: auto !important;
-            left: auto !important;
-
-            font-size: 9px;
-        }
-
-
-        .lac-category-status,
-        .lac-category-row .lac-category-status {
-            top: 5px !important;
-            right: 5px !important;
-
-            bottom: auto !important;
-            left: auto !important;
-        }
-
-
-        .lac-status-badge {
-            padding: 5px 8px;
-
-            font-size: 9px;
-        }
-
-
-        .lac-category-chevron {
-            width: 37px;
-            height: 37px;
-
-            flex: 0 0 37px;
-
-            font-size: 23px;
-        }
-
-    }
-
-
-    /* =========================================
-       VERY SMALL DEVICES
-    ========================================== */
-
-    @media (max-width: 360px) {
-
-        .lac-category-row {
-            min-height: 175px;
-
-            padding: 17px;
-
-            border-radius: 18px;
-        }
-
-
-        .lac-category-title,
-        .lac-category-row .lac-category-title {
-            bottom: 3px !important;
-
-            font-size: 17px;
-
-            font-weight: 900;
-        }
-
-
-        .lac-category-meta,
-        .lac-category-row .lac-category-meta {
-            top: 4px !important;
-            right: 4px !important;
-
-            bottom: auto !important;
-            left: auto !important;
-
-            font-size: 8px;
-        }
-
-
-        .lac-category-status,
-        .lac-category-row .lac-category-status {
-            top: 4px !important;
-            right: 4px !important;
-
-            bottom: auto !important;
-            left: auto !important;
-        }
-
-
-        .lac-status-badge {
-            padding: 5px 7px;
-
-            font-size: 8px;
-        }
-
-
-        .lac-category-chevron {
-            width: 34px;
-            height: 34px;
-
-            flex: 0 0 34px;
-
-            font-size: 21px;
-        }
-
-    }
-
-
-    /* =========================================
-       DESKTOP
-    ========================================== */
-
-    @media (min-width: 700px) {
-
-        .lac-category-list {
-            gap: 18px;
-        }
-
-
-        .lac-category-row {
-            min-height: 250px;
-
-            padding: 26px;
-
-            border-radius: 24px;
-        }
-
-
-        .lac-category-title,
-        .lac-category-row .lac-category-title {
-            bottom: 5px !important;
-
-            font-size: 24px;
-
-            font-weight: 900;
-        }
-
-
-        .lac-category-meta,
-        .lac-category-row .lac-category-meta {
-            top: 7px !important;
-            right: 7px !important;
-
-            bottom: auto !important;
-            left: auto !important;
-
-            font-size: 10px;
-        }
-
-
-        .lac-category-status,
-        .lac-category-row .lac-category-status {
-            top: 7px !important;
-            right: 7px !important;
-
-            bottom: auto !important;
-            left: auto !important;
-        }
-
-
-        .lac-category-chevron {
-            width: 42px;
-            height: 42px;
-
-            flex: 0 0 42px;
-        }
-
-    }
-
-
-    /* =========================================
-       FORCE CATEGORY BADGES WHITE
-    ========================================== */
-
-    .lac-category-status .lac-status-badge {
-        background: #ffffff !important;
-
-        color: #3f4348 !important;
-
-        border:
-            1px solid
-            rgba(0, 0, 0, 0.08) !important;
-    }
-
-
-    .lac-category-status .lac-status-badge-new {
-        background: #ffffff !important;
-
-        color: #3f4348 !important;
-
-        border:
-            1px solid
-            rgba(0, 0, 0, 0.08) !important;
-    }
-
-
-    /* =========================================
-       FORCE "NEW NEAR YOU" BADGE WHITE
-    ========================================== */
-
-    .lac-new-nearby
-    .lac-new-rail
-    .lac-new-card
-    .lac-new-card-image
-    .lac-new-card-badge {
-        background: #ffffff !important;
-        background-color: #ffffff !important;
-
-        color: #3f4348 !important;
-
-        border:
-            1px solid
-            rgba(0, 0, 0, 0.10) !important;
-
-        box-shadow:
-            0 2px 8px
-            rgba(0, 0, 0, 0.15) !important;
-
-        opacity: 1 !important;
-    }
-
-
     /* =========================================================
        FEATURED LOCAL CONTENT
     ========================================================= */
@@ -1237,8 +1058,6 @@
         margin-bottom: 30px;
     }
 
-
-    /* HEADER */
 
     .lac-featured-header {
         display: flex;
@@ -1287,8 +1106,6 @@
     }
 
 
-    /* HORIZONTAL CAROUSEL */
-
     .lac-featured-rail {
         display: flex;
 
@@ -1311,8 +1128,6 @@
         display: none;
     }
 
-
-    /* CARD */
 
     .lac-featured-card {
         position: relative;
@@ -1352,8 +1167,6 @@
     }
 
 
-    /* IMAGE */
-
     .lac-featured-image {
         position: relative;
 
@@ -1390,8 +1203,6 @@
     }
 
 
-    /* FEATURED BADGE */
-
     .lac-featured-badge {
         position: absolute;
 
@@ -1424,8 +1235,6 @@
         z-index: 3;
     }
 
-
-    /* CARD INFORMATION */
 
     .lac-featured-content {
         padding: 17px;
@@ -1488,8 +1297,6 @@
     }
 
 
-    /* VIEW DETAILS */
-
     .lac-featured-view {
         display: flex;
         align-items: center;
@@ -1509,8 +1316,6 @@
     }
 
 
-    /* DESKTOP */
-
     @media (min-width: 768px) {
 
         .lac-featured-card {
@@ -1521,62 +1326,11 @@
 
 
     /* =========================================================
-       #4 CARD PRESS / TAP FEEDBACK
+       CARD PRESS / TAP FEEDBACK
     ========================================================= */
 
-
-    /* CATEGORY CARDS */
-
-    .lac-category-card {
-        transition:
-            transform 0.16s ease,
-            box-shadow 0.16s ease,
-            opacity 0.16s ease;
-
-        -webkit-tap-highlight-color: transparent;
-
-        touch-action: manipulation;
-    }
-
-
-    .lac-category-card:active {
-        transform: scale(0.975);
-
-        box-shadow:
-            0 4px 14px
-            rgba(0, 0, 0, 0.14);
-
-        opacity: 0.96;
-    }
-
-
-    /* FEATURED NEAR YOU CARDS */
-
-    .lac-featured-card {
-        transition:
-            transform 0.16s ease,
-            box-shadow 0.16s ease,
-            opacity 0.16s ease;
-
-        -webkit-tap-highlight-color: transparent;
-
-        touch-action: manipulation;
-    }
-
-
-    .lac-featured-card:active {
-        transform: scale(0.975);
-
-        box-shadow:
-            0 5px 16px
-            rgba(0, 0, 0, 0.14);
-
-        opacity: 0.96;
-    }
-
-
-    /* NEW NEAR YOU CARDS */
-
+    .lac-category-row,
+    .lac-featured-card,
     .lac-new-card {
         transition:
             transform 0.16s ease,
@@ -1589,22 +1343,30 @@
     }
 
 
+    .lac-category-row:active {
+        transform: scale(0.975);
+
+        opacity: 0.96;
+    }
+
+
+    .lac-featured-card:active {
+        transform: scale(0.975);
+
+        opacity: 0.96;
+    }
+
+
     .lac-new-card:active {
         transform: scale(0.965);
-
-        box-shadow:
-            0 4px 12px
-            rgba(0, 0, 0, 0.12);
 
         opacity: 0.95;
     }
 
 
-    /* DESKTOP HOVER */
-
     @media (hover: hover) and (pointer: fine) {
 
-        .lac-category-card:hover,
+        .lac-category-row:hover,
         .lac-featured-card:hover,
         .lac-new-card:hover {
             transform: translateY(-2px);
@@ -1617,18 +1379,16 @@
     }
 
 
-    /* ACCESSIBILITY */
-
     @media (prefers-reduced-motion: reduce) {
 
-        .lac-category-card,
+        .lac-category-row,
         .lac-featured-card,
         .lac-new-card {
             transition: none;
         }
 
 
-        .lac-category-card:active,
+        .lac-category-row:active,
         .lac-featured-card:active,
         .lac-new-card:active {
             transform: none;
@@ -1638,7 +1398,7 @@
 
 
     /* =========================================================
-       #5 LAC IMAGE LOADING SKELETONS
+       IMAGE LOADING SKELETONS
     ========================================================= */
 
     .lac-image-loading {
@@ -1727,8 +1487,7 @@
 
 
     /* =========================================================
-       #6 LAC MOBILE ACTION BAR
-       Alerts + LaC
+       MOBILE ACTION BAR
     ========================================================= */
 
     .lac-mobile-action-bar {
@@ -1760,14 +1519,9 @@
 
         box-shadow: none !important;
 
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-
         z-index: 1000;
     }
 
-
-    /* BUTTON */
 
     .lac-mobile-action {
         flex: 1;
@@ -1800,8 +1554,6 @@
     }
 
 
-    /* ICON */
-
     .lac-mobile-action-icon {
         display: block;
 
@@ -1810,8 +1562,6 @@
         line-height: 1;
     }
 
-
-    /* TEXT */
 
     .lac-mobile-action-label {
         display: block;
@@ -1827,8 +1577,6 @@
     }
 
 
-    /* CENTER DIVIDER */
-
     .lac-mobile-action-divider {
         width: 1px;
         height: 30px;
@@ -1840,8 +1588,6 @@
     }
 
 
-    /* TAP FEEDBACK */
-
     .lac-mobile-action:active {
         transform: scale(0.94);
 
@@ -1849,43 +1595,6 @@
             rgba(245, 241, 232, 0.9);
     }
 
-
-    /* DESKTOP HOVER */
-
-    @media (hover: hover) and (pointer: fine) {
-
-        .lac-mobile-action:hover {
-            background: transparent !important;
-
-            opacity: 0.75;
-        }
-
-    }
-
-
-    /* ACCESSIBILITY */
-
-    @media (prefers-reduced-motion: reduce) {
-
-        .lac-mobile-action {
-            transition: none;
-        }
-
-
-        .lac-mobile-action:active {
-            transform: scale(0.94);
-
-            background: transparent !important;
-
-            opacity: 0.65;
-        }
-
-    }
-
-
-    /* =========================================================
-       SPACE FOR FIXED MOBILE BAR
-    ========================================================= */
 
     body {
         padding-bottom:
@@ -1940,762 +1649,698 @@
 
 
     /* =========================================
-       PWA INSTALL SECTION
+       PWA INSTALL
     ========================================== */
 
     .lac-install-section[hidden] {
         display: none !important;
     }
-	
-	
-	/* =========================================================
-   KALXA APP MENU
-========================================================= */
 
-.access-header {
-    position: relative;
-}
 
+    /* =========================================================
+       KALXA APP MENU
+    ========================================================= */
 
-.kalxa-menu-button {
-    position: absolute;
-
-    top: 18px;
-    right: 18px;
-
-    width: 44px;
-    height: 44px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    gap: 5px;
-
-    padding: 0;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.10);
-
-    border-radius: 14px;
-
-    background:
-        rgba(255, 255, 255, 0.05);
-
-    cursor: pointer;
-
-    z-index: 100;
-
-    -webkit-tap-highlight-color:
-        transparent;
-}
-
-
-.kalxa-menu-button span {
-    width: 18px;
-    height: 2px;
-
-    display: block;
-
-    border-radius: 999px;
-
-    background: #ffffff;
-}
-
-
-.kalxa-menu-button:active {
-    transform: scale(0.94);
-}
-
-
-/* =========================================================
-   MENU OVERLAY
-========================================================= */
-
-.kalxa-menu-overlay {
-    position: fixed;
-
-    inset: 0;
-
-    background:
-        rgba(0, 0, 0, 0.62);
-
-    backdrop-filter:
-        blur(3px);
-
-    -webkit-backdrop-filter:
-        blur(3px);
-
-    z-index: 1998;
-}
-
-
-.kalxa-menu-overlay[hidden] {
-    display: none !important;
-}
-
-
-/* =========================================================
-   SIDE MENU
-========================================================= */
-
-.kalxa-side-menu {
-    position: fixed;
-
-    top: 0;
-    right: 0;
-
-    width:
-        min(
-            88vw,
-            380px
-        );
-
-    height: 100dvh;
-
-    display: flex;
-    flex-direction: column;
-
-    background: #101114;
-
-    border-left:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-
-    box-shadow:
-        -20px
-        0
-        60px
-        rgba(0, 0, 0, 0.42);
-
-    transform:
-        translateX(105%);
-
-    transition:
-        transform
-        0.25s
-        ease;
-
-    z-index: 1999;
-}
-
-
-.kalxa-side-menu.is-open {
-    transform:
-        translateX(0);
-}
-
-
-/* =========================================================
-   MENU HEADER
-========================================================= */
-
-.kalxa-side-menu-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 16px;
-
-    padding:
-        calc(
-            22px
-            +
-            env(safe-area-inset-top)
-        )
-        20px
-        20px;
-
-    border-bottom:
-        1px solid
-        rgba(255, 255, 255, 0.07);
-}
-
-
-.kalxa-side-menu-brand {
-    color: #ffffff;
-
-    font-size: 24px;
-    font-weight: 900;
-
-    letter-spacing: -1px;
-}
-
-
-.kalxa-side-menu-zone {
-    margin-top: 5px;
-
-    color:
-        rgba(255, 255, 255, 0.50);
-
-    font-size: 11px;
-    font-weight: 700;
-}
-
-
-.kalxa-menu-close {
-    width: 40px;
-    height: 40px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 0;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.05);
-
-    color: #ffffff;
-
-    font-size: 25px;
-    font-weight: 300;
-
-    cursor: pointer;
-}
-
-
-/* =========================================================
-   MENU CONTENT
-========================================================= */
-
-.kalxa-side-menu-content {
-    flex: 1;
-
-    overflow-y: auto;
-
-    padding: 12px 14px 24px;
-}
-
-
-.kalxa-menu-section {
-    padding:
-        16px
-        0;
-}
-
-
-.kalxa-menu-section +
-.kalxa-menu-section {
-    border-top:
-        1px solid
-        rgba(255, 255, 255, 0.06);
-}
-
-
-.kalxa-menu-section-label {
-    margin:
-        0
-        8px
-        10px;
-
-    color:
-        rgba(255, 255, 255, 0.34);
-
-    font-size: 9px;
-    font-weight: 900;
-
-    letter-spacing: 1.3px;
-}
-
-
-.kalxa-menu-item {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-
-    gap: 13px;
-
-    margin-bottom: 5px;
-
-    padding:
-        13px
-        12px;
-
-    border-radius: 14px;
-
-    color: #ffffff;
-
-    text-decoration: none;
-
-    -webkit-tap-highlight-color:
-        transparent;
-}
-
-
-.kalxa-menu-item:active {
-    background:
-        rgba(255, 255, 255, 0.06);
-}
-
-
-.kalxa-menu-item-primary {
-    background:
-        #f5f1e8;
-
-    color: #292c30;
-}
-
-
-.kalxa-menu-item-primary:active {
-    background:
-        #e9e4da;
-}
-
-
-.kalxa-menu-item-icon {
-    width: 37px;
-    height: 37px;
-
-    flex: 0 0 37px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 11px;
-
-    background:
-        rgba(255, 255, 255, 0.06);
-
-    font-size: 17px;
-}
-
-
-.kalxa-menu-item-primary
-.kalxa-menu-item-icon {
-    background:
-        rgba(0, 0, 0, 0.07);
-}
-
-
-.kalxa-menu-item > span:nth-child(2) {
-    min-width: 0;
-    flex: 1;
-}
-
-
-.kalxa-menu-item strong {
-    display: block;
-
-    font-size: 13px;
-    font-weight: 800;
-}
-
-
-.kalxa-menu-item small {
-    display: block;
-
-    margin-top: 3px;
-
-    color:
-        rgba(255, 255, 255, 0.43);
-
-    font-size: 10px;
-    font-weight: 600;
-
-    line-height: 1.35;
-}
-
-
-.kalxa-menu-item-primary small {
-    color:
-        rgba(41, 44, 48, 0.58);
-}
-
-
-.kalxa-menu-arrow {
-    margin-left: auto;
-
-    font-size: 17px;
-
-    opacity: 0.55;
-}
-
-
-/* =========================================================
-   MENU FOOTER
-========================================================= */
-
-.kalxa-side-menu-footer {
-    padding:
-        17px
-        20px
-        calc(
-            20px
-            +
-            env(safe-area-inset-bottom)
-        );
-
-    border-top:
-        1px solid
-        rgba(255, 255, 255, 0.07);
-}
-
-
-.kalxa-side-menu-footer strong {
-    display: block;
-
-    color:
-        rgba(255, 255, 255, 0.65);
-
-    font-size: 10px;
-    font-weight: 800;
-}
-
-
-.kalxa-side-menu-footer span {
-    display: block;
-
-    margin-top: 4px;
-
-    color:
-        rgba(255, 255, 255, 0.30);
-
-    font-size: 9px;
-}
-
-
-/* =========================================================
-   BUSINESS CTA
-========================================================= */
-
-.kalxa-business-cta {
-    margin:
-        10px
-        0
-        34px;
-
-    padding:
-        27px
-        22px;
-
-    border-radius: 22px;
-
-    background:
-        #f5f1e8;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.10);
-
-    color: #3f4348;
-
-    box-shadow:
-        0
-        8px
-        26px
-        rgba(0, 0, 0, 0.15);
-}
-
-
-.kalxa-business-cta-eyebrow {
-    margin-bottom: 9px;
-
-    color:
-        rgba(63, 67, 72, 0.52);
-
-    font-size: 9px;
-    font-weight: 900;
-
-    letter-spacing: 1.2px;
-}
-
-
-.kalxa-business-cta h2 {
-    margin: 0;
-
-    color: #3f4348;
-
-    font-size: 23px;
-    font-weight: 900;
-
-    line-height: 1.15;
-
-    letter-spacing: -0.5px;
-}
-
-
-.kalxa-business-cta > p {
-    margin:
-        11px
-        0
-        19px;
-
-    color:
-        rgba(63, 67, 72, 0.70);
-
-    font-size: 13px;
-
-    line-height: 1.55;
-}
-
-
-.kalxa-business-cta-primary {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
-
-    padding:
-        15px
-        16px;
-
-    border-radius: 14px;
-
-    background: #111316;
-
-    color: #ffffff;
-
-    text-decoration: none;
-
-    font-size: 13px;
-    font-weight: 850;
-
-    -webkit-tap-highlight-color:
-        transparent;
-}
-
-
-.kalxa-business-cta-primary:active {
-    transform: scale(0.985);
-}
-
-
-.kalxa-business-cta-divider {
-    position: relative;
-
-    margin:
-        18px
-        0;
-
-    text-align: center;
-}
-
-
-.kalxa-business-cta-divider::before {
-    content: "";
-
-    position: absolute;
-
-    top: 50%;
-    left: 0;
-
-    width: 100%;
-    height: 1px;
-
-    background:
-        rgba(63, 67, 72, 0.12);
-}
-
-
-.kalxa-business-cta-divider span {
-    position: relative;
-
-    padding:
-        0
-        9px;
-
-    background: #f5f1e8;
-
-    color:
-        rgba(63, 67, 72, 0.38);
-
-    font-size: 8px;
-    font-weight: 900;
-}
-
-
-.kalxa-business-cta-secondary-text {
-    margin-bottom: 12px !important;
-
-    font-size: 11px !important;
-}
-
-
-.kalxa-business-cta-secondary {
-    display: inline-flex;
-    align-items: center;
-
-    padding:
-        11px
-        13px;
-
-    border:
-        1px solid
-        rgba(63, 67, 72, 0.14);
-
-    border-radius: 12px;
-
-    color: #3f4348;
-
-    text-decoration: none;
-
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.kalxa-business-cta-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    padding: 15px 20px;
-
-    background: #fff8e7;
-    color: #111111;
-
-    border: 1px solid #e8dfc8;
-    border-radius: 14px;
-
-    font-weight: 800;
-    text-decoration: none;
-
-    cursor: pointer;
-    transition:
-        transform 0.2s ease,
-        background 0.2s ease;
-}
-
-.kalxa-business-cta-button:hover {
-    background: #f7efd9;
-    color: #111111;
-    transform: translateY(-1px);
-}
-
-.kalxa-business-cta-button:active {
-    transform: scale(0.98);
-}
-
-
-.kalxa-business-cta-note {
-    margin-top: 15px;
-
-    color:
-        rgba(63, 67, 72, 0.43);
-
-    font-size: 9px;
-    font-weight: 700;
-}
-
-
-/* =========================================================
-   SMALL DEVICES
-========================================================= */
-
-@media (max-width: 480px) {
-
-    .kalxa-menu-button {
-        top: 14px;
-        right: 14px;
-
-        width: 41px;
-        height: 41px;
+    .access-header {
+        position: relative;
     }
 
 
-    .kalxa-business-cta {
-        padding:
-            23px
-            18px;
+    .kalxa-menu-button {
+        position: absolute;
 
-        border-radius: 20px;
+        top: 18px;
+        right: 18px;
+
+        width: 44px;
+        height: 44px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        gap: 5px;
+
+        padding: 0;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.10);
+
+        border-radius: 14px;
+
+        background:
+            rgba(255, 255, 255, 0.05);
+
+        cursor: pointer;
+
+        z-index: 100;
+
+        -webkit-tap-highlight-color:
+            transparent;
+    }
+
+
+    .kalxa-menu-button span {
+        width: 18px;
+        height: 2px;
+
+        display: block;
+
+        border-radius: 999px;
+
+        background: #ffffff;
+    }
+
+
+    .kalxa-menu-button:active {
+        transform: scale(0.94);
+    }
+
+
+    /* =========================================================
+       MENU OVERLAY
+    ========================================================= */
+
+    .kalxa-menu-overlay {
+        position: fixed;
+
+        inset: 0;
+
+        background:
+            rgba(0, 0, 0, 0.62);
+
+        backdrop-filter:
+            blur(3px);
+
+        -webkit-backdrop-filter:
+            blur(3px);
+
+        z-index: 1998;
+    }
+
+
+    .kalxa-menu-overlay[hidden] {
+        display: none !important;
+    }
+
+
+    /* =========================================================
+       SIDE MENU
+    ========================================================= */
+
+    .kalxa-side-menu {
+        position: fixed;
+
+        top: 0;
+        right: 0;
+
+        width:
+            min(
+                88vw,
+                380px
+            );
+
+        height: 100dvh;
+
+        display: flex;
+        flex-direction: column;
+
+        background: #101114;
+
+        border-left:
+            1px solid
+            rgba(255, 255, 255, 0.08);
+
+        box-shadow:
+            -20px
+            0
+            60px
+            rgba(0, 0, 0, 0.42);
+
+        transform:
+            translateX(105%);
+
+        transition:
+            transform
+            0.25s
+            ease;
+
+        z-index: 1999;
+    }
+
+
+    .kalxa-side-menu.is-open {
+        transform:
+            translateX(0);
+    }
+
+
+    .kalxa-side-menu-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 16px;
+
+        padding:
+            calc(
+                22px
+                +
+                env(safe-area-inset-top)
+            )
+            20px
+            20px;
+
+        border-bottom:
+            1px solid
+            rgba(255, 255, 255, 0.07);
+    }
+
+
+    .kalxa-side-menu-brand {
+        color: #ffffff;
+
+        font-size: 24px;
+        font-weight: 900;
+
+        letter-spacing: -1px;
+    }
+
+
+    .kalxa-side-menu-zone {
+        margin-top: 5px;
+
+        color:
+            rgba(255, 255, 255, 0.50);
+
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+    .kalxa-menu-close {
+        width: 40px;
+        height: 40px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 0;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.08);
+
+        border-radius: 50%;
+
+        background:
+            rgba(255, 255, 255, 0.05);
+
+        color: #ffffff;
+
+        font-size: 25px;
+        font-weight: 300;
+
+        cursor: pointer;
+    }
+
+
+    .kalxa-side-menu-content {
+        flex: 1;
+
+        overflow-y: auto;
+
+        padding: 12px 14px 24px;
+    }
+
+
+    .kalxa-menu-section {
+        padding:
+            16px
+            0;
+    }
+
+
+    .kalxa-menu-section +
+    .kalxa-menu-section {
+        border-top:
+            1px solid
+            rgba(255, 255, 255, 0.06);
+    }
+
+
+    .kalxa-menu-section-label {
+        margin:
+            0
+            8px
+            10px;
+
+        color:
+            rgba(255, 255, 255, 0.34);
+
+        font-size: 9px;
+        font-weight: 900;
+
+        letter-spacing: 1.3px;
+    }
+
+
+    .kalxa-menu-item {
+        width: 100%;
+
+        display: flex;
+        align-items: center;
+
+        gap: 13px;
+
+        margin-bottom: 5px;
+
+        padding:
+            13px
+            12px;
+
+        border-radius: 14px;
+
+        color: #ffffff;
+
+        text-decoration: none;
+
+        -webkit-tap-highlight-color:
+            transparent;
+    }
+
+
+    .kalxa-menu-item:active {
+        background:
+            rgba(255, 255, 255, 0.06);
+    }
+
+
+    .kalxa-menu-item-primary {
+        background:
+            #f5f1e8;
+
+        color: #292c30;
+    }
+
+
+    .kalxa-menu-item-primary:active {
+        background:
+            #e9e4da;
+    }
+
+
+    .kalxa-menu-item-icon {
+        width: 37px;
+        height: 37px;
+
+        flex: 0 0 37px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 11px;
+
+        background:
+            rgba(255, 255, 255, 0.06);
+
+        font-size: 17px;
+    }
+
+
+    .kalxa-menu-item-primary
+    .kalxa-menu-item-icon {
+        background:
+            rgba(0, 0, 0, 0.07);
+    }
+
+
+    .kalxa-menu-item > span:nth-child(2) {
+        min-width: 0;
+        flex: 1;
+    }
+
+
+    .kalxa-menu-item strong {
+        display: block;
+
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+
+    .kalxa-menu-item small {
+        display: block;
+
+        margin-top: 3px;
+
+        color:
+            rgba(255, 255, 255, 0.43);
+
+        font-size: 10px;
+        font-weight: 600;
+
+        line-height: 1.35;
+    }
+
+
+    .kalxa-menu-item-primary small {
+        color:
+            rgba(41, 44, 48, 0.58);
+    }
+
+
+    .kalxa-menu-arrow {
+        margin-left: auto;
+
+        font-size: 17px;
+
+        opacity: 0.55;
+    }
+
+
+    .kalxa-side-menu-footer {
+        padding:
+            17px
+            20px
+            calc(
+                20px
+                +
+                env(safe-area-inset-bottom)
+            );
+
+        border-top:
+            1px solid
+            rgba(255, 255, 255, 0.07);
+    }
+
+
+    .kalxa-side-menu-footer strong {
+        display: block;
+
+        color:
+            rgba(255, 255, 255, 0.65);
+
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+
+    .kalxa-side-menu-footer span {
+        display: block;
+
+        margin-top: 4px;
+
+        color:
+            rgba(255, 255, 255, 0.30);
+
+        font-size: 9px;
+    }
+
+
+    /* =========================================================
+       BUSINESS CTA
+    ========================================================= */
+
+    .kalxa-business-cta {
+        margin:
+            10px
+            0
+            34px;
+
+        padding:
+            27px
+            22px;
+
+        border-radius: 22px;
+
+        background:
+            #f5f1e8;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.10);
+
+        color: #3f4348;
+
+        box-shadow:
+            0
+            8px
+            26px
+            rgba(0, 0, 0, 0.15);
+    }
+
+
+    .kalxa-business-cta-eyebrow {
+        margin-bottom: 9px;
+
+        color:
+            rgba(63, 67, 72, 0.52);
+
+        font-size: 9px;
+        font-weight: 900;
+
+        letter-spacing: 1.2px;
     }
 
 
     .kalxa-business-cta h2 {
-        font-size: 21px;
+        margin: 0;
+
+        color: #3f4348;
+
+        font-size: 23px;
+        font-weight: 900;
+
+        line-height: 1.15;
+
+        letter-spacing: -0.5px;
     }
 
-}
+
+    .kalxa-business-cta > p {
+        margin:
+            11px
+            0
+            19px;
+
+        color:
+            rgba(63, 67, 72, 0.70);
+
+        font-size: 13px;
+
+        line-height: 1.55;
+    }
 
 
-/* =========================================================
-   MENU DESKTOP HOVER
-========================================================= */
+    .kalxa-business-cta-primary {
+        width: 100%;
 
-@media (hover: hover) and (pointer: fine) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
-    .kalxa-menu-item:hover {
+        gap: 12px;
+
+        padding:
+            15px
+            16px;
+
+        border-radius: 14px;
+
+        background: #111316;
+
+        color: #ffffff;
+
+        text-decoration: none;
+
+        font-size: 13px;
+        font-weight: 850;
+
+        -webkit-tap-highlight-color:
+            transparent;
+    }
+
+
+    .kalxa-business-cta-primary:active {
+        transform: scale(0.985);
+    }
+
+
+    .kalxa-business-cta-divider {
+        position: relative;
+
+        margin:
+            18px
+            0;
+
+        text-align: center;
+    }
+
+
+    .kalxa-business-cta-divider::before {
+        content: "";
+
+        position: absolute;
+
+        top: 50%;
+        left: 0;
+
+        width: 100%;
+        height: 1px;
+
         background:
-            rgba(255, 255, 255, 0.055);
+            rgba(63, 67, 72, 0.12);
     }
 
 
-    .kalxa-menu-item-primary:hover {
-        background:
-            #ffffff;
+    .kalxa-business-cta-divider span {
+        position: relative;
+
+        padding:
+            0
+            9px;
+
+        background: #f5f1e8;
+
+        color:
+            rgba(63, 67, 72, 0.38);
+
+        font-size: 8px;
+        font-weight: 900;
     }
 
 
-    .kalxa-business-cta-primary:hover {
-        opacity: 0.90;
+    .kalxa-business-cta-secondary-text {
+        margin-bottom: 12px !important;
+
+        font-size: 11px !important;
     }
 
-}
 
-</style>
+    .kalxa-business-cta-secondary {
+        display: inline-flex;
+        align-items: center;
 
+        padding:
+            11px
+            13px;
 
+        border:
+            1px solid
+            rgba(63, 67, 72, 0.14);
 
-<!-- =========================================
-     KALXA EARLY PWA INSTALL CAPTURE
-========================================== -->
+        border-radius: 12px;
 
-<script>
+        color: #3f4348;
 
-    /*
-     * The main PWA installation script loads near
-     * the end of the document.
-     *
-     * Capture beforeinstallprompt here so that
-     * Chromium cannot fire it before our main
-     * installation code is ready.
-     */
+        text-decoration: none;
 
-    window.kalxaInstallPrompt = null;
-
-
-    window.addEventListener(
-        "beforeinstallprompt",
-        function (event) {
-
-            event.preventDefault();
+        font-size: 11px;
+        font-weight: 800;
+    }
 
 
-            window.kalxaInstallPrompt =
-                event;
+    .kalxa-business-cta-note {
+        margin-top: 15px;
+
+        color:
+            rgba(63, 67, 72, 0.43);
+
+        font-size: 9px;
+        font-weight: 700;
+    }
 
 
-            console.log(
-                "[Kalxa PWA] Early native install prompt captured."
-            );
+    @media (max-width: 480px) {
 
+        .kalxa-menu-button {
+            top: 14px;
+            right: 14px;
 
-            window.dispatchEvent(
-                new CustomEvent(
-                    "kalxainstallpromptready"
-                )
-            );
-
+            width: 41px;
+            height: 41px;
         }
-    );
 
-</script>
-	
+
+        .kalxa-business-cta {
+            padding:
+                23px
+                18px;
+
+            border-radius: 20px;
+        }
+
+
+        .kalxa-business-cta h2 {
+            font-size: 21px;
+        }
+
+    }
+
+
+    @media (hover: hover) and (pointer: fine) {
+
+        .kalxa-menu-item:hover {
+            background:
+                rgba(255, 255, 255, 0.055);
+        }
+
+
+        .kalxa-menu-item-primary:hover {
+            background:
+                #ffffff;
+        }
+
+
+        .kalxa-business-cta-primary:hover {
+            opacity: 0.90;
+        }
+
+    }
+
+    </style>
+
+
+    <!-- =========================================
+         KALXA EARLY PWA INSTALL CAPTURE
+    ========================================== -->
+
+    <script>
+
+        window.kalxaInstallPrompt = null;
+
+
+        window.addEventListener(
+            "beforeinstallprompt",
+            function (event) {
+
+                event.preventDefault();
+
+                window.kalxaInstallPrompt =
+                    event;
+
+
+                console.log(
+                    "[Kalxa PWA] Early native install prompt captured."
+                );
+
+
+                window.dispatchEvent(
+                    new CustomEvent(
+                        "kalxainstallpromptready"
+                    )
+                );
+
+            }
+        );
+
+    </script>
+
 </head>
 
 
@@ -2711,66 +2356,14 @@
 
     <header class="access-header">
 
-     <div class="public-brand-wrap">
+        <div class="public-brand-wrap">
 
-        <div class="lac-brand">
-            KALXA
-        </div>
-
-        <div class="lac-tagline">
-            EVERY PLACE HAS ITS OWN KALXA.
-        </div>
-
-     </div>
-
-
-    <!-- =========================================
-         KALXA MENU
-    ========================================== -->
-
-     <button
-        type="button"
-        class="kalxa-menu-button"
-        id="kalxa-menu-button"
-        aria-label="Open Kalxa menu"
-        aria-controls="kalxa-side-menu"
-        aria-expanded="false"
-     >
-        <span></span>
-        <span></span>
-        <span></span>
-     </button>
-
-    </header>
-	
-	
-	<!-- =========================================
-     KALXA SIDE MENU
-========================================== -->
-
-    <div
-      class="kalxa-menu-overlay"
-      id="kalxa-menu-overlay"
-      hidden
-    ></div>
-
-
-    <aside
-      class="kalxa-side-menu"
-      id="kalxa-side-menu"
-      aria-hidden="true"
-    >
-
-      <div class="kalxa-side-menu-header">
-
-        <div>
-
-            <div class="kalxa-side-menu-brand">
+            <div class="lac-brand">
                 KALXA
             </div>
 
-            <div class="kalxa-side-menu-zone">
-                📍 {{ zone.name }}
+            <div class="lac-tagline">
+                EVERY PLACE HAS ITS OWN KALXA.
             </div>
 
         </div>
@@ -2778,199 +2371,251 @@
 
         <button
             type="button"
-            class="kalxa-menu-close"
-            id="kalxa-menu-close"
-            aria-label="Close Kalxa menu"
+            class="kalxa-menu-button"
+            id="kalxa-menu-button"
+            aria-label="Open Kalxa menu"
+            aria-controls="kalxa-side-menu"
+            aria-expanded="false"
         >
-            ×
+            <span></span>
+            <span></span>
+            <span></span>
         </button>
 
-      </div>
+    </header>
 
 
-      <div class="kalxa-side-menu-content">
+    <!-- =========================================
+         KALXA SIDE MENU
+    ========================================== -->
+
+    <div
+        class="kalxa-menu-overlay"
+        id="kalxa-menu-overlay"
+        hidden
+    ></div>
 
 
-        <!-- =====================================
-             EXPLORE
-        ====================================== -->
+    <aside
+        class="kalxa-side-menu"
+        id="kalxa-side-menu"
+        aria-hidden="true"
+    >
 
-        <div class="kalxa-menu-section">
+        <div class="kalxa-side-menu-header">
 
-            <div class="kalxa-menu-section-label">
-                EXPLORE
+            <div>
+
+                <div class="kalxa-side-menu-brand">
+                    KALXA
+                </div>
+
+                <div class="kalxa-side-menu-zone">
+                    📍 {{ zone.name }}
+                </div>
+
             </div>
 
 
-            <a
-                href="#"
-                class="kalxa-menu-item"
-                id="kalxa-menu-home"
+            <button
+                type="button"
+                class="kalxa-menu-close"
+                id="kalxa-menu-close"
+                aria-label="Close Kalxa menu"
             >
-
-                <span class="kalxa-menu-item-icon">
-                    🏠
-                </span>
-
-                <span>
-                    <strong>
-                        {{ zone.name }} Home
-                    </strong>
-
-                    <small>
-                        Explore local categories
-                    </small>
-                </span>
-
-            </a>
-
-
-            <a
-                href="#lac-alerts"
-                class="kalxa-menu-item"
-                data-close-kalxa-menu
-            >
-
-                <span class="kalxa-menu-item-icon">
-                    🔔
-                </span>
-
-                <span>
-                    <strong>
-                        Notifications
-                    </strong>
-
-                    <small>
-                        Choose what you want to hear about
-                    </small>
-                </span>
-
-            </a>
+                ×
+            </button>
 
         </div>
 
 
-        <!-- =====================================
-             BUSINESS / CONTENT
-        ====================================== -->
+        <div class="kalxa-side-menu-content">
 
-        <div class="kalxa-menu-section">
 
-            <div class="kalxa-menu-section-label">
-                FOR LOCAL BUSINESSES
+            <div class="kalxa-menu-section">
+
+                <div class="kalxa-menu-section-label">
+                    EXPLORE
+                </div>
+
+
+                <a
+                    href="#"
+                    class="kalxa-menu-item"
+                    id="kalxa-menu-home"
+                >
+
+                    <span class="kalxa-menu-item-icon">
+                        🏠
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            {{ zone.name }} Home
+                        </strong>
+
+                        <small>
+                            Explore what is happening around you
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="#lac-alerts"
+                    class="kalxa-menu-item"
+                    data-close-kalxa-menu
+                >
+
+                    <span class="kalxa-menu-item-icon">
+                        🔔
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Notifications
+                        </strong>
+
+                        <small>
+                            Choose what you want to hear about
+                        </small>
+
+                    </span>
+
+                </a>
+
             </div>
-            <a
-              href="{{ url_for(
-               'submit_content',
-               zone_id=zone.id
-              ) }}"
-              class="
-               kalxa-menu-item
-               kalxa-menu-item-primary
-              "
-            >
-
-                <span class="kalxa-menu-item-icon">
-                    ＋
-                </span>
-
-                <span>
-                    <strong>
-                        Add your business
-                    </strong>
-
-                    <small>
-                        Get discovered on Kalxa
-                    </small>
-                </span>
-
-                <span class="kalxa-menu-arrow">
-                    →
-                </span>
-
-            </a>
 
 
-            <a
-                href="{{ url_for('submit_content') }}"
-                class="kalxa-menu-item"
-            >
+            <div class="kalxa-menu-section">
 
-                <span class="kalxa-menu-item-icon">
-                    📣
-                </span>
+                <div class="kalxa-menu-section-label">
+                    FOR LOCAL BUSINESSES
+                </div>
 
-                <span>
-                    <strong>
-                        Promote something
-                    </strong>
 
-                    <small>
-                        Events, specials and local campaigns
-                    </small>
-                </span>
+                <a
+                    href="{{ url_for(
+                        'submit_content',
+                        zone_id=zone.id
+                    ) }}"
+                    class="
+                        kalxa-menu-item
+                        kalxa-menu-item-primary
+                    "
+                >
 
-                <span class="kalxa-menu-arrow">
-                    →
-                </span>
+                    <span class="kalxa-menu-item-icon">
+                        ＋
+                    </span>
 
-            </a>
+                    <span>
+
+                        <strong>
+                            Add your business
+                        </strong>
+
+                        <small>
+                            Get discovered on Kalxa
+                        </small>
+
+                    </span>
+
+                    <span class="kalxa-menu-arrow">
+                        →
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for(
+                        'submit_content',
+                        zone_id=zone.id
+                    ) }}"
+                    class="kalxa-menu-item"
+                >
+
+                    <span class="kalxa-menu-item-icon">
+                        📣
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Promote something
+                        </strong>
+
+                        <small>
+                            Events, specials and local campaigns
+                        </small>
+
+                    </span>
+
+                    <span class="kalxa-menu-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <div class="kalxa-menu-section">
+
+                <div class="kalxa-menu-section-label">
+                    KALXA
+                </div>
+
+
+                <a
+                    href="https://lac-acess-delivered.onrender.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="kalxa-menu-item"
+                >
+
+                    <span class="kalxa-menu-item-icon">
+                        ℹ️
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            About LaC
+                        </strong>
+
+                        <small>
+                            The infrastructure behind Kalxa
+                        </small>
+
+                    </span>
+
+                </a>
+
+            </div>
 
         </div>
 
 
-        <!-- =====================================
-             KALXA
-        ====================================== -->
+        <div class="kalxa-side-menu-footer">
 
-        <div class="kalxa-menu-section">
+            <strong>
+                Kalxa · Powered by LaC
+            </strong>
 
-            <div class="kalxa-menu-section-label">
-                KALXA
-            </div>
-
-
-            <a
-                href="https://lac-acess-delivered.onrender.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="kalxa-menu-item"
-            >
-
-                <span class="kalxa-menu-item-icon">
-                    ℹ️
-                </span>
-
-                <span>
-                    <strong>
-                        About Kalxa
-                    </strong>
-
-                    <small>
-                        Powered by LaC
-                    </small>
-                </span>
-
-            </a>
+            <span>
+                Every place has its own Kalxa.
+            </span>
 
         </div>
-
-      </div>
-
-
-      <div class="kalxa-side-menu-footer">
-
-        <strong>
-            Kalxa · Powered by LaC
-        </strong>
-
-        <span>
-            Every place has its own Kalxa.
-        </span>
-
-    </div>
 
     </aside>
+
 
     <!-- =========================================
          MAIN EXPERIENCE
@@ -2994,326 +2639,346 @@
             </span>
 
         </div>
-		
-		
-		
-		<!-- =========================================================
-     FEATURED LOCAL CONTENT
-========================================================= -->
+
+
+        <!-- =========================================================
+             FEATURED LOCAL CONTENT
+        ========================================================== -->
 
         {% if featured_items %}
 
         <section class="lac-featured-section">
 
-         <div class="lac-featured-header">
+            <div class="lac-featured-header">
 
-          <div>
-            <div class="lac-featured-eyebrow">
-                ⭐ FEATURED NEAR YOU
+                <div>
+
+                    <div class="lac-featured-eyebrow">
+                        ⭐ FEATURED NEAR YOU
+                    </div>
+
+                    <h2 class="lac-featured-title">
+                        Local highlights
+                    </h2>
+
+                </div>
+
+
+                <div class="lac-featured-hint">
+                    Swipe →
+                </div>
+
             </div>
 
-            <h2 class="lac-featured-title">
-                Local highlights
-            </h2>
-          </div>
 
-          <div class="lac-featured-hint">
-            Swipe →
-         </div>
+            <div class="lac-featured-rail">
 
-         </div>
+                {% for item in featured_items %}
 
+                    {% set item_category =
+                        category_lookup.get(
+                            item.category
+                        )
+                    %}
 
-         <div class="lac-featured-rail">
+                    {% if item_category %}
 
-          {% for item in featured_items %}
-
-            {% set item_category =
-                category_lookup.get(item.category)
-            %}
-
-            <a
-                href="{{ url_for(
-                    'listing_detail',
-                    item_id=item.id
-                ) }}"
-                class="lac-featured-card"
-            >
-
-                <!-- IMAGE -->
-
-                <div class="lac-featured-image lac-image-loading">
-
-                    {% if item.image_url %}
-
-                        <img
-                            src="{{ item.image_url }}"
-                            alt="{{ item.title }}"
-                            loading="lazy"
-                        >
+                        {% set item_consumer =
+                            consumer_category_lookup.get(
+                                item_category.slug,
+                                {}
+                            )
+                        %}
 
                     {% else %}
 
-                        <div class="lac-featured-image-fallback">
+                        {% set item_consumer = {} %}
 
-                            {% if item_category %}
-                                {{ item_category.icon }}
+                    {% endif %}
+
+
+                    <a
+                        href="{{ url_for(
+                            'listing_detail',
+                            item_id=item.id
+                        ) }}"
+                        class="lac-featured-card"
+                    >
+
+                        <div
+                            class="
+                                lac-featured-image
+                                lac-image-loading
+                            "
+                        >
+
+                            {% if item.image_url %}
+
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
+
                             {% else %}
-                                📍
+
+                                <div
+                                    class="
+                                        lac-featured-image-fallback
+                                    "
+                                >
+
+                                    {{
+                                        item_consumer.get(
+                                            "icon",
+                                            item_category.icon
+                                            if item_category
+                                            else "📍"
+                                        )
+                                    }}
+
+                                </div>
+
                             {% endif %}
 
+
+                            <div class="lac-featured-badge">
+                                ⭐ FEATURED
+                            </div>
+
                         </div>
 
-                    {% endif %}
+
+                        <div class="lac-featured-content">
+
+                            <div class="lac-featured-category">
+
+                                {{
+                                    item_consumer.get(
+                                        "title",
+                                        item_category.name
+                                        if item_category
+                                        else (
+                                            item.category
+                                            | replace("-", " ")
+                                            | title
+                                        )
+                                    )
+                                }}
+
+                            </div>
 
 
-                    <!-- FEATURED BADGE -->
-
-                    <div class="lac-featured-badge">
-                        ⭐ FEATURED
-                    </div>
-
-                </div>
+                            <div class="lac-featured-item-title">
+                                {{ item.title }}
+                            </div>
 
 
-                <!-- CONTENT -->
+                            {% if item.business_name %}
 
-                <div class="lac-featured-content">
+                                <div class="lac-featured-meta">
+                                    📍 {{ item.business_name }}
+                                </div>
 
-                    <div class="lac-featured-category">
+                            {% elif item.venue %}
 
-                        {% if item_category %}
+                                <div class="lac-featured-meta">
+                                    📍 {{ item.venue }}
+                                </div>
 
-                            {{ item_category.name }}
-
-                        {% else %}
-
-                            {{ item.category }}
-
-                        {% endif %}
-
-                    </div>
+                            {% endif %}
 
 
-                    <div class="lac-featured-item-title">
-                        {{ item.title }}
-                    </div>
+                            {% if item.price %}
+
+                                <div class="lac-featured-price">
+                                    {{ item.price }}
+                                </div>
+
+                            {% endif %}
 
 
-                    {% if item.business_name %}
+                            <div class="lac-featured-view">
 
-                        <div class="lac-featured-meta">
-                            📍 {{ item.business_name }}
+                                <span>
+                                    View details
+                                </span>
+
+                                <span>
+                                    →
+                                </span>
+
+                            </div>
+
                         </div>
 
-                    {% elif item.venue %}
+                    </a>
 
-                        <div class="lac-featured-meta">
-                            📍 {{ item.venue }}
-                        </div>
+                {% endfor %}
 
-                    {% endif %}
-
-
-                    {% if item.price %}
-
-                        <div class="lac-featured-price">
-                            {{ item.price }}
-                        </div>
-
-                    {% endif %}
-
-
-                    <div class="lac-featured-view">
-
-                        <span>
-                            View details
-                        </span>
-
-                        <span>
-                            →
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </a>
-
-          {% endfor %}
-
-         </div>
+            </div>
 
         </section>
 
         {% endif %}
 
+
         <!-- =========================================
-     NEW NEAR YOU
-========================================== -->
+             NEW NEAR YOU
+        ========================================== -->
 
         {% if new_items %}
 
         <section class="lac-new-nearby">
 
-         <div class="lac-new-nearby-header">
+            <div class="lac-new-nearby-header">
 
-          <div class="lac-new-nearby-heading">
+                <div class="lac-new-nearby-heading">
 
-           
+                    <h2 class="lac-new-nearby-title">
+                        WHAT'S NEW
+                    </h2>
 
-            <h2 class="lac-new-nearby-title">
-                WHAT'S NEW
-            </h2>
-
-          </div>
+                </div>
 
 
-          <div class="lac-new-nearby-hint">
-            Swipe →
-          </div>
+                <div class="lac-new-nearby-hint">
+                    Swipe →
+                </div>
 
-         </div>
-
-
-         <div class="lac-new-rail">
+            </div>
 
 
-          {% for item in new_items %}
+            <div class="lac-new-rail">
 
+                {% for item in new_items %}
 
-            {% set item_category =
-                category_lookup.get(
-                    item.category
-                )
-            %}
+                    {% set item_category =
+                        category_lookup.get(
+                            item.category
+                        )
+                    %}
 
+                    {% if item_category %}
 
-            <a
-                href="{{ url_for(
-                    'listing_detail',
-                    item_id=item.id
-                ) }}"
-                class="lac-new-card"
-            >
-
-
-                <!-- =============================
-                     IMAGE
-                ============================== -->
-
-                <div class="lac-new-card-image lac-image-loading">
-
-
-                    {% if item.image_url %}
-
-                        <img
-                            src="{{ item.image_url }}"
-                            alt="{{ item.title }}"
-                            loading="lazy"
-                        >
+                        {% set item_consumer =
+                            consumer_category_lookup.get(
+                                item_category.slug,
+                                {}
+                            )
+                        %}
 
                     {% else %}
 
+                        {% set item_consumer = {} %}
+
+                    {% endif %}
+
+
+                    <a
+                        href="{{ url_for(
+                            'listing_detail',
+                            item_id=item.id
+                        ) }}"
+                        class="lac-new-card"
+                    >
+
                         <div
                             class="
-                                lac-new-card-image-fallback
+                                lac-new-card-image
+                                lac-image-loading
                             "
                         >
 
-                            {% if (
-                                item_category
-                                and
-                                item_category.icon
-                            ) %}
+                            {% if item.image_url %}
 
-                                {{ item_category.icon }}
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
 
                             {% else %}
 
-                                📍
+                                <div
+                                    class="
+                                        lac-new-card-image-fallback
+                                    "
+                                >
+
+                                    {{
+                                        item_consumer.get(
+                                            "icon",
+                                            item_category.icon
+                                            if item_category
+                                            else "📍"
+                                        )
+                                    }}
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <div class="lac-new-card-badge">
+                                NEW
+                            </div>
+
+                        </div>
+
+
+                        <div class="lac-new-card-content">
+
+                            <div class="lac-new-card-category">
+
+                                {{
+                                    item_consumer.get(
+                                        "title",
+                                        item_category.name
+                                        if item_category
+                                        else (
+                                            item.category
+                                            | replace("-", " ")
+                                            | title
+                                        )
+                                    )
+                                }}
+
+                            </div>
+
+
+                            <div class="lac-new-card-title">
+                                {{ item.title }}
+                            </div>
+
+
+                            {% if item.business_name %}
+
+                                <div class="lac-new-card-business">
+                                    {{ item.business_name }}
+                                </div>
+
+                            {% elif item.venue %}
+
+                                <div class="lac-new-card-business">
+                                    📍 {{ item.venue }}
+                                </div>
 
                             {% endif %}
 
                         </div>
 
-                    {% endif %}
+                    </a>
 
+                {% endfor %}
 
-                    <div class="lac-new-card-badge">
-                        NEW
-                    </div>
-
-                </div>
-
-
-                <!-- =============================
-                     CONTENT
-                ============================== -->
-
-                <div class="lac-new-card-content">
-
-
-                    <div class="lac-new-card-category">
-
-                        {% if item_category %}
-
-                            {{ item_category.name }}
-
-                        {% else %}
-
-                            {{
-                                item.category
-                                | replace("-", " ")
-                                | title
-                            }}
-
-                        {% endif %}
-
-                    </div>
-
-
-                    <div class="lac-new-card-title">
-                        {{ item.title }}
-                    </div>
-
-
-                    {% if item.business_name %}
-
-                        <div
-                            class="
-                                lac-new-card-business
-                            "
-                        >
-                            {{ item.business_name }}
-                        </div>
-
-                    {% elif item.venue %}
-
-                        <div
-                            class="
-                                lac-new-card-business
-                            "
-                        >
-                            📍 {{ item.venue }}
-                        </div>
-
-                    {% endif %}
-
-
-                </div>
-
-            </a>
-
-
-          {% endfor %}
-
-
-         </div>
+            </div>
 
         </section>
 
         {% endif %}
+
+
         <!-- =========================================
              CATEGORY SECTION
         ========================================== -->
@@ -3322,242 +2987,282 @@
 
             <div class="category-section-heading">
 
-                <div>
-
-
-                    <h2>
-                        EXPLORE {{ zone.name | upper }}
-                    </h2>
-
-                </div>
+                <h2>
+                    EXPLORE {{ zone.name | upper }}
+                </h2>
 
             </div>
 
 
-            <!-- =====================================
-                 CATEGORY DIRECTORY / SLIDESHOW
-            ====================================== -->
-
             <div class="lac-category-list">
+
+                {#
+                    Multiple legacy Category rows may point to
+                    the same canonical taxonomy.
+
+                    Example:
+
+                        foods
+                        check-out-our-specials
+
+                    both become:
+
+                        restaurants
+
+                    The namespace prevents duplicate HUNGRY?
+                    cards without deleting database rows.
+                #}
+
+                {% set category_namespace =
+                    namespace(
+                        rendered_keys=[]
+                    )
+                %}
+
 
                 {% for category in categories %}
 
-				     {% set category_images =
-                      category_background_images.get(
-                        category.id,
-                        []
-                      )
-                     %}
+                    {% set presentation =
+                        consumer_category_lookup.get(
+                            category.slug,
+                            {}
+                        )
+                    %}
 
 
-                    <!-- =================================
-                         BUILD IMAGE LIST
-
-                         Existing image_url remains
-                         Image 1.
-                    ================================== -->
-                    {% set category_images = (
-                     category_background_images.get(
-                      category.id,
-                      []
-                     )
-                    ) %}
+                    {% set canonical_key =
+                        presentation.get(
+                            "key",
+                            category.slug
+                        )
+                    %}
 
 
-                    <!-- =================================
-                         CATEGORY CARD
-                    ================================== -->
+                    {% if canonical_key not in category_namespace.rendered_keys %}
 
-                    <a
-                        class="
-                            lac-category-row
-                            {% if not category_images %}
-                                no-category-image
-                            {% endif %}
-                        "
-
-                        href="{{ url_for(
-                            'qr_category',
-                            code=access_point.code,
-                            category=category.slug
-                        ) }}"
-
-                        data-category-images='{{ category_images | tojson | forceescape }}'
-                    >
+                        {% set category_namespace.rendered_keys =
+                            category_namespace.rendered_keys
+                            +
+                            [canonical_key]
+                        %}
 
 
-                        {% if category_images %}
+                        {% set category_images =
+                            category_background_images.get(
+                                category.id,
+                                []
+                            )
+                        %}
 
 
-                            <!-- =================================
-                                 BACKGROUND LAYER A
-
-                                 First image is visible
-                                 immediately.
-                            ================================== -->
-
-                            <div
-                                class="
-                                    lac-category-background
-                                    lac-category-background-a
-                                    is-visible
-                                "
-                                style="
-                                    background-image:
-                                        url('{{ category_images[0] | e }}');
-                                "
-                            ></div>
+                        {% set stats =
+                            category_stats.get(
+                                category.slug,
+                                {}
+                            )
+                        %}
 
 
-                            <!-- =================================
-                                 BACKGROUND LAYER B
-
-                                 JavaScript loads the next
-                                 slideshow image here.
-                            ================================== -->
-
-                            <div
-                                class="
-                                    lac-category-background
-                                    lac-category-background-b
-                                "
-                            ></div>
-
-
-                            <!-- =================================
-                                 LIGHT OVERLAY
-                            ================================== -->
-
-                            <div
-                                class="lac-category-light-overlay"
-                            ></div>
-
-
-                        {% else %}
-
-
-                            <!-- =================================
-                                 NO IMAGE FALLBACK
-                            ================================== -->
-
-                            <div
-                                class="lac-category-fallback-large"
-                                aria-hidden="true"
-                            >
-
-                                {% if category.icon %}
-                                    {{ category.icon }}
-                                {% else %}
-                                    📌
+                        <a
+                            class="
+                                lac-category-row
+                                {% if not category_images %}
+                                    no-category-image
                                 {% endif %}
+                            "
+
+                            href="{{ url_for(
+                                'qr_category',
+                                code=access_point.code,
+                                category=category.slug
+                            ) }}"
+
+                            data-category-images='{{ category_images | tojson | forceescape }}'
+                        >
+
+
+                            {% if category_images %}
+
+
+                                <div
+                                    class="
+                                        lac-category-background
+                                        lac-category-background-a
+                                        is-visible
+                                    "
+                                    style="
+                                        background-image:
+                                            url('{{ category_images[0] | e }}');
+                                    "
+                                ></div>
+
+
+                                <div
+                                    class="
+                                        lac-category-background
+                                        lac-category-background-b
+                                    "
+                                ></div>
+
+
+                                <div
+                                    class="
+                                        lac-category-light-overlay
+                                    "
+                                ></div>
+
+
+                            {% else %}
+
+
+                                <div
+                                    class="
+                                        lac-category-fallback-large
+                                    "
+                                    aria-hidden="true"
+                                >
+
+                                    {{
+                                        presentation.get(
+                                            "icon",
+                                            category.icon
+                                            if category.icon
+                                            else "📌"
+                                        )
+                                    }}
+
+                                </div>
+
+
+                            {% endif %}
+
+
+                            <div class="lac-category-info">
+
+
+                                <!-- =============================
+                                     CONSUMER SUBTITLE
+                                ============================== -->
+
+                                <div class="lac-category-subtitle">
+
+                                    {{
+                                        presentation.get(
+                                            "subtitle",
+                                            ""
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                <!-- =============================
+                                     CONSUMER TITLE
+                                ============================== -->
+
+                                <div class="lac-category-title">
+
+                                    {{
+                                        presentation.get(
+                                            "title",
+                                            category.name
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                <!-- =============================
+                                     STATUS
+                                ============================== -->
+
+                                <div class="lac-category-status">
+
+
+                                    {% if stats.get("count", 0) > 0 %}
+
+                                        <span class="lac-status-badge">
+
+                                            <span>
+                                                {{
+                                                    stats.get(
+                                                        "icon",
+                                                        "🔥"
+                                                    )
+                                                }}
+                                            </span>
+
+                                            <span>
+                                                {{
+                                                    stats.get(
+                                                        "count",
+                                                        0
+                                                    )
+                                                }}
+                                                {{
+                                                    stats.get(
+                                                        "label",
+                                                        "LIVE"
+                                                    )
+                                                }}
+                                            </span>
+
+                                        </span>
+
+
+                                    {% else %}
+
+
+                                        <span class="lac-status-badge">
+
+                                            <span>
+                                                📍
+                                            </span>
+
+                                            <span>
+                                                EXPLORE
+                                            </span>
+
+                                        </span>
+
+
+                                    {% endif %}
+
+
+                                    {% if stats.get("new_count", 0) > 0 %}
+
+                                        <span
+                                            class="
+                                                lac-status-badge
+                                                lac-status-badge-new
+                                            "
+                                        >
+
+                                            ✨
+                                            {{ stats.get("new_count") }}
+                                            NEW
+
+                                        </span>
+
+                                    {% endif %}
+
+
+                                </div>
 
                             </div>
 
 
-                        {% endif %}
+                            <div
+                                class="lac-category-chevron"
+                                aria-hidden="true"
+                            >
+                                ›
+                            </div>
 
 
-                        <!-- =================================
-                             CATEGORY TEXT
-                        ================================== -->
+                        </a>
 
-                        <div class="lac-category-info">
-
-
-    <!-- =================================
-         CATEGORY NAME
-    ================================== -->
-
-                         <div class="lac-category-title">
-                          {{ category.name }}
-                         </div>
-
-
-    <!-- =================================
-         STATUS BADGES
-    ================================== -->
-
-                         {% set stats =
-                          category_stats.get(
-                           category.slug,
-                           {}
-                          )
-                         %}
-
-
-                         <div class="lac-category-status">
-
-
-                          {% if stats.get("count", 0) > 0 %}
-
-                           <span class="lac-status-badge">
-
-                            <span>
-                             {{ stats.get("icon", "🔥") }}
-                            </span>
-
-                            <span>
-                             {{ stats.get("count", 0) }}
-                             {{ stats.get("label", "LIVE") }}
-                            </span>
-
-                           </span>
-
-                          {% else %}
-
-                           <span class="lac-status-badge">
-
-                            <span>
-                              📍
-                            </span>
-
-                            <span>
-                              EXPLORE
-                            </span>
-
-                           </span>
-
-                          {% endif %}
-
-
-                          {% if stats.get("new_count", 0) > 0 %}
-
-                           <span
-                             class="
-                               lac-status-badge
-                               lac-status-badge-new
-                             "
-                           >
-
-                             ✨
-                             {{ stats.get("new_count") }}
-                             NEW
-
-                           </span>
-
-                          {% endif %}
-
-
-                         </div>
-
-
-                        </div>
-
-
-                        <!-- =================================
-                             ARROW
-                        ================================== -->
-
-                        <div
-                            class="lac-category-chevron"
-                            aria-hidden="true"
-                        >
-                            ›
-                        </div>
-
-
-                    </a>
-
+                    {% endif %}
 
                 {% endfor %}
 
@@ -3565,77 +3270,83 @@
 
         </section>
 
+
         <!-- =========================================
-     GROW YOUR LOCAL PRESENCE
-========================================== -->
+             GROW YOUR LOCAL PRESENCE
+        ========================================== -->
 
         <section class="kalxa-business-cta">
 
-          <div class="kalxa-business-cta-eyebrow">
-            FOR LOCAL BUSINESSES
-          </div>
+            <div class="kalxa-business-cta-eyebrow">
+                FOR LOCAL BUSINESSES
+            </div>
 
 
-          <h2>
-            Own a business in {{ zone.name }}?
-          </h2>
+            <h2>
+                Own a business in {{ zone.name }}?
+            </h2>
 
 
-          <p>
-            Put your business where local people
-            are already discovering what is around them.
-          </p>
-
-          <a
-            href="{{ url_for(
-              'submit_content',
-              zone_id=zone.id
-            ) }}"
-            class="kalxa-business-cta-primary"
-          >
-            <span>
-              ＋
-            </span>
-
-            Add your business to Kalxa
-
-            <span>
-              →
-            </span>
-          </a>
+            <p>
+                Put your business where local people
+                are already discovering what is around them.
+            </p>
 
 
-          <div class="kalxa-business-cta-divider">
+            <a
+                href="{{ url_for(
+                    'submit_content',
+                    zone_id=zone.id
+                ) }}"
+                class="kalxa-business-cta-primary"
+            >
 
-            <span>
-              OR
-            </span>
+                <span>
+                    ＋
+                </span>
 
-          </div>
+                Add your business to Kalxa
 
+                <span>
+                    →
+                </span>
 
-          <p class="kalxa-business-cta-secondary-text">
-            Hosting an event, running a special
-            or promoting something locally?
-          </p>
-
-
-          <a
-            href="{{ url_for(
-             'submit_content',
-             zone_id=zone.id
-            ) }}"
-            class="kalxa-business-cta-secondary"
-          >
-            📣 Promote it on Kalxa
-          </a>
+            </a>
 
 
-          <div class="kalxa-business-cta-note">
-            Presence and Campaign packages available.
-          </div>
+            <div class="kalxa-business-cta-divider">
+
+                <span>
+                    OR
+                </span>
+
+            </div>
+
+
+            <p class="kalxa-business-cta-secondary-text">
+                Hosting an event, running a special
+                or promoting something locally?
+            </p>
+
+
+            <a
+                href="{{ url_for(
+                    'submit_content',
+                    zone_id=zone.id
+                ) }}"
+                class="kalxa-business-cta-secondary"
+            >
+                📣 Promote it on Kalxa
+            </a>
+
+
+            <div class="kalxa-business-cta-note">
+                Presence and Campaign packages available.
+            </div>
 
         </section>
+
+
         <!-- =========================================
              QUICK ACCESS / ADD TO HOME SCREEN
         ========================================== -->
@@ -3643,7 +3354,7 @@
         <section
             id="lac-install-section"
             class="lac-install-section"
-			hidden
+            hidden
         >
 
             <div class="lac-install-card">
@@ -3687,7 +3398,6 @@
                         type="button"
                         id="lac-install-button"
                         class="lac-install-button"
-                        
                     >
                         Add Kalxa to Home Screen
                     </button>
@@ -3736,7 +3446,7 @@
 
                 <p>
                     Stay ahead of {{ zone.name }}'s
-                    premier events and promos.
+                    events, specials and local opportunities.
                 </p>
 
             </div>
@@ -3769,10 +3479,6 @@
             </p>
 
 
-            <!-- =====================================
-                 ENABLE BUTTON
-            ====================================== -->
-
             <button
                 type="button"
                 id="lac-enable-notifications"
@@ -3789,10 +3495,6 @@
                 Free. No account required.
             </p>
 
-
-            <!-- =====================================
-                 CATEGORY PREFERENCES
-            ====================================== -->
 
             <div
                 id="lac-notification-preferences"
@@ -3822,39 +3524,101 @@
 
                 <div class="notification-category-list">
 
+                    {% set notification_namespace =
+                        namespace(
+                            rendered_keys=[]
+                        )
+                    %}
+
+
                     {% for category in categories %}
 
-                        <label
-                            class="notification-category-option"
-                        >
+                        {% set presentation =
+                            consumer_category_lookup.get(
+                                category.slug,
+                                {}
+                            )
+                        %}
 
-                            <input
-                                type="checkbox"
-                                name="lac_notification_category"
-                                value="{{ category.slug }}"
+
+                        {% set canonical_key =
+                            presentation.get(
+                                "key",
+                                category.slug
+                            )
+                        %}
+
+
+                        {% if canonical_key not in notification_namespace.rendered_keys %}
+
+                            {% set notification_namespace.rendered_keys =
+                                notification_namespace.rendered_keys
+                                +
+                                [canonical_key]
+                            %}
+
+
+                            <label
+                                class="
+                                    notification-category-option
+                                "
                             >
 
+                                <!--
+                                    IMPORTANT:
 
-                            <span
-                                class="notification-category-icon"
-                            >
+                                    Keep the REAL existing category
+                                    slug as the checkbox value.
 
-                                {% if category.icon %}
-                                    {{ category.icon }}
-                                {% else %}
-                                    🔔
-                                {% endif %}
+                                    This preserves compatibility with
+                                    the current push subscription
+                                    backend while the taxonomy migration
+                                    is still in progress.
+                                -->
 
-                            </span>
+                                <input
+                                    type="checkbox"
+                                    name="lac_notification_category"
+                                    value="{{ category.slug }}"
+                                >
 
 
-                            <span
-                                class="notification-category-name"
-                            >
-                                {{ category.name }}
-                            </span>
+                                <span
+                                    class="
+                                        notification-category-icon
+                                    "
+                                >
 
-                        </label>
+                                    {{
+                                        presentation.get(
+                                            "icon",
+                                            category.icon
+                                            if category.icon
+                                            else "🔔"
+                                        )
+                                    }}
+
+                                </span>
+
+
+                                <span
+                                    class="
+                                        notification-category-name
+                                    "
+                                >
+
+                                    {{
+                                        presentation.get(
+                                            "title",
+                                            category.name
+                                        )
+                                    }}
+
+                                </span>
+
+                            </label>
+
+                        {% endif %}
 
                     {% endfor %}
 
@@ -3862,13 +3626,17 @@
 
 
                 <div
-                    class="notification-preference-actions"
+                    class="
+                        notification-preference-actions
+                    "
                 >
 
                     <button
                         type="button"
                         id="lac-select-all-categories"
-                        class="notification-secondary-button"
+                        class="
+                            notification-secondary-button
+                        "
                     >
                         Select All
                     </button>
@@ -3877,7 +3645,9 @@
                     <button
                         type="button"
                         id="lac-save-notification-preferences"
-                        class="public-notification-button"
+                        class="
+                            public-notification-button
+                        "
                     >
                         Save My Preferences
                     </button>
@@ -3902,7 +3672,7 @@
         <section class="public-website-link">
 
             <p>
-                Want to know more about us ?
+                Want to know more about LaC?
             </p>
 
 
@@ -3912,7 +3682,7 @@
                 rel="noopener noreferrer"
                 class="public-website-button"
             >
-                Visit Our Website
+                Visit LaC
             </a>
 
         </section>
@@ -3928,7 +3698,7 @@
     <footer class="public-footer">
 
         <div class="footer-brand">
-            KALXA || LaC
+            KALXA · Powered by LaC
         </div>
 
 
@@ -4012,8 +3782,6 @@
 ></script>
 
 
-
-
 <!-- =========================================
      PUSH NOTIFICATION SCRIPT
 ========================================== -->
@@ -4053,10 +3821,6 @@ document.addEventListener(
                 let images = [];
 
 
-                /* =====================================
-                   READ IMAGE LIST
-                ====================================== */
-
                 try {
 
                     images =
@@ -4082,15 +3846,6 @@ document.addEventListener(
                 );
 
 
-                /*
-                 * Zero images:
-                 * nothing to display.
-                 *
-                 * One image:
-                 * first background layer already
-                 * displays it, so no slideshow needed.
-                 */
-
                 if (
                     !Array.isArray(images)
                     ||
@@ -4100,10 +3855,6 @@ document.addEventListener(
                     return;
                 }
 
-
-                /* =====================================
-                   GET TWO BACKGROUND LAYERS
-                ====================================== */
 
                 const layerA =
                     card.querySelector(
@@ -4131,10 +3882,6 @@ document.addEventListener(
                 }
 
 
-                /* =====================================
-                   SLIDESHOW STATE
-                ====================================== */
-
                 let currentIndex = 0;
 
                 let visibleLayer =
@@ -4143,10 +3890,6 @@ document.addEventListener(
                 let hiddenLayer =
                     layerB;
 
-
-                /* =====================================
-                   PRELOAD IMAGES
-                ====================================== */
 
                 images.forEach(
                     function (imageUrl) {
@@ -4160,10 +3903,6 @@ document.addEventListener(
                     }
                 );
 
-
-                /* =====================================
-                   CHANGE BACKGROUND
-                ====================================== */
 
                 function changeCategoryImage() {
 
@@ -4184,11 +3923,6 @@ document.addEventListener(
                         '")';
 
 
-                    /*
-                     * Force the browser to know the new
-                     * background before beginning fade.
-                     */
-
                     hiddenLayer.classList.add(
                         "is-visible"
                     );
@@ -4198,10 +3932,6 @@ document.addEventListener(
                         "is-visible"
                     );
 
-
-                    /*
-                     * Swap layer references.
-                     */
 
                     const previousVisibleLayer =
                         visibleLayer;
@@ -4216,15 +3946,6 @@ document.addEventListener(
 
                 }
 
-
-                /* =====================================
-                   STAGGER EACH CATEGORY
-
-                   First card: 4.0 sec
-                   Second:     4.8 sec
-                   Third:      5.6 sec
-                   etc.
-                ====================================== */
 
                 const initialDelay =
                     4000
@@ -4258,113 +3979,111 @@ document.addEventListener(
 </script>
 
 
+<!-- =========================================
+     IMAGE LOADING SKELETONS
+========================================== -->
+
 <script>
-/* =========================================================
-   #5 LAC IMAGE LOADING SKELETONS
-========================================================= */
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const imageContainers =
-        document.querySelectorAll(".lac-image-loading");
-
-
-    imageContainers.forEach(function (container) {
-
-        const image =
-            container.querySelector("img");
-
-
-        /*
-         * No real image exists.
-         * Remove skeleton immediately so fallback icons
-         * remain visible.
-         */
-        if (!image) {
-
-            container.classList.remove(
-                "lac-image-loading"
+        const imageContainers =
+            document.querySelectorAll(
+                ".lac-image-loading"
             );
 
-            container.classList.add(
-                "lac-image-loaded"
-            );
 
-            return;
-        }
+        imageContainers.forEach(
+            function (container) {
 
-        if (
-			image.complete
-			&&
-			image.naturalWidth > 0
-		) {
-
-            container.classList.remove(
-                "lac-image-loading"
-            );
-
-            container.classList.add(
-                "lac-image-loaded"
-            );
-
-            return;
-        }
+                const image =
+                    container.querySelector(
+                        "img"
+                    );
 
 
-        /*
-         * Image successfully loaded.
-         */
-        image.addEventListener(
-            "load",
-            function () {
+                if (!image) {
 
-                container.classList.remove(
-                    "lac-image-loading"
+                    container.classList.remove(
+                        "lac-image-loading"
+                    );
+
+                    container.classList.add(
+                        "lac-image-loaded"
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    image.complete
+                    &&
+                    image.naturalWidth > 0
+                ) {
+
+                    container.classList.remove(
+                        "lac-image-loading"
+                    );
+
+                    container.classList.add(
+                        "lac-image-loaded"
+                    );
+
+                    return;
+                }
+
+
+                image.addEventListener(
+                    "load",
+                    function () {
+
+                        container.classList.remove(
+                            "lac-image-loading"
+                        );
+
+                        container.classList.add(
+                            "lac-image-loaded"
+                        );
+
+                    }
                 );
 
-                container.classList.add(
-                    "lac-image-loaded"
-                );
 
-            }
-        );
+                image.addEventListener(
+                    "error",
+                    function () {
 
+                        container.classList.remove(
+                            "lac-image-loading"
+                        );
 
-        /*
-         * Image failed.
-         * Stop skeleton so it does not shimmer forever.
-         */
-        image.addEventListener(
-            "error",
-            function () {
+                        container.classList.add(
+                            "lac-image-loaded"
+                        );
 
-                container.classList.remove(
-                    "lac-image-loading"
-                );
-
-                container.classList.add(
-                    "lac-image-loaded"
+                    }
                 );
 
             }
         );
 
-    });
+    }
+);
 
-});
 </script>
 
+
 <!-- =========================================================
-     LAC MOBILE ACTION BAR
-     Alerts + LaC
+     MOBILE ACTION BAR
 ========================================================= -->
 
 <nav
     class="lac-mobile-action-bar"
-    aria-label="LaC quick actions"
+    aria-label="Kalxa quick actions"
 >
-
-    <!-- ALERTS -->
 
     <a
         href="#lac-alerts"
@@ -4389,8 +4108,6 @@ document.addEventListener("DOMContentLoaded", function () {
     ></div>
 
 
-    <!-- LAC WEBSITE -->
-
     <a
         href="https://lac-acess-delivered.onrender.com/"
         class="lac-mobile-action"
@@ -4411,6 +4128,9 @@ document.addEventListener("DOMContentLoaded", function () {
 </nav>
 
 
+<!-- =========================================
+     PWA DEBUG
+========================================== -->
 
 <script>
 
@@ -4544,6 +4264,7 @@ window.addEventListener(
 
 </script>
 
+
 <!-- =========================================
      KALXA SIDE MENU SCRIPT
 ========================================== -->
@@ -4636,6 +4357,7 @@ document.addEventListener(
             document.body.style.overflow =
                 "";
 
+
             window.setTimeout(
                 function () {
 
@@ -4703,6 +4425,7 @@ document.addEventListener(
 
                     closeMenu();
 
+
                     window.scrollTo({
                         top: 0,
                         behavior: "smooth"
@@ -4737,7 +4460,8 @@ document.addEventListener(
 );
 
 </script>
-	
+
+
 </body>
 
 </html>
