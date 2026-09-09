@@ -7742,6 +7742,8 @@ def create_content():
 
             directions_url=directions_url,
 
+            ticket_url=ticket_url,
+
             menu_highlights=menu_highlights,
 
             special_offer=special_offer,
