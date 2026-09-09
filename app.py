@@ -1889,9 +1889,9 @@ def content_is_expired(
 @app.route("/q/<access_code>")
 def qr_access(access_code):
 
-    # -----------------------------------------------------
+    # =====================================================
     # FIND ACCESS POINT
-    # -----------------------------------------------------
+    # =====================================================
 
     access_point = (
         AccessPoint.query
@@ -1905,9 +1905,9 @@ def qr_access(access_code):
     zone = access_point.zone
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # RECORD PHYSICAL QR SCAN
-    # -----------------------------------------------------
+    # =====================================================
 
     try:
 
@@ -1934,14 +1934,17 @@ def qr_access(access_code):
         )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CATEGORY-SPECIFIC QR
-    # -----------------------------------------------------
+    # =====================================================
 
     if access_point.default_category:
 
         category_slug = (
-            access_point.default_category
+            str(
+                access_point.default_category
+                or ""
+            )
             .strip()
             .lower()
         )
@@ -1964,9 +1967,23 @@ def qr_access(access_code):
         )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # GENERAL QR
-    # -----------------------------------------------------
+    #
+    # IMPORTANT:
+    #
+    # These remain the REAL Category database rows.
+    #
+    # We do not replace them with BUSINESS_CATEGORIES
+    # because:
+    #
+    # - category images depend on Category.id
+    # - zone appearances depend on Category.id
+    # - existing QR routes use Category.slug
+    # - existing admin configuration uses Category rows
+    #
+    # Consumer presentation is layered on top.
+    # =====================================================
 
     categories = get_active_categories()
 
@@ -1974,17 +1991,59 @@ def qr_access(access_code):
 
 
     # =====================================================
-    # ZONE-SPECIFIC CATEGORY APPEARANCES
+    # CONSUMER PRESENTATION LOOKUP
+    #
+    # Key:
+    #     REAL database/public category slug
+    #
+    # Value:
+    #     {
+    #         "key": "restaurants",
+    #         "title": "HUNGRY?",
+    #         "subtitle": "...",
+    #         "icon": "🍔"
+    #     }
+    #
+    # This lets access.html display consumer language
+    # without changing the URL or database category.
     # =====================================================
-    #
-    # Load all custom category appearances belonging
-    # to the current zone.
-    #
-    # Example:
-    #
-    # KwaMhlanga + Events
-    # KwaMhlanga + Property
-    #
+
+    consumer_category_lookup = {}
+
+
+    for category in categories:
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        presentation = (
+            get_consumer_category(
+                canonical_key
+            )
+        )
+
+        consumer_category_lookup[
+            category.slug
+        ] = {
+
+            "key":
+                canonical_key,
+
+            "title":
+                presentation["title"],
+
+            "subtitle":
+                presentation["subtitle"],
+
+            "icon":
+                presentation["icon"],
+
+        }
+
+
+    # =====================================================
+    # ZONE-SPECIFIC CATEGORY APPEARANCES
     # =====================================================
 
     zone_category_appearances = (
@@ -1996,7 +2055,7 @@ def qr_access(access_code):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # APPEARANCE LOOKUP
     #
     # Key:
@@ -2004,7 +2063,7 @@ def qr_access(access_code):
     #
     # Value:
     #     ZoneCategoryAppearance
-    # -----------------------------------------------------
+    # =====================================================
 
     zone_category_appearance_lookup = {
 
@@ -2018,16 +2077,14 @@ def qr_access(access_code):
 
     # =====================================================
     # RESOLVE CATEGORY BACKGROUND IMAGES
-    # =====================================================
     #
-    # Priority per image position:
+    # Priority:
     #
     # 1. Zone-specific image
     # 2. Default Category image
     #
-    # This means a zone can replace only one image and
-    # continue using the global defaults for the others.
-    #
+    # We deliberately continue indexing these by the REAL
+    # Category.id.
     # =====================================================
 
     category_background_images = {}
@@ -2047,6 +2104,7 @@ def qr_access(access_code):
         # -------------------------------------------------
 
         image_1 = (
+
             appearance.image_url
 
             if (
@@ -2063,6 +2121,7 @@ def qr_access(access_code):
         # -------------------------------------------------
 
         image_2 = (
+
             appearance.image_url_2
 
             if (
@@ -2079,6 +2138,7 @@ def qr_access(access_code):
         # -------------------------------------------------
 
         image_3 = (
+
             appearance.image_url_3
 
             if (
@@ -2120,8 +2180,8 @@ def qr_access(access_code):
     # -----------------------------------------------------
     # NEW LISTING CUTOFF
     #
-    # A listing is considered NEW when created during
-    # the last 7 days.
+    # A listing is NEW when created during the
+    # last 7 days.
     # -----------------------------------------------------
 
     new_cutoff = (
@@ -2131,6 +2191,11 @@ def qr_access(access_code):
 
 
     for category in categories:
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
 
         try:
 
@@ -2185,19 +2250,46 @@ def qr_access(access_code):
 
 
         # -------------------------------------------------
-        # BADGE WORDING
+        # CONSUMER-AWARE BADGE WORDING
+        #
+        # Rules operate on the canonical taxonomy rather
+        # than old database/public slugs.
         # -------------------------------------------------
 
-        if category.slug == "events":
+        if canonical_key == "events":
 
             badge_icon = "📅"
             badge_label = "UPCOMING"
 
 
-        elif category.slug == "property":
+        elif canonical_key == "rentals":
 
             badge_icon = "🏠"
             badge_label = "AVAILABLE"
+
+
+        elif canonical_key == "accommodation":
+
+            badge_icon = "🛏️"
+            badge_label = "AVAILABLE"
+
+
+        elif canonical_key == "jobs":
+
+            badge_icon = "💼"
+            badge_label = "OPEN"
+
+
+        elif canonical_key == "emergency":
+
+            badge_icon = "🚨"
+            badge_label = "INFO"
+
+
+        elif canonical_key == "announcements":
+
+            badge_icon = "📢"
+            badge_label = "UPDATE"
 
 
         else:
@@ -2205,6 +2297,18 @@ def qr_access(access_code):
             badge_icon = "🔥"
             badge_label = "LIVE"
 
+
+        # -------------------------------------------------
+        # IMPORTANT:
+        #
+        # Stats stay indexed by the REAL public slug.
+        #
+        # This means existing access.html code such as:
+        #
+        # category_stats[category.slug]
+        #
+        # continues to work.
+        # -------------------------------------------------
 
         category_stats[
             category.slug
@@ -2221,21 +2325,39 @@ def qr_access(access_code):
 
             "icon":
                 badge_icon,
+
+            "canonical_key":
+                canonical_key,
         }
 
 
     # =====================================================
     # NEW NEAR YOU
     # =====================================================
-    #
-    # Gather active listings from all categories.
-    #
-    # We use the same get_active_content() helper so
-    # expired / archived / inactive content is excluded.
-    #
-    # =====================================================
 
     new_items_pool = []
+
+
+    # -----------------------------------------------------
+    # PREVENT DUPLICATES
+    #
+    # This becomes important now because multiple old
+    # Category rows may normalize to the same taxonomy.
+    #
+    # Example:
+    #
+    # foods
+    # check-out-our-specials
+    #
+    # both normalize to:
+    #
+    # restaurants
+    #
+    # get_active_content() can therefore return overlapping
+    # results for both Category rows.
+    # -----------------------------------------------------
+
+    seen_new_item_ids = set()
 
 
     for category in categories:
@@ -2263,6 +2385,13 @@ def qr_access(access_code):
 
 
         for item in category_items:
+
+            if item.id in seen_new_item_ids:
+                continue
+
+            seen_new_item_ids.add(
+                item.id
+            )
 
             new_items_pool.append(
                 item
@@ -2295,21 +2424,34 @@ def qr_access(access_code):
 
     # =====================================================
     # CATEGORY LOOKUP
-    # =====================================================
     #
-    # Allows access.html to display the friendly category
-    # name/icon from a listing's category slug.
+    # Keep legacy/public slug lookup for compatibility.
     #
+    # Also add canonical keys so a ContentItem stored as
+    # "restaurants" can still resolve a Category object
+    # while older rows remain "check-out-our-specials".
     # =====================================================
 
-    category_lookup = {
+    category_lookup = {}
 
-        category.slug:
-            category
 
-        for category
-        in categories
-    }
+    for category in categories:
+
+        # Existing public slug.
+        category_lookup[
+            category.slug
+        ] = category
+
+        # Canonical taxonomy key.
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        if canonical_key not in category_lookup:
+
+            category_lookup[
+                canonical_key
+            ] = category
 
 
     # =====================================================
@@ -2317,6 +2459,8 @@ def qr_access(access_code):
     # =====================================================
 
     featured_items_pool = []
+
+    seen_featured_item_ids = set()
 
 
     for category in categories:
@@ -2345,11 +2489,19 @@ def qr_access(access_code):
 
         for item in category_items:
 
-            if item.featured:
+            if not item.featured:
+                continue
 
-                featured_items_pool.append(
-                    item
-                )
+            if item.id in seen_featured_item_ids:
+                continue
+
+            seen_featured_item_ids.add(
+                item.id
+            )
+
+            featured_items_pool.append(
+                item
+            )
 
 
     # -----------------------------------------------------
@@ -2388,7 +2540,31 @@ def qr_access(access_code):
 
         access_point=access_point,
 
+        # -------------------------------------------------
+        # REAL DATABASE CATEGORY ROWS
+        # -------------------------------------------------
+
         categories=categories,
+
+        # -------------------------------------------------
+        # CONSUMER PRESENTATION
+        #
+        # access.html will use:
+        #
+        # consumer_category_lookup[category.slug]
+        #
+        # to display:
+        #
+        # WHAT'S ON?
+        # HUNGRY?
+        # GET FRESH
+        # SPECIALS TODAY
+        # etc.
+        # -------------------------------------------------
+
+        consumer_category_lookup=(
+            consumer_category_lookup
+        ),
 
         category_stats=category_stats,
 
@@ -2398,21 +2574,10 @@ def qr_access(access_code):
 
         featured_items=featured_items,
 
-        # -----------------------------------------------
-        # ZONE-SPECIFIC CATEGORY BACKGROUND IMAGES
-        # -----------------------------------------------
-
         category_background_images=(
             category_background_images
         ),
     )
-# =========================================================
-# CATEGORY PAGE
-# =========================================================
-# =========================================================
-# PUSH NOTIFICATION SUBSCRIBE
-# =========================================================
-
 # =========================================================
 # PUSH NOTIFICATION UNSUBSCRIBE
 # =========================================================
