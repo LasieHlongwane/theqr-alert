@@ -1388,53 +1388,82 @@
                          TITLE / BUSINESS
                     ================================== -->
 
+                    <!-- =================================
+                        TITLE / BUSINESS
+                    ================================== -->
+
                     <div class="listing-main-info">
 
-                        <h2>
-                            {{ item.title }}
-                        </h2>
+                      <h2>
+                        {{ item.title }}
+                      </h2>
 
 
-                        {% if item.business_name %}
+                      <!-- =================================
+                        CAMPAIGN STATE
 
-                        <div class="business-name business-name-with-status">
+                        Calculated dynamically in Python.
+                        Nothing is manually changed here.
+                      ================================== -->
 
-                            <span>
-                                {{ item.business_name }}
-                            </span>
+                      {% if
+                        item.campaign_state
+                        and item.campaign_state.label
+                      %}
+
+                      <span
+                        class="
+                          lac-campaign-state
+                          {{ item.campaign_state.css_class }}
+                        "
+                      >
+                        {{ item.campaign_state.label }}
+                      </span>
+
+                      {% endif %}
 
 
-                            {% if
-                                item.can_use_business_features()
-                                and item.is_verified
-                            %}
+                      {% if item.business_name %}
 
-                            <span
-                                class="business-inline-verified"
-                                title="Verified by Kalxa"
-                                aria-label="Verified by Kalxa"
-                            >
-                                ✓
-                            </span>
+                      <div class="business-name business-name-with-status">
 
-                            {% endif %}
+                      <span>
+                        {{ item.business_name }}
+                      </span>
+                      {% if
+                        item.can_use_business_features()
+                        and item.is_verified
+                      %}
 
-                        </div>
+                      <span
+                        class="business-inline-verified"
+                        title="Verified by Kalxa"
+                        aria-label="Verified by Kalxa"
+                      >
+                        ✓
+                        </span>
 
                         {% endif %}
 
+                      </div>
 
-                        {% if item.description %}
+                      {% endif %}
 
-                        <p class="listing-description">
-                            {{ item.description }}
-                        </p>
 
-                        {% endif %}
+                      {% if item.description %}
+
+                      <p class="listing-description">
+                        {{ item.description }}
+                      </p>
+
+                      {% endif %}
 
                     </div>
 
 
+<!-- =================================
+     PROMINENT DATE / AVAILABILITY
+================================== -->
                     <!-- =================================
                          PROMINENT DATE / AVAILABILITY
                     ================================== -->
