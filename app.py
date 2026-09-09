@@ -2407,11 +2407,9 @@ def get_active_content(
       )
       .all()
     )
-
-
-return attach_campaign_states(
-    items
-)
+    return attach_campaign_states(
+      items
+    )
 
 
 # CONTENT EXPIRY HELPERS
