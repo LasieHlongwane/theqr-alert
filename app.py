@@ -4008,6 +4008,29 @@ def submit_content():
     # =====================================================
     # LOAD FORM OPTIONS
     # =====================================================
+    #
+    # IMPORTANT:
+    #
+    # zones
+    # -----
+    # Still come from the database.
+    #
+    # business_categories
+    # -------------------
+    # Come from categories.py.
+    #
+    # These are the stable business taxonomy values used
+    # by NEW submissions.
+    #
+    # Example:
+    #
+    # restaurants -> Restaurant & Food
+    # events      -> Events & Entertainment
+    # beauty      -> Salon, Barber & Beauty
+    #
+    # Consumer-facing wording such as HUNGRY? and
+    # WHAT'S ON? is NOT used here.
+    # =====================================================
 
     zones = (
         Zone.query
@@ -4020,8 +4043,8 @@ def submit_content():
         .all()
     )
 
-    categories = (
-        get_active_categories()
+    business_categories = (
+        BUSINESS_CATEGORIES
     )
 
 
@@ -4068,6 +4091,45 @@ def submit_content():
 
 
     # =====================================================
+    # TEMPLATE RENDER HELPER
+    # =====================================================
+    #
+    # Keeping this in one place prevents validation branches
+    # from accidentally passing the old public Category
+    # records back to submit.html.
+    #
+    # We temporarily also expose the same dictionary under
+    # "categories". This makes the transition easier while
+    # submit.html is updated in the next step.
+    # =====================================================
+
+    def render_submit_form():
+
+        return render_template(
+            "submit.html",
+
+            zones=
+                zones,
+
+            business_categories=
+                business_categories,
+
+            # Temporary compatibility alias.
+            #
+            # The updated submit.html should use
+            # business_categories directly.
+            categories=
+                business_categories,
+
+            selected_zone_id=
+                selected_zone_id,
+
+            selected_zone=
+                selected_zone,
+        )
+
+
+    # =====================================================
     # POST
     # =====================================================
 
@@ -4077,19 +4139,51 @@ def submit_content():
         # BASIC FORM DATA
         # =================================================
 
-        zone_id = request.form.get(
-            "zone_id",
-            type=int,
+        zone_id = (
+            request.form.get(
+                "zone_id",
+                type=int,
+            )
         )
 
-        category_slug = (
+
+        # =================================================
+        # STABLE BUSINESS CATEGORY
+        # =================================================
+        #
+        # New forms should POST canonical values:
+        #
+        # events
+        # restaurants
+        # beauty
+        # retail_specials
+        # accommodation
+        # rentals
+        # delivery
+        # services
+        # jobs
+        # emergency
+        # announcements
+        # building
+        #
+        # normalize_category() also allows an old category
+        # value to reach this route during the transition.
+        # =================================================
+
+        raw_category = (
             request.form.get(
                 "category",
                 "",
             )
             .strip()
-            .lower()
         )
+
+        category_key = (
+            normalize_category(
+                raw_category
+            )
+        )
+
 
         content_type = (
             request.form.get(
@@ -4224,7 +4318,7 @@ def submit_content():
 
         if (
             not zone_id
-            or not category_slug
+            or not category_key
             or not title
             or not submitter_name
         ):
@@ -4234,22 +4328,18 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         # =================================================
         # VALIDATE HOME ZONE
         # =================================================
 
-        zone = db.session.get(
-            Zone,
-            zone_id,
+        zone = (
+            db.session.get(
+                Zone,
+                zone_id,
+            )
         )
 
         if (
@@ -4262,122 +4352,74 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         # =================================================
-        # IMPORTANT:
         # RECONSTRUCT SELECTED ZONE FROM POST
+        # =================================================
         #
         # This keeps the locked-zone display correct if
         # validation later returns the user to the form.
         # =================================================
 
-        selected_zone_id = zone.id
-        selected_zone = zone
-
-
-        # =================================================
-        # VALIDATE REAL PUBLIC CATEGORY
-        # =================================================
-
-        category_record = (
-            get_active_category_by_slug(
-                category_slug
-            )
+        selected_zone_id = (
+            zone.id
         )
 
-        if not category_record:
+        selected_zone = (
+            zone
+        )
+
+
+        # =================================================
+        # VALIDATE BUSINESS TAXONOMY CATEGORY
+        # =================================================
+        #
+        # OLD:
+        #
+        # get_active_category_by_slug(category_slug)
+        #
+        # That validated against the consumer/public
+        # Category table and therefore tied submission
+        # taxonomy to navigation wording.
+        #
+        # NEW:
+        #
+        # Validate against BUSINESS_CATEGORIES.
+        # =================================================
+
+        if (
+            category_key
+            not in BUSINESS_CATEGORIES
+        ):
 
             flash(
-                "Please select a valid category.",
+                "Please select a valid business/content category.",
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         # =================================================
-        # NORMALIZE CATEGORY FOR INTERNAL WORKFLOW/PRICING
+        # INTERNAL WORKFLOW CATEGORY
+        # =================================================
         #
-        # IMPORTANT:
-        #
-        # category_slug remains the REAL public category.
+        # The stable category is now also the starting point
+        # for workflow/pricing.
         #
         # Example:
         #
-        # Public/database:
-        # upcoming-event-🥹🔥
+        # category_key = "events"
+        # category_key = "restaurants"
+        # category_key = "beauty"
         #
-        # Internal workflow:
-        # events
+        # No consumer-facing wording is involved here.
         # =================================================
 
-        category_aliases = {
-
-            # EVENTS
-
-            "event":
-                "events",
-
-            "local-events":
-                "events",
-
-            "local_events":
-                "events",
-
-            "upcoming-event-🥹🔥":
-                "events",
-
-
-            # FOOD / RESTAURANTS
-
-            "restaurant":
-                "local-restaurants",
-
-            "restaurants":
-                "local-restaurants",
-
-            "foods":
-                "local-restaurants",
-
-            "check-out-our-specials":
-                "local-restaurants",
-
-
-            # BEAUTY
-
-            "beauty":
-                "beauty-salon",
-
-            "salon":
-                "beauty-salon",
-
-
-            # OPPORTUNITIES
-
-            "opportunity":
-                "opportunities",
-        }
-
-
         workflow_category = (
-            category_aliases.get(
-                category_slug,
-                category_slug,
-            )
+            category_key
         )
 
 
@@ -4401,22 +4443,13 @@ def submit_content():
 
         # =================================================
         # NOTIFICATION ELIGIBILITY
+        # =================================================
         #
         # Every newly approved public submission is allowed
-        # to trigger the notification engine.
+        # to enter the notification workflow.
         #
-        # This DOES NOT notify everybody.
-        #
-        # send_zone_push_notification() still requires:
-        #
-        # active subscriber
-        #       +
-        # matching zone
-        #       +
-        # matching REAL public category
-        #
-        # Commercial content is additionally blocked from
-        # push until it is actually paid/waived and live.
+        # The actual push system still decides who should
+        # receive the notification.
         # =================================================
 
         notification_eligible = True
@@ -4433,13 +4466,7 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         availability_status = (
@@ -4449,6 +4476,16 @@ def submit_content():
 
         # =================================================
         # DETERMINE COMMERCIAL PRICING MODEL
+        # =================================================
+        #
+        # Pricing now receives the stable taxonomy key.
+        #
+        # Examples:
+        #
+        # events
+        # restaurants
+        # beauty
+        # retail_specials
         # =================================================
 
         pricing_model = (
@@ -4494,13 +4531,7 @@ def submit_content():
                     "error",
                 )
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                    selected_zone_id=selected_zone_id,
-                    selected_zone=selected_zone,
-                )
+                return render_submit_form()
 
 
             # =============================================
@@ -4561,13 +4592,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 # -----------------------------------------
@@ -4582,13 +4607,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 # -----------------------------------------
@@ -4608,13 +4627,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 # -----------------------------------------
@@ -4655,17 +4668,13 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
+                    return render_submit_form()
+
+
+                zone_count = (
+                    len(
+                        distribution_zone_ids
                     )
-
-
-                zone_count = len(
-                    distribution_zone_ids
                 )
 
 
@@ -4695,13 +4704,7 @@ def submit_content():
                     "error",
                 )
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                    selected_zone_id=selected_zone_id,
-                    selected_zone=selected_zone,
-                )
+                return render_submit_form()
 
 
             # =============================================
@@ -4731,13 +4734,7 @@ def submit_content():
                     "error",
                 )
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                    selected_zone_id=selected_zone_id,
-                    selected_zone=selected_zone,
-                )
+                return render_submit_form()
 
 
         # =================================================
@@ -4757,6 +4754,7 @@ def submit_content():
             )
 
             if not value:
+
                 return None
 
             return datetime.strptime(
@@ -4808,13 +4806,7 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         # =================================================
@@ -4843,13 +4835,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 if (
@@ -4864,13 +4850,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 if (
@@ -4885,13 +4865,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 start_date = None
@@ -4912,13 +4886,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 if (
@@ -4935,13 +4903,7 @@ def submit_content():
                         "error",
                     )
 
-                    return render_template(
-                        "submit.html",
-                        zones=zones,
-                        categories=categories,
-                        selected_zone_id=selected_zone_id,
-                        selected_zone=selected_zone,
-                    )
+                    return render_submit_form()
 
 
                 publish_from = None
@@ -5008,13 +4970,7 @@ def submit_content():
                     "error",
                 )
 
-                return render_template(
-                    "submit.html",
-                    zones=zones,
-                    categories=categories,
-                    selected_zone_id=selected_zone_id,
-                    selected_zone=selected_zone,
-                )
+                return render_submit_form()
 
 
         # =================================================
@@ -5049,13 +5005,7 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         # =================================================
@@ -5073,11 +5023,25 @@ def submit_content():
 
 
             # ---------------------------------------------
-            # REAL PUBLIC CATEGORY
+            # STABLE BUSINESS TAXONOMY
+            # ---------------------------------------------
+            #
+            # NEW submissions now store:
+            #
+            # events
+            # restaurants
+            # beauty
+            # retail_specials
+            # accommodation
+            # rentals
+            # delivery
+            # ...
+            #
+            # Consumer presentation labels are never stored.
             # ---------------------------------------------
 
             category=
-                category_slug,
+                category_key,
 
 
             # ---------------------------------------------
@@ -5246,6 +5210,7 @@ def submit_content():
 
 
                 if not image_url:
+
                     continue
 
 
@@ -5311,13 +5276,7 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         except Exception as error:
@@ -5336,13 +5295,7 @@ def submit_content():
                 "error",
             )
 
-            return render_template(
-                "submit.html",
-                zones=zones,
-                categories=categories,
-                selected_zone_id=selected_zone_id,
-                selected_zone=selected_zone,
-            )
+            return render_submit_form()
 
 
         # =================================================
@@ -5362,13 +5315,7 @@ def submit_content():
     # GET
     # =====================================================
 
-    return render_template(
-        "submit.html",
-        zones=zones,
-        categories=categories,
-        selected_zone_id=selected_zone_id,
-        selected_zone=selected_zone,
-    )
+    return render_submit_form()
 # =========================================================
 # SUBMISSION SUCCESS
 # =========================================================
