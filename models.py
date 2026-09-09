@@ -824,24 +824,24 @@ class ContentItem(db.Model):
 
 
     def get_campaign_target_date(self):
-    """
-    Return the most meaningful date for countdown purposes.
+        """
+        Return the most meaningful date for countdown purposes.
 
-    Events count down toward event_date.
+        Events count down toward event_date.
 
-    Other campaigns count down toward start_date.
-    """
+        Other campaigns count down toward start_date.
+        """
 
-        canonical_category = normalize_category(
-          self.category
-        )
+          canonical_category = normalize_category(
+            self.category
+          )
 
 
     # ========================================================
     # EVENTS
     # ========================================================
 
-        if canonical_category == "events":
+          if canonical_category == "events":
 
             return (
               self.event_date
@@ -853,8 +853,62 @@ class ContentItem(db.Model):
     # OTHER CAMPAIGNS
     # ========================================================
 
-        return self.start_date
-        
+          return self.start_date
+
+    def get_campaign_start_datetime(self):
+    """
+    Build the campaign's effective start datetime.
+
+    Events use event_date as their primary target date.
+    Other campaigns use start_date.
+
+    If no start_time exists, midnight is used temporarily.
+    """
+
+    target_date = self.get_campaign_target_date()
+
+    if not target_date:
+        return None
+
+
+    effective_time = (
+        self.start_time
+        or time.min
+    )
+
+
+    return datetime.combine(
+        target_date,
+        effective_time,
+    )
+
+    def get_campaign_end_datetime(self):
+        """
+        Build the campaign's effective end datetime.
+
+        If end_date exists, combine it with end_time.
+
+        If there is an end_date but no end_time, use the end
+        of that day rather than midnight so the campaign does
+        not disappear at 00:00.
+
+        If no end_date exists, return None.
+        """
+
+        if not self.end_date:
+            return None
+
+
+        effective_time = (
+            self.end_time
+            or time.max
+        )
+
+
+        return datetime.combine(
+            self.end_date,
+            effective_time,
+        )
         
         
 class ListingClaim(db.Model):
