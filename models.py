@@ -798,6 +798,51 @@ class ContentItem(db.Model):
             for claim in self.claims
         )
         
+    def has_campaign_dates(self):
+    """
+    Return True when the content has enough date information
+    to participate in Kalxa's campaign-state system.
+    """
+
+        return bool(
+          self.start_date
+          or self.event_date
+          or self.end_date
+        )
+
+
+    def get_campaign_target_date(self):
+    """
+    Return the most meaningful date for countdown purposes.
+
+    Events count down toward event_date.
+
+    Other campaigns count down toward start_date.
+    """
+
+        canonical_category = normalize_category(
+          self.category
+        )
+
+
+    # ========================================================
+    # EVENTS
+    # ========================================================
+
+        if canonical_category == "events":
+
+            return (
+              self.event_date
+              or self.start_date
+            )
+
+
+    # ========================================================
+    # OTHER CAMPAIGNS
+    # ========================================================
+
+        return self.start_date
+        
         
         
 class ListingClaim(db.Model):
