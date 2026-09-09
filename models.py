@@ -471,6 +471,11 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
+    ticket_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
     menu_highlights = db.Column(
         db.Text,
         nullable=True,
