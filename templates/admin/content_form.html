@@ -141,7 +141,7 @@
 
                 <small class="muted">
                     The home zone is where this business,
-                    event or opportunity originates..
+                    event or opportunity originates.
                 </small>
 
             </label>
@@ -269,7 +269,7 @@
 
 
             <!-- =================================================
-                 BUSINESS
+                 BUSINESS / ORGANISATION
             ================================================== -->
 
             <label>
@@ -291,7 +291,7 @@
 
 
             <!-- =================================================
-                 VENUE
+                 VENUE / LOCATION
             ================================================== -->
 
             <label>
@@ -308,6 +308,10 @@
                         else ''
                     }}"
                 >
+
+                <small class="muted">
+                    The location name people will see on the listing.
+                </small>
 
             </label>
 
@@ -341,25 +345,138 @@
 
 
             <!-- =================================================
-                 CONTACT
+                 PUBLIC CONTACT & ACTIONS
             ================================================== -->
 
-            <label>
+            <div
+                style="
+                    margin-top: 24px;
+                    padding: 20px;
+                    border: 1px solid rgba(128,128,128,.35);
+                    border-radius: 14px;
+                "
+            >
 
-                Contact
+                <p class="admin-eyebrow">
+                    PUBLIC CONTACT & ACTIONS
+                </p>
 
-                <input
-                    type="text"
-                    name="contact"
-                    placeholder="079 000 0000"
-                    value="{{
-                        item.contact
-                        if item and item.contact
-                        else ''
-                    }}"
-                >
+                <h3 style="margin-top: 0;">
+                    Customer Actions
+                </h3>
 
-            </label>
+                <p class="muted">
+                    These details can appear as action buttons
+                    on the public Kalxa listing.
+                </p>
+
+
+                <!-- =============================================
+                     PHONE
+                ============================================== -->
+
+                <label>
+
+                    Phone Number
+
+                    <input
+                        type="text"
+                        name="contact"
+                        placeholder="079 000 0000"
+                        value="{{
+                            item.contact
+                            if item and item.contact
+                            else ''
+                        }}"
+                    >
+
+                    <small class="muted">
+                        Used for the public Call button.
+                    </small>
+
+                </label>
+
+
+                <!-- =============================================
+                     WHATSAPP
+                ============================================== -->
+
+                <label>
+
+                    WhatsApp Number
+
+                    <input
+                        type="text"
+                        name="whatsapp_number"
+                        placeholder="079 000 0000"
+                        value="{{
+                            item.whatsapp_number
+                            if item and item.whatsapp_number
+                            else ''
+                        }}"
+                    >
+
+                    <small class="muted">
+                        Used for the public WhatsApp button.
+                    </small>
+
+                </label>
+
+
+                <!-- =============================================
+                     DIRECTIONS
+                ============================================== -->
+
+                <label>
+
+                    Directions / Google Maps Link
+
+                    <input
+                        type="url"
+                        name="directions_url"
+                        placeholder="https://maps.google.com/..."
+                        value="{{
+                            item.directions_url
+                            if item and item.directions_url
+                            else ''
+                        }}"
+                    >
+
+                    <small class="muted">
+                        Paste a Google Maps or other HTTPS location
+                        link. This will power the Directions button.
+                    </small>
+
+                </label>
+
+
+                <!-- =============================================
+                     TICKET / BOOKING LINK
+                ============================================== -->
+
+                <label>
+
+                    Ticket / Booking Link
+
+                    <input
+                        type="url"
+                        name="ticket_url"
+                        placeholder="https://..."
+                        value="{{
+                            item.ticket_url
+                            if item and item.ticket_url
+                            else ''
+                        }}"
+                    >
+
+                    <small class="muted">
+                        Optional. Add the event ticket, booking,
+                        registration or reservation page.
+                    </small>
+
+                </label>
+
+            </div>
 
 
             <!-- =================================================
@@ -552,6 +669,11 @@
                         }}"
                     >
 
+                    <small class="muted">
+                        Optional for one-day events. For multi-day
+                        events, enter the final event date.
+                    </small>
+
                 </label>
 
             </div>
@@ -696,7 +818,9 @@
                 </p>
 
 
-                <!-- PRICING MODEL -->
+                <!-- =============================================
+                     PRICING MODEL
+                ============================================== -->
 
                 <label>
 
@@ -730,7 +854,9 @@
                 </label>
 
 
-                <!-- DURATION -->
+                <!-- =============================================
+                     DURATION
+                ============================================== -->
 
                 <label id="commercial-duration-group">
 
@@ -755,7 +881,9 @@
                 </label>
 
 
-                <!-- CAMPAIGN REACH -->
+                <!-- =============================================
+                     CAMPAIGN REACH
+                ============================================== -->
 
                 <div
                     id="campaign-reach-section"
@@ -827,7 +955,9 @@
                 </div>
 
 
-                <!-- CALCULATED PACKAGE PRICE -->
+                <!-- =============================================
+                     CALCULATED PACKAGE PRICE
+                ============================================== -->
 
                 <div
                     style="
@@ -871,7 +1001,9 @@
                 </div>
 
 
-                <!-- PAYMENT STATUS -->
+                <!-- =============================================
+                     PAYMENT STATUS
+                ============================================== -->
 
                 <label>
 
@@ -923,7 +1055,9 @@
                 </label>
 
 
-                <!-- PAYMENT REFERENCE -->
+                <!-- =============================================
+                     PAYMENT REFERENCE
+                ============================================== -->
 
                 <label>
 
@@ -1552,14 +1686,16 @@
 
        Browser display only.
        Flask backend remains source of truth.
+
+       These values mirror pricing.py.
     ======================================================== */
 
     const presencePricing = {
 
-        30: 49,
-        90: 99,
-        180: 169,
-        365: 249
+        30: 99,
+        90: 179,
+        180: 299,
+        365: 499
 
     };
 
@@ -1567,21 +1703,21 @@
     const campaignPricing = {
 
         7: {
-            1: 49,
-            2: 79,
-            3: 109
+            1: 79,
+            2: 99,
+            3: 119
         },
 
         14: {
-            1: 79,
+            1: 99,
             2: 119,
             3: 159
         },
 
         30: {
-            1: 129,
-            2: 179,
-            3: 229
+            1: 179,
+            2: 199,
+            3: 249
         }
 
     };
@@ -1905,8 +2041,7 @@
         ---------------------------------------------------- */
 
         const overrideKey =
-            category
-            + "|"
+            category + "|"
             + contentType;
 
 
@@ -2452,8 +2587,6 @@
 
     /* ========================================================
        ENSURE CAMPAIGN HOME ZONE
-
-       Home/origin zone counts as one purchased reach zone.
     ======================================================== */
 
     function ensureCampaignHomeZone() {
@@ -2650,11 +2783,6 @@
         }
 
 
-        /*
-         * The original edit duration only needs to be
-         * restored once.
-         */
-
         durationSelect.dataset.currentDuration =
             "";
 
@@ -2813,10 +2941,6 @@
             getSelectedPricingModel();
 
 
-        /* ----------------------------------------------------
-           SET HIDDEN MODEL
-        ---------------------------------------------------- */
-
         if (pricingModelInput) {
 
             pricingModelInput.value =
@@ -2896,10 +3020,6 @@
 
             }
 
-
-            /*
-             * Home zone counts as part of purchased reach.
-             */
 
             ensureCampaignHomeZone();
 
@@ -3050,10 +3170,6 @@
                         getSelectedPricingModel();
 
 
-                    /*
-                     * Campaign home zone must remain selected.
-                     */
-
                     if (
                         pricingModel
                         === "campaign"
@@ -3067,10 +3183,6 @@
                     let zoneCount =
                         getSelectedZoneCount();
 
-
-                    /*
-                     * Maximum 3 zones.
-                     */
 
                     if (
                         zoneCount > 3
@@ -3089,10 +3201,6 @@
                                 checkbox.dataset.zoneId
                             );
 
-
-                        /*
-                         * Don't remove the required home zone.
-                         */
 
                         if (
                             changedZoneId
@@ -3143,22 +3251,6 @@
 
     /* ========================================================
        INITIAL LOAD
-
-       IMPORTANT ORDER:
-
-       category
-           ↓
-       content types
-           ↓
-       workflow
-           ↓
-       Presence / Campaign
-           ↓
-       duration options
-           ↓
-       reach
-           ↓
-       package price
     ======================================================== */
 
     populateContentTypes(
@@ -3401,7 +3493,3 @@
 </body>
 
 </html>
-
-
-
-     
