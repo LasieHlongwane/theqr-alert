@@ -2664,23 +2664,84 @@ def qr_category(
 
 
     # =====================================================
-    # NORMALIZE CATEGORY SLUG
+    # CLEAN REQUESTED CATEGORY
+    #
+    # This may be either:
+    #
+    # OLD PUBLIC / DATABASE SLUG
+    #
+    #     check-out-our-specials
+    #     upcoming-event-🥹🔥
+    #     beauty-salon
+    #     property
+    #     transport
+    #
+    # OR NEW CANONICAL KEY
+    #
+    #     restaurants
+    #     events
+    #     beauty
+    #     rentals
+    #     delivery
+    #
     # =====================================================
 
     category_slug = (
-        category
+        str(
+            category
+            or ""
+        )
         .strip()
         .lower()
     )
 
 
+    if not category_slug:
+        abort(404)
+
+
+    # =====================================================
+    # CANONICAL BUSINESS TAXONOMY
+    #
+    # Examples:
+    #
+    # upcoming-event-🥹🔥
+    #       -> events
+    #
+    # check-out-our-specials
+    #       -> restaurants
+    #
+    # beauty-salon
+    #       -> beauty
+    #
+    # property
+    #       -> rentals
+    #
+    # transport
+    #       -> delivery
+    # =====================================================
+
+    canonical_category = normalize_category(
+        category_slug
+    )
+
+
     # =====================================================
     # VALIDATE CATEGORY
+    #
+    # get_category_by_slug() now understands both:
+    #
+    # - exact existing database slugs
+    # - canonical taxonomy keys
+    #
+    # This allows old and new URLs to coexist during
+    # migration.
     # =====================================================
 
     category_record = (
-        get_active_category_by_slug(
-            category_slug
+        get_category_by_slug(
+            category_slug,
+            active_only=True,
         )
     )
 
@@ -2691,7 +2752,49 @@ def qr_category(
 
 
     # =====================================================
+    # CONSUMER PRESENTATION
+    #
+    # This is intentionally separate from the database
+    # Category row.
+    #
+    # Example:
+    #
+    # DATABASE / BUSINESS
+    #     restaurants
+    #
+    # CONSUMER
+    #     🍔 HUNGRY?
+    #     Find something good to eat
+    # =====================================================
+
+    consumer_category = (
+        get_consumer_category(
+            canonical_category
+        )
+    )
+
+
+    # =====================================================
     # GET ACTIVE CONTENT
+    #
+    # get_active_content() now understands all equivalent
+    # legacy + canonical category values.
+    #
+    # Therefore:
+    #
+    #     category URL:
+    #         check-out-our-specials
+    #
+    # can retrieve ContentItem rows stored as:
+    #
+    #     check-out-our-specials
+    #     foods
+    #     local-restaurants
+    #     restaurants
+    #
+    # because they all belong to the canonical:
+    #
+    #     restaurants
     # =====================================================
 
     items = get_active_content(
@@ -2700,34 +2803,44 @@ def qr_category(
     )
 
 
-    
-
-
     # =====================================================
     # RECORD CATEGORY VIEW
-    # =====================================================
     #
-    # Analytics must NEVER prevent residents from
+    # IMPORTANT:
+    #
+    # Keep category_selected as the REAL requested/public
+    # category slug for now.
+    #
+    # This preserves continuity with your existing QRScan
+    # analytics data.
+    #
+    # We are NOT migrating analytics category values yet.
+    #
+    # Analytics must never prevent residents from
     # accessing local content.
-    #
-    # If analytics recording fails, roll back the
-    # transaction and continue rendering the page.
-    #
     # =====================================================
 
     try:
 
         category_event = QRScan(
-            access_point_id=access_point.id,
 
-            event_type="category_view",
+            access_point_id=(
+                access_point.id
+            ),
 
-            category_selected=category_slug,
+            event_type=(
+                "category_view"
+            ),
+
+            category_selected=(
+                category_slug
+            ),
 
             user_agent=request.headers.get(
                 "User-Agent",
                 "",
             ),
+
         )
 
 
@@ -2746,31 +2859,69 @@ def qr_category(
 
         app.logger.exception(
             "Failed to record category view. "
-            "access_point=%s category=%s error=%s",
+            "access_point=%s "
+            "category=%s "
+            "canonical_category=%s "
+            "error=%s",
             access_point.code,
             category_slug,
+            canonical_category,
             exc,
         )
 
 
     # =====================================================
     # DISPLAY CATEGORY PAGE
+    #
+    # category
+    #     = existing Category database object
+    #
+    # canonical_category
+    #     = stable internal taxonomy key
+    #
+    # consumer_category
+    #     = customer-facing presentation
+    #
+    # Example:
+    #
+    # category.slug:
+    #     check-out-our-specials
+    #
+    # canonical_category:
+    #     restaurants
+    #
+    # consumer_category:
+    #     {
+    #         "title": "HUNGRY?",
+    #         "subtitle":
+    #             "Find something good to eat",
+    #         "icon": "🍔",
+    #     }
     # =====================================================
 
     return render_template(
+
         "category.html",
 
         zone=zone,
 
         category=category_record,
 
+        canonical_category=(
+            canonical_category
+        ),
+
+        consumer_category=(
+            consumer_category
+        ),
+
         items=items,
 
         access_point=access_point,
 
         today=date.today(),
-    )
 
+    )
 # =========================================================
 # PUBLIC VAPID KEY
 # =========================================================
