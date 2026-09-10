@@ -898,12 +898,19 @@ def get_campaign_state(
     now=None,
 ):
     """
-    Calculate the current state of a Kalxa campaign.
+    Calculate the current Kalxa campaign state.
 
-    This function does NOT modify the database.
+    This function does not modify the database.
 
-    It calculates the state dynamically whenever the page
-    is loaded.
+    It calculates presentation state dynamically from:
+
+        Events:
+            event_date + start_time
+            event_end_date + end_time
+
+        Other campaigns:
+            start_date + start_time
+            end_date + end_time
 
     Possible states:
 
@@ -912,28 +919,16 @@ def get_campaign_state(
         today
         tonight
         live
-        ending
-        ended
         active
+        ends_today
+        ending_soon
+        ended
         undated
-
-    Examples:
-
-        3 DAYS TO GO
-        TOMORROW
-        TODAY
-        TONIGHT
-        HAPPENING NOW
-        ENDS TODAY
-        ENDED
-
-    The underlying state is separate from the consumer label.
-    Category-specific wording can therefore be added later.
     """
 
-    # ========================================================
-    # CURRENT KALXA TIME
-    # ========================================================
+    # =====================================================
+    # CURRENT KALXA LOCAL TIME
+    # =====================================================
 
     if now is None:
 
@@ -941,14 +936,16 @@ def get_campaign_state(
             KALXA_TIMEZONE
         )
 
+
     elif now.tzinfo is None:
 
         # Test/admin supplied naive datetime.
-        # Interpret it as South African local time.
+        # Treat it as South African local time.
 
         now = now.replace(
             tzinfo=KALXA_TIMEZONE
         )
+
 
     else:
 
@@ -957,90 +954,124 @@ def get_campaign_state(
         )
 
 
-    today = now.date()
+    today = (
+        now.date()
+    )
 
 
-    # ========================================================
+    # =====================================================
     # CATEGORY
-    # ========================================================
+    # =====================================================
 
-    canonical_category = normalize_category(
-        item.category
+    canonical_category = (
+        normalize_category(
+            item.category
+        )
     )
 
 
-    # ========================================================
-    # CAMPAIGN DATES
-    # ========================================================
-
-    target_date = (
-        item.get_campaign_target_date()
-    )
-
-    start_datetime = (
-        item.get_campaign_start_datetime()
-    )
-
-    end_datetime = (
-        item.get_campaign_end_datetime()
+    is_event = (
+        canonical_category
+        == "events"
     )
 
 
-    # ========================================================
-    # MAKE MODEL DATETIMES TIMEZONE-AWARE
-    #
-    # ContentItem helpers currently return naive datetimes
-    # built from Date + Time columns.
-    #
-    # Those values represent Kalxa local campaign time.
-    # ========================================================
+    # =====================================================
+    # RAW DATE / TIME VALUES
+    # =====================================================
 
-    if start_datetime is not None:
+    start_time_value = (
+        getattr(
+            item,
+            "start_time",
+            None,
+        )
+    )
 
-        if start_datetime.tzinfo is None:
 
-            start_datetime = (
-                start_datetime.replace(
-                    tzinfo=KALXA_TIMEZONE
-                )
+    end_time_value = (
+        getattr(
+            item,
+            "end_time",
+            None,
+        )
+    )
+
+
+    # =====================================================
+    # EVENT DATES
+    # =====================================================
+
+    if is_event:
+
+        start_date_value = (
+            getattr(
+                item,
+                "event_date",
+                None,
             )
-
-        else:
-
-            start_datetime = (
-                start_datetime.astimezone(
-                    KALXA_TIMEZONE
-                )
+            or
+            getattr(
+                item,
+                "start_date",
+                None,
             )
+        )
 
 
-    if end_datetime is not None:
-
-        if end_datetime.tzinfo is None:
-
-            end_datetime = (
-                end_datetime.replace(
-                    tzinfo=KALXA_TIMEZONE
-                )
+        event_end_date = (
+            getattr(
+                item,
+                "event_end_date",
+                None,
             )
+        )
 
-        else:
 
-            end_datetime = (
-                end_datetime.astimezone(
-                    KALXA_TIMEZONE
-                )
+        # -------------------------------------------------
+        # A one-day event defaults to its event_date.
+        # -------------------------------------------------
+
+        end_date_value = (
+            event_end_date
+            or
+            start_date_value
+        )
+
+
+    # =====================================================
+    # NON-EVENT CAMPAIGN DATES
+    # =====================================================
+
+    else:
+
+        start_date_value = (
+            getattr(
+                item,
+                "start_date",
+                None,
             )
+        )
 
 
-    # ========================================================
-    # NO CAMPAIGN DATE
-    #
-    # Some Discovery / Business listings are intentionally
-    # ongoing and therefore have no campaign dates.
-    # ========================================================
+        end_date_value = (
+            getattr(
+                item,
+                "end_date",
+                None,
+            )
+        )
 
-    if target_date is None:
+
+    # =====================================================
+    # NO USEFUL CAMPAIGN DATE
+    # =====================================================
+
+    if (
+        not start_date_value
+        and
+        not end_date_value
+    ):
 
         return {
             "state": "undated",
@@ -1050,20 +1081,92 @@ def get_campaign_state(
             "is_live": False,
             "is_ended": False,
             "starts_at": None,
-            "ends_at": end_datetime,
+            "ends_at": None,
         }
 
 
-    # ========================================================
-    # ENDED
+    # =====================================================
+    # BUILD START DATETIME
+    # =====================================================
+
+    start_datetime = None
+
+
+    if start_date_value:
+
+        # -------------------------------------------------
+        # If an exact start time exists, use it.
+        #
+        # Otherwise midnight is used internally for date
+        # comparison, but events without a start_time will
+        # not automatically be labelled HAPPENING NOW.
+        # -------------------------------------------------
+
+        effective_start_time = (
+            start_time_value
+            or
+            time.min
+        )
+
+
+        start_datetime = (
+            datetime.combine(
+                start_date_value,
+                effective_start_time,
+            )
+            .replace(
+                tzinfo=KALXA_TIMEZONE
+            )
+        )
+
+
+    # =====================================================
+    # BUILD END DATETIME
+    # =====================================================
+
+    end_datetime = None
+
+
+    if end_date_value:
+
+        # -------------------------------------------------
+        # If the user did not provide an end time,
+        # consider the content valid until the end
+        # of that day.
+        #
+        # This prevents something ending at 00:00.
+        # -------------------------------------------------
+
+        effective_end_time = (
+            end_time_value
+            or
+            time.max
+        )
+
+
+        end_datetime = (
+            datetime.combine(
+                end_date_value,
+                effective_end_time,
+            )
+            .replace(
+                tzinfo=KALXA_TIMEZONE
+            )
+        )
+
+
+    # =====================================================
+    # INVALID DATE RANGE SAFETY
     #
-    # Explicit end datetime always has the strongest
-    # authority.
-    # ========================================================
+    # Form validation should normally prevent this.
+    # This is defensive protection for old/manual data.
+    # =====================================================
 
     if (
-        end_datetime is not None
-        and now > end_datetime
+        start_datetime
+        and end_datetime
+        and end_datetime
+        < start_datetime
     ):
 
         return {
@@ -1078,30 +1181,66 @@ def get_campaign_state(
         }
 
 
-    # ========================================================
-    # DAYS UNTIL TARGET
-    # ========================================================
+    # =====================================================
+    # ALREADY ENDED
+    # =====================================================
 
-    days_to_go = (
-        target_date - today
-    ).days
+    if (
+        end_datetime
+        and
+        now > end_datetime
+    ):
+
+        return {
+            "state": "ended",
+            "label": "ENDED",
+            "css_class": "campaign-ended",
+            "days_to_go": 0,
+            "is_live": False,
+            "is_ended": True,
+            "starts_at": start_datetime,
+            "ends_at": end_datetime,
+        }
 
 
-    # ========================================================
+    # =====================================================
+    # DAYS UNTIL START
+    # =====================================================
+
+    days_to_go = None
+
+
+    if start_date_value:
+
+        days_to_go = (
+            start_date_value
+            -
+            today
+        ).days
+
+
+    # =====================================================
     # FUTURE — MORE THAN ONE DAY
     #
     # Example:
     #
-    # Sep 9 -> Sep 12
+    # Today: 9 Sep
+    # Event: 12 Sep
     #
-    # 3 DAYS TO GO
-    # ========================================================
+    # → 3 DAYS TO GO
+    # =====================================================
 
-    if days_to_go > 1:
+    if (
+        days_to_go is not None
+        and
+        days_to_go > 1
+    ):
 
         return {
             "state": "upcoming",
-            "label": f"{days_to_go} DAYS TO GO",
+            "label": (
+                f"{days_to_go} DAYS TO GO"
+            ),
             "css_class": "campaign-countdown",
             "days_to_go": days_to_go,
             "is_live": False,
@@ -1111,15 +1250,18 @@ def get_campaign_state(
         }
 
 
-    # ========================================================
+    # =====================================================
     # TOMORROW
-    # ========================================================
+    # =====================================================
 
-    if days_to_go == 1:
+    if (
+        days_to_go
+        == 1
+    ):
 
         return {
             "state": "tomorrow",
-            "label": "TOMORROW",
+            "label": "🔥 TOMORROW",
             "css_class": "campaign-tomorrow",
             "days_to_go": 1,
             "is_live": False,
@@ -1129,31 +1271,39 @@ def get_campaign_state(
         }
 
 
-    # ========================================================
-    # TODAY — BEFORE START TIME
-    # ========================================================
+    # =====================================================
+    # EVENT LOGIC
+    # =====================================================
 
-    if days_to_go == 0:
+    if is_event:
+
+        # =================================================
+        # EVENT IS TODAY BUT HAS NOT STARTED
+        # =================================================
 
         if (
-            start_datetime is not None
-            and now < start_datetime
+            days_to_go == 0
+            and
+            start_datetime
+            and
+            now < start_datetime
         ):
 
-            # ------------------------------------------------
-            # EVENT TODAY
+            # ---------------------------------------------
+            # EVENING EVENT
             #
-            # If it has an actual start time, TODAY becomes
-            # TONIGHT for evening events.
-            #
-            # 17:00 is our initial Kalxa evening threshold.
-            # This can later become configurable.
-            # ------------------------------------------------
+            # 17:00 is currently Kalxa's "tonight"
+            # threshold.
+            # ---------------------------------------------
 
             if (
-                canonical_category == "events"
-                and item.start_time is not None
-                and item.start_time >= time(17, 0)
+                start_time_value
+                and
+                start_time_value
+                >= time(
+                    17,
+                    0,
+                )
             ):
 
                 return {
@@ -1180,17 +1330,130 @@ def get_campaign_state(
             }
 
 
-        # ====================================================
-        # STARTED TODAY
+        # =================================================
+        # EVENT WITH NO START TIME
         #
-        # If an explicit end datetime exists and we are
-        # between start and end, it is live.
-        # ====================================================
+        # We know the event is today, but cannot truthfully
+        # know whether it has started.
+        # =================================================
 
         if (
-            start_datetime is not None
-            and end_datetime is not None
-            and start_datetime <= now <= end_datetime
+            days_to_go == 0
+            and
+            not start_time_value
+        ):
+
+            return {
+                "state": "today",
+                "label": "🔥 TODAY",
+                "css_class": "campaign-today",
+                "days_to_go": 0,
+                "is_live": False,
+                "is_ended": False,
+                "starts_at": start_datetime,
+                "ends_at": end_datetime,
+            }
+
+
+        # =================================================
+        # EVENT CURRENTLY HAPPENING
+        #
+        # This works across midnight.
+        #
+        # Example:
+        #
+        # Start:
+        # Sep 12 18:00
+        #
+        # End:
+        # Sep 13 02:00
+        #
+        # At Sep 13 01:00 this condition is still TRUE.
+        # =================================================
+
+        if (
+            start_datetime
+            and
+            end_datetime
+            and
+            start_time_value
+            and
+            start_datetime
+            <= now
+            <= end_datetime
+        ):
+
+            remaining = (
+                end_datetime
+                -
+                now
+            )
+
+
+            remaining_seconds = (
+                remaining.total_seconds()
+            )
+
+
+            # =============================================
+            # ENDING SOON
+            #
+            # Initial Kalxa threshold:
+            # final 3 hours.
+            # =============================================
+
+            if (
+                0
+                <= remaining_seconds
+                <= 3 * 60 * 60
+            ):
+
+                return {
+                    "state": "ending_soon",
+                    "label": "⏳ ENDING SOON",
+                    "css_class": "campaign-ending-soon",
+                    "days_to_go": 0,
+                    "is_live": True,
+                    "is_ended": False,
+                    "starts_at": start_datetime,
+                    "ends_at": end_datetime,
+                }
+
+
+            # =============================================
+            # NORMAL LIVE EVENT
+            # =============================================
+
+            return {
+                "state": "live",
+                "label": "🔴 HAPPENING NOW",
+                "css_class": "campaign-live",
+                "days_to_go": 0,
+                "is_live": True,
+                "is_ended": False,
+                "starts_at": start_datetime,
+                "ends_at": end_datetime,
+            }
+
+
+        # =================================================
+        # EVENT STARTED BUT NO EXPLICIT END TIME
+        #
+        # If there is a start time but no end_time, the
+        # event remains live until the end of end_date /
+        # event_date.
+        # =================================================
+
+        if (
+            start_datetime
+            and
+            start_time_value
+            and
+            now >= start_datetime
+            and
+            end_datetime
+            and
+            now <= end_datetime
         ):
 
             return {
@@ -1205,17 +1468,37 @@ def get_campaign_state(
             }
 
 
-        # ====================================================
-        # STARTED, BUT NO EXPLICIT END DATETIME
-        #
-        # We know the campaign has started, but we cannot
-        # truthfully claim it is still happening indefinitely.
-        #
-        # For events we keep TODAY rather than manufacturing
-        # an end time.
-        # ====================================================
+        # =================================================
+        # FALLBACK EVENT ENDED
+        # =================================================
 
-        if canonical_category == "events":
+        if (
+            start_date_value
+            and
+            today > end_date_value
+        ):
+
+            return {
+                "state": "ended",
+                "label": "ENDED",
+                "css_class": "campaign-ended",
+                "days_to_go": 0,
+                "is_live": False,
+                "is_ended": True,
+                "starts_at": start_datetime,
+                "ends_at": end_datetime,
+            }
+
+
+        # =================================================
+        # EVENT TODAY FALLBACK
+        # =================================================
+
+        if (
+            start_date_value
+            and
+            today == start_date_value
+        ):
 
             return {
                 "state": "today",
@@ -1225,56 +1508,153 @@ def get_campaign_state(
                 "is_live": False,
                 "is_ended": False,
                 "starts_at": start_datetime,
-                "ends_at": None,
+                "ends_at": end_datetime,
             }
 
 
-        return {
-            "state": "active",
-            "label": "🔥 AVAILABLE NOW",
-            "css_class": "campaign-active",
-            "days_to_go": 0,
-            "is_live": True,
-            "is_ended": False,
-            "starts_at": start_datetime,
-            "ends_at": end_datetime,
-        }
+    # =====================================================
+    # NON-EVENT CAMPAIGN
+    # =====================================================
 
+    else:
 
-    # ========================================================
-    # TARGET DATE HAS PASSED
-    #
-    # We reach here when:
-    #
-    #     days_to_go < 0
-    #
-    # An explicit end date may still mean the campaign is
-    # active.
-    #
-    # Example:
-    #
-    # Special:
-    # start = Sep 5
-    # end   = Sep 12
-    # today = Sep 9
-    # ========================================================
+        # =================================================
+        # CAMPAIGN HAS NOT STARTED YET TODAY
+        # =================================================
 
-    if (
-        end_datetime is not None
-        and now <= end_datetime
-    ):
-
-        # ----------------------------------------------------
-        # LAST DAY
-        # ----------------------------------------------------
-
-        if end_datetime.date() == today:
+        if (
+            days_to_go == 0
+            and
+            start_datetime
+            and
+            start_time_value
+            and
+            now < start_datetime
+        ):
 
             return {
-                "state": "ending",
-                "label": "ENDS TODAY",
-                "css_class": "campaign-ending",
+                "state": "today",
+                "label": "STARTS TODAY",
+                "css_class": "campaign-today",
                 "days_to_go": 0,
+                "is_live": False,
+                "is_ended": False,
+                "starts_at": start_datetime,
+                "ends_at": end_datetime,
+            }
+
+
+        # =================================================
+        # ACTIVE CAMPAIGN
+        # =================================================
+
+        campaign_has_started = (
+
+            start_datetime is None
+
+            or
+
+            now >= start_datetime
+
+        )
+
+
+        campaign_has_not_ended = (
+
+            end_datetime is None
+
+            or
+
+            now <= end_datetime
+
+        )
+
+
+        if (
+            campaign_has_started
+            and
+            campaign_has_not_ended
+        ):
+
+            # =============================================
+            # EXACT ENDING-SOON WINDOW
+            #
+            # Only possible when an explicit end_time was
+            # provided.
+            # =============================================
+
+            if (
+                end_datetime
+                and
+                end_time_value
+            ):
+
+                remaining = (
+                    end_datetime
+                    -
+                    now
+                )
+
+
+                remaining_seconds = (
+                    remaining.total_seconds()
+                )
+
+
+                if (
+                    0
+                    <= remaining_seconds
+                    <= 3 * 60 * 60
+                ):
+
+                    return {
+                        "state": "ending_soon",
+                        "label": "⏳ ENDING SOON",
+                        "css_class": "campaign-ending-soon",
+                        "days_to_go": 0,
+                        "is_live": True,
+                        "is_ended": False,
+                        "starts_at": start_datetime,
+                        "ends_at": end_datetime,
+                    }
+
+
+            # =============================================
+            # ENDS TODAY
+            # =============================================
+
+            if (
+                end_datetime
+                and
+                end_datetime.date()
+                == today
+            ):
+
+                return {
+                    "state": "ends_today",
+                    "label": "🔥 ENDS TODAY",
+                    "css_class": "campaign-ending",
+                    "days_to_go": 0,
+                    "is_live": True,
+                    "is_ended": False,
+                    "starts_at": start_datetime,
+                    "ends_at": end_datetime,
+                }
+
+
+            # =============================================
+            # GENERIC ACTIVE CAMPAIGN
+            # =============================================
+
+            return {
+                "state": "active",
+                "label": "🔥 AVAILABLE NOW",
+                "css_class": "campaign-active",
+                "days_to_go": (
+                    days_to_go
+                    if days_to_go is not None
+                    else 0
+                ),
                 "is_live": True,
                 "is_ended": False,
                 "starts_at": start_datetime,
@@ -1282,29 +1662,15 @@ def get_campaign_state(
             }
 
 
-        # ----------------------------------------------------
-        # CAMPAIGN CURRENTLY ACTIVE
-        # ----------------------------------------------------
+    # =====================================================
+    # FINAL ENDED SAFETY
+    # =====================================================
 
-        return {
-            "state": "active",
-            "label": "🔥 AVAILABLE NOW",
-            "css_class": "campaign-active",
-            "days_to_go": 0,
-            "is_live": True,
-            "is_ended": False,
-            "starts_at": start_datetime,
-            "ends_at": end_datetime,
-        }
-
-
-    # ========================================================
-    # EVENT WITHOUT END DATE
-    #
-    # If its target date has already passed, it is ended.
-    # ========================================================
-
-    if canonical_category == "events":
+    if (
+        end_datetime
+        and
+        now > end_datetime
+    ):
 
         return {
             "state": "ended",
@@ -1318,23 +1684,24 @@ def get_campaign_state(
         }
 
 
-    # ========================================================
-    # ONGOING CAMPAIGN WITHOUT END DATE
-    #
-    # A non-event campaign may intentionally have no end.
-    # ========================================================
+    # =====================================================
+    # FINAL FALLBACK
+    # =====================================================
 
     return {
         "state": "active",
         "label": "🔥 AVAILABLE NOW",
         "css_class": "campaign-active",
-        "days_to_go": 0,
+        "days_to_go": (
+            days_to_go
+            if days_to_go is not None
+            else 0
+        ),
         "is_live": True,
         "is_ended": False,
         "starts_at": start_datetime,
         "ends_at": end_datetime,
     }
-
 
 def should_show_campaign_state(item):
     """
