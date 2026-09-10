@@ -3659,11 +3659,48 @@ def get_active_content(
     # NON-EVENT NATURAL VISIBILITY
     # =====================================================
 
-    natural_content_visibility = db.and_(
+    natural_content_visibility = db.or_(
 
-        # ---------------------------------------------
-        # START
-        # ---------------------------------------------
+     db.and_(
+
+        ContentItem.pricing_model
+        == PRICING_MODEL_CAMPAIGN,
+
+        db.or_(
+
+            ContentItem.end_date.is_(
+                None
+            ),
+
+            ContentItem.end_date
+            >= today,
+
+        ),
+
+     ),
+
+
+    # =====================================================
+    # NON-CAMPAIGN / PRESENCE CONTENT
+    #
+    # Preserve the original behaviour:
+    #
+    #     start_date must have arrived
+    #     end_date must not have passed
+    # =====================================================
+
+     db.and_(
+
+        db.or_(
+
+            ContentItem.pricing_model.is_(
+                None
+            ),
+
+            ContentItem.pricing_model
+            != PRICING_MODEL_CAMPAIGN,
+
+        ),
 
         db.or_(
 
@@ -3676,11 +3713,6 @@ def get_active_content(
 
         ),
 
-
-        # ---------------------------------------------
-        # END
-        # ---------------------------------------------
-
         db.or_(
 
             ContentItem.end_date.is_(
@@ -3691,6 +3723,8 @@ def get_active_content(
             >= today,
 
         ),
+
+     ),
 
     )
 
