@@ -96,49 +96,76 @@ document.addEventListener(
         }
 
 
-        function urlBase64ToUint8Array(
-            base64String
-        ) {
+        function urlBase64ToUint8Array(base64String) {
 
-            const padding =
-                "=".repeat(
-                    (
-                        4
-                        -
-                        base64String.length % 4
-                    )
-                    % 4
-                );
+          if (!base64String) {
+           throw new Error(
+            "VAPID public key is empty."
+           );
+          }
 
+          const cleaned =
+           String(base64String)
+            .trim();
 
-            const base64 = (
-                base64String
-                + padding
-            )
-                .replace(
-                    /-/g,
-                    "+"
-                )
-                .replace(
-                    /_/g,
-                    "/"
-                );
+          const padding =
+           "=".repeat(
+            (4 - cleaned.length % 4) % 4
+          );
 
+          const base64 =
+           (
+            cleaned
+            + padding
+           )
+           .replace(
+             /-/g,
+             "+"
+           )
+           .replace(
+             /_/g,
+             "/"
+           );
 
-            const rawData =
-                window.atob(
-                    base64
-                );
+          let rawData;
 
+          try {
 
-            return Uint8Array.from(
-                [...rawData].map(
-                    char =>
-                        char.charCodeAt(0)
-                )
+           rawData =
+            window.atob(
+                base64
             );
 
-        }
+          }
+          catch (error) {
+
+            console.error(
+             "[Kalxa Push] Invalid VAPID base64:",
+             error
+            );
+
+            throw new Error(
+             "Invalid VAPID public key format."
+            );
+          }
+
+          const outputArray =
+            new Uint8Array(
+             rawData.length
+          );
+
+          for (
+           let i = 0;
+           i < rawData.length;
+           i++
+          ) {
+
+           outputArray[i] =
+            rawData.charCodeAt(i);
+          }
+
+          return outputArray;
+        } 
 
 
         async function fetchWithTimeout(
