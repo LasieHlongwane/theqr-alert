@@ -3002,6 +3002,7 @@ def get_active_category_by_slug(
         .first()
     )
 
+
 def get_active_content(
     zone_id,
     category_slug,
@@ -3045,15 +3046,6 @@ def get_active_content(
     # CATEGORY ALIASES
     #
     # Allows legacy and canonical values to coexist.
-    #
-    # Example:
-    #
-    # restaurants:
-    #
-    #     restaurants
-    #     foods
-    #     check-out-our-specials
-    #     local-restaurants
     # =====================================================
 
     category_aliases = set(
@@ -3124,35 +3116,6 @@ def get_active_content(
 
     # =====================================================
     # COMMERCIAL VISIBILITY
-    #
-    # IMPORTANT:
-    #
-    # There are THREE main groups.
-    #
-    # A. Legacy/admin content
-    #    pricing_model is NULL
-    #
-    # B. Explicitly waived content
-    #
-    # C. Paid commercial content with an active
-    #    commercial period
-    #
-    # We also preserve OLD ADMIN CONTENT that existed
-    # before the commercial system was introduced.
-    #
-    # Such content may have:
-    #
-    #     pricing_model = presence/campaign
-    #
-    # but:
-    #
-    #     amount_due = NULL
-    #     paid_at = NULL
-    #     commercial_starts_at = NULL
-    #     commercial_expires_at = NULL
-    #
-    # That is treated as legacy/admin content rather than
-    # a failed customer payment.
     # =====================================================
 
     legacy_admin_commercial_content = db.and_(
@@ -3220,8 +3183,7 @@ def get_active_content(
 
 
         # ---------------------------------------------
-        # OLD ADMIN CONTENT CREATED BEFORE COMMERCIAL
-        # PAYMENT METADATA WAS fully populated
+        # OLD ADMIN CONTENT
         # ---------------------------------------------
 
         legacy_admin_commercial_content,
@@ -3244,32 +3206,13 @@ def get_active_content(
         ContentItem.query
         .filter(
 
-            # ---------------------------------------------
-            # PUBLISHED ONLY
-            # ---------------------------------------------
-
             ContentItem.active.is_(True),
-
-
-            # ---------------------------------------------
-            # LEGACY + CANONICAL TAXONOMY
-            # ---------------------------------------------
 
             ContentItem.category.in_(
                 category_aliases
             ),
 
-
-            # ---------------------------------------------
-            # ZONE
-            # ---------------------------------------------
-
             zone_visibility,
-
-
-            # ---------------------------------------------
-            # COMMERCIAL STATUS
-            # ---------------------------------------------
 
             commercial_visibility,
 
@@ -3278,42 +3221,327 @@ def get_active_content(
 
 
     # =====================================================
+    # STEP 9 — URGENCY RANKING
+    #
+    # Smaller number = higher priority.
+    #
+    # IMPORTANT:
+    #
+    # Featured remains the FIRST priority.
+    #
+    # Inside featured/non-featured groups:
+    #
+    # HAPPENING NOW
+    # ENDING SOON
+    # TONIGHT
+    # ENDS TODAY / CLOSES TODAY
+    # TODAY
+    # TOMORROW
+    # UPCOMING
+    # AVAILABLE NOW
+    # NORMAL / UNDATED
+    # =====================================================
+
+    urgency_priority = {
+
+        "live": 0,
+
+        "ending_soon": 1,
+
+        "tonight": 2,
+
+        "ends_today": 3,
+
+        "today": 4,
+
+        "tomorrow": 5,
+
+        "upcoming": 6,
+
+        "active": 7,
+
+        "undated": 8,
+
+        "ended": 9,
+
+    }
+
+
+    # =====================================================
+    # PYTHON SORT KEY
+    #
+    # Campaign state is calculated in Python, not SQL,
+    # so final urgency ordering happens after .all().
+    # =====================================================
+
+    def campaign_sort_key(
+        item,
+    ):
+
+        # ---------------------------------------------
+        # FEATURED
+        #
+        # Featured = 0
+        # Normal   = 1
+        # ---------------------------------------------
+
+        featured_rank = (
+            0
+            if getattr(
+                item,
+                "featured",
+                False,
+            )
+            else 1
+        )
+
+
+        # ---------------------------------------------
+        # CAMPAIGN STATE
+        # ---------------------------------------------
+
+        campaign_state = (
+            getattr(
+                item,
+                "campaign_state",
+                None,
+            )
+            or {}
+        )
+
+
+        state = campaign_state.get(
+            "state"
+        )
+
+
+        urgency_rank = (
+            urgency_priority.get(
+                state,
+                8,
+            )
+        )
+
+
+        # ---------------------------------------------
+        # DAYS TO GO
+        #
+        # Example:
+        #
+        # 2 DAYS TO GO
+        # appears before
+        # 5 DAYS TO GO
+        # ---------------------------------------------
+
+        days_to_go = (
+            campaign_state.get(
+                "days_to_go"
+            )
+        )
+
+
+        if days_to_go is None:
+
+            days_rank = 999999
+
+        else:
+
+            try:
+
+                days_rank = int(
+                    days_to_go
+                )
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                days_rank = 999999
+
+
+        # ---------------------------------------------
+        # RELEVANT DATE
+        #
+        # Events:
+        #
+        #     event_date
+        #
+        # Other campaigns:
+        #
+        #     start_date
+        # ---------------------------------------------
+
+        if (
+            normalize_category(
+                item.category
+            )
+            == "events"
+        ):
+
+            relevant_date = (
+                getattr(
+                    item,
+                    "event_date",
+                    None,
+                )
+                or
+                getattr(
+                    item,
+                    "start_date",
+                    None,
+                )
+            )
+
+        else:
+
+            relevant_date = (
+                getattr(
+                    item,
+                    "start_date",
+                    None,
+                )
+            )
+
+
+        if relevant_date:
+
+            date_rank = (
+                relevant_date.toordinal()
+            )
+
+        else:
+
+            date_rank = 999999999
+
+
+        # ---------------------------------------------
+        # NEWEST LISTING FALLBACK
+        # ---------------------------------------------
+
+        created_at = (
+            getattr(
+                item,
+                "created_at",
+                None,
+            )
+        )
+
+
+        if created_at:
+
+            try:
+
+                created_rank = (
+                    -created_at.timestamp()
+                )
+
+            except (
+                ValueError,
+                OSError,
+            ):
+
+                created_rank = 0
+
+        else:
+
+            created_rank = 0
+
+
+        return (
+
+            # 1. FEATURED FIRST
+            featured_rank,
+
+            # 2. URGENCY
+            urgency_rank,
+
+            # 3. CLOSEST UPCOMING
+            days_rank,
+
+            # 4. CLOSEST RELEVANT DATE
+            date_rank,
+
+            # 5. NEWEST CREATED
+            created_rank,
+
+        )
+
+
+    # =====================================================
     # EVENTS
     # =====================================================
 
-    if canonical_category == "events":
+    if (
+        canonical_category
+        == "events"
+    ):
 
-        # -------------------------------------------------
-        # FUTURE / CURRENT EVENT VISIBILITY
+        # =================================================
+        # EVENT NATURAL VISIBILITY
         #
-        # Event remains visible when:
+        # NEW EVENT STRUCTURE:
         #
-        # 1. end_date has not passed
+        #     event_date
+        #     event_end_date
         #
-        # OR
+        # LEGACY SUPPORT:
         #
-        # 2. event_date has not passed when no end_date
+        #     end_date
         #
-        # OR
-        #
-        # 3. legacy event has no dates
-        #
-        # -------------------------------------------------
+        # =================================================
 
         event_natural_visibility = db.or_(
 
+            # -----------------------------------------
+            # NEW EVENTS WITH event_end_date
+            # -----------------------------------------
+
             db.and_(
+
+                ContentItem.event_end_date.is_not(
+                    None
+                ),
+
+                ContentItem.event_end_date
+                >= today,
+
+            ),
+
+
+            # -----------------------------------------
+            # LEGACY EVENTS USING end_date
+            #
+            # Only when event_end_date is missing.
+            # -----------------------------------------
+
+            db.and_(
+
+                ContentItem.event_end_date.is_(
+                    None
+                ),
 
                 ContentItem.end_date.is_not(
                     None
                 ),
 
-                ContentItem.end_date >= today,
+                ContentItem.end_date
+                >= today,
 
             ),
 
 
+            # -----------------------------------------
+            # SINGLE-DAY EVENT
+            #
+            # No explicit end date.
+            # -----------------------------------------
+
             db.and_(
+
+                ContentItem.event_end_date.is_(
+                    None
+                ),
 
                 ContentItem.end_date.is_(
                     None
@@ -3323,12 +3551,21 @@ def get_active_content(
                     None
                 ),
 
-                ContentItem.event_date >= today,
+                ContentItem.event_date
+                >= today,
 
             ),
 
 
+            # -----------------------------------------
+            # LEGACY / UNDATED EVENT
+            # -----------------------------------------
+
             db.and_(
+
+                ContentItem.event_end_date.is_(
+                    None
+                ),
 
                 ContentItem.end_date.is_(
                     None
@@ -3349,36 +3586,51 @@ def get_active_content(
 
 
         # =================================================
-        # EVENT ORDERING
+        # DATABASE PRE-ORDER
         #
-        # Featured first.
-        #
-        # Then closest upcoming event.
-        #
-        # Then newest listing.
+        # This gives us sensible deterministic results
+        # before Python campaign urgency sorting.
         # =================================================
 
         items = (
-           query
-           .order_by(
+            query
+            .order_by(
 
-            featured_priority.desc(),
+                featured_priority.desc(),
 
-            ContentItem.event_date
-            .asc()
-            .nullslast(),
+                ContentItem.event_date
+                .asc()
+                .nullslast(),
 
-            ContentItem.created_at
-            .desc(),
+                ContentItem.created_at
+                .desc(),
 
-           )
-           .all()
+            )
+            .all()
         )
 
 
-        return attach_campaign_states(
-          items
+        # =================================================
+        # ATTACH CAMPAIGN STATE
+        # =================================================
+
+        items = (
+            attach_campaign_states(
+                items
+            )
         )
+
+
+        # =================================================
+        # STEP 9 FINAL URGENCY SORT
+        # =================================================
+
+        items.sort(
+            key=campaign_sort_key
+        )
+
+
+        return items
 
 
     # =====================================================
@@ -3387,28 +3639,34 @@ def get_active_content(
 
     natural_content_visibility = db.and_(
 
-        # -------------------------------------------------
+        # ---------------------------------------------
         # START
-        # -------------------------------------------------
+        # ---------------------------------------------
 
         db.or_(
 
-            ContentItem.start_date.is_(None),
+            ContentItem.start_date.is_(
+                None
+            ),
 
-            ContentItem.start_date <= today,
+            ContentItem.start_date
+            <= today,
 
         ),
 
 
-        # -------------------------------------------------
+        # ---------------------------------------------
         # END
-        # -------------------------------------------------
+        # ---------------------------------------------
 
         db.or_(
 
-            ContentItem.end_date.is_(None),
+            ContentItem.end_date.is_(
+                None
+            ),
 
-            ContentItem.end_date >= today,
+            ContentItem.end_date
+            >= today,
 
         ),
 
@@ -3421,34 +3679,53 @@ def get_active_content(
 
 
     # =====================================================
-    # NON-EVENT ORDERING
+    # NON-EVENT DATABASE PRE-ORDER
     #
-    # Featured first.
+    # NOTE:
     #
-    # Then earliest applicable start.
-    #
-    # Then newest listing.
+    # This now correctly uses start_date instead of
+    # event_date.
     # =====================================================
+
     items = (
-      query
-      .order_by(
+        query
+        .order_by(
 
-        featured_priority.desc(),
+            featured_priority.desc(),
 
-        ContentItem.event_date
-        .asc()
-        .nullslast(),
+            ContentItem.start_date
+            .asc()
+            .nullslast(),
 
-        ContentItem.created_at
-        .desc(),
+            ContentItem.created_at
+            .desc(),
 
-      )
-      .all()
-    )
-    return attach_campaign_states(
-      items
+        )
+        .all()
     )
 
+
+    # =====================================================
+    # ATTACH CAMPAIGN STATES
+    # =====================================================
+
+    items = (
+        attach_campaign_states(
+            items
+        )
+    )
+
+
+    # =====================================================
+    # STEP 9 FINAL URGENCY SORT
+    # =====================================================
+
+    items.sort(
+        key=campaign_sort_key
+    )
+
+
+    return items
 
 # CONTENT EXPIRY HELPERS
 # =========================================================
