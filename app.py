@@ -6303,24 +6303,6 @@ def submit_content():
                 zone.id,
 
 
-            # ---------------------------------------------
-            # STABLE BUSINESS TAXONOMY
-            # ---------------------------------------------
-            #
-            # NEW submissions now store:
-            #
-            # events
-            # restaurants
-            # beauty
-            # retail_specials
-            # accommodation
-            # rentals
-            # delivery
-            # ...
-            #
-            # Consumer presentation labels are never stored.
-            # ---------------------------------------------
-
             category=
                 category_key,
 
@@ -6406,11 +6388,18 @@ def submit_content():
             event_end_date=
                 event_end_date,
 
+            start_time=
+                start_time,
+
             start_date=
                 start_date,
 
+            end_time=
+                end_time,
+
             end_date=
                 end_date,
+
 
 
             # ---------------------------------------------
