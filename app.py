@@ -1703,6 +1703,579 @@ def get_campaign_state(
         "ends_at": end_datetime,
     }
 
+def get_campaign_state_label(
+    item,
+    campaign_state,
+):
+    """
+    Convert a generic campaign state into
+    category-specific Kalxa consumer wording.
+
+    The state engine decides WHAT state the item is in.
+
+    This helper decides HOW that state should be shown
+    to the user based on category.
+    """
+
+    if not campaign_state:
+        return campaign_state
+
+
+    state = (
+        campaign_state.get(
+            "state"
+        )
+    )
+
+
+    if not state:
+        return campaign_state
+
+
+    canonical_category = (
+        normalize_category(
+            item.category
+        )
+    )
+
+
+    days_to_go = (
+        campaign_state.get(
+            "days_to_go"
+        )
+    )
+
+
+    # =====================================================
+    # EVENTS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "events"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "🔥 TOMORROW",
+
+            "today":
+                "🔥 TODAY",
+
+            "tonight":
+                "🔥 TONIGHT",
+
+            "live":
+                "🔴 HAPPENING NOW",
+
+            "ending_soon":
+                "⏳ ENDING SOON",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"{days_to_go} DAYS TO GO"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # RETAIL SPECIALS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "retail_specials"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "🔥 STARTS TOMORROW",
+
+            "today":
+                "STARTS TODAY",
+
+            "active":
+                "🔥 AVAILABLE NOW",
+
+            "ends_today":
+                "🔥 ENDS TODAY",
+
+            "ending_soon":
+                "⏳ LAST 3 HOURS",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"STARTS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # RESTAURANT CAMPAIGNS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "restaurants"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "🔥 STARTS TOMORROW",
+
+            "today":
+                "STARTS TODAY",
+
+            "active":
+                "🔥 AVAILABLE NOW",
+
+            "ends_today":
+                "🔥 ENDS TODAY",
+
+            "ending_soon":
+                "⏳ LAST FEW HOURS",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"STARTS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # BEAUTY CAMPAIGNS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "beauty"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "🔥 STARTS TOMORROW",
+
+            "today":
+                "STARTS TODAY",
+
+            "active":
+                "🔥 AVAILABLE NOW",
+
+            "ends_today":
+                "🔥 ENDS TODAY",
+
+            "ending_soon":
+                "⏳ LAST FEW HOURS",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"STARTS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # ACCOMMODATION CAMPAIGNS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "accommodation"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "🔥 STARTS TOMORROW",
+
+            "today":
+                "STARTS TODAY",
+
+            "active":
+                "🔥 AVAILABLE NOW",
+
+            "ends_today":
+                "🔥 ENDS TODAY",
+
+            "ending_soon":
+                "⏳ ENDING SOON",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"STARTS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # JOBS / OPPORTUNITIES
+    # =====================================================
+
+    if (
+        canonical_category
+        == "jobs"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "OPENS TOMORROW",
+
+            "today":
+                "OPENS TODAY",
+
+            "active":
+                "APPLICATIONS OPEN",
+
+            "ends_today":
+                "🔥 CLOSES TODAY",
+
+            "ending_soon":
+                "⏳ CLOSING SOON",
+
+            "ended":
+                "CLOSED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"OPENS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # RENTALS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "rentals"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "AVAILABLE TOMORROW",
+
+            "today":
+                "AVAILABLE TODAY",
+
+            "active":
+                "🏠 AVAILABLE NOW",
+
+            "ends_today":
+                "ENDS TODAY",
+
+            "ending_soon":
+                "⏳ ENDING SOON",
+
+            "ended":
+                "NO LONGER AVAILABLE",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"AVAILABLE IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # BUILDING / HARDWARE CAMPAIGNS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "building"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "🔥 STARTS TOMORROW",
+
+            "today":
+                "STARTS TODAY",
+
+            "active":
+                "🔥 AVAILABLE NOW",
+
+            "ends_today":
+                "🔥 ENDS TODAY",
+
+            "ending_soon":
+                "⏳ LAST FEW HOURS",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"STARTS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # ANNOUNCEMENTS
+    # =====================================================
+
+    if (
+        canonical_category
+        == "announcements"
+    ):
+
+        labels = {
+
+            "tomorrow":
+                "STARTS TOMORROW",
+
+            "today":
+                "STARTS TODAY",
+
+            "active":
+                "📢 ACTIVE NOW",
+
+            "ends_today":
+                "ENDS TODAY",
+
+            "ending_soon":
+                "⏳ ENDING SOON",
+
+            "ended":
+                "ENDED",
+
+        }
+
+
+        if (
+            state == "upcoming"
+            and days_to_go is not None
+        ):
+
+            campaign_state[
+                "label"
+            ] = (
+                f"STARTS IN {days_to_go} DAYS"
+            )
+
+
+        elif state in labels:
+
+            campaign_state[
+                "label"
+            ] = (
+                labels[
+                    state
+                ]
+            )
+
+
+        return campaign_state
+
+
+    # =====================================================
+    # GENERIC FALLBACK
+    #
+    # Leave the label generated by get_campaign_state().
+    # =====================================================
+
+    return campaign_state
+
 def should_show_campaign_state(item):
     """
     Decide whether a ContentItem should display Kalxa's
