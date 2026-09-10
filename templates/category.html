@@ -2798,7 +2798,85 @@
      STEP 10 — REMIND ME ENGINE
 ========================================== -->
 
+<!-- =========================================
+     STEP 10D — REMIND ME + WEB PUSH
+========================================== -->
+
 <script>
+
+async function getKalxaPushSubscription() {
+
+    // =========================================
+    // SERVICE WORKER SUPPORT
+    // =========================================
+
+    if (
+        !("serviceWorker" in navigator)
+    ) {
+
+        return null;
+    }
+
+
+    if (
+        !("PushManager" in window)
+    ) {
+
+        return null;
+    }
+
+
+    try {
+
+        // =====================================
+        // WAIT FOR ACTIVE SERVICE WORKER
+        // =====================================
+
+        const registration =
+            await navigator
+                .serviceWorker
+                .ready;
+
+
+        if (!registration) {
+
+            return null;
+        }
+
+
+        // =====================================
+        // GET EXISTING SUBSCRIPTION
+        //
+        // IMPORTANT:
+        // We are NOT creating a subscription
+        // here.
+        //
+        // Kalxa's existing notification system
+        // remains responsible for opt-in.
+        // =====================================
+
+        const subscription =
+            await registration
+                .pushManager
+                .getSubscription();
+
+
+        return subscription;
+
+    }
+    catch (error) {
+
+        console.error(
+            "[Kalxa Reminder] "
+            + "Could not read push subscription:",
+            error
+        );
+
+        return null;
+    }
+}
+
+
 
 document.addEventListener(
     "click",
@@ -2811,6 +2889,7 @@ document.addEventListener(
 
 
         if (!button) {
+
             return;
         }
 
@@ -2841,45 +2920,9 @@ document.addEventListener(
         }
 
 
-        const body =
-            new URLSearchParams();
-
-
         // =========================================
-        // CURRENT DEFAULT
-        //
-        // 60 minutes before campaign start.
-        //
-        // Later this can become:
-        //
-        // 1 hour before
-        // 3 hours before
-        // 1 day before
+        // UI — SAVING
         // =========================================
-
-        body.append(
-            "minutes_before",
-            "60"
-        );
-
-
-        if (zoneId) {
-
-            body.append(
-                "zone_id",
-                zoneId
-            );
-        }
-
-
-        if (accessPointId) {
-
-            body.append(
-                "access_point_id",
-                accessPointId
-            );
-        }
-
 
         button.disabled =
             true;
@@ -2893,15 +2936,114 @@ document.addEventListener(
         );
 
         button.textContent =
-            "Saving reminder...";
+            "Checking notifications...";
 
 
         try {
+
+            // =====================================
+            // GET EXISTING PUSH SUBSCRIPTION
+            // =====================================
+
+            const pushSubscription =
+                await getKalxaPushSubscription();
+
+
+            if (!pushSubscription) {
+
+                button.disabled =
+                    false;
+
+                button.classList.remove(
+                    "is-saving"
+                );
+
+                button.classList.add(
+                    "is-error"
+                );
+
+                button.textContent =
+                    "🔔 Enable Alerts First";
+
+
+                alert(
+                    "Please enable Kalxa notifications "
+                    + "first, then tap Remind Me again."
+                );
+
+
+                return;
+            }
+
+
+            // =====================================
+            // PUSH ENDPOINT
+            // =====================================
+
+            const pushEndpoint =
+                pushSubscription.endpoint;
+
+
+            if (!pushEndpoint) {
+
+                throw new Error(
+                    "Your notification subscription "
+                    + "could not be read."
+                );
+            }
+
+
+            // =====================================
+            // BUILD REQUEST
+            // =====================================
+
+            const body =
+                new URLSearchParams();
+
+
+            body.append(
+                "minutes_before",
+                "60"
+            );
+
+
+            body.append(
+                "push_endpoint",
+                pushEndpoint
+            );
+
+
+            if (zoneId) {
+
+                body.append(
+                    "zone_id",
+                    zoneId
+                );
+            }
+
+
+            if (accessPointId) {
+
+                body.append(
+                    "access_point_id",
+                    accessPointId
+                );
+            }
+
+
+            // =====================================
+            // SAVE REMINDER
+            // =====================================
+
+            button.textContent =
+                "Saving reminder...";
+
 
             const response =
                 await fetch(
                     `/listing/${itemId}/remind`,
                     {
+
                         method:
                             "POST",
 
@@ -2914,6 +3056,7 @@ document.addEventListener(
 
                         body:
                             body.toString(),
+
                     }
                 );
 
@@ -2921,6 +3064,44 @@ document.addEventListener(
             const result =
                 await response.json();
 
+
+            // =====================================
+            // BACKEND SAYS PUSH IS MISSING
+            // =====================================
+
+            if (
+                result.requires_push
+            ) {
+
+                button.disabled =
+                    false;
+
+                button.classList.remove(
+                    "is-saving"
+                );
+
+                button.classList.add(
+                    "is-error"
+                );
+
+                button.textContent =
+                    "🔔 Enable Alerts First";
+
+
+                alert(
+                    result.message
+                    ||
+                    "Please enable Kalxa notifications first."
+                );
+
+
+                return;
+            }
+
+
+            // =====================================
+            // NORMAL ERROR
+            // =====================================
 
             if (!response.ok) {
 
@@ -2932,52 +3113,49 @@ document.addEventListener(
             }
 
 
+            // =====================================
+            // SUCCESS
+            // =====================================
+
             button.classList.remove(
                 "is-saving"
+            );
+
+            button.classList.remove(
+                "is-error"
             );
 
             button.classList.add(
                 "is-saved"
             );
 
-            button.textContent =
-                "✓ Reminder saved";
+            button.disabled =
+                true;
 
-
-            // =========================================
-            // OPTIONAL ENGAGEMENT EVENT
-            //
-            // The backend also records
-            // reminder_created.
-            // =========================================
 
             if (
-                window.LaCTrack
+                result.already_exists
             ) {
 
-                try {
+                button.textContent =
+                    "✓ Reminder already saved";
 
-                    window.LaCTrack(
-                        "reminder_created",
-                        {
-                            contentItemId:
-                                Number(itemId)
-                        }
-                    );
-
-                }
-                catch (trackingError) {
-
-                    console.debug(
-                        "Reminder tracking skipped.",
-                        trackingError
-                    );
-                }
             }
+            else {
 
+                button.textContent =
+                    "✓ Reminder saved";
+
+            }
 
         }
         catch (error) {
+
+            console.error(
+                "[Kalxa Reminder]",
+                error
+            );
+
 
             button.disabled =
                 false;
@@ -3005,7 +3183,6 @@ document.addEventListener(
 );
 
 </script>
-
 
 <!-- =========================================
      ENGAGEMENT CONFIG
