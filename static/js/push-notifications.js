@@ -96,77 +96,110 @@ document.addEventListener(
         }
 
 
-        function urlBase64ToUint8Array(base64String) {
+        // =================================================
+        // VAPID PUBLIC KEY CONVERTER
+        // =================================================
 
-          if (!base64String) {
-           throw new Error(
-            "VAPID public key is empty."
-           );
-          }
+        function urlBase64ToUint8Array(
+            base64String
+        ) {
 
-          const cleaned =
-           String(base64String)
-            .trim();
+            if (!base64String) {
 
-          const padding =
-           "=".repeat(
-            (4 - cleaned.length % 4) % 4
-          );
+                throw new Error(
+                    "VAPID public key is empty."
+                );
 
-          const base64 =
-           (
-            cleaned
-            + padding
-           )
-           .replace(
-             /-/g,
-             "+"
-           )
-           .replace(
-             /_/g,
-             "/"
-           );
+            }
 
-          let rawData;
 
-          try {
+            const cleaned =
+                String(
+                    base64String
+                )
+                .trim();
 
-           rawData =
-            window.atob(
-                base64
-            );
 
-          }
-          catch (error) {
+            const padding =
+                "=".repeat(
+                    (
+                        4
+                        -
+                        cleaned.length % 4
+                    ) % 4
+                );
 
-            console.error(
-             "[Kalxa Push] Invalid VAPID base64:",
-             error
-            );
 
-            throw new Error(
-             "Invalid VAPID public key format."
-            );
-          }
+            const base64 =
+                (
+                    cleaned
+                    +
+                    padding
+                )
+                .replace(
+                    /-/g,
+                    "+"
+                )
+                .replace(
+                    /_/g,
+                    "/"
+                );
 
-          const outputArray =
-            new Uint8Array(
-             rawData.length
-          );
 
-          for (
-           let i = 0;
-           i < rawData.length;
-           i++
-          ) {
+            let rawData;
 
-           outputArray[i] =
-            rawData.charCodeAt(i);
-          }
 
-          return outputArray;
-        } 
+            try {
 
+                rawData =
+                    window.atob(
+                        base64
+                    );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "[Kalxa Push] Invalid VAPID base64:",
+                    error
+                );
+
+
+                throw new Error(
+                    "Invalid VAPID public key format."
+                );
+
+            }
+
+
+            const outputArray =
+                new Uint8Array(
+                    rawData.length
+                );
+
+
+            for (
+                let i = 0;
+                i < rawData.length;
+                i++
+            ) {
+
+                outputArray[i] =
+                    rawData.charCodeAt(
+                        i
+                    );
+
+            }
+
+
+            return outputArray;
+        }
+
+
+        // =================================================
+        // FETCH WITH TIMEOUT
+        // =================================================
 
         async function fetchWithTimeout(
             url,
@@ -192,6 +225,7 @@ document.addEventListener(
                     url,
                     {
                         ...options,
+
                         signal:
                             controller.signal,
                     }
@@ -209,6 +243,10 @@ document.addEventListener(
 
         }
 
+
+        // =================================================
+        // SELECTED CATEGORIES
+        // =================================================
 
         function getSelectedCategories() {
 
@@ -248,18 +286,36 @@ document.addEventListener(
             }
 
 
-            await navigator.serviceWorker.register(
-                "/service-worker.js",
-                {
-                    scope: "/",
-                }
+            const registration =
+                await navigator
+                    .serviceWorker
+                    .register(
+                        "/service-worker.js",
+                        {
+                            scope: "/",
+                        }
+                    );
+
+
+            console.log(
+                "[Kalxa Push] Service worker registration:",
+                registration
             );
 
 
-            return await (
-                navigator.serviceWorker.ready
+            const readyRegistration =
+                await navigator
+                    .serviceWorker
+                    .ready;
+
+
+            console.log(
+                "[Kalxa Push] Service worker ready:",
+                readyRegistration
             );
 
+
+            return readyRegistration;
         }
 
 
@@ -273,20 +329,36 @@ document.addEventListener(
                 await getServiceWorkerRegistration();
 
 
+            // -------------------------------------------------
+            // CHECK FOR EXISTING SUBSCRIPTION
+            // -------------------------------------------------
+
             let subscription =
-                await (
-                    registration
+                await registration
                     .pushManager
-                    .getSubscription()
-                );
+                    .getSubscription();
 
 
             if (subscription) {
+
+                console.log(
+                    "[Kalxa Push] Existing push subscription found."
+                );
+
 
                 return subscription;
 
             }
 
+
+            console.log(
+                "[Kalxa Push] No existing subscription. Creating one."
+            );
+
+
+            // -------------------------------------------------
+            // FETCH PUBLIC VAPID KEY
+            // -------------------------------------------------
 
             const response =
                 await fetchWithTimeout(
@@ -326,20 +398,123 @@ document.addEventListener(
             }
 
 
-            subscription =
-                await (
-                    registration
-                    .pushManager
-                    .subscribe({
-                        userVisibleOnly:
-                            true,
+            // -------------------------------------------------
+            // CONVERT VAPID KEY
+            // -------------------------------------------------
 
-                        applicationServerKey:
-                            urlBase64ToUint8Array(
-                                publicKey
-                            ),
-                    })
+            const applicationServerKey =
+                urlBase64ToUint8Array(
+                    publicKey
                 );
+
+
+            console.log(
+                "[Kalxa Push] Public key character length:",
+                publicKey.length
+            );
+
+
+            console.log(
+                "[Kalxa Push] Decoded VAPID key byte length:",
+                applicationServerKey.length
+            );
+
+
+            // -------------------------------------------------
+            // VALIDATE VAPID KEY SIZE
+            //
+            // Standard uncompressed P-256 public key should
+            // normally decode to 65 bytes.
+            // -------------------------------------------------
+
+            if (
+                applicationServerKey.length
+                !== 65
+            ) {
+
+                console.error(
+                    "[Kalxa Push] Invalid VAPID key byte length:",
+                    applicationServerKey.length
+                );
+
+
+                throw new Error(
+                    "Push public key is invalid."
+                );
+
+            }
+
+
+            // -------------------------------------------------
+            // CREATE PUSH SUBSCRIPTION
+            // -------------------------------------------------
+
+            try {
+
+                subscription =
+                    await registration
+                        .pushManager
+                        .subscribe({
+
+                            userVisibleOnly:
+                                true,
+
+                            applicationServerKey:
+                                applicationServerKey,
+
+                        });
+
+
+                console.log(
+                    "[Kalxa Push] Push subscription created successfully:",
+                    subscription
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "[Kalxa Push] pushManager.subscribe() failed:",
+                    error
+                );
+
+
+                if (
+                    error
+                    &&
+                    error.name
+                ) {
+
+                    console.error(
+                        "[Kalxa Push] Error name:",
+                        error.name
+                    );
+
+                }
+
+
+                if (
+                    error
+                    &&
+                    error.message
+                ) {
+
+                    console.error(
+                        "[Kalxa Push] Error message:",
+                        error.message
+                    );
+
+                }
+
+
+                throw new Error(
+                    error.message
+                    ||
+                    "Registration failed - push service error."
+                );
+
+            }
 
 
             return subscription;
@@ -403,12 +578,16 @@ document.addEventListener(
                     ) {
 
                         permission =
-                            await (
-                                Notification
-                                .requestPermission()
-                            );
+                            await Notification
+                                .requestPermission();
 
                     }
+
+
+                    console.log(
+                        "[Kalxa Push] Notification permission:",
+                        permission
+                    );
 
 
                     if (
@@ -442,13 +621,12 @@ document.addEventListener(
                             "nearest",
                     });
 
-
                 }
 
                 catch (error) {
 
                     console.error(
-                        "[LaC Push]",
+                        "[Kalxa Push]",
                         error
                     );
 
@@ -553,11 +731,34 @@ document.addEventListener(
                     );
 
 
+                    // -------------------------------------------------
+                    // CREATE / LOAD PUSH SUBSCRIPTION
+                    // -------------------------------------------------
+
                     pushSubscription =
-                        await (
-                            getPushSubscription()
+                        await getPushSubscription();
+
+
+                    if (!pushSubscription) {
+
+                        throw new Error(
+                            "Push subscription could not be created."
                         );
 
+                    }
+
+
+                    console.log(
+                        "[Kalxa Push] Subscription endpoint available:",
+                        Boolean(
+                            pushSubscription.endpoint
+                        )
+                    );
+
+
+                    // -------------------------------------------------
+                    // SAVE SUBSCRIPTION + PREFERENCES
+                    // -------------------------------------------------
 
                     const response =
                         await fetchWithTimeout(
@@ -611,7 +812,7 @@ document.addEventListener(
                     catch (error) {
 
                         console.error(
-                            "[LaC Push] Invalid JSON response:",
+                            "[Kalxa Push] Invalid JSON response:",
                             responseText
                         );
 
@@ -633,15 +834,16 @@ document.addEventListener(
                     }
 
 
-                    // -------------------------------------
+                    // -------------------------------------------------
                     // STORE LOCAL COPY
-                    // -------------------------------------
+                    // -------------------------------------------------
 
                     localStorage.setItem(
                         "lac_notification_categories",
                         JSON.stringify(
                             data.categories
-                            || categories
+                            ||
+                            categories
                         )
                     );
 
@@ -666,12 +868,16 @@ document.addEventListener(
                         "Manage Notification Preferences";
 
 
+                    console.log(
+                        "[Kalxa Push] Notification preferences saved successfully."
+                    );
+
                 }
 
                 catch (error) {
 
                     console.error(
-                        "[LaC Push]",
+                        "[Kalxa Push] Save preferences failed:",
                         error
                     );
 
@@ -807,6 +1013,10 @@ document.addEventListener(
 
         }
 
+
+        // =================================================
+        // INITIAL STATE
+        // =================================================
 
         restorePreferences();
 
