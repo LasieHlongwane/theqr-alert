@@ -1,0 +1,56 @@
+name: Kalxa Reminder Scheduler
+
+on:
+  schedule:
+    # Run every 5 minutes.
+    - cron: "*/5 * * * *"
+
+  # Allows manual testing from GitHub Actions.
+  workflow_dispatch:
+
+
+jobs:
+
+  send-reminders:
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+
+    steps:
+
+      - name: Run Kalxa reminder processor
+        shell: bash
+        env:
+          REMINDER_CRON_TOKEN: ${{ secrets.REMINDER_CRON_TOKEN }}
+
+        run: |
+
+          echo "Triggering Kalxa reminder processor..."
+
+          HTTP_STATUS=$(curl \
+            --silent \
+            --show-error \
+            --output response.json \
+            --write-out "%{http_code}" \
+            --request POST \
+            --header "Authorization: Bearer ${REMINDER_CRON_TOKEN}" \
+            --header "Content-Type: application/json" \
+            "https://lac-local-access.onrender.com/internal/run-content-reminders"
+          )
+
+          echo "HTTP status: ${HTTP_STATUS}"
+
+          if [ -f response.json ]; then
+            cat response.json
+          fi
+
+          if [ "${HTTP_STATUS}" -lt 200 ] || [ "${HTTP_STATUS}" -ge 300 ]; then
+            echo ""
+            echo "Kalxa reminder processor failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "Kalxa reminder processor completed successfully."
