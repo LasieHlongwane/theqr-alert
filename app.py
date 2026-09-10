@@ -5687,6 +5687,7 @@ def push_unsubscribe():
         "success": True,
     }), 200
 
+
 @app.route(
     "/q/<code>/<category>"
 )
@@ -5713,28 +5714,6 @@ def qr_category(
 
     # =====================================================
     # CLEAN REQUESTED CATEGORY
-    #
-    # The URL may contain either:
-    #
-    # LEGACY / CURRENT PUBLIC SLUG
-    #
-    #     check-out-our-specials
-    #     foods
-    #     upcoming-event-🥹🔥
-    #     beauty-salon
-    #     discount-deals
-    #     property
-    #     transport
-    #
-    # OR CANONICAL BUSINESS TAXONOMY
-    #
-    #     restaurants
-    #     events
-    #     beauty
-    #     retail_specials
-    #     rentals
-    #     delivery
-    #
     # =====================================================
 
     category_slug = (
@@ -5767,13 +5746,10 @@ def qr_category(
     # =====================================================
     # VALIDATE CATEGORY
     #
-    # get_category_by_slug() must support:
+    # Supports both:
     #
-    # - existing Category table slugs
+    # - legacy category slugs
     # - canonical taxonomy keys
-    #
-    # This keeps old public URLs alive while the database
-    # is gradually moved toward canonical taxonomy.
     # =====================================================
 
     category_record = (
@@ -5789,19 +5765,6 @@ def qr_category(
 
     # =====================================================
     # CONSUMER PRESENTATION
-    #
-    # Example:
-    #
-    # URL / DATABASE
-    #     check-out-our-specials
-    #
-    # CANONICAL
-    #     restaurants
-    #
-    # CONSUMER
-    #     🍔 HUNGRY?
-    #     Find something good to eat
-    #
     # =====================================================
 
     consumer_category = (
@@ -5814,17 +5777,15 @@ def qr_category(
     # =====================================================
     # GET ACTIVE CONTENT
     #
-    # get_active_content() handles all aliases belonging
-    # to the same canonical category.
+    # Alias-aware.
     #
     # Example:
     #
-    # restaurants can include ContentItem.category values:
+    # "events" can include:
     #
-    #     check-out-our-specials
-    #     foods
-    #     local-restaurants
-    #     restaurants
+    #     upcoming-event-🥹🔥
+    #     local-events
+    #     events
     #
     # =====================================================
 
@@ -5837,15 +5798,42 @@ def qr_category(
 
 
     # =====================================================
+    # STEP 10 / CAMPAIGN STATE
+    #
+    # IMPORTANT:
+    #
+    # Attach state BEFORE rendering category.html.
+    #
+    # This gives each applicable listing:
+    #
+    #     item.campaign_state
+    #
+    # Example states:
+    #
+    #     2 DAYS TO GO
+    #     TOMORROW
+    #     TODAY
+    #     TONIGHT
+    #     HAPPENING NOW
+    #     ENDING SOON
+    #
+    # category.html uses this to display:
+    #
+    #     campaign badge
+    #     Remind Me button
+    #
+    # =====================================================
+
+    items = attach_campaign_states(
+        items
+    )
+
+
+    # =====================================================
     # RECORD CATEGORY VIEW
     #
-    # Keep the actual requested/public category slug in
-    # QRScan for now.
-    #
-    # This preserves continuity with historical analytics.
-    #
-    # EngagementEvent / engagement.js can separately use
-    # canonical_category.
+    # Keep the requested/public category slug in QRScan
+    # for historical analytics continuity.
     # =====================================================
 
     try:
@@ -5899,16 +5887,6 @@ def qr_category(
 
     # =====================================================
     # DISPLAY CATEGORY PAGE
-    #
-    # category
-    #     Existing Category database object.
-    #
-    # canonical_category
-    #     Stable internal/business taxonomy.
-    #
-    # consumer_category
-    #     Customer-facing language.
-    #
     # =====================================================
 
     return render_template(
