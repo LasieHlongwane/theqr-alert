@@ -948,14 +948,16 @@ def create_content_reminder(
 
 
     # =====================================================
-    # ONLY ACTIVE CONTENT
+    # ACTIVE LISTING CHECK
     # =====================================================
 
     if not item.active:
 
         return {
             "success": False,
-            "message": "This listing is no longer active.",
+            "message": (
+                "This listing is no longer active."
+            ),
         }, 400
 
 
@@ -987,7 +989,10 @@ def create_content_reminder(
     }
 
 
-    if reminder_minutes not in allowed_offsets:
+    if (
+        reminder_minutes
+        not in allowed_offsets
+    ):
 
         reminder_minutes = 60
 
@@ -999,7 +1004,9 @@ def create_content_reminder(
     scheduled_for = (
         get_reminder_datetime(
             item,
-            minutes_before=reminder_minutes,
+            minutes_before=(
+                reminder_minutes
+            ),
         )
     )
 
@@ -1031,7 +1038,7 @@ def create_content_reminder(
 
 
     # =====================================================
-    # OPTIONAL ACCESS CONTEXT
+    # ZONE / ACCESS CONTEXT
     # =====================================================
 
     zone_id = request.form.get(
@@ -1046,29 +1053,151 @@ def create_content_reminder(
 
 
     # =====================================================
+    # STEP 10D — PUSH SUBSCRIPTION
+    #
+    # Browser sends its existing Web Push endpoint.
+    # We DO NOT create a second push subscription here.
+    #
+    # We only connect the reminder to an existing one.
+    # =====================================================
+
+    push_endpoint = (
+        request.form.get(
+            "push_endpoint",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not push_endpoint:
+
+        return {
+            "success": False,
+            "requires_push": True,
+            "message": (
+                "Enable Kalxa notifications first "
+                "so we know where to send the reminder."
+            ),
+        }, 400
+
+
+    push_subscription = (
+        PushSubscription.query
+        .filter_by(
+            endpoint=push_endpoint
+        )
+        .first()
+    )
+
+
+    if not push_subscription:
+
+        return {
+            "success": False,
+            "requires_push": True,
+            "message": (
+                "Your notification subscription "
+                "could not be found. Please enable "
+                "Kalxa alerts again."
+            ),
+        }, 400
+
+
+    # =====================================================
+    # PREVENT DUPLICATE REMINDER
+    #
+    # Same browser + same listing + same reminder offset.
+    # =====================================================
+
+    existing_reminder = (
+        ContentReminder.query
+        .filter_by(
+            content_item_id=item.id,
+            push_subscription_id=(
+                push_subscription.id
+            ),
+            reminder_minutes_before=(
+                reminder_minutes
+            ),
+            status="pending",
+        )
+        .first()
+    )
+
+
+    if existing_reminder:
+
+        return {
+
+            "success": True,
+
+            "already_exists": True,
+
+            "message": (
+                "Reminder already saved."
+            ),
+
+            "scheduled_for": (
+                existing_reminder
+                .scheduled_for
+                .isoformat()
+                if
+                existing_reminder
+                .scheduled_for
+                else None
+            ),
+
+        }, 200
+
+
+    # =====================================================
+    # STORE UTC IN DATABASE
+    # =====================================================
+
+    scheduled_for_utc = (
+        scheduled_for
+        .astimezone(
+            ZoneInfo("UTC")
+        )
+        .replace(
+            tzinfo=None
+        )
+    )
+
+
+    # =====================================================
     # CREATE REMINDER
     # =====================================================
 
     reminder = ContentReminder(
 
-        content_item_id=item.id,
+        content_item_id=(
+            item.id
+        ),
 
-        zone_id=zone_id,
+        zone_id=(
+            zone_id
+        ),
 
-        access_point_id=access_point_id,
+        access_point_id=(
+            access_point_id
+        ),
 
-        reminder_type="before_start",
+        push_subscription_id=(
+            push_subscription.id
+        ),
+
+        reminder_type=(
+            "before_start"
+        ),
 
         reminder_minutes_before=(
             reminder_minutes
         ),
 
         scheduled_for=(
-            scheduled_for.astimezone(
-                ZoneInfo("UTC")
-            ).replace(
-                tzinfo=None
-            )
+            scheduled_for_utc
         ),
 
         status="pending",
@@ -1084,28 +1213,37 @@ def create_content_reminder(
 
 
     # =====================================================
-    # ANONYMOUS ENGAGEMENT EVENT
+    # ENGAGEMENT EVENT
     # =====================================================
 
     try:
 
         engagement = EngagementEvent(
 
-            event_type="reminder_created",
+            event_type=(
+                "reminder_created"
+            ),
 
-            zone_id=zone_id,
+            zone_id=(
+                zone_id
+            ),
 
             access_point_id=(
                 access_point_id
             ),
 
-            content_item_id=item.id,
+            content_item_id=(
+                item.id
+            ),
 
-            category=normalize_category(
-                item.category
+            category=(
+                normalize_category(
+                    item.category
+                )
             ),
 
         )
+
 
         db.session.add(
             engagement
@@ -1113,18 +1251,26 @@ def create_content_reminder(
 
         db.session.commit()
 
-    except Exception:
+
+    except Exception as exc:
 
         db.session.rollback()
 
+        current_app.logger.warning(
+            "Reminder engagement tracking failed: %s",
+            exc,
+        )
+
 
     # =====================================================
-    # RESPONSE
+    # SUCCESS
     # =====================================================
 
     return {
 
         "success": True,
+
+        "already_exists": False,
 
         "message": (
             "Reminder saved."
