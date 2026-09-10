@@ -238,15 +238,11 @@
         }
 
 
-        /* UPCOMING */
-
         .campaign-countdown {
             background: #fff4df;
             color: #3f4348;
         }
 
-
-        /* TOMORROW */
 
         .campaign-tomorrow {
             background: #fff4df;
@@ -254,15 +250,11 @@
         }
 
 
-        /* TODAY */
-
         .campaign-today {
             background: #fff4df;
             color: #111316;
         }
 
-
-        /* TONIGHT */
 
         .campaign-tonight {
             background: #111316;
@@ -270,23 +262,17 @@
         }
 
 
-        /* LIVE */
-
         .campaign-live {
             background: #d92d20;
             color: #ffffff;
         }
 
 
-        /* GENERIC ACTIVE CAMPAIGN */
-
         .campaign-active {
             background: #fff4df;
             color: #111316;
         }
 
-
-        /* ENDING */
 
         .campaign-ending {
             background: #111316;
@@ -300,15 +286,11 @@
         }
 
 
-        /* ENDED */
-
         .campaign-ended {
             background: #e8e8e8;
             color: #666666;
         }
 
-
-        /* UNDATED */
 
         .campaign-undated {
             display: none;
@@ -320,7 +302,6 @@
         ========================================================= */
 
         .kalxa-reminder-wrap {
-
             margin-top: 12px;
         }
 
@@ -380,13 +361,11 @@
 
 
         .kalxa-remind-btn:disabled {
-
             cursor: default;
         }
 
 
         .kalxa-remind-btn.is-saving {
-
             opacity: 0.65;
         }
 
@@ -1098,9 +1077,7 @@
             <div class="category-page-title-row">
 
                 <div class="category-page-icon">
-
                     {{ consumer_category.icon }}
-
                 </div>
 
 
@@ -1560,8 +1537,7 @@
 
                                     {% if
                                         item.event_end_date
-                                        and
-                                        item.event_end_date != item.event_date
+                                        and item.event_end_date != item.event_date
                                     %}
 
                                         Event Dates
@@ -1582,8 +1558,7 @@
 
                                     {% if
                                         item.event_end_date
-                                        and
-                                        item.event_end_date != item.event_date
+                                        and item.event_end_date != item.event_date
                                     %}
 
                                         —
@@ -1646,13 +1621,11 @@
                                         and item.end_date
                                     %}
 
-
                                         {% if
                                             item.start_date == item.end_date
                                         %}
 
                                             {{ item.start_date.strftime("%d %b %Y") }}
-
 
                                         {% else %}
 
@@ -1662,11 +1635,9 @@
 
                                         {% endif %}
 
-
                                     {% elif item.start_date %}
 
                                         {{ item.start_date.strftime("%d %b %Y") }}
-
 
                                     {% elif item.end_date %}
 
@@ -1859,7 +1830,6 @@
 
                         {% endif %}
 
-
                     </div>
 
 
@@ -1885,9 +1855,6 @@
 
                     <!-- =================================
                          STEP 10 — REMIND ME
-
-                         Only appears for timed campaign
-                         content which has not ended.
                     ================================== -->
 
                     {% if
@@ -1971,8 +1938,6 @@
                         <div class="listing-actions">
 
 
-                            <!-- CALL -->
-
                             {% if item.contact %}
 
                             <a
@@ -1989,8 +1954,6 @@
 
                             {% endif %}
 
-
-                            <!-- WHATSAPP -->
 
                             {% if
                                 item.whatsapp_number
@@ -2020,8 +1983,6 @@
 
                             {% endif %}
 
-
-                            <!-- DIRECTIONS -->
 
                             {% if item.directions_url %}
 
@@ -2059,8 +2020,6 @@
                             {% endif %}
 
 
-                            <!-- TICKETS -->
-
                             {% if item.ticket_url %}
 
                             <a
@@ -2076,7 +2035,6 @@
                             </a>
 
                             {% endif %}
-
 
                         </div>
 
@@ -2099,7 +2057,6 @@
                 ================================== -->
 
                 <div class="lac-empty-state">
-
 
                     <div class="lac-empty-icon-wrap">
 
@@ -2392,7 +2349,6 @@
                     >
                         ← Explore other categories
                     </a>
-
 
                 </div>
 
@@ -2795,10 +2751,6 @@
 
 
 <!-- =========================================
-     STEP 10 — REMIND ME ENGINE
-========================================== -->
-
-<!-- =========================================
      STEP 10D — REMIND ME + WEB PUSH
 ========================================== -->
 
@@ -2806,19 +2758,9 @@
 
 async function getKalxaPushSubscription() {
 
-    // =========================================
-    // SERVICE WORKER SUPPORT
-    // =========================================
-
     if (
         !("serviceWorker" in navigator)
-    ) {
-
-        return null;
-    }
-
-
-    if (
+        ||
         !("PushManager" in window)
     ) {
 
@@ -2828,14 +2770,8 @@ async function getKalxaPushSubscription() {
 
     try {
 
-        // =====================================
-        // WAIT FOR ACTIVE SERVICE WORKER
-        // =====================================
-
         const registration =
-            await navigator
-                .serviceWorker
-                .ready;
+            await navigator.serviceWorker.ready;
 
 
         if (!registration) {
@@ -2843,17 +2779,6 @@ async function getKalxaPushSubscription() {
             return null;
         }
 
-
-        // =====================================
-        // GET EXISTING SUBSCRIPTION
-        //
-        // IMPORTANT:
-        // We are NOT creating a subscription
-        // here.
-        //
-        // Kalxa's existing notification system
-        // remains responsible for opt-in.
-        // =====================================
 
         const subscription =
             await registration
@@ -2867,15 +2792,13 @@ async function getKalxaPushSubscription() {
     catch (error) {
 
         console.error(
-            "[Kalxa Reminder] "
-            + "Could not read push subscription:",
+            "[Kalxa Reminder] Could not read push subscription:",
             error
         );
 
         return null;
     }
 }
-
 
 
 document.addEventListener(
@@ -2920,10 +2843,6 @@ document.addEventListener(
         }
 
 
-        // =========================================
-        // UI — SAVING
-        // =========================================
-
         button.disabled =
             true;
 
@@ -2940,10 +2859,6 @@ document.addEventListener(
 
 
         try {
-
-            // =====================================
-            // GET EXISTING PUSH SUBSCRIPTION
-            // =====================================
 
             const pushSubscription =
                 await getKalxaPushSubscription();
@@ -2967,18 +2882,13 @@ document.addEventListener(
 
 
                 alert(
-                    "Please enable Kalxa notifications "
-                    + "first, then tap Remind Me again."
+                    "Please enable Kalxa notifications first, then tap Remind Me again."
                 );
 
 
                 return;
             }
 
-
-            // =====================================
-            // PUSH ENDPOINT
-            // =====================================
 
             const pushEndpoint =
                 pushSubscription.endpoint;
@@ -2987,15 +2897,10 @@ document.addEventListener(
             if (!pushEndpoint) {
 
                 throw new Error(
-                    "Your notification subscription "
-                    + "could not be read."
+                    "Your notification subscription could not be read."
                 );
             }
 
-
-            // =====================================
-            // BUILD REQUEST
-            // =====================================
 
             const body =
                 new URLSearchParams();
@@ -3031,10 +2936,6 @@ document.addEventListener(
             }
 
 
-            // =====================================
-            // SAVE REMINDER
-            // =====================================
-
             button.textContent =
                 "Saving reminder...";
 
@@ -3061,13 +2962,22 @@ document.addEventListener(
                 );
 
 
-            const result =
-                await response.json();
+            let result = {};
 
+            try {
 
-            // =====================================
-            // BACKEND SAYS PUSH IS MISSING
-            // =====================================
+                result =
+                    await response.json();
+
+            }
+            catch (jsonError) {
+
+                console.error(
+                    "[Kalxa Reminder] Could not parse response:",
+                    jsonError
+                );
+            }
+
 
             if (
                 result.requires_push
@@ -3099,10 +3009,6 @@ document.addEventListener(
             }
 
 
-            // =====================================
-            // NORMAL ERROR
-            // =====================================
-
             if (!response.ok) {
 
                 throw new Error(
@@ -3112,10 +3018,6 @@ document.addEventListener(
                 );
             }
 
-
-            // =====================================
-            // SUCCESS
-            // =====================================
 
             button.classList.remove(
                 "is-saving"
@@ -3183,6 +3085,7 @@ document.addEventListener(
 );
 
 </script>
+
 
 <!-- =========================================
      ENGAGEMENT CONFIG
