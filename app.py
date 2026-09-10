@@ -68,7 +68,7 @@ from categories import (
     get_consumer_category,
     get_business_category_choices,
 )
-from admin import admin_bp
+from admin import admin_bp, get_category_by_slug
 from pricing import (
     calculate_kalxa_price,
     KalxaPricingError,
