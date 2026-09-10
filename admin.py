@@ -7992,6 +7992,15 @@ def create_content():
 
             title=title,
 
+            start_date=submission.start_date,
+            start_time=submission.start_time,
+
+            end_date=submission.end_date,
+            end_time=submission.end_time,
+
+            event_date=submission.event_date,
+            event_end_date=submission.event_end_date,
+
             description=(
                 request.form.get(
                     "description",
