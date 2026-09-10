@@ -8343,6 +8343,7 @@ def create_content():
     )
 
 
+
 @admin_bp.route(
     "/content/<int:item_id>/edit",
     methods=["GET", "POST"],
@@ -8408,6 +8409,9 @@ def edit_content(
 
         # =================================================
         # SNAPSHOT EXISTING COMMERCIAL PACKAGE
+        #
+        # This protects already-paid commercial listings
+        # when Admin edits unrelated listing information.
         # =================================================
 
         old_pricing_model = (
@@ -8471,6 +8475,7 @@ def edit_content(
             type=int,
         )
 
+
         category = (
             request.form.get(
                 "category",
@@ -8479,6 +8484,7 @@ def edit_content(
             .strip()
             .lower()
         )
+
 
         content_type = (
             request.form.get(
@@ -8489,6 +8495,7 @@ def edit_content(
             .lower()
             or None
         )
+
 
         title = (
             request.form.get(
@@ -8512,6 +8519,7 @@ def edit_content(
             or None
         )
 
+
         whatsapp_number = (
             request.form.get(
                 "whatsapp_number",
@@ -8521,6 +8529,7 @@ def edit_content(
             or None
         )
 
+
         directions_url = (
             request.form.get(
                 "directions_url",
@@ -8529,6 +8538,7 @@ def edit_content(
             .strip()
             or None
         )
+
 
         ticket_url = (
             request.form.get(
@@ -8570,6 +8580,7 @@ def edit_content(
             Zone,
             zone_id,
         )
+
 
         if not zone:
 
@@ -8617,11 +8628,13 @@ def edit_content(
             )
         )
 
+
         lifetime_type = (
             workflow[
                 "lifetime_type"
             ]
         )
+
 
         workflow_notification_eligible = bool(
             workflow.get(
@@ -8629,6 +8642,7 @@ def edit_content(
                 False,
             )
         )
+
 
         pricing_model = (
             workflow.get(
@@ -8680,6 +8694,197 @@ def edit_content(
 
 
         # =================================================
+        # CAMPAIGN START / END TIMES
+        #
+        # HTML <input type="time"> sends values such as:
+        #
+        #     18:00
+        #     02:00
+        #
+        # parse_optional_time() converts them into
+        # datetime.time values for SQLAlchemy db.Time.
+        # =================================================
+
+        try:
+
+            start_time = parse_optional_time(
+                request.form.get(
+                    "start_time"
+                )
+            )
+
+
+            end_time = parse_optional_time(
+                request.form.get(
+                    "end_time"
+                )
+            )
+
+        except ValueError:
+
+            flash(
+                "Please enter valid start and end times.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # DETERMINE EFFECTIVE CAMPAIGN DATES
+        #
+        # Events:
+        #
+        #     event_date + start_time
+        #     event_end_date + end_time
+        #
+        # Other campaigns:
+        #
+        #     start_date + start_time
+        #     end_date + end_time
+        #
+        # =================================================
+
+        canonical_category = normalize_category(
+            category
+        )
+
+
+        if (
+            canonical_category == "events"
+            or lifetime_type == "event"
+        ):
+
+            effective_start_date = (
+                dates.get(
+                    "event_date"
+                )
+            )
+
+
+            effective_end_date = (
+                dates.get(
+                    "event_end_date"
+                )
+                or
+                effective_start_date
+            )
+
+        else:
+
+            effective_start_date = (
+                dates.get(
+                    "start_date"
+                )
+            )
+
+
+            effective_end_date = (
+                dates.get(
+                    "end_date"
+                )
+            )
+
+
+        # =================================================
+        # DATE ORDER VALIDATION
+        # =================================================
+
+        if (
+            effective_start_date
+            and effective_end_date
+            and effective_end_date
+            < effective_start_date
+        ):
+
+            flash(
+                "End date cannot be before start date.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # SAME-DAY TIME VALIDATION
+        #
+        # Example invalid:
+        #
+        #     12 Sep
+        #     18:00 → 14:00
+        #
+        # Example valid overnight:
+        #
+        #     12 Sep 18:00
+        #     13 Sep 02:00
+        #
+        # =================================================
+
+        if (
+            effective_start_date
+            and effective_end_date
+            and effective_start_date
+            == effective_end_date
+            and start_time
+            and end_time
+            and end_time <= start_time
+        ):
+
+            flash(
+                (
+                    "End time must be after start time "
+                    "when the campaign starts and ends "
+                    "on the same day."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # END TIME WITHOUT END DATE
+        #
+        # Events are allowed because a one-day event can
+        # use event_date as its effective end date.
+        #
+        # Non-event campaigns need an actual end_date.
+        # =================================================
+
+        if (
+            canonical_category != "events"
+            and end_time
+            and not effective_end_date
+        ):
+
+            flash(
+                (
+                    "Please enter an end date when "
+                    "using an end time."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
         # LISTING LEVEL
         # =================================================
 
@@ -8693,18 +8898,22 @@ def edit_content(
             .lower()
         )
 
+
         allowed_listing_levels = {
             "discovery",
             "business",
             "promotion",
         }
 
+
         if (
             listing_level
             not in allowed_listing_levels
         ):
 
-            listing_level = "discovery"
+            listing_level = (
+                "discovery"
+            )
 
 
         # =================================================
@@ -8715,17 +8924,21 @@ def edit_content(
             zone_id
         )
 
+
         item.category = (
             category
         )
+
 
         item.content_type = (
             content_type
         )
 
+
         item.lifetime_type = (
             lifetime_type
         )
+
 
         if not item.availability_status:
 
@@ -8733,9 +8946,11 @@ def edit_content(
                 "available"
             )
 
+
         item.title = (
             title
         )
+
 
         item.description = (
             request.form.get(
@@ -8746,6 +8961,7 @@ def edit_content(
             or None
         )
 
+
         item.business_name = (
             request.form.get(
                 "business_name",
@@ -8755,6 +8971,7 @@ def edit_content(
             or None
         )
 
+
         item.venue = (
             request.form.get(
                 "venue",
@@ -8763,6 +8980,7 @@ def edit_content(
             .strip()
             or None
         )
+
 
         item.price = (
             request.form.get(
@@ -8776,27 +8994,22 @@ def edit_content(
 
         # =================================================
         # PUBLIC CONTACT + ACTION DATA
-        #
-        # These are stored independently so the listing
-        # detail page can show:
-        #
-        # 📞 Call
-        # 💬 WhatsApp
-        # 📍 Directions
-        # 🎟 Get Tickets
         # =================================================
 
         item.contact = (
             contact
         )
 
+
         item.whatsapp_number = (
             whatsapp_number
         )
 
+
         item.directions_url = (
             directions_url
         )
+
 
         item.ticket_url = (
             ticket_url
@@ -8821,15 +9034,18 @@ def edit_content(
                 "unclaimed"
             )
 
+
             item.is_verified = (
                 False
             )
+
 
         else:
 
             item.ownership_status = (
                 "claimed"
             )
+
 
             item.is_verified = (
                 request.form.get(
@@ -8860,6 +9076,7 @@ def edit_content(
                 or None
             )
 
+
             item.menu_highlights = (
                 request.form.get(
                     "menu_highlights",
@@ -8868,6 +9085,7 @@ def edit_content(
                 .strip()
                 or None
             )
+
 
             item.special_offer = (
                 request.form.get(
@@ -8878,32 +9096,42 @@ def edit_content(
                 or None
             )
 
+
         else:
 
-            item.opening_hours = None
+            item.opening_hours = (
+                None
+            )
 
-            item.menu_highlights = None
 
-            item.special_offer = None
+            item.menu_highlights = (
+                None
+            )
+
+
+            item.special_offer = (
+                None
+            )
+
 
             # =============================================
             # DISCOVERY ONLY SUPPORTS PRIMARY IMAGE
             # =============================================
 
-            item.image_url_2 = None
+            item.image_url_2 = (
+                None
+            )
 
-            item.image_url_3 = None
+
+            item.image_url_3 = (
+                None
+            )
 
 
         # =================================================
         # FEATURED
         #
-        # IMPORTANT:
-        #
-        # Featured is independent of listing_level.
-        #
-        # Discovery, Business and Promotion can all
-        # be featured by Admin.
+        # Featured remains independent of listing_level.
         # =================================================
 
         item.featured = (
@@ -8932,15 +9160,19 @@ def edit_content(
                 == "on"
             )
 
+
             item.notification_eligible = (
                 workflow_notification_eligible
                 and
                 promotion_notification_requested
             )
 
+
         else:
 
-            item.notification_eligible = False
+            item.notification_eligible = (
+                False
+            )
 
 
         # =================================================
@@ -8969,10 +9201,34 @@ def edit_content(
 
 
         # =================================================
+        # APPLY CAMPAIGN TIMES
+        #
+        # These are independent from Kalxa's paid package
+        # dates:
+        #
+        # commercial_starts_at
+        # commercial_expires_at
+        #
+        # start_time / end_time describe the actual
+        # event/campaign itself.
+        # =================================================
+
+        item.start_time = (
+            start_time
+        )
+
+
+        item.end_time = (
+            end_time
+        )
+
+
+        # =================================================
         # IMAGES
         # =================================================
 
         uploaded_images = []
+
 
         for uploaded_file in request.files.getlist(
             "images"
@@ -8999,6 +9255,7 @@ def edit_content(
             )
         )
 
+
         if (
             legacy_image
             and legacy_image.filename
@@ -9019,11 +9276,16 @@ def edit_content(
             == "discovery"
         ):
 
-            maximum_images = 1
+            maximum_images = (
+                1
+            )
+
 
         else:
 
-            maximum_images = 3
+            maximum_images = (
+                3
+            )
 
 
         if (
@@ -9043,6 +9305,7 @@ def edit_content(
                     "a maximum of 1 image."
                 )
 
+
             else:
 
                 message = (
@@ -9055,6 +9318,7 @@ def edit_content(
                 message,
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -9077,9 +9341,12 @@ def edit_content(
 
             uploaded_image_urls = []
 
+
             try:
 
-                for uploaded_file in uploaded_images:
+                for uploaded_file in (
+                    uploaded_images
+                ):
 
                     image_url = (
                         upload_listing_image(
@@ -9087,15 +9354,18 @@ def edit_content(
                         )
                     )
 
+
                     if image_url:
 
                         uploaded_image_urls.append(
                             image_url
                         )
 
+
             except Exception as error:
 
                 db.session.rollback()
+
 
                 current_app.logger.exception(
                     (
@@ -9106,10 +9376,12 @@ def edit_content(
                     error,
                 )
 
+
                 flash(
                     f"Image upload failed: {error}",
                     "error",
                 )
+
 
                 return _render_content_form(
                     zones,
@@ -9147,6 +9419,7 @@ def edit_content(
                     else None
                 )
 
+
                 item.image_url_3 = (
                     uploaded_image_urls[2]
                     if len(
@@ -9155,11 +9428,17 @@ def edit_content(
                     else None
                 )
 
+
             else:
 
-                item.image_url_2 = None
+                item.image_url_2 = (
+                    None
+                )
 
-                item.image_url_3 = None
+
+                item.image_url_3 = (
+                    None
+                )
 
 
         # =================================================
@@ -9171,13 +9450,23 @@ def edit_content(
             == "discovery"
         ):
 
-            item.image_url_2 = None
+            item.image_url_2 = (
+                None
+            )
 
-            item.image_url_3 = None
+
+            item.image_url_3 = (
+                None
+            )
 
 
         # =================================================
         # CONFIGURE COMMERCIAL PACKAGE
+        #
+        # IMPORTANT:
+        #
+        # Keep using the existing commercial engine.
+        # start_time/end_time do not change package pricing.
         # =================================================
 
         try:
@@ -9190,9 +9479,11 @@ def edit_content(
                 )
             )
 
+
         except ValueError as error:
 
             db.session.rollback()
+
 
             flash(
                 str(
@@ -9200,6 +9491,7 @@ def edit_content(
                 ),
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -9224,6 +9516,7 @@ def edit_content(
 
                 db.session.rollback()
 
+
                 flash(
                     (
                         "A campaign must include its "
@@ -9231,6 +9524,7 @@ def edit_content(
                     ),
                     "error",
                 )
+
 
                 return _render_content_form(
                     zones,
@@ -9248,6 +9542,7 @@ def edit_content(
 
                 db.session.rollback()
 
+
                 flash(
                     (
                         "Kalxa campaign packages currently "
@@ -9255,6 +9550,7 @@ def edit_content(
                     ),
                     "error",
                 )
+
 
                 return _render_content_form(
                     zones,
@@ -9268,7 +9564,9 @@ def edit_content(
             == PRICING_MODEL_PRESENCE
         ):
 
-            distribution_zone_ids = []
+            distribution_zone_ids = (
+                []
+            )
 
 
         # =================================================
@@ -9338,6 +9636,7 @@ def edit_content(
                 old_commercial_starts_at
             )
 
+
             item.commercial_expires_at = (
                 old_commercial_expires_at
             )
@@ -9356,6 +9655,7 @@ def edit_content(
                     old_paid_at
                 )
 
+
                 item.amount_paid = (
                     old_amount_paid
                 )
@@ -9367,9 +9667,14 @@ def edit_content(
 
             else:
 
-                item.paid_at = None
+                item.paid_at = (
+                    None
+                )
 
-                item.amount_paid = None
+
+                item.amount_paid = (
+                    None
+                )
 
 
         # =================================================
@@ -9421,9 +9726,13 @@ def edit_content(
                 db.session.add(
                     ContentDistributionZone(
 
-                        content_item_id=item.id,
+                        content_item_id=(
+                            item.id
+                        ),
 
-                        zone_id=distribution_zone_id,
+                        zone_id=(
+                            distribution_zone_id
+                        ),
 
                     )
                 )
@@ -9440,6 +9749,7 @@ def edit_content(
 
             db.session.rollback()
 
+
             current_app.logger.exception(
                 (
                     "Failed to update content item. "
@@ -9449,6 +9759,7 @@ def edit_content(
                 error,
             )
 
+
             flash(
                 (
                     "Content could not be updated. "
@@ -9456,6 +9767,7 @@ def edit_content(
                 ),
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -9484,6 +9796,7 @@ def edit_content(
                 "success",
             )
 
+
         elif (
             item.pricing_model
             == PRICING_MODEL_PRESENCE
@@ -9497,6 +9810,7 @@ def edit_content(
                 ),
                 "success",
             )
+
 
         else:
 
@@ -9522,7 +9836,7 @@ def edit_content(
         categories,
         item,
     )
-
+       
 @admin_bp.route(
     "/content/<int:item_id>/toggle",
     methods=["POST"],
