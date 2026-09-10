@@ -7423,6 +7423,7 @@ def _validate_and_normalize_content_dates(
     }, None
 
 
+
 @admin_bp.route(
     "/content/new",
     methods=["GET", "POST"],
@@ -7481,6 +7482,7 @@ def create_content():
             type=int,
         )
 
+
         category = (
             request.form.get(
                 "category",
@@ -7489,6 +7491,7 @@ def create_content():
             .strip()
             .lower()
         )
+
 
         content_type = (
             request.form.get(
@@ -7499,6 +7502,7 @@ def create_content():
             .lower()
             or None
         )
+
 
         title = (
             request.form.get(
@@ -7522,6 +7526,7 @@ def create_content():
             or None
         )
 
+
         whatsapp_number = (
             request.form.get(
                 "whatsapp_number",
@@ -7531,6 +7536,7 @@ def create_content():
             or None
         )
 
+
         directions_url = (
             request.form.get(
                 "directions_url",
@@ -7539,6 +7545,7 @@ def create_content():
             .strip()
             or None
         )
+
 
         ticket_url = (
             request.form.get(
@@ -7580,6 +7587,7 @@ def create_content():
             Zone,
             zone_id,
         )
+
 
         if not zone:
 
@@ -7627,11 +7635,13 @@ def create_content():
             )
         )
 
+
         lifetime_type = (
             workflow[
                 "lifetime_type"
             ]
         )
+
 
         workflow_notification_eligible = bool(
             workflow.get(
@@ -7639,6 +7649,7 @@ def create_content():
                 False,
             )
         )
+
 
         pricing_model = (
             workflow.get(
@@ -7690,6 +7701,203 @@ def create_content():
 
 
         # =================================================
+        # CAMPAIGN START / END TIMES
+        #
+        # HTML time fields send:
+        #
+        #     18:00
+        #     02:00
+        #
+        # parse_optional_time() converts those into
+        # datetime.time objects for db.Time.
+        # =================================================
+
+        try:
+
+            start_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "start_time"
+                    )
+                )
+            )
+
+
+            end_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "end_time"
+                    )
+                )
+            )
+
+        except ValueError:
+
+            flash(
+                "Please enter valid start and end times.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # CANONICAL CATEGORY
+        # =================================================
+
+        canonical_category = (
+            normalize_category(
+                category
+            )
+        )
+
+
+        # =================================================
+        # DETERMINE EFFECTIVE CAMPAIGN DATES
+        #
+        # Events:
+        #
+        #     event_date + start_time
+        #     event_end_date + end_time
+        #
+        # Other campaigns:
+        #
+        #     start_date + start_time
+        #     end_date + end_time
+        # =================================================
+
+        if (
+            canonical_category == "events"
+            or lifetime_type == "event"
+        ):
+
+            effective_start_date = (
+                dates.get(
+                    "event_date"
+                )
+            )
+
+
+            effective_end_date = (
+                dates.get(
+                    "event_end_date"
+                )
+                or
+                effective_start_date
+            )
+
+        else:
+
+            effective_start_date = (
+                dates.get(
+                    "start_date"
+                )
+            )
+
+
+            effective_end_date = (
+                dates.get(
+                    "end_date"
+                )
+            )
+
+
+        # =================================================
+        # VALIDATE DATE ORDER
+        # =================================================
+
+        if (
+            effective_start_date
+            and effective_end_date
+            and effective_end_date
+            < effective_start_date
+        ):
+
+            flash(
+                "End date cannot be before start date.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # VALIDATE SAME-DAY TIME ORDER
+        #
+        # Invalid:
+        #
+        #     12 Sep
+        #     18:00 → 02:00
+        #
+        # Valid overnight:
+        #
+        #     12 Sep 18:00
+        #     13 Sep 02:00
+        # =================================================
+
+        if (
+            effective_start_date
+            and effective_end_date
+            and effective_start_date
+            == effective_end_date
+            and start_time
+            and end_time
+            and end_time <= start_time
+        ):
+
+            flash(
+                (
+                    "End time must be after start time "
+                    "when the content starts and ends "
+                    "on the same day."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # END TIME WITHOUT END DATE
+        #
+        # A one-day event is allowed because event_date
+        # becomes its effective end date.
+        # =================================================
+
+        if (
+            canonical_category != "events"
+            and end_time
+            and not effective_end_date
+        ):
+
+            flash(
+                (
+                    "Please enter an end date when "
+                    "using an end time."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
         # LISTING LEVEL
         # =================================================
 
@@ -7702,32 +7910,48 @@ def create_content():
             .lower()
         )
 
+
         allowed_listing_levels = {
             "discovery",
             "business",
             "promotion",
         }
 
+
         if (
             listing_level
             not in allowed_listing_levels
         ):
 
-            listing_level = "discovery"
+            listing_level = (
+                "discovery"
+            )
 
 
         # =================================================
         # OWNERSHIP + VERIFICATION
         # =================================================
 
-        if listing_level == "discovery":
+        if (
+            listing_level
+            == "discovery"
+        ):
 
-            ownership_status = "unclaimed"
-            is_verified = False
+            ownership_status = (
+                "unclaimed"
+            )
+
+            is_verified = (
+                False
+            )
+
 
         else:
 
-            ownership_status = "claimed"
+            ownership_status = (
+                "claimed"
+            )
+
 
             is_verified = (
                 request.form.get(
@@ -7741,11 +7965,6 @@ def create_content():
         # FEATURED
         #
         # Featured is independent of listing_level.
-        # Admin can feature:
-        #
-        # - Discovery
-        # - Business
-        # - Promotion
         # =================================================
 
         featured = (
@@ -7762,7 +7981,10 @@ def create_content():
         # Notifications remain Promotion-only.
         # =================================================
 
-        if listing_level == "promotion":
+        if (
+            listing_level
+            == "promotion"
+        ):
 
             promotion_notification_requested = (
                 request.form.get(
@@ -7771,15 +7993,19 @@ def create_content():
                 == "on"
             )
 
+
             notification_eligible = (
                 workflow_notification_eligible
                 and
                 promotion_notification_requested
             )
 
+
         else:
 
-            notification_eligible = False
+            notification_eligible = (
+                False
+            )
 
 
         # =================================================
@@ -7803,6 +8029,7 @@ def create_content():
                 or None
             )
 
+
             menu_highlights = (
                 request.form.get(
                     "menu_highlights",
@@ -7811,6 +8038,7 @@ def create_content():
                 .strip()
                 or None
             )
+
 
             special_offer = (
                 request.form.get(
@@ -7821,11 +8049,20 @@ def create_content():
                 or None
             )
 
+
         else:
 
-            opening_hours = None
-            menu_highlights = None
-            special_offer = None
+            opening_hours = (
+                None
+            )
+
+            menu_highlights = (
+                None
+            )
+
+            special_offer = (
+                None
+            )
 
 
         # =================================================
@@ -7834,13 +8071,15 @@ def create_content():
 
         uploaded_images = []
 
+
         for uploaded_file in request.files.getlist(
             "images"
         ):
 
             if (
                 uploaded_file
-                and uploaded_file.filename
+                and
+                uploaded_file.filename
             ):
 
                 uploaded_images.append(
@@ -7858,6 +8097,7 @@ def create_content():
             )
         )
 
+
         if (
             legacy_image
             and legacy_image.filename
@@ -7873,30 +8113,48 @@ def create_content():
         # IMAGE LIMIT
         # =================================================
 
-        if listing_level == "discovery":
-            maximum_images = 1
+        if (
+            listing_level
+            == "discovery"
+        ):
+
+            maximum_images = (
+                1
+            )
+
+
         else:
-            maximum_images = 3
+
+            maximum_images = (
+                3
+            )
 
 
         if (
-            len(uploaded_images)
+            len(
+                uploaded_images
+            )
             > maximum_images
         ):
 
-            if listing_level == "discovery":
+            if (
+                listing_level
+                == "discovery"
+            ):
 
                 message = (
                     "Discovery listings can have "
                     "a maximum of 1 image."
                 )
 
+
             else:
 
                 message = (
-                    "You can upload a maximum "
-                    "of 3 images."
+                    "Business and Promotion listings "
+                    "can have a maximum of 3 images."
                 )
+
 
             flash(
                 message,
@@ -7916,9 +8174,12 @@ def create_content():
 
         uploaded_image_urls = []
 
+
         try:
 
-            for uploaded_file in uploaded_images:
+            for uploaded_file in (
+                uploaded_images
+            ):
 
                 image_url = (
                     upload_listing_image(
@@ -7926,11 +8187,13 @@ def create_content():
                     )
                 )
 
+
                 if image_url:
 
                     uploaded_image_urls.append(
                         image_url
                     )
+
 
         except Exception as error:
 
@@ -7943,10 +8206,12 @@ def create_content():
                 error,
             )
 
+
             flash(
                 f"Image upload failed: {error}",
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -7956,50 +8221,95 @@ def create_content():
 
 
         primary_image_url = (
+
             uploaded_image_urls[0]
-            if len(uploaded_image_urls) >= 1
+
+            if len(
+                uploaded_image_urls
+            ) >= 1
+
             else None
         )
+
 
         second_image_url = (
+
             uploaded_image_urls[1]
-            if len(uploaded_image_urls) >= 2
+
+            if len(
+                uploaded_image_urls
+            ) >= 2
+
             else None
         )
 
+
         third_image_url = (
+
             uploaded_image_urls[2]
-            if len(uploaded_image_urls) >= 3
+
+            if len(
+                uploaded_image_urls
+            ) >= 3
+
             else None
         )
 
 
         # =================================================
         # CREATE CONTENT ITEM
+        #
+        # IMPORTANT:
+        #
+        # Do NOT use "submission.start_date" here.
+        #
+        # This is the Admin create route. There is no
+        # PendingSubmission object.
         # =================================================
 
         item = ContentItem(
 
-            zone_id=zone_id,
+            zone_id=(
+                zone_id
+            ),
 
-            category=category,
+            category=(
+                category
+            ),
 
-            content_type=content_type,
+            content_type=(
+                content_type
+            ),
 
-            lifetime_type=lifetime_type,
+            lifetime_type=(
+                lifetime_type
+            ),
 
-            availability_status="available",
+            availability_status=(
+                "available"
+            ),
 
-            title=title,
+            title=(
+                title
+            ),
 
-            start_date=submission.start_date,
-            start_time=submission.start_time,
 
-            end_date=submission.end_date,
-            end_time=submission.end_time,
+            # =============================================
+            # CONTENT DATES ARE APPLIED BELOW FROM `dates`
+            # =============================================
 
-            event_date=submission.event_date,
-            event_end_date=submission.event_end_date,
+            start_time=(
+                start_time
+            ),
+
+            end_time=(
+                end_time
+            ),
+
+
+            # =============================================
+            # DESCRIPTION
+            # =============================================
 
             description=(
                 request.form.get(
@@ -8010,6 +8320,11 @@ def create_content():
                 or None
             ),
 
+
+            # =============================================
+            # BUSINESS
+            # =============================================
+
             business_name=(
                 request.form.get(
                     "business_name",
@@ -8018,6 +8333,11 @@ def create_content():
                 .strip()
                 or None
             ),
+
+
+            # =============================================
+            # VENUE
+            # =============================================
 
             venue=(
                 request.form.get(
@@ -8028,6 +8348,11 @@ def create_content():
                 or None
             ),
 
+
+            # =============================================
+            # CUSTOMER-FACING PRICE
+            # =============================================
+
             price=(
                 request.form.get(
                     "price",
@@ -8037,75 +8362,116 @@ def create_content():
                 or None
             ),
 
+
             # =============================================
             # PUBLIC CONTACT / ACTION DATA
             # =============================================
 
-            contact=contact,
+            contact=(
+                contact
+            ),
 
-            whatsapp_number=whatsapp_number,
+            whatsapp_number=(
+                whatsapp_number
+            ),
 
-            directions_url=directions_url,
+            directions_url=(
+                directions_url
+            ),
 
-            ticket_url=ticket_url,
+            ticket_url=(
+                ticket_url
+            ),
+
 
             # =============================================
             # LISTING LEVEL
             # =============================================
 
-            listing_level=listing_level,
+            listing_level=(
+                listing_level
+            ),
 
-            ownership_status=ownership_status,
+            ownership_status=(
+                ownership_status
+            ),
 
-            is_verified=is_verified,
+            is_verified=(
+                is_verified
+            ),
+
 
             # =============================================
             # BUSINESS FIELDS
             # =============================================
 
-            opening_hours=opening_hours,
+            opening_hours=(
+                opening_hours
+            ),
 
-            menu_highlights=menu_highlights,
+            menu_highlights=(
+                menu_highlights
+            ),
 
-            special_offer=special_offer,
+            special_offer=(
+                special_offer
+            ),
+
 
             # =============================================
             # IMAGES
             # =============================================
 
-            image_url=primary_image_url,
+            image_url=(
+                primary_image_url
+            ),
 
             image_url_2=(
+
                 second_image_url
+
                 if listing_level
                 in {
                     "business",
                     "promotion",
                 }
+
                 else None
+
             ),
 
             image_url_3=(
+
                 third_image_url
+
                 if listing_level
                 in {
                     "business",
                     "promotion",
                 }
+
                 else None
+
             ),
+
 
             # =============================================
             # FEATURED
             # =============================================
 
-            featured=featured,
+            featured=(
+                featured
+            ),
+
 
             # =============================================
             # NOTIFICATIONS
             # =============================================
 
-            notification_eligible=notification_eligible,
+            notification_eligible=(
+                notification_eligible
+            ),
+
 
             # =============================================
             # ACTIVE
@@ -8122,9 +8488,20 @@ def create_content():
 
         # =================================================
         # APPLY NORMALIZED CONTENT DATES
+        #
+        # This safely applies fields returned by your
+        # existing lifecycle validator, such as:
+        #
+        # publish_from
+        # event_date
+        # event_end_date
+        # start_date
+        # end_date
         # =================================================
 
-        for key, value in dates.items():
+        for key, value in (
+            dates.items()
+        ):
 
             setattr(
                 item,
@@ -8135,6 +8512,14 @@ def create_content():
 
         # =================================================
         # CONFIGURE KALXA COMMERCIAL PACKAGE
+        #
+        # This existing helper remains authoritative for:
+        #
+        # pricing model
+        # duration
+        # amount due
+        # payment status
+        # distribution zone selection
         # =================================================
 
         try:
@@ -8147,14 +8532,19 @@ def create_content():
                 )
             )
 
+
         except ValueError as error:
 
             db.session.rollback()
 
+
             flash(
-                str(error),
+                str(
+                    error
+                ),
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -8177,6 +8567,9 @@ def create_content():
                 not in distribution_zone_ids
             ):
 
+                db.session.rollback()
+
+
                 flash(
                     (
                         "A campaign must include its "
@@ -8184,6 +8577,7 @@ def create_content():
                     ),
                     "error",
                 )
+
 
                 return _render_content_form(
                     zones,
@@ -8193,9 +8587,14 @@ def create_content():
 
 
             if (
-                len(distribution_zone_ids)
+                len(
+                    distribution_zone_ids
+                )
                 > 3
             ):
+
+                db.session.rollback()
+
 
                 flash(
                     (
@@ -8204,6 +8603,7 @@ def create_content():
                     ),
                     "error",
                 )
+
 
                 return _render_content_form(
                     zones,
@@ -8217,21 +8617,36 @@ def create_content():
             == PRICING_MODEL_PRESENCE
         ):
 
-            distribution_zone_ids = []
+            distribution_zone_ids = (
+                []
+            )
 
 
         # =================================================
-        # SAVE CONTENT + DISTRIBUTION
+        # SAVE CONTENT + DISTRIBUTION AS ONE TRANSACTION
         # =================================================
 
         try:
+
+            # =============================================
+            # ADD CONTENT ITEM
+            # =============================================
 
             db.session.add(
                 item
             )
 
+
+            # =============================================
+            # GET CONTENT ITEM ID
+            # =============================================
+
             db.session.flush()
 
+
+            # =============================================
+            # CREATE CAMPAIGN DISTRIBUTION LINKS
+            # =============================================
 
             for distribution_zone_id in (
                 distribution_zone_ids
@@ -8240,17 +8655,26 @@ def create_content():
                 distribution_link = (
                     ContentDistributionZone(
 
-                        content_item_id=item.id,
+                        content_item_id=(
+                            item.id
+                        ),
 
-                        zone_id=distribution_zone_id,
+                        zone_id=(
+                            distribution_zone_id
+                        ),
 
                     )
                 )
+
 
                 db.session.add(
                     distribution_link
                 )
 
+
+            # =============================================
+            # COMMIT
+            # =============================================
 
             db.session.commit()
 
@@ -8258,6 +8682,7 @@ def create_content():
         except Exception as error:
 
             db.session.rollback()
+
 
             current_app.logger.exception(
                 (
@@ -8268,6 +8693,7 @@ def create_content():
                 error,
             )
 
+
             flash(
                 (
                     "Content could not be published. "
@@ -8275,6 +8701,7 @@ def create_content():
                 ),
                 "error",
             )
+
 
             return _render_content_form(
                 zones,
@@ -8303,6 +8730,7 @@ def create_content():
                 "success",
             )
 
+
         elif (
             item.pricing_model
             == PRICING_MODEL_PRESENCE
@@ -8316,6 +8744,7 @@ def create_content():
                 ),
                 "success",
             )
+
 
         else:
 
@@ -8341,7 +8770,6 @@ def create_content():
         categories,
         None,
     )
-
 
 
 @admin_bp.route(
