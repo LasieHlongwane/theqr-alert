@@ -1439,12 +1439,19 @@ class PendingSubmissionImage(db.Model):
     
     
 class ContentReminder(db.Model):
+
     __tablename__ = "content_reminders"
+
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
+
+
+    # -----------------------------------------------------
+    # CONTENT
+    # -----------------------------------------------------
 
     content_item_id = db.Column(
         db.Integer,
@@ -1456,6 +1463,11 @@ class ContentReminder(db.Model):
         index=True,
     )
 
+
+    # -----------------------------------------------------
+    # LOCATION CONTEXT
+    # -----------------------------------------------------
+
     zone_id = db.Column(
         db.Integer,
         db.ForeignKey(
@@ -1465,6 +1477,7 @@ class ContentReminder(db.Model):
         nullable=True,
         index=True,
     )
+
 
     access_point_id = db.Column(
         db.Integer,
@@ -1476,11 +1489,25 @@ class ContentReminder(db.Model):
         index=True,
     )
 
-    # =====================================================
-    # STEP 10D — WEB PUSH DESTINATION
-    # =====================================================
+
+    # -----------------------------------------------------
+    # STEP 10D — PUSH SUBSCRIBER
+    # -----------------------------------------------------
+
+    push_subscriber_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "push_subscribers.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
 
 
+    # -----------------------------------------------------
+    # REMINDER CONFIG
+    # -----------------------------------------------------
 
     reminder_type = db.Column(
         db.String(30),
@@ -1489,17 +1516,24 @@ class ContentReminder(db.Model):
         index=True,
     )
 
+
     reminder_minutes_before = db.Column(
         db.Integer,
         nullable=False,
         default=60,
     )
 
+
     scheduled_for = db.Column(
         db.DateTime,
         nullable=True,
         index=True,
     )
+
+
+    # -----------------------------------------------------
+    # STATUS
+    # -----------------------------------------------------
 
     status = db.Column(
         db.String(30),
@@ -1508,6 +1542,11 @@ class ContentReminder(db.Model):
         index=True,
     )
 
+
+    # -----------------------------------------------------
+    # TIMESTAMPS
+    # -----------------------------------------------------
+
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -1515,10 +1554,16 @@ class ContentReminder(db.Model):
         index=True,
     )
 
+
     sent_at = db.Column(
         db.DateTime,
         nullable=True,
     )
+
+
+    # -----------------------------------------------------
+    # RELATIONSHIPS
+    # -----------------------------------------------------
 
     content_item = db.relationship(
         "ContentItem",
@@ -1529,6 +1574,7 @@ class ContentReminder(db.Model):
         ),
     )
 
+
     zone = db.relationship(
         "Zone",
         backref=db.backref(
@@ -1536,6 +1582,7 @@ class ContentReminder(db.Model):
             lazy=True,
         ),
     )
+
 
     access_point = db.relationship(
         "AccessPoint",
@@ -1545,6 +1592,25 @@ class ContentReminder(db.Model):
         ),
     )
 
+
+    push_subscriber = db.relationship(
+        "PushSubscriber",
+        backref=db.backref(
+            "content_reminders",
+            lazy=True,
+        ),
+    )
+
+
+    def __repr__(self):
+
+        return (
+            f"<ContentReminder "
+            f"id={self.id} "
+            f"content_item_id={self.content_item_id} "
+            f"push_subscriber_id={self.push_subscriber_id} "
+            f"status={self.status}>"
+        )
 
 # ============================================================
 # QR SCAN
