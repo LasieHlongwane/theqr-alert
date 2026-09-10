@@ -3097,17 +3097,39 @@ def get_active_content(
 
     zone_visibility = db.or_(
 
+    # =================================================
+    # HOME / ORIGIN ZONE
+    # =================================================
+
         ContentItem.zone_id == zone_id,
+
+
+    # =================================================
+    # CAMPAIGN DISTRIBUTION ZONE
+    #
+    # We query ContentDistributionZone directly instead
+    # of depending on a relationship/backref existing
+    # on ContentItem.
+    # =================================================
 
         db.and_(
 
-            ContentItem.pricing_model
-            == PRICING_MODEL_CAMPAIGN,
+          ContentItem.pricing_model
+          == PRICING_MODEL_CAMPAIGN,
 
-            ContentItem.distribution_zone_links.any(
+          db.exists().where(
+
+            db.and_(
+
+                ContentDistributionZone.content_item_id
+                == ContentItem.id,
+
                 ContentDistributionZone.zone_id
-                == zone_id
-            ),
+                == zone_id,
+
+            )
+
+          ),
 
         ),
 
