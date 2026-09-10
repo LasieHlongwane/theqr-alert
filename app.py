@@ -989,10 +989,7 @@ def create_content_reminder(
     }
 
 
-    if (
-        reminder_minutes
-        not in allowed_offsets
-    ):
+    if reminder_minutes not in allowed_offsets:
 
         reminder_minutes = 60
 
@@ -1038,13 +1035,14 @@ def create_content_reminder(
 
 
     # =====================================================
-    # ZONE / ACCESS CONTEXT
+    # LOCATION CONTEXT
     # =====================================================
 
     zone_id = request.form.get(
         "zone_id",
         type=int,
     )
+
 
     access_point_id = request.form.get(
         "access_point_id",
@@ -1053,12 +1051,7 @@ def create_content_reminder(
 
 
     # =====================================================
-    # STEP 10D — PUSH SUBSCRIPTION
-    #
-    # Browser sends its existing Web Push endpoint.
-    # We DO NOT create a second push subscription here.
-    #
-    # We only connect the reminder to an existing one.
+    # PUSH ENDPOINT
     # =====================================================
 
     push_endpoint = (
@@ -1082,45 +1075,55 @@ def create_content_reminder(
         }, 400
 
 
-    push_subscription = (
-        PushSubscription.query
+    # =====================================================
+    # FIND EXISTING PUSH SUBSCRIBER
+    # =====================================================
+
+    push_subscriber = (
+        PushSubscriber.query
         .filter_by(
-            endpoint=push_endpoint
+            endpoint=push_endpoint,
+            active=True,
         )
         .first()
     )
 
 
-    if not push_subscription:
+    if not push_subscriber:
 
         return {
             "success": False,
             "requires_push": True,
             "message": (
-                "Your notification subscription "
+                "Your Kalxa notification subscription "
                 "could not be found. Please enable "
-                "Kalxa alerts again."
+                "notifications again."
             ),
         }, 400
 
 
     # =====================================================
     # PREVENT DUPLICATE REMINDER
-    #
-    # Same browser + same listing + same reminder offset.
     # =====================================================
 
     existing_reminder = (
         ContentReminder.query
         .filter_by(
-            content_item_id=item.id,
-            push_subscription_id=(
-                push_subscription.id
+
+            content_item_id=(
+                item.id
             ),
+
+            push_subscriber_id=(
+                push_subscriber.id
+            ),
+
             reminder_minutes_before=(
                 reminder_minutes
             ),
+
             status="pending",
+
         )
         .first()
     )
@@ -1142,9 +1145,7 @@ def create_content_reminder(
                 existing_reminder
                 .scheduled_for
                 .isoformat()
-                if
-                existing_reminder
-                .scheduled_for
+                if existing_reminder.scheduled_for
                 else None
             ),
 
@@ -1152,7 +1153,7 @@ def create_content_reminder(
 
 
     # =====================================================
-    # STORE UTC IN DATABASE
+    # STORE UTC DATETIME
     # =====================================================
 
     scheduled_for_utc = (
@@ -1178,14 +1179,15 @@ def create_content_reminder(
 
         zone_id=(
             zone_id
+            or push_subscriber.zone_id
         ),
 
         access_point_id=(
             access_point_id
         ),
 
-        push_subscription_id=(
-            push_subscription.id
+        push_subscriber_id=(
+            push_subscriber.id
         ),
 
         reminder_type=(
@@ -1226,6 +1228,7 @@ def create_content_reminder(
 
             zone_id=(
                 zone_id
+                or push_subscriber.zone_id
             ),
 
             access_point_id=(
@@ -1263,7 +1266,7 @@ def create_content_reminder(
 
 
     # =====================================================
-    # SUCCESS
+    # SUCCESS RESPONSE
     # =====================================================
 
     return {
@@ -1281,6 +1284,7 @@ def create_content_reminder(
         ),
 
     }, 201
+
 
 def parse_optional_time(
     value,
