@@ -207,111 +207,213 @@
         }
 
 
+        /* =========================================================
+           KALXA CAMPAIGN STATE
+        ========================================================= */
 
-        /* ==========================================================
-   KALXA CAMPAIGN STATE
-   ========================================================== */
+        .lac-campaign-state {
 
-.lac-campaign-state {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
-    width: fit-content;
+            width: fit-content;
 
-    margin-top: 8px;
+            margin-top: 8px;
 
-    padding: 6px 10px;
+            padding: 6px 10px;
 
-    border-radius: 999px;
+            border-radius: 999px;
 
-    font-size: 10px;
-    font-weight: 900;
+            font-size: 10px;
+            font-weight: 900;
 
-    line-height: 1;
+            line-height: 1;
 
-    letter-spacing: 0.5px;
+            letter-spacing: 0.5px;
 
-    text-transform: uppercase;
+            text-transform: uppercase;
 
-    white-space: nowrap;
-}
-
-
-/* UPCOMING */
-
-.campaign-countdown {
-    background: #fff4df;
-    color: #3f4348;
-}
+            white-space: nowrap;
+        }
 
 
-/* TOMORROW */
+        /* UPCOMING */
 
-.campaign-tomorrow {
-    background: #fff4df;
-    color: #111316;
-}
-
-
-/* TODAY */
-
-.campaign-today {
-    background: #fff4df;
-    color: #111316;
-}
+        .campaign-countdown {
+            background: #fff4df;
+            color: #3f4348;
+        }
 
 
-/* TONIGHT */
+        /* TOMORROW */
 
-.campaign-tonight {
-    background: #111316;
-    color: #fff4df;
-}
-
-
-/* LIVE */
-
-.campaign-live {
-    background: #d92d20;
-    color: #ffffff;
-}
+        .campaign-tomorrow {
+            background: #fff4df;
+            color: #111316;
+        }
 
 
-/* GENERIC ACTIVE CAMPAIGN */
+        /* TODAY */
 
-.campaign-active {
-    background: #fff4df;
-    color: #111316;
-}
-
-
-/* ENDING */
-
-.campaign-ending {
-    background: #111316;
-    color: #fff4df;
-}
-
-.campaign-ending-soon {
-    background: #111316;
-    color: #fff4df;
-}
+        .campaign-today {
+            background: #fff4df;
+            color: #111316;
+        }
 
 
-/* ENDED */
+        /* TONIGHT */
 
-.campaign-ended {
-    background: #e8e8e8;
-    color: #666666;
-}
+        .campaign-tonight {
+            background: #111316;
+            color: #fff4df;
+        }
 
 
-/* UNDATED */
+        /* LIVE */
 
-.campaign-undated {
-    display: none;
-}
+        .campaign-live {
+            background: #d92d20;
+            color: #ffffff;
+        }
+
+
+        /* GENERIC ACTIVE CAMPAIGN */
+
+        .campaign-active {
+            background: #fff4df;
+            color: #111316;
+        }
+
+
+        /* ENDING */
+
+        .campaign-ending {
+            background: #111316;
+            color: #fff4df;
+        }
+
+
+        .campaign-ending-soon {
+            background: #111316;
+            color: #fff4df;
+        }
+
+
+        /* ENDED */
+
+        .campaign-ended {
+            background: #e8e8e8;
+            color: #666666;
+        }
+
+
+        /* UNDATED */
+
+        .campaign-undated {
+            display: none;
+        }
+
+
+        /* =========================================================
+           STEP 10 — REMIND ME
+        ========================================================= */
+
+        .kalxa-reminder-wrap {
+
+            margin-top: 12px;
+        }
+
+
+        .kalxa-remind-btn {
+
+            width: 100%;
+            min-height: 45px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+
+            padding: 11px 14px;
+
+            box-sizing: border-box;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 12px;
+
+            background:
+                rgba(255, 255, 255, 0.05);
+
+            color: #fff4df;
+
+            font-size: 12px;
+            font-weight: 850;
+
+            cursor: pointer;
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease,
+                opacity 0.2s ease;
+        }
+
+
+        .kalxa-remind-btn:hover {
+
+            background:
+                rgba(255, 255, 255, 0.09);
+        }
+
+
+        .kalxa-remind-btn:active {
+
+            transform:
+                scale(0.98);
+        }
+
+
+        .kalxa-remind-btn:disabled {
+
+            cursor: default;
+        }
+
+
+        .kalxa-remind-btn.is-saving {
+
+            opacity: 0.65;
+        }
+
+
+        .kalxa-remind-btn.is-saved {
+
+            background:
+                rgba(255, 244, 223, 0.09);
+
+            border-color:
+                rgba(255, 244, 223, 0.16);
+
+            color: #fff4df;
+
+            opacity: 0.82;
+
+            cursor: default;
+        }
+
+
+        .kalxa-remind-btn.is-error {
+
+            border-color:
+                rgba(217, 45, 32, 0.35);
+        }
+
+
         /* =========================================================
            SPECIAL OFFER PREVIEW
         ========================================================= */
@@ -907,12 +1009,16 @@
 
         @media (prefers-reduced-motion: reduce) {
 
-            .lac-empty-primary {
+            .lac-empty-primary,
+            .kalxa-remind-btn {
+
                 transition: none;
             }
 
 
-            .lac-empty-primary:active {
+            .lac-empty-primary:active,
+            .kalxa-remind-btn:active {
+
                 transform: none;
             }
         }
@@ -974,11 +1080,6 @@
 
         <!-- =====================================
              CATEGORY HERO
-
-             IMPORTANT:
-             Consumer language comes from
-             CONSUMER_CATEGORIES, not the database
-             Category.name.
         ====================================== -->
 
         <section class="category-page-hero">
@@ -1019,8 +1120,10 @@
 
 
             <p class="category-page-intro">
+
                 {{ consumer_category.subtitle }}
                 in {{ zone.name }}.
+
             </p>
 
         </section>
@@ -1090,26 +1193,17 @@
 
                     <!-- =================================
                          IMAGE GALLERY
-
-                         DISCOVERY:
-                         Maximum one image.
-
-                         BUSINESS / PROMOTION:
-                         Up to three images.
                     ================================== -->
 
                     {% if item.can_use_business_features() %}
 
-
-                        <!-- =============================
-                             RELATIONSHIP IMAGES
-                        ============================== -->
 
                         {% if item.images %}
 
                         <div
                             class="
                                 content-gallery
+
                                 {% if item.images|length == 1 %}
                                     single-gallery
                                 {% elif item.images|length == 2 %}
@@ -1153,10 +1247,6 @@
 
                         </div>
 
-
-                        <!-- =============================
-                             LEGACY / URL GALLERY
-                        ============================== -->
 
                         {% elif
                             item.image_url
@@ -1314,11 +1404,6 @@
                     <div class="listing-badge-row">
 
 
-                        <!--
-                            Featured is independent of
-                            listing_level.
-                        -->
-
                         {% if item.featured %}
 
                         <span class="featured">
@@ -1352,10 +1437,6 @@
                         {% endif %}
 
 
-                        <!-- =================================
-                             NON-EVENT UPCOMING
-                        ================================== -->
-
                         {% if
                             canonical_category != "events"
                             and item.start_date
@@ -1369,10 +1450,6 @@
                         {% endif %}
 
 
-                        <!-- =================================
-                             EVENT UPCOMING
-                        ================================== -->
-
                         {% if
                             canonical_category == "events"
                             and item.event_date
@@ -1385,7 +1462,6 @@
 
                         {% endif %}
 
-
                     </div>
 
 
@@ -1393,82 +1469,75 @@
                          TITLE / BUSINESS
                     ================================== -->
 
-                    <!-- =================================
-                        TITLE / BUSINESS
-                    ================================== -->
-
                     <div class="listing-main-info">
 
-                      <h2>
-                        {{ item.title }}
-                      </h2>
+                        <h2>
+                            {{ item.title }}
+                        </h2>
 
 
-                      <!-- =================================
-                        CAMPAIGN STATE
+                        <!-- =================================
+                             CAMPAIGN STATE
+                        ================================== -->
 
-                        Calculated dynamically in Python.
-                        Nothing is manually changed here.
-                      ================================== -->
+                        {% if
+                            item.campaign_state is defined
+                            and item.campaign_state
+                            and item.campaign_state.label
+                        %}
 
-                      {% if
-                        item.campaign_state
-                        and item.campaign_state.label
-                      %}
-
-                      <span
-                        class="
-                          lac-campaign-state
-                          {{ item.campaign_state.css_class }}
-                        "
-                      >
-                        {{ item.campaign_state.label }}
-                      </span>
-
-                      {% endif %}
-
-
-                      {% if item.business_name %}
-
-                      <div class="business-name business-name-with-status">
-
-                      <span>
-                        {{ item.business_name }}
-                      </span>
-                      {% if
-                        item.can_use_business_features()
-                        and item.is_verified
-                      %}
-
-                      <span
-                        class="business-inline-verified"
-                        title="Verified by Kalxa"
-                        aria-label="Verified by Kalxa"
-                      >
-                        ✓
+                        <span
+                            class="
+                                lac-campaign-state
+                                {{ item.campaign_state.css_class }}
+                            "
+                        >
+                            {{ item.campaign_state.label }}
                         </span>
 
                         {% endif %}
 
-                      </div>
 
-                      {% endif %}
+                        {% if item.business_name %}
+
+                        <div class="business-name business-name-with-status">
+
+                            <span>
+                                {{ item.business_name }}
+                            </span>
 
 
-                      {% if item.description %}
+                            {% if
+                                item.can_use_business_features()
+                                and item.is_verified
+                            %}
 
-                      <p class="listing-description">
-                        {{ item.description }}
-                      </p>
+                            <span
+                                class="business-inline-verified"
+                                title="Verified by Kalxa"
+                                aria-label="Verified by Kalxa"
+                            >
+                                ✓
+                            </span>
 
-                      {% endif %}
+                            {% endif %}
+
+                        </div>
+
+                        {% endif %}
+
+
+                        {% if item.description %}
+
+                        <p class="listing-description">
+                            {{ item.description }}
+                        </p>
+
+                        {% endif %}
 
                     </div>
 
 
-<!-- =================================
-     PROMINENT DATE / AVAILABILITY
-================================== -->
                     <!-- =================================
                          PROMINENT DATE / AVAILABILITY
                     ================================== -->
@@ -1492,8 +1561,7 @@
                                     {% if
                                         item.event_end_date
                                         and
-                                        item.event_end_date
-                                        != item.event_date
+                                        item.event_end_date != item.event_date
                                     %}
 
                                         Event Dates
@@ -1515,8 +1583,7 @@
                                     {% if
                                         item.event_end_date
                                         and
-                                        item.event_end_date
-                                        != item.event_date
+                                        item.event_end_date != item.event_date
                                     %}
 
                                         —
@@ -1581,8 +1648,7 @@
 
 
                                         {% if
-                                            item.start_date
-                                            == item.end_date
+                                            item.start_date == item.end_date
                                         %}
 
                                             {{ item.start_date.strftime("%d %b %Y") }}
@@ -1660,8 +1726,6 @@
                     <div class="listing-detail-grid">
 
 
-                        <!-- LOCATION -->
-
                         {% if item.venue %}
 
                         <div class="listing-detail-card">
@@ -1686,8 +1750,6 @@
 
                         {% endif %}
 
-
-                        <!-- PRICE -->
 
                         {% if
                             item.can_use_business_features()
@@ -1765,8 +1827,6 @@
                         {% endif %}
 
 
-                        <!-- OPENING HOURS -->
-
                         {% if
                             item.can_use_business_features()
                             and item.opening_hours
@@ -1824,12 +1884,38 @@
 
 
                     <!-- =================================
+                         STEP 10 — REMIND ME
+
+                         Only appears for timed campaign
+                         content which has not ended.
+                    ================================== -->
+
+                    {% if
+                        item.campaign_state is defined
+                        and item.campaign_state
+                        and not item.campaign_state.is_ended
+                    %}
+
+                    <div class="kalxa-reminder-wrap">
+
+                        <button
+                            type="button"
+                            class="kalxa-remind-btn"
+                            data-reminder-button
+                            data-item-id="{{ item.id }}"
+                            data-zone-id="{{ zone.id }}"
+                            data-access-point-id="{{ access_point.id }}"
+                        >
+                            🔔 Remind Me
+                        </button>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================
                          QUICK ACTIONS
-
-                         These are field-driven.
-
-                         They are intentionally not gated
-                         by listing_level.
                     ================================== -->
 
                     {% if
@@ -1885,9 +1971,7 @@
                         <div class="listing-actions">
 
 
-                            <!-- =========================
-                                 CALL
-                            ========================== -->
+                            <!-- CALL -->
 
                             {% if item.contact %}
 
@@ -1906,9 +1990,7 @@
                             {% endif %}
 
 
-                            <!-- =========================
-                                 WHATSAPP
-                            ========================== -->
+                            <!-- WHATSAPP -->
 
                             {% if
                                 item.whatsapp_number
@@ -1939,9 +2021,7 @@
                             {% endif %}
 
 
-                            <!-- =========================
-                                 DIRECTIONS
-                            ========================== -->
+                            <!-- DIRECTIONS -->
 
                             {% if item.directions_url %}
 
@@ -1979,14 +2059,7 @@
                             {% endif %}
 
 
-                            <!-- =========================
-                                 TICKETS / BOOKING
-
-                                 No tracking event here yet
-                                 because ticket_click is not
-                                 currently part of the known
-                                 engagement event allow-list.
-                            ========================== -->
+                            <!-- TICKETS -->
 
                             {% if item.ticket_url %}
 
@@ -2173,10 +2246,6 @@
                     </p>
 
 
-                    <!-- =================================
-                         USER ALERT CTA
-                    ================================== -->
-
                     <a
                         href="{{ url_for(
                             'qr_access',
@@ -2247,10 +2316,6 @@
                     </a>
 
 
-                    <!-- =================================
-                         ADD A LISTING
-                    ================================== -->
-
                     <div class="lac-empty-contribute">
 
 
@@ -2314,7 +2379,6 @@
                         >
                             + Add a listing
                         </a>
-
 
                     </div>
 
@@ -2470,7 +2534,6 @@
 
         const altText =
             button.dataset.imageAlt || "";
-
 
         openImageModal(
             imageUrl,
@@ -2732,6 +2795,219 @@
 
 
 <!-- =========================================
+     STEP 10 — REMIND ME ENGINE
+========================================== -->
+
+<script>
+
+document.addEventListener(
+    "click",
+    async function(event) {
+
+        const button =
+            event.target.closest(
+                "[data-reminder-button]"
+            );
+
+
+        if (!button) {
+            return;
+        }
+
+
+        if (
+            button.classList.contains(
+                "is-saved"
+            )
+        ) {
+
+            return;
+        }
+
+
+        const itemId =
+            button.dataset.itemId;
+
+        const zoneId =
+            button.dataset.zoneId;
+
+        const accessPointId =
+            button.dataset.accessPointId;
+
+
+        if (!itemId) {
+
+            return;
+        }
+
+
+        const body =
+            new URLSearchParams();
+
+
+        // =========================================
+        // CURRENT DEFAULT
+        //
+        // 60 minutes before campaign start.
+        //
+        // Later this can become:
+        //
+        // 1 hour before
+        // 3 hours before
+        // 1 day before
+        // =========================================
+
+        body.append(
+            "minutes_before",
+            "60"
+        );
+
+
+        if (zoneId) {
+
+            body.append(
+                "zone_id",
+                zoneId
+            );
+        }
+
+
+        if (accessPointId) {
+
+            body.append(
+                "access_point_id",
+                accessPointId
+            );
+        }
+
+
+        button.disabled =
+            true;
+
+        button.classList.remove(
+            "is-error"
+        );
+
+        button.classList.add(
+            "is-saving"
+        );
+
+        button.textContent =
+            "Saving reminder...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/listing/${itemId}/remind`,
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/x-www-form-urlencoded",
+
+                        },
+
+                        body:
+                            body.toString(),
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.message
+                    ||
+                    "Could not save reminder."
+                );
+            }
+
+
+            button.classList.remove(
+                "is-saving"
+            );
+
+            button.classList.add(
+                "is-saved"
+            );
+
+            button.textContent =
+                "✓ Reminder saved";
+
+
+            // =========================================
+            // OPTIONAL ENGAGEMENT EVENT
+            //
+            // The backend also records
+            // reminder_created.
+            // =========================================
+
+            if (
+                window.LaCTrack
+            ) {
+
+                try {
+
+                    window.LaCTrack(
+                        "reminder_created",
+                        {
+                            contentItemId:
+                                Number(itemId)
+                        }
+                    );
+
+                }
+                catch (trackingError) {
+
+                    console.debug(
+                        "Reminder tracking skipped.",
+                        trackingError
+                    );
+                }
+            }
+
+
+        }
+        catch (error) {
+
+            button.disabled =
+                false;
+
+            button.classList.remove(
+                "is-saving"
+            );
+
+            button.classList.add(
+                "is-error"
+            );
+
+            button.textContent =
+                "🔔 Remind Me";
+
+
+            alert(
+                error.message
+                ||
+                "Could not save reminder."
+            );
+        }
+
+    }
+);
+
+</script>
+
+
+<!-- =========================================
      ENGAGEMENT CONFIG
 ========================================== -->
 
@@ -2748,10 +3024,6 @@ window.LAC_ENGAGEMENT_CONFIG = {
     contentItemId:
         null,
 
-    /*
-     * Track the canonical business taxonomy key
-     * rather than presentation text.
-     */
     category:
         {{ canonical_category | tojson }}
 
@@ -2780,9 +3052,11 @@ window.LAC_ENGAGEMENT_CONFIG = {
 
 document.addEventListener(
     "DOMContentLoaded",
-    function () {
+    function() {
 
-        if (window.LaCTrack) {
+        if (
+            window.LaCTrack
+        ) {
 
             window.LaCTrack(
                 "category_view"
@@ -2797,14 +3071,3 @@ document.addEventListener(
 </body>
 
 </html>
-
-
-      
-
-
-  
-
-                          
-
-
-                  
