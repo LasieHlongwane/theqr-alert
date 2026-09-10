@@ -843,6 +843,54 @@ def create_yoco_checkout(code):
     )
 
 
+def parse_optional_time(
+    value,
+):
+    """
+    Convert an HTML <input type="time"> value into
+    datetime.time.
+
+    Examples:
+
+        "18:00"
+            -> time(18, 0)
+
+        "02:30"
+            -> time(2, 30)
+
+        ""
+        None
+            -> None
+    """
+
+    value = (
+        str(value or "")
+        .strip()
+    )
+
+    if not value:
+        return None
+
+
+    for time_format in (
+        "%H:%M",
+        "%H:%M:%S",
+    ):
+
+        try:
+
+            return datetime.strptime(
+                value,
+                time_format,
+            ).time()
+
+        except ValueError:
+            continue
+
+
+    raise ValueError(
+        "Invalid time value."
+    )
 
 def get_campaign_state(
     item,
