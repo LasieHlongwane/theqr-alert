@@ -1435,6 +1435,131 @@ class PendingSubmissionImage(db.Model):
             cascade="all, delete-orphan",
         ),
     )
+    
+    
+    
+class ContentReminder(db.Model):
+    __tablename__ = "content_reminders"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    content_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "content_items.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "zones.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    access_point_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "access_points.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    # =====================================================
+    # STEP 10D — WEB PUSH DESTINATION
+    # =====================================================
+
+    push_subscription_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "push_subscriptions.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    reminder_type = db.Column(
+        db.String(30),
+        nullable=False,
+        default="before_start",
+        index=True,
+    )
+
+    reminder_minutes_before = db.Column(
+        db.Integer,
+        nullable=False,
+        default=60,
+    )
+
+    scheduled_for = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        server_default=db.func.now(),
+        index=True,
+    )
+
+    sent_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    content_item = db.relationship(
+        "ContentItem",
+        backref=db.backref(
+            "reminders",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    zone = db.relationship(
+        "Zone",
+        backref=db.backref(
+            "content_reminders",
+            lazy=True,
+        ),
+    )
+
+    access_point = db.relationship(
+        "AccessPoint",
+        backref=db.backref(
+            "content_reminders",
+            lazy=True,
+        ),
+    )
+
+    push_subscription = db.relationship(
+        "PushSubscription",
+        backref=db.backref(
+            "content_reminders",
+            lazy=True,
+        ),
+    )
 # ============================================================
 # QR SCAN
 # ============================================================
