@@ -5475,6 +5475,42 @@ def submit_content():
             or None
         )
 
+        start_time_raw = (
+          request.form.get(
+            "start_time"
+          )
+          or ""
+        ).strip()
+
+
+        end_time_raw = (
+          request.form.get(
+            "end_time"
+          )
+          or ""
+        ).strip()
+
+        try:
+
+          start_time = parse_optional_time(
+            start_time_raw
+          )
+
+          end_time = parse_optional_time(
+            end_time_raw
+          )
+
+        except ValueError:
+
+          flash(
+            "Please enter valid campaign times.",
+            "error",
+          )
+
+          return redirect(
+            request.url
+          )
+
         price = (
             request.form.get(
                 "price",
