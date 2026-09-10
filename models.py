@@ -1322,6 +1322,16 @@ class PendingSubmission(db.Model):
         db.Date,
         nullable=True,
     )
+    
+    start_time = db.Column(
+        db.Time,
+        nullable=True,
+    )
+
+    end_time = db.Column(
+        db.Time,
+        nullable=True,
+    )
 
 
     # --------------------------------------------------------
