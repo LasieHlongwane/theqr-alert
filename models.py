@@ -1480,15 +1480,7 @@ class ContentReminder(db.Model):
     # STEP 10D — WEB PUSH DESTINATION
     # =====================================================
 
-    push_subscription_id = db.Column(
-        db.Integer,
-        db.ForeignKey(
-            "push_subscriptions.id",
-            ondelete="SET NULL",
-        ),
-        nullable=True,
-        index=True,
-    )
+
 
     reminder_type = db.Column(
         db.String(30),
@@ -1553,13 +1545,7 @@ class ContentReminder(db.Model):
         ),
     )
 
-    push_subscription = db.relationship(
-        "PushSubscription",
-        backref=db.backref(
-            "content_reminders",
-            lazy=True,
-        ),
-    )
+
 # ============================================================
 # QR SCAN
 # ============================================================
