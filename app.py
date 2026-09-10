@@ -843,6 +843,298 @@ def create_yoco_checkout(code):
         code=303,
     )
 
+def get_reminder_datetime(
+    item,
+    minutes_before=60,
+):
+    """
+    Calculate when a reminder should be delivered.
+
+    Uses campaign start timing, not commercial timing.
+    """
+
+    canonical_category = normalize_category(
+        item.category
+    )
+
+    start_time_value = getattr(
+        item,
+        "start_time",
+        None,
+    )
+
+
+    # =====================================================
+    # EVENTS
+    # =====================================================
+
+    if canonical_category == "events":
+
+        start_date_value = (
+            getattr(
+                item,
+                "event_date",
+                None,
+            )
+            or
+            getattr(
+                item,
+                "start_date",
+                None,
+            )
+        )
+
+
+    # =====================================================
+    # OTHER CAMPAIGNS
+    # =====================================================
+
+    else:
+
+        start_date_value = getattr(
+            item,
+            "start_date",
+            None,
+        )
+
+
+    if not start_date_value:
+        return None
+
+
+    effective_start_time = (
+        start_time_value
+        or time(
+            9,
+            0,
+        )
+    )
+
+
+    start_datetime = (
+        datetime.combine(
+            start_date_value,
+            effective_start_time,
+        )
+        .replace(
+            tzinfo=KALXA_TIMEZONE
+        )
+    )
+
+
+    reminder_datetime = (
+        start_datetime
+        -
+        timedelta(
+            minutes=minutes_before
+        )
+    )
+
+
+    return reminder_datetime
+
+
+@app.route(
+    "/listing/<int:item_id>/remind",
+    methods=["POST"],
+)
+def create_content_reminder(
+    item_id,
+):
+
+    item = ContentItem.query.get_or_404(
+        item_id
+    )
+
+
+    # =====================================================
+    # ONLY ACTIVE CONTENT
+    # =====================================================
+
+    if not item.active:
+
+        return {
+            "success": False,
+            "message": "This listing is no longer active.",
+        }, 400
+
+
+    # =====================================================
+    # REMINDER OFFSET
+    # =====================================================
+
+    try:
+
+        reminder_minutes = int(
+            request.form.get(
+                "minutes_before",
+                60,
+            )
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        reminder_minutes = 60
+
+
+    allowed_offsets = {
+        60,
+        180,
+        1440,
+    }
+
+
+    if reminder_minutes not in allowed_offsets:
+
+        reminder_minutes = 60
+
+
+    # =====================================================
+    # CALCULATE REMINDER TIME
+    # =====================================================
+
+    scheduled_for = (
+        get_reminder_datetime(
+            item,
+            minutes_before=reminder_minutes,
+        )
+    )
+
+
+    if not scheduled_for:
+
+        return {
+            "success": False,
+            "message": (
+                "This listing does not have enough "
+                "timing information for a reminder."
+            ),
+        }, 400
+
+
+    now_local = datetime.now(
+        KALXA_TIMEZONE
+    )
+
+
+    if scheduled_for <= now_local:
+
+        return {
+            "success": False,
+            "message": (
+                "That reminder time has already passed."
+            ),
+        }, 400
+
+
+    # =====================================================
+    # OPTIONAL ACCESS CONTEXT
+    # =====================================================
+
+    zone_id = request.form.get(
+        "zone_id",
+        type=int,
+    )
+
+    access_point_id = request.form.get(
+        "access_point_id",
+        type=int,
+    )
+
+
+    # =====================================================
+    # CREATE REMINDER
+    # =====================================================
+
+    reminder = ContentReminder(
+
+        content_item_id=item.id,
+
+        zone_id=zone_id,
+
+        access_point_id=access_point_id,
+
+        reminder_type="before_start",
+
+        reminder_minutes_before=(
+            reminder_minutes
+        ),
+
+        scheduled_for=(
+            scheduled_for.astimezone(
+                ZoneInfo("UTC")
+            ).replace(
+                tzinfo=None
+            )
+        ),
+
+        status="pending",
+
+    )
+
+
+    db.session.add(
+        reminder
+    )
+
+    db.session.commit()
+
+
+    # =====================================================
+    # ANONYMOUS ENGAGEMENT EVENT
+    # =====================================================
+
+    try:
+
+        engagement = EngagementEvent(
+
+            event_type="reminder_created",
+
+            zone_id=zone_id,
+
+            access_point_id=(
+                access_point_id
+            ),
+
+            content_item_id=item.id,
+
+            category=normalize_category(
+                item.category
+            ),
+
+        )
+
+        db.session.add(
+            engagement
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+
+    # =====================================================
+    # RESPONSE
+    # =====================================================
+
+    return {
+
+        "success": True,
+
+        "message": (
+            "Reminder saved."
+        ),
+
+        "scheduled_for": (
+            scheduled_for.isoformat()
+        ),
+
+    }, 201
 
 def parse_optional_time(
     value,
