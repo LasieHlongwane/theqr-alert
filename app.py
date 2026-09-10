@@ -34,6 +34,7 @@ from flask import (
     request,
     url_for,
 )
+import secrets
 from flask_migrate import Migrate
 from sqlalchemy import or_
 from pricing import (
@@ -381,6 +382,421 @@ def pwa_app():
     "/payment/yoco/<code>",
     methods=["POST"],
 )
+
+def send_due_content_reminders(
+    limit=100,
+):
+    """
+    Send pending Kalxa reminders whose scheduled time has arrived.
+
+    This function is designed to be called by:
+    - a scheduled job
+    - a worker
+    - a manual Flask shell test
+
+    It reuses the existing PushSubscriber destination.
+    """
+
+    now_utc = datetime.utcnow()
+
+
+    # =====================================================
+    # LOAD DUE REMINDERS
+    # =====================================================
+
+    reminders = (
+        ContentReminder.query
+        .filter(
+
+            ContentReminder.status
+            == "pending",
+
+            ContentReminder.scheduled_for.is_not(
+                None
+            ),
+
+            ContentReminder.scheduled_for
+            <= now_utc,
+
+        )
+        .order_by(
+            ContentReminder.scheduled_for.asc()
+        )
+        .limit(
+            limit
+        )
+        .all()
+    )
+
+
+    if not reminders:
+
+        return {
+            "processed": 0,
+            "sent": 0,
+            "failed": 0,
+        }
+
+
+    sent_count = 0
+    failed_count = 0
+
+
+    # =====================================================
+    # PROCESS EACH REMINDER
+    # =====================================================
+
+    for reminder in reminders:
+
+        try:
+
+            # =================================================
+            # CONTENT
+            # =================================================
+
+            item = reminder.content_item
+
+
+            if not item:
+
+                reminder.status = "failed"
+
+                failed_count += 1
+
+                continue
+
+
+            # =================================================
+            # ACTIVE CONTENT CHECK
+            # =================================================
+
+            if not item.active:
+
+                reminder.status = "cancelled"
+
+                continue
+
+
+            # =================================================
+            # PUSH SUBSCRIBER
+            # =================================================
+
+            subscriber = (
+                reminder.push_subscriber
+            )
+
+
+            if not subscriber:
+
+                reminder.status = "failed"
+
+                failed_count += 1
+
+                continue
+
+
+            if not subscriber.active:
+
+                reminder.status = "failed"
+
+                failed_count += 1
+
+                continue
+
+
+            # =================================================
+            # BUILD NOTIFICATION
+            # =================================================
+
+            notification_title = (
+                "🔔 Kalxa Reminder"
+            )
+
+
+            canonical_category = (
+                normalize_category(
+                    item.category
+                )
+            )
+
+
+            if canonical_category == "events":
+
+                notification_body = (
+                    f"{item.title} starts soon."
+                )
+
+
+            elif canonical_category == "jobs":
+
+                notification_body = (
+                    f"Don't miss {item.title}."
+                )
+
+
+            elif canonical_category == "retail_specials":
+
+                notification_body = (
+                    f"{item.title} is coming up soon."
+                )
+
+
+            else:
+
+                notification_body = (
+                    f"{item.title} is coming up soon."
+                )
+
+
+            # =================================================
+            # TARGET URL
+            # =================================================
+
+            target_url = url_for(
+                "listing_detail",
+                item_id=item.id,
+                _external=True,
+            )
+
+
+            # =================================================
+            # SEND PUSH
+            #
+            # IMPORTANT:
+            #
+            # Replace send_push_notification(...)
+            # with your EXISTING push send helper if the
+            # function has another name.
+            # =================================================
+
+            send_push_notification(
+                subscriber=subscriber,
+                title=notification_title,
+                body=notification_body,
+                url=target_url,
+            )
+
+
+            # =================================================
+            # MARK SENT
+            # =================================================
+
+            reminder.status = "sent"
+
+            reminder.sent_at = (
+                datetime.utcnow()
+            )
+
+
+            sent_count += 1
+
+
+        except Exception as exc:
+
+            reminder.status = "failed"
+
+            failed_count += 1
+
+
+            current_app.logger.exception(
+                "Kalxa reminder send failed "
+                "for reminder_id=%s: %s",
+                reminder.id,
+                exc,
+            )
+
+
+    # =====================================================
+    # SAVE ALL STATUS CHANGES
+    # =====================================================
+
+    db.session.commit()
+
+
+    return {
+
+        "processed": (
+            len(reminders)
+        ),
+
+        "sent": (
+            sent_count
+        ),
+
+        "failed": (
+            failed_count
+        ),
+
+    }
+
+
+@app.route(
+    "/internal/run-content-reminders",
+    methods=["POST"],
+)
+def run_content_reminders():
+    """
+    Internal scheduler endpoint.
+
+    Called by an external scheduler such as GitHub Actions.
+
+    Protected by REMINDER_CRON_TOKEN.
+    """
+
+    # =====================================================
+    # EXPECTED SECRET
+    # =====================================================
+
+    expected_token = (
+        os.environ.get(
+            "REMINDER_CRON_TOKEN",
+            ""
+        )
+        .strip()
+    )
+
+
+    if not expected_token:
+
+        current_app.logger.error(
+            "REMINDER_CRON_TOKEN is not configured."
+        )
+
+        return {
+            "success": False,
+            "message": (
+                "Reminder scheduler is not configured."
+            ),
+        }, 503
+
+
+    # =====================================================
+    # TOKEN SENT BY SCHEDULER
+    #
+    # Authorization:
+    # Bearer <token>
+    # =====================================================
+
+    authorization = (
+        request.headers.get(
+            "Authorization",
+            ""
+        )
+        .strip()
+    )
+
+
+    if not authorization.startswith(
+        "Bearer "
+    ):
+
+        return {
+            "success": False,
+            "message": "Unauthorized.",
+        }, 401
+
+
+    supplied_token = (
+        authorization[
+            len("Bearer "):
+        ]
+        .strip()
+    )
+
+
+    # =====================================================
+    # CONSTANT-TIME TOKEN COMPARISON
+    # =====================================================
+
+    if (
+        not supplied_token
+        or not secrets.compare_digest(
+            supplied_token,
+            expected_token,
+        )
+    ):
+
+        return {
+            "success": False,
+            "message": "Unauthorized.",
+        }, 401
+
+
+    # =====================================================
+    # SEND DUE REMINDERS
+    # =====================================================
+
+    try:
+
+        result = (
+            send_due_content_reminders(
+                limit=100
+            )
+        )
+
+
+        current_app.logger.info(
+            "[Kalxa Reminder Scheduler] "
+            "processed=%s sent=%s failed=%s",
+            result.get(
+                "processed",
+                0,
+            ),
+            result.get(
+                "sent",
+                0,
+            ),
+            result.get(
+                "failed",
+                0,
+            ),
+        )
+
+
+        return {
+
+            "success": True,
+
+            "processed": result.get(
+                "processed",
+                0,
+            ),
+
+            "sent": result.get(
+                "sent",
+                0,
+            ),
+
+            "failed": result.get(
+                "failed",
+                0,
+            ),
+
+        }, 200
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            "[Kalxa Reminder Scheduler] "
+            "Scheduler execution failed: %s",
+            exc,
+        )
+
+
+        return {
+
+            "success": False,
+
+            "message": (
+                "Reminder processing failed."
+            ),
+
+        }, 500
+        
 def create_yoco_checkout(code):
 
     # --------------------------------------------------------
