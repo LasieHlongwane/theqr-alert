@@ -2276,6 +2276,55 @@ def get_campaign_state_label(
 
     return campaign_state
 
+
+
+def attach_campaign_state(
+    item,
+):
+    """
+    Attach the calculated campaign state to an item.
+
+    The attribute exists only for the current request.
+    It is not stored in the database.
+    """
+
+    if not item:
+        return item
+
+
+    if should_show_campaign_state(
+        item
+    ):
+
+        campaign_state = (
+            get_campaign_state(
+                item
+            )
+        )
+
+
+        campaign_state = (
+            get_campaign_state_label(
+                item,
+                campaign_state,
+            )
+        )
+
+
+        item.campaign_state = (
+            campaign_state
+        )
+
+
+    else:
+
+        item.campaign_state = (
+            None
+        )
+
+
+    return item
+    
 def should_show_campaign_state(item):
     """
     Decide whether a ContentItem should display Kalxa's
