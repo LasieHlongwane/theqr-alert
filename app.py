@@ -388,144 +388,345 @@ def send_due_content_reminders(
     limit=100,
 ):
 
+    """
+    Find due Kalxa content reminders and send them.
+
+    Production-safe behaviour:
+
+    - Finds reminders that are:
+        status = pending
+        scheduled_for <= now
+
+    - Atomically claims each reminder:
+
+        pending -> processing
+
+    - Only the scheduler process that successfully claims
+      the reminder is allowed to send it.
+
+    - Prevents duplicate push notifications when two
+      scheduler executions overlap.
+
+    - Final statuses:
+
+        sent
+        failed
+        cancelled
+    """
+
     # =====================================================
     # CURRENT UTC TIME
     #
-    # ContentReminder.scheduled_for is stored as
-    # UTC-naive datetime.
+    # Reminder scheduled_for values are stored as
+    # UTC-naive datetimes.
     # =====================================================
 
     now_utc = datetime.utcnow()
 
 
     # =====================================================
-    # FIND DUE REMINDERS
+    # RESULT COUNTERS
     # =====================================================
 
-    reminders = (
-        ContentReminder.query
+    processed_count = 0
+    sent_count = 0
+    failed_count = 0
+    cancelled_count = 0
+
+    skipped_claimed_count = 0
+
+
+    # =====================================================
+    # FIND CANDIDATE REMINDER IDS
+    #
+    # IMPORTANT:
+    #
+    # We intentionally fetch IDs first.
+    #
+    # Two scheduler jobs may both see the same pending IDs.
+    #
+    # That is okay.
+    #
+    # The atomic claim below decides which scheduler
+    # actually owns each reminder.
+    # =====================================================
+
+    candidate_rows = (
+        db.session.query(
+            ContentReminder.id
+        )
         .filter(
             ContentReminder.status
             == "pending",
 
             ContentReminder.scheduled_for
-            .is_not(None),
+            .isnot(None),
 
             ContentReminder.scheduled_for
             <= now_utc,
         )
         .order_by(
-            ContentReminder.scheduled_for.asc(),
-            ContentReminder.id.asc(),
+            ContentReminder
+            .scheduled_for
+            .asc(),
+
+            ContentReminder
+            .id
+            .asc(),
         )
-        .limit(limit)
+        .limit(
+            limit
+        )
         .all()
     )
 
 
-    processed = 0
-    sent = 0
-    failed = 0
-    cancelled = 0
+    candidate_ids = [
+        row[0]
+        for row in candidate_rows
+    ]
 
 
     # =====================================================
-    # PROCESS EACH REMINDER
+    # NOTHING DUE
     # =====================================================
 
-    for reminder in reminders:
+    if not candidate_ids:
 
-        processed += 1
+        return {
+
+            "processed":
+                0,
+
+            "sent":
+                0,
+
+            "failed":
+                0,
+
+            "cancelled":
+                0,
+
+            "skipped_claimed":
+                0,
+
+        }
 
 
-        # -------------------------------------------------
-        # LOAD CONTENT
-        # -------------------------------------------------
+    # =====================================================
+    # PROCESS EACH CANDIDATE
+    # =====================================================
+
+    for reminder_id in candidate_ids:
+
+        # =================================================
+        # ATOMIC CLAIM
+        #
+        # This UPDATE is the critical duplicate-prevention
+        # mechanism.
+        #
+        # Scheduler A:
+        #
+        # pending -> processing
+        # rowcount = 1
+        #
+        # Scheduler B arriving at same time:
+        #
+        # WHERE status = pending no longer matches
+        # rowcount = 0
+        #
+        # Scheduler B therefore skips the reminder.
+        # =================================================
+
+        try:
+
+            claimed_rows = (
+                ContentReminder.query
+                .filter(
+                    ContentReminder.id
+                    == reminder_id,
+
+                    ContentReminder.status
+                    == "pending",
+
+                    ContentReminder.scheduled_for
+                    .isnot(None),
+
+                    ContentReminder.scheduled_for
+                    <= now_utc,
+                )
+                .update(
+                    {
+                        ContentReminder.status:
+                            "processing",
+                    },
+                    synchronize_session=False,
+                )
+            )
+
+
+            db.session.commit()
+
+
+        except Exception as exc:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                "[Kalxa Reminder] "
+                "Unable to claim reminder "
+                "reminder_id=%s "
+                "error=%s",
+                reminder_id,
+                exc,
+            )
+
+            failed_count += 1
+
+            continue
+
+
+        # =================================================
+        # ANOTHER SCHEDULER ALREADY CLAIMED IT
+        # =================================================
+
+        if claimed_rows != 1:
+
+            skipped_claimed_count += 1
+
+            current_app.logger.info(
+                "[Kalxa Reminder] "
+                "Skipped already-claimed reminder "
+                "reminder_id=%s",
+                reminder_id,
+            )
+
+            continue
+
+
+        # =================================================
+        # THIS SCHEDULER OWNS THE REMINDER
+        # =================================================
+
+        processed_count += 1
+
+
+        # =================================================
+        # RELOAD REMINDER
+        #
+        # We committed the atomic claim above, so reload
+        # the current row from the database.
+        # =================================================
+
+        reminder = (
+            db.session.get(
+                ContentReminder,
+                reminder_id,
+            )
+        )
+
+
+        if not reminder:
+
+            current_app.logger.warning(
+                "[Kalxa Reminder] "
+                "Claimed reminder disappeared "
+                "reminder_id=%s",
+                reminder_id,
+            )
+
+            cancelled_count += 1
+
+            continue
+
+
+        # =================================================
+        # CONTENT ITEM
+        # =================================================
 
         item = reminder.content_item
 
 
-        if not item:
+        if (
+            not item
+            or not item.active
+        ):
 
-            reminder.status = "failed"
-
-            failed += 1
-
-            current_app.logger.warning(
-                "[Kalxa Reminder] Missing content item "
-                "reminder_id=%s",
-                reminder.id,
+            reminder.status = (
+                "cancelled"
             )
 
-            continue
+
+            try:
+
+                db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
 
 
-        # -------------------------------------------------
-        # CONTENT MUST STILL BE ACTIVE
-        # -------------------------------------------------
+            cancelled_count += 1
 
-        if not item.active:
-
-            reminder.status = "cancelled"
-
-            cancelled += 1
 
             current_app.logger.info(
-                "[Kalxa Reminder] Cancelled because "
-                "content is inactive "
+                "[Kalxa Reminder] "
+                "Cancelled because content is unavailable "
                 "reminder_id=%s "
                 "content_item_id=%s",
                 reminder.id,
-                item.id,
+                reminder.content_item_id,
             )
 
             continue
 
 
-        # -------------------------------------------------
-        # LOAD PUSH SUBSCRIBER
-        # -------------------------------------------------
+        # =================================================
+        # PUSH SUBSCRIBER
+        # =================================================
 
         subscriber = (
             reminder.push_subscriber
         )
 
 
-        if not subscriber:
+        if (
+            not subscriber
+            or not subscriber.active
+        ):
 
-            reminder.status = "failed"
-
-            failed += 1
-
-            current_app.logger.warning(
-                "[Kalxa Reminder] Missing push subscriber "
-                "reminder_id=%s",
-                reminder.id,
+            reminder.status = (
+                "cancelled"
             )
 
-            continue
+
+            try:
+
+                db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
 
 
-        if not subscriber.active:
+            cancelled_count += 1
 
-            reminder.status = "failed"
 
-            failed += 1
-
-            current_app.logger.warning(
-                "[Kalxa Reminder] Push subscriber inactive "
+            current_app.logger.info(
+                "[Kalxa Reminder] "
+                "Cancelled because subscriber is unavailable "
                 "reminder_id=%s "
                 "subscriber_id=%s",
                 reminder.id,
-                subscriber.id,
+                reminder.push_subscriber_id,
             )
 
             continue
 
 
-        # -------------------------------------------------
+        # =================================================
         # CATEGORY
-        # -------------------------------------------------
+        # =================================================
 
         canonical_category = (
             normalize_category(
@@ -534,18 +735,18 @@ def send_due_content_reminders(
         )
 
 
-        # -------------------------------------------------
+        # =================================================
         # NOTIFICATION TITLE
-        # -------------------------------------------------
+        # =================================================
 
         notification_title = (
             "🔔 Kalxa Reminder"
         )
 
 
-        # -------------------------------------------------
-        # CATEGORY-SPECIFIC BODY
-        # -------------------------------------------------
+        # =================================================
+        # NOTIFICATION BODY
+        # =================================================
 
         if canonical_category == "events":
 
@@ -557,49 +758,14 @@ def send_due_content_reminders(
         elif canonical_category == "retail_specials":
 
             notification_body = (
-                f"{item.title} is available soon."
+                f"{item.title} is starting soon."
             )
 
 
         elif canonical_category == "jobs":
 
             notification_body = (
-                f"{item.title} is opening soon."
-            )
-
-
-        elif canonical_category == "rentals":
-
-            notification_body = (
-                f"{item.title} is available soon."
-            )
-
-
-        elif canonical_category == "restaurants":
-
-            notification_body = (
-                f"{item.title} is happening soon."
-            )
-
-
-        elif canonical_category == "beauty":
-
-            notification_body = (
-                f"{item.title} is happening soon."
-            )
-
-
-        elif canonical_category == "accommodation":
-
-            notification_body = (
-                f"{item.title} is available soon."
-            )
-
-
-        elif canonical_category == "building":
-
-            notification_body = (
-                f"{item.title} is available soon."
+                f"{item.title} is coming up soon."
             )
 
 
@@ -610,93 +776,64 @@ def send_due_content_reminders(
             )
 
 
-        # -------------------------------------------------
+        # =================================================
         # TARGET URL
         #
-        # Open the listing when notification is tapped.
-        # -------------------------------------------------
+        # Do NOT use url_for(..., _external=True) here.
+        #
+        # This function runs from GitHub scheduler context,
+        # outside a browser request.
+        # =================================================
 
         public_base_url = (
-         os.environ.get(
-          "PUBLIC_BASE_URL",
-          "https://lac-local-access.onrender.com",
-         )
-         .rstrip("/")
+            os.environ.get(
+                "PUBLIC_BASE_URL",
+                "https://lac-local-access.onrender.com",
+            )
+            .rstrip("/")
         )
+
 
         target_url = (
-         f"{public_base_url}/listing/{item.id}"
+            f"{public_base_url}"
+            f"/listing/{item.id}"
         )
 
 
-        # -------------------------------------------------
+        # =================================================
         # SEND PUSH
-        # -------------------------------------------------
+        # =================================================
 
         try:
 
-            was_sent = (
+            sent = (
                 send_push_notification(
-                    subscriber=subscriber,
-                    title=notification_title,
-                    body=notification_body,
-                    url=target_url,
+
+                    subscriber=
+                        subscriber,
+
+                    title=
+                        notification_title,
+
+                    body=
+                        notification_body,
+
+                    url=
+                        target_url,
+
                     tag=(
-                        f"kalxa-reminder-{reminder.id}"
+                        f"kalxa-reminder-"
+                        f"{reminder.id}"
                     ),
                 )
             )
 
 
-            if was_sent:
-
-                reminder.status = "sent"
-
-                reminder.sent_at = (
-                    datetime.utcnow()
-                )
-
-                sent += 1
-
-
-                current_app.logger.info(
-                    "[Kalxa Reminder] SENT "
-                    "reminder_id=%s "
-                    "content_item_id=%s "
-                    "subscriber_id=%s",
-                    reminder.id,
-                    item.id,
-                    subscriber.id,
-                )
-
-
-            else:
-
-                reminder.status = "failed"
-
-                failed += 1
-
-
-                current_app.logger.warning(
-                    "[Kalxa Reminder] Push send returned False "
-                    "reminder_id=%s "
-                    "content_item_id=%s "
-                    "subscriber_id=%s",
-                    reminder.id,
-                    item.id,
-                    subscriber.id,
-                )
-
-
         except Exception as exc:
 
-            reminder.status = "failed"
-
-            failed += 1
-
-
             current_app.logger.exception(
-                "[Kalxa Reminder] Unexpected send error "
+                "[Kalxa Reminder] "
+                "Unexpected push exception "
                 "reminder_id=%s "
                 "content_item_id=%s "
                 "subscriber_id=%s "
@@ -708,63 +845,141 @@ def send_due_content_reminders(
             )
 
 
+            sent = False
+
+
+        # =================================================
+        # SUCCESS
+        # =================================================
+
+        if sent:
+
+            reminder.status = (
+                "sent"
+            )
+
+            reminder.sent_at = (
+                datetime.utcnow()
+            )
+
+
+            try:
+
+                db.session.commit()
+
+
+            except Exception as exc:
+
+                db.session.rollback()
+
+
+                current_app.logger.exception(
+                    "[Kalxa Reminder] "
+                    "Push was sent but database status "
+                    "could not be updated "
+                    "reminder_id=%s "
+                    "error=%s",
+                    reminder.id,
+                    exc,
+                )
+
+
+                # Important:
+                #
+                # Do NOT immediately retry here.
+                #
+                # The push may already have reached
+                # the user's phone.
+
+                failed_count += 1
+
+                continue
+
+
+            sent_count += 1
+
+
+            current_app.logger.info(
+                "[Kalxa Reminder] "
+                "SENT "
+                "reminder_id=%s "
+                "content_item_id=%s "
+                "subscriber_id=%s",
+                reminder.id,
+                item.id,
+                subscriber.id,
+            )
+
+
+        # =================================================
+        # DELIVERY FAILED
+        # =================================================
+
+        else:
+
+            reminder.status = (
+                "failed"
+            )
+
+
+            try:
+
+                db.session.commit()
+
+
+            except Exception as exc:
+
+                db.session.rollback()
+
+
+                current_app.logger.exception(
+                    "[Kalxa Reminder] "
+                    "Unable to mark failed reminder "
+                    "reminder_id=%s "
+                    "error=%s",
+                    reminder.id,
+                    exc,
+                )
+
+
+            failed_count += 1
+
+
+            current_app.logger.warning(
+                "[Kalxa Reminder] "
+                "Push send returned False "
+                "reminder_id=%s "
+                "content_item_id=%s "
+                "subscriber_id=%s",
+                reminder.id,
+                item.id,
+                subscriber.id,
+            )
+
+
     # =====================================================
-    # SAVE REMINDER STATUS CHANGES
+    # FINAL RESULT
     # =====================================================
 
-    try:
-
-        db.session.commit()
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-        current_app.logger.exception(
-            "[Kalxa Reminder] Unable to save "
-            "reminder processing results "
-            "error=%s",
-            exc,
-        )
-
-        raise
-
-
-    # =====================================================
-    # RESULT
-    # =====================================================
-
-    result = {
+    return {
 
         "processed":
-            processed,
+            processed_count,
 
         "sent":
-            sent,
+            sent_count,
 
         "failed":
-            failed,
+            failed_count,
 
         "cancelled":
-            cancelled,
+            cancelled_count,
+
+        "skipped_claimed":
+            skipped_claimed_count,
 
     }
 
-
-    current_app.logger.info(
-        "[Kalxa Reminder] Batch complete "
-        "processed=%s "
-        "sent=%s "
-        "failed=%s "
-        "cancelled=%s",
-        processed,
-        sent,
-        failed,
-        cancelled,
-    )
-
-
-    return result
 
 @app.route(
     "/internal/run-content-reminders",
