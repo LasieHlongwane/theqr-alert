@@ -8407,7 +8407,6 @@ def _validate_and_normalize_content_dates(
     }, None
 
 
-
 @admin_bp.route(
     "/content/new",
     methods=["GET", "POST"],
@@ -8686,14 +8685,6 @@ def create_content():
 
         # =================================================
         # CAMPAIGN START / END TIMES
-        #
-        # HTML time fields send:
-        #
-        #     18:00
-        #     02:00
-        #
-        # parse_optional_time() converts those into
-        # datetime.time objects for db.Time.
         # =================================================
 
         try:
@@ -8742,16 +8733,6 @@ def create_content():
 
         # =================================================
         # DETERMINE EFFECTIVE CAMPAIGN DATES
-        #
-        # Events:
-        #
-        #     event_date + start_time
-        #     event_end_date + end_time
-        #
-        # Other campaigns:
-        #
-        #     start_date + start_time
-        #     end_date + end_time
         # =================================================
 
         if (
@@ -8815,16 +8796,6 @@ def create_content():
 
         # =================================================
         # VALIDATE SAME-DAY TIME ORDER
-        #
-        # Invalid:
-        #
-        #     12 Sep
-        #     18:00 → 02:00
-        #
-        # Valid overnight:
-        #
-        #     12 Sep 18:00
-        #     13 Sep 02:00
         # =================================================
 
         if (
@@ -8855,9 +8826,6 @@ def create_content():
 
         # =================================================
         # END TIME WITHOUT END DATE
-        #
-        # A one-day event is allowed because event_date
-        # becomes its effective end date.
         # =================================================
 
         if (
@@ -8947,8 +8915,6 @@ def create_content():
 
         # =================================================
         # FEATURED
-        #
-        # Featured is independent of listing_level.
         # =================================================
 
         featured = (
@@ -8960,9 +8926,211 @@ def create_content():
 
 
         # =================================================
-        # NOTIFICATION ELIGIBILITY
+        # SPONSORED VISIBILITY
         #
-        # Notifications remain Promotion-only.
+        # IMPORTANT:
+        #
+        # This is intentionally independent from:
+        #
+        # pricing_model
+        # payment_status
+        # amount_due
+        # amount_paid
+        # commercial_starts_at
+        # commercial_expires_at
+        #
+        # Admin controls sponsorship manually for now.
+        # =================================================
+
+        is_sponsored = (
+            request.form.get(
+                "is_sponsored"
+            )
+            == "on"
+        )
+
+
+        sponsorship_status = (
+            request.form.get(
+                "sponsorship_status",
+                "inactive",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        allowed_sponsorship_statuses = {
+            "inactive",
+            "scheduled",
+            "active",
+            "expired",
+        }
+
+
+        if (
+            sponsorship_status
+            not in allowed_sponsorship_statuses
+        ):
+
+            sponsorship_status = (
+                "inactive"
+            )
+
+
+        sponsorship_reference = (
+            request.form.get(
+                "sponsorship_reference",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        try:
+
+            sponsored_priority = int(
+                request.form.get(
+                    "sponsored_priority",
+                    0,
+                )
+                or 0
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            sponsored_priority = 0
+
+
+        sponsored_priority = max(
+            0,
+            min(
+                sponsored_priority,
+                100,
+            ),
+        )
+
+
+        sponsored_starts_raw = (
+            request.form.get(
+                "sponsored_starts_at",
+                "",
+            )
+            .strip()
+        )
+
+
+        sponsored_expires_raw = (
+            request.form.get(
+                "sponsored_expires_at",
+                "",
+            )
+            .strip()
+        )
+
+
+        try:
+
+            sponsored_starts_at = (
+
+                datetime.fromisoformat(
+                    sponsored_starts_raw
+                )
+
+                if sponsored_starts_raw
+
+                else None
+            )
+
+
+            sponsored_expires_at = (
+
+                datetime.fromisoformat(
+                    sponsored_expires_raw
+                )
+
+                if sponsored_expires_raw
+
+                else None
+            )
+
+
+        except ValueError:
+
+            flash(
+                "Please enter valid sponsorship dates.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # SPONSORSHIP DATE VALIDATION
+        # =================================================
+
+        if (
+            sponsored_starts_at
+            and sponsored_expires_at
+            and sponsored_expires_at
+            <= sponsored_starts_at
+        ):
+
+            flash(
+                (
+                    "Sponsored expiry must be after "
+                    "the sponsored start time."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # =================================================
+        # NON-SPONSORED SAFETY
+        #
+        # Prevent stale/manual sponsorship metadata from
+        # affecting an ordinary listing.
+        # =================================================
+
+        if not is_sponsored:
+
+            sponsorship_status = (
+                "inactive"
+            )
+
+            sponsored_starts_at = (
+                None
+            )
+
+            sponsored_expires_at = (
+                None
+            )
+
+            sponsored_priority = (
+                0
+            )
+
+            sponsorship_reference = (
+                None
+            )
+
+
+        # =================================================
+        # NOTIFICATION ELIGIBILITY
         # =================================================
 
         if (
@@ -9070,10 +9238,6 @@ def create_content():
                     uploaded_file
                 )
 
-
-        # -------------------------------------------------
-        # LEGACY SINGLE IMAGE FIELD
-        # -------------------------------------------------
 
         legacy_image = (
             request.files.get(
@@ -9242,13 +9406,6 @@ def create_content():
 
         # =================================================
         # CREATE CONTENT ITEM
-        #
-        # IMPORTANT:
-        #
-        # Do NOT use "submission.start_date" here.
-        #
-        # This is the Admin create route. There is no
-        # PendingSubmission object.
         # =================================================
 
         item = ContentItem(
@@ -9277,11 +9434,6 @@ def create_content():
                 title
             ),
 
-
-            # =============================================
-            # CONTENT DATES ARE APPLIED BELOW FROM `dates`
-            # =============================================
-
             start_time=(
                 start_time
             ),
@@ -9289,11 +9441,6 @@ def create_content():
             end_time=(
                 end_time
             ),
-
-
-            # =============================================
-            # DESCRIPTION
-            # =============================================
 
             description=(
                 request.form.get(
@@ -9304,11 +9451,6 @@ def create_content():
                 or None
             ),
 
-
-            # =============================================
-            # BUSINESS
-            # =============================================
-
             business_name=(
                 request.form.get(
                     "business_name",
@@ -9317,11 +9459,6 @@ def create_content():
                 .strip()
                 or None
             ),
-
-
-            # =============================================
-            # VENUE
-            # =============================================
 
             venue=(
                 request.form.get(
@@ -9332,11 +9469,6 @@ def create_content():
                 or None
             ),
 
-
-            # =============================================
-            # CUSTOMER-FACING PRICE
-            # =============================================
-
             price=(
                 request.form.get(
                     "price",
@@ -9345,11 +9477,6 @@ def create_content():
                 .strip()
                 or None
             ),
-
-
-            # =============================================
-            # PUBLIC CONTACT / ACTION DATA
-            # =============================================
 
             contact=(
                 contact
@@ -9367,11 +9494,6 @@ def create_content():
                 ticket_url
             ),
 
-
-            # =============================================
-            # LISTING LEVEL
-            # =============================================
-
             listing_level=(
                 listing_level
             ),
@@ -9384,11 +9506,6 @@ def create_content():
                 is_verified
             ),
 
-
-            # =============================================
-            # BUSINESS FIELDS
-            # =============================================
-
             opening_hours=(
                 opening_hours
             ),
@@ -9400,11 +9517,6 @@ def create_content():
             special_offer=(
                 special_offer
             ),
-
-
-            # =============================================
-            # IMAGES
-            # =============================================
 
             image_url=(
                 primary_image_url
@@ -9438,13 +9550,37 @@ def create_content():
 
             ),
 
-
-            # =============================================
-            # FEATURED
-            # =============================================
-
             featured=(
                 featured
+            ),
+
+
+            # =============================================
+            # SPONSORED
+            # =============================================
+
+            is_sponsored=(
+                is_sponsored
+            ),
+
+            sponsorship_status=(
+                sponsorship_status
+            ),
+
+            sponsored_starts_at=(
+                sponsored_starts_at
+            ),
+
+            sponsored_expires_at=(
+                sponsored_expires_at
+            ),
+
+            sponsored_priority=(
+                sponsored_priority
+            ),
+
+            sponsorship_reference=(
+                sponsorship_reference
             ),
 
 
@@ -9455,11 +9591,6 @@ def create_content():
             notification_eligible=(
                 notification_eligible
             ),
-
-
-            # =============================================
-            # ACTIVE
-            # =============================================
 
             active=(
                 request.form.get(
@@ -9472,15 +9603,6 @@ def create_content():
 
         # =================================================
         # APPLY NORMALIZED CONTENT DATES
-        #
-        # This safely applies fields returned by your
-        # existing lifecycle validator, such as:
-        #
-        # publish_from
-        # event_date
-        # event_end_date
-        # start_date
-        # end_date
         # =================================================
 
         for key, value in (
@@ -9495,15 +9617,9 @@ def create_content():
 
 
         # =================================================
-        # CONFIGURE KALXA COMMERCIAL PACKAGE
+        # CONFIGURE EXISTING COMMERCIAL PACKAGE
         #
-        # This existing helper remains authoritative for:
-        #
-        # pricing model
-        # duration
-        # amount due
-        # payment status
-        # distribution zone selection
+        # Sponsorship does NOT enter this helper.
         # =================================================
 
         try:
@@ -9612,25 +9728,13 @@ def create_content():
 
         try:
 
-            # =============================================
-            # ADD CONTENT ITEM
-            # =============================================
-
             db.session.add(
                 item
             )
 
 
-            # =============================================
-            # GET CONTENT ITEM ID
-            # =============================================
-
             db.session.flush()
 
-
-            # =============================================
-            # CREATE CAMPAIGN DISTRIBUTION LINKS
-            # =============================================
 
             for distribution_zone_id in (
                 distribution_zone_ids
@@ -9655,10 +9759,6 @@ def create_content():
                     distribution_link
                 )
 
-
-            # =============================================
-            # COMMIT
-            # =============================================
 
             db.session.commit()
 
@@ -9822,8 +9922,10 @@ def edit_content(
         # =================================================
         # SNAPSHOT EXISTING COMMERCIAL PACKAGE
         #
-        # This protects already-paid commercial listings
-        # when Admin edits unrelated listing information.
+        # DO NOT mix sponsorship state into this snapshot.
+        #
+        # This block continues protecting the original
+        # Presence/Campaign payment workflow.
         # =================================================
 
         old_pricing_model = (
@@ -10107,28 +10209,24 @@ def edit_content(
 
         # =================================================
         # CAMPAIGN START / END TIMES
-        #
-        # HTML <input type="time"> sends values such as:
-        #
-        #     18:00
-        #     02:00
-        #
-        # parse_optional_time() converts them into
-        # datetime.time values for SQLAlchemy db.Time.
         # =================================================
 
         try:
 
-            start_time = parse_optional_time(
-                request.form.get(
-                    "start_time"
+            start_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "start_time"
+                    )
                 )
             )
 
 
-            end_time = parse_optional_time(
-                request.form.get(
-                    "end_time"
+            end_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "end_time"
+                    )
                 )
             )
 
@@ -10147,22 +10245,13 @@ def edit_content(
 
 
         # =================================================
-        # DETERMINE EFFECTIVE CAMPAIGN DATES
-        #
-        # Events:
-        #
-        #     event_date + start_time
-        #     event_end_date + end_time
-        #
-        # Other campaigns:
-        #
-        #     start_date + start_time
-        #     end_date + end_time
-        #
+        # EFFECTIVE CAMPAIGN DATES
         # =================================================
 
-        canonical_category = normalize_category(
-            category
+        canonical_category = (
+            normalize_category(
+                category
+            )
         )
 
 
@@ -10227,17 +10316,6 @@ def edit_content(
 
         # =================================================
         # SAME-DAY TIME VALIDATION
-        #
-        # Example invalid:
-        #
-        #     12 Sep
-        #     18:00 → 14:00
-        #
-        # Example valid overnight:
-        #
-        #     12 Sep 18:00
-        #     13 Sep 02:00
-        #
         # =================================================
 
         if (
@@ -10268,11 +10346,6 @@ def edit_content(
 
         # =================================================
         # END TIME WITHOUT END DATE
-        #
-        # Events are allowed because a one-day event can
-        # use event_date as its effective end date.
-        #
-        # Non-event campaigns need an actual end_date.
         # =================================================
 
         if (
@@ -10336,16 +10409,13 @@ def edit_content(
             zone_id
         )
 
-
         item.category = (
             category
         )
 
-
         item.content_type = (
             content_type
         )
-
 
         item.lifetime_type = (
             lifetime_type
@@ -10412,21 +10482,17 @@ def edit_content(
             contact
         )
 
-
         item.whatsapp_number = (
             whatsapp_number
         )
-
 
         item.directions_url = (
             directions_url
         )
 
-
         item.ticket_url = (
             ticket_url
         )
-
 
         item.listing_level = (
             listing_level
@@ -10446,7 +10512,6 @@ def edit_content(
                 "unclaimed"
             )
 
-
             item.is_verified = (
                 False
             )
@@ -10457,7 +10522,6 @@ def edit_content(
             item.ownership_status = (
                 "claimed"
             )
-
 
             item.is_verified = (
                 request.form.get(
@@ -10515,25 +10579,17 @@ def edit_content(
                 None
             )
 
-
             item.menu_highlights = (
                 None
             )
-
 
             item.special_offer = (
                 None
             )
 
-
-            # =============================================
-            # DISCOVERY ONLY SUPPORTS PRIMARY IMAGE
-            # =============================================
-
             item.image_url_2 = (
                 None
             )
-
 
             item.image_url_3 = (
                 None
@@ -10542,8 +10598,6 @@ def edit_content(
 
         # =================================================
         # FEATURED
-        #
-        # Featured remains independent of listing_level.
         # =================================================
 
         item.featured = (
@@ -10555,9 +10609,233 @@ def edit_content(
 
 
         # =================================================
-        # NOTIFICATION ELIGIBILITY
+        # SPONSORED VISIBILITY
         #
-        # Notifications remain Promotion-only.
+        # Completely independent from the existing
+        # Presence/Campaign payment workflow.
+        # =================================================
+
+        is_sponsored = (
+            request.form.get(
+                "is_sponsored"
+            )
+            == "on"
+        )
+
+
+        sponsorship_status = (
+            request.form.get(
+                "sponsorship_status",
+                item.sponsorship_status
+                or "inactive",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        allowed_sponsorship_statuses = {
+            "inactive",
+            "scheduled",
+            "active",
+            "expired",
+        }
+
+
+        if (
+            sponsorship_status
+            not in allowed_sponsorship_statuses
+        ):
+
+            sponsorship_status = (
+                "inactive"
+            )
+
+
+        sponsorship_reference = (
+            request.form.get(
+                "sponsorship_reference",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        try:
+
+            sponsored_priority = int(
+                request.form.get(
+                    "sponsored_priority",
+                    item.sponsored_priority
+                    or 0,
+                )
+                or 0
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            sponsored_priority = (
+                0
+            )
+
+
+        sponsored_priority = max(
+            0,
+            min(
+                sponsored_priority,
+                100,
+            ),
+        )
+
+
+        sponsored_starts_raw = (
+            request.form.get(
+                "sponsored_starts_at",
+                "",
+            )
+            .strip()
+        )
+
+
+        sponsored_expires_raw = (
+            request.form.get(
+                "sponsored_expires_at",
+                "",
+            )
+            .strip()
+        )
+
+
+        try:
+
+            sponsored_starts_at = (
+
+                datetime.fromisoformat(
+                    sponsored_starts_raw
+                )
+
+                if sponsored_starts_raw
+
+                else None
+            )
+
+
+            sponsored_expires_at = (
+
+                datetime.fromisoformat(
+                    sponsored_expires_raw
+                )
+
+                if sponsored_expires_raw
+
+                else None
+            )
+
+
+        except ValueError:
+
+            flash(
+                "Please enter valid sponsorship dates.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # SPONSORSHIP DATE VALIDATION
+        # =================================================
+
+        if (
+            sponsored_starts_at
+            and sponsored_expires_at
+            and sponsored_expires_at
+            <= sponsored_starts_at
+        ):
+
+            flash(
+                (
+                    "Sponsored expiry must be after "
+                    "the sponsored start time."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # =================================================
+        # APPLY SPONSORSHIP STATE
+        # =================================================
+
+        if is_sponsored:
+
+            item.is_sponsored = (
+                True
+            )
+
+            item.sponsorship_status = (
+                sponsorship_status
+            )
+
+            item.sponsored_starts_at = (
+                sponsored_starts_at
+            )
+
+            item.sponsored_expires_at = (
+                sponsored_expires_at
+            )
+
+            item.sponsored_priority = (
+                sponsored_priority
+            )
+
+            item.sponsorship_reference = (
+                sponsorship_reference
+            )
+
+
+        else:
+
+            item.is_sponsored = (
+                False
+            )
+
+            item.sponsorship_status = (
+                "inactive"
+            )
+
+            item.sponsored_starts_at = (
+                None
+            )
+
+            item.sponsored_expires_at = (
+                None
+            )
+
+            item.sponsored_priority = (
+                0
+            )
+
+            item.sponsorship_reference = (
+                None
+            )
+
+
+        # =================================================
+        # NOTIFICATION ELIGIBILITY
         # =================================================
 
         if (
@@ -10603,7 +10881,9 @@ def edit_content(
         # APPLY NORMALIZED CONTENT DATES
         # =================================================
 
-        for key, value in dates.items():
+        for key, value in (
+            dates.items()
+        ):
 
             setattr(
                 item,
@@ -10614,21 +10894,11 @@ def edit_content(
 
         # =================================================
         # APPLY CAMPAIGN TIMES
-        #
-        # These are independent from Kalxa's paid package
-        # dates:
-        #
-        # commercial_starts_at
-        # commercial_expires_at
-        #
-        # start_time / end_time describe the actual
-        # event/campaign itself.
         # =================================================
 
         item.start_time = (
             start_time
         )
-
 
         item.end_time = (
             end_time
@@ -10656,10 +10926,6 @@ def edit_content(
                     uploaded_file
                 )
 
-
-        # -------------------------------------------------
-        # LEGACY FIELD
-        # -------------------------------------------------
 
         legacy_image = (
             request.files.get(
@@ -10741,12 +11007,6 @@ def edit_content(
 
         # =================================================
         # UPLOAD NEW IMAGES
-        #
-        # No new upload:
-        #     preserve existing images.
-        #
-        # New upload:
-        #     replace existing image set.
         # =================================================
 
         if uploaded_images:
@@ -10804,16 +11064,14 @@ def edit_content(
 
             item.image_url = (
                 uploaded_image_urls[0]
+
                 if len(
                     uploaded_image_urls
                 ) >= 1
+
                 else None
             )
 
-
-            # =============================================
-            # EXTRA BUSINESS / PROMOTION IMAGES
-            # =============================================
 
             if (
                 listing_level
@@ -10825,18 +11083,22 @@ def edit_content(
 
                 item.image_url_2 = (
                     uploaded_image_urls[1]
+
                     if len(
                         uploaded_image_urls
                     ) >= 2
+
                     else None
                 )
 
 
                 item.image_url_3 = (
                     uploaded_image_urls[2]
+
                     if len(
                         uploaded_image_urls
                     ) >= 3
+
                     else None
                 )
 
@@ -10846,7 +11108,6 @@ def edit_content(
                 item.image_url_2 = (
                     None
                 )
-
 
                 item.image_url_3 = (
                     None
@@ -10866,19 +11127,15 @@ def edit_content(
                 None
             )
 
-
             item.image_url_3 = (
                 None
             )
 
 
         # =================================================
-        # CONFIGURE COMMERCIAL PACKAGE
+        # CONFIGURE EXISTING COMMERCIAL PACKAGE
         #
-        # IMPORTANT:
-        #
-        # Keep using the existing commercial engine.
-        # start_time/end_time do not change package pricing.
+        # Sponsorship does NOT affect this calculation.
         # =================================================
 
         try:
@@ -10982,7 +11239,10 @@ def edit_content(
 
 
         # =================================================
-        # DETERMINE WHETHER PACKAGE CHANGED
+        # DETERMINE WHETHER ORIGINAL COMMERCIAL PACKAGE
+        # CHANGED
+        #
+        # Sponsorship is intentionally NOT included.
         # =================================================
 
         new_distribution_zone_ids = set(
@@ -11048,15 +11308,10 @@ def edit_content(
                 old_commercial_starts_at
             )
 
-
             item.commercial_expires_at = (
                 old_commercial_expires_at
             )
 
-
-            # ---------------------------------------------
-            # ACTUAL PAID TRANSACTION
-            # ---------------------------------------------
 
             if (
                 item.payment_status
@@ -11067,22 +11322,16 @@ def edit_content(
                     old_paid_at
                 )
 
-
                 item.amount_paid = (
                     old_amount_paid
                 )
 
-
-            # ---------------------------------------------
-            # WAIVED PACKAGE
-            # ---------------------------------------------
 
             else:
 
                 item.paid_at = (
                     None
                 )
-
 
                 item.amount_paid = (
                     None
@@ -11112,10 +11361,6 @@ def edit_content(
 
         try:
 
-            # =============================================
-            # REMOVE OLD DISTRIBUTION LINKS
-            # =============================================
-
             (
                 ContentDistributionZone.query
                 .filter_by(
@@ -11126,10 +11371,6 @@ def edit_content(
                 )
             )
 
-
-            # =============================================
-            # CREATE CURRENT CAMPAIGN DISTRIBUTION
-            # =============================================
 
             for distribution_zone_id in (
                 distribution_zone_ids
@@ -11149,10 +11390,6 @@ def edit_content(
                     )
                 )
 
-
-            # =============================================
-            # COMMIT ITEM + DISTRIBUTION TOGETHER
-            # =============================================
 
             db.session.commit()
 
