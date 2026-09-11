@@ -2536,6 +2536,39 @@ def recover_stale_content_reminders(
 
         return 0
 
+
+
+def get_content_reminder_retry_datetime(
+    retry_count,
+):
+
+    """
+    Return the UTC-naive datetime when a failed reminder
+    should be retried.
+
+    retry_count represents the number of failed attempts
+    that have already occurred.
+    """
+
+    delay_minutes = (
+        KALXA_REMINDER_RETRY_DELAYS.get(
+            retry_count
+        )
+    )
+
+
+    if delay_minutes is None:
+
+        return None
+
+
+    return (
+        datetime.utcnow()
+        + timedelta(
+            minutes=delay_minutes
+        )
+    )
+
 def parse_optional_time(
     value,
 ):
