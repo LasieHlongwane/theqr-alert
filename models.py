@@ -334,6 +334,7 @@ class AccessPoint(db.Model):
 # ============================================================
 # CONTENT ITEM
 # ============================================================
+
 class ContentItem(db.Model):
 
     __tablename__ = "content_items"
@@ -364,7 +365,6 @@ class ContentItem(db.Model):
         nullable=True,
         index=True,
     )
-
 
     listing_level = db.Column(
         db.String(30),
@@ -504,11 +504,11 @@ class ContentItem(db.Model):
         db.String(500),
         nullable=True,
     )
-    
-    
-        # =====================================================
+
+
+    # ========================================================
     # COMMERCIAL / MONETIZATION MODEL
-    # =====================================================
+    # ========================================================
     #
     # presence:
     #     Long-life business presence.
@@ -520,7 +520,12 @@ class ContentItem(db.Model):
     #
     # None:
     #     Legacy / Kalxa-curated / non-commercial content.
-    # =====================================================
+    #
+    # IMPORTANT:
+    #
+    # Sponsored visibility is intentionally kept separate
+    # from this existing commercial model.
+    # ========================================================
 
     pricing_model = db.Column(
         db.String(30),
@@ -529,22 +534,20 @@ class ContentItem(db.Model):
     )
 
 
-    # =====================================================
+    # ========================================================
     # COMMERCIAL DURATION
-    # =====================================================
+    # ========================================================
 
     commercial_duration_days = db.Column(
         db.Integer,
         nullable=True,
     )
 
-
     commercial_starts_at = db.Column(
         db.DateTime,
         nullable=True,
         index=True,
     )
-
 
     commercial_expires_at = db.Column(
         db.DateTime,
@@ -553,9 +556,13 @@ class ContentItem(db.Model):
     )
 
 
-    # =====================================================
+    # ========================================================
     # PAYMENT
-    # =====================================================
+    # ========================================================
+    #
+    # Existing listing payment workflow.
+    #
+    # DO NOT use these fields yet for sponsored placement.
     #
     # unpaid:
     #     Customer has not yet paid.
@@ -569,7 +576,7 @@ class ContentItem(db.Model):
     #
     # refunded:
     #     Payment refunded.
-    # =====================================================
+    # ========================================================
 
     payment_status = db.Column(
         db.String(30),
@@ -577,7 +584,6 @@ class ContentItem(db.Model):
         default="unpaid",
         index=True,
     )
-
 
     amount_due = db.Column(
         db.Numeric(
@@ -587,7 +593,6 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-
     amount_paid = db.Column(
         db.Numeric(
             10,
@@ -596,17 +601,94 @@ class ContentItem(db.Model):
         nullable=True,
     )
 
-
     payment_reference = db.Column(
         db.String(150),
         nullable=True,
         index=True,
     )
 
-
     paid_at = db.Column(
         db.DateTime,
         nullable=True,
+    )
+
+
+    # ========================================================
+    # SPONSORED / PAID VISIBILITY LAYER
+    # ========================================================
+    #
+    # This is deliberately independent from:
+    #
+    # pricing_model
+    # payment_status
+    # amount_due
+    # amount_paid
+    # commercial_starts_at
+    # commercial_expires_at
+    #
+    # Initial MVP:
+    #
+    # Admin activates sponsorship manually.
+    #
+    # Later:
+    # A dedicated sponsorship checkout can be added without
+    # modifying the existing Presence/Campaign payment flow.
+    #
+    # sponsorship_status:
+    #
+    # inactive
+    # scheduled
+    # active
+    # expired
+    #
+    # sponsored_priority:
+    #
+    # Higher number = stronger sponsored ranking.
+    #
+    # Example:
+    #
+    # 0 = default
+    # 10 = standard sponsored
+    # 20 = premium sponsored
+    # ========================================================
+
+    is_sponsored = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+    )
+
+    sponsorship_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="inactive",
+        index=True,
+    )
+
+    sponsored_starts_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    sponsored_expires_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    sponsored_priority = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+        index=True,
+    )
+
+    sponsorship_reference = db.Column(
+        db.String(150),
+        nullable=True,
+        index=True,
     )
 
 
@@ -697,6 +779,9 @@ class ContentItem(db.Model):
     )
 
 
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
 
     claims = db.relationship(
         "ListingClaim",
@@ -806,7 +891,12 @@ class ContentItem(db.Model):
             claim.status == "pending"
             for claim in self.claims
         )
-        
+
+
+    # ========================================================
+    # CAMPAIGN HELPERS
+    # ========================================================
+
     def has_campaign_dates(self):
         """
         Return True when the content has date/time information
@@ -836,23 +926,24 @@ class ContentItem(db.Model):
         )
 
 
-    # ========================================================
-    # EVENTS
-    # ========================================================
+        # ====================================================
+        # EVENTS
+        # ====================================================
 
         if canonical_category == "events":
 
             return (
-              self.event_date
-              or self.start_date
+                self.event_date
+                or self.start_date
             )
 
 
-    # ========================================================
-    # OTHER CAMPAIGNS
-    # ========================================================
+        # ====================================================
+        # OTHER CAMPAIGNS
+        # ====================================================
 
         return self.start_date
+
 
     def get_campaign_start_datetime(self):
         """
@@ -864,7 +955,10 @@ class ContentItem(db.Model):
         If no start_time exists, midnight is used temporarily.
         """
 
-        target_date = self.get_campaign_target_date()
+        target_date = (
+            self.get_campaign_target_date()
+        )
+
 
         if not target_date:
             return None
@@ -880,6 +974,7 @@ class ContentItem(db.Model):
             target_date,
             effective_time,
         )
+
 
     def get_campaign_end_datetime(self):
         """
