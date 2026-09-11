@@ -1486,6 +1486,7 @@ def get_reminder_datetime(
     return reminder_datetime
 
 
+
 @app.route(
     "/listing/<int:item_id>/remind",
     methods=["POST"],
@@ -1494,32 +1495,33 @@ def create_content_reminder(
     item_id,
 ):
 
-    item = ContentItem.query.get_or_404(
-        item_id
+    # =====================================================
+    # FIND CONTENT
+    # =====================================================
+
+    item = (
+        ContentItem.query
+        .filter_by(
+            id=item_id,
+            active=True,
+        )
+        .first_or_404()
     )
 
 
     # =====================================================
-    # ACTIVE LISTING CHECK
-    # =====================================================
-
-    if not item.active:
-
-        return {
-            "success": False,
-            "message": (
-                "This listing is no longer active."
-            ),
-        }, 400
-
-
-    # =====================================================
     # REMINDER OFFSET
+    #
+    # Supported:
+    #
+    # 60   = 1 hour
+    # 180  = 3 hours
+    # 1440 = 1 day
     # =====================================================
 
     try:
 
-        reminder_minutes = int(
+        minutes_before = int(
             request.form.get(
                 "minutes_before",
                 60,
@@ -1531,7 +1533,7 @@ def create_content_reminder(
         ValueError,
     ):
 
-        reminder_minutes = 60
+        minutes_before = 60
 
 
     allowed_offsets = {
@@ -1541,65 +1543,68 @@ def create_content_reminder(
     }
 
 
-    if reminder_minutes not in allowed_offsets:
+    if (
+        minutes_before
+        not in allowed_offsets
+    ):
 
-        reminder_minutes = 60
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Invalid reminder time.",
+
+        }), 400
 
 
     # =====================================================
-    # CALCULATE REMINDER TIME
+    # CALCULATE SCHEDULE
     # =====================================================
 
     scheduled_for = (
         get_reminder_datetime(
             item,
-            minutes_before=(
-                reminder_minutes
-            ),
+            minutes_before=minutes_before,
         )
     )
 
 
     if not scheduled_for:
 
-        return {
-            "success": False,
-            "message": (
-                "This listing does not have enough "
-                "timing information for a reminder."
-            ),
-        }, 400
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "This listing does not have enough timing information for a reminder.",
+
+        }), 400
 
 
-    now_local = datetime.now(
-        KALXA_TIMEZONE
+    now_local = (
+        datetime.now(
+            KALXA_TIMEZONE
+        )
     )
 
 
-    if scheduled_for <= now_local:
+    if (
+        scheduled_for
+        <= now_local
+    ):
 
-        return {
-            "success": False,
-            "message": (
-                "That reminder time has already passed."
-            ),
-        }, 400
+        return jsonify({
 
+            "success":
+                False,
 
-    # =====================================================
-    # LOCATION CONTEXT
-    # =====================================================
+            "message":
+                "That reminder time has already passed. Choose a shorter reminder.",
 
-    zone_id = request.form.get(
-        "zone_id",
-        type=int,
-    )
-
-
-    access_point_id = request.form.get(
-        "access_point_id",
-        type=int,
-    )
+        }), 400
 
 
     # =====================================================
@@ -1609,7 +1614,7 @@ def create_content_reminder(
     push_endpoint = (
         request.form.get(
             "push_endpoint",
-            "",
+            ""
         )
         .strip()
     )
@@ -1617,18 +1622,22 @@ def create_content_reminder(
 
     if not push_endpoint:
 
-        return {
-            "success": False,
-            "requires_push": True,
-            "message": (
-                "Enable Kalxa notifications first "
-                "so we know where to send the reminder."
-            ),
-        }, 400
+        return jsonify({
+
+            "success":
+                False,
+
+            "requires_push":
+                True,
+
+            "message":
+                "Please enable Kalxa notifications first.",
+
+        }), 400
 
 
     # =====================================================
-    # FIND EXISTING PUSH SUBSCRIBER
+    # FIND SUBSCRIBER
     # =====================================================
 
     push_subscriber = (
@@ -1643,69 +1652,130 @@ def create_content_reminder(
 
     if not push_subscriber:
 
-        return {
-            "success": False,
-            "requires_push": True,
-            "message": (
-                "Your Kalxa notification subscription "
-                "could not be found. Please enable "
-                "notifications again."
-            ),
-        }, 400
+        return jsonify({
+
+            "success":
+                False,
+
+            "requires_push":
+                True,
+
+            "message":
+                "Your Kalxa notification subscription could not be found. Please enable notifications again.",
+
+        }), 400
 
 
     # =====================================================
-    # PREVENT DUPLICATE REMINDER
+    # LOCATION CONTEXT
     # =====================================================
 
-    existing_reminder = (
+    zone_id = (
+        request.form.get(
+            "zone_id",
+            type=int,
+        )
+    )
+
+
+    access_point_id = (
+        request.form.get(
+            "access_point_id",
+            type=int,
+        )
+    )
+
+
+    # =====================================================
+    # CHECK EXISTING REMINDER
+    #
+    # Same:
+    # - item
+    # - subscriber
+    # - reminder offset
+    # =====================================================
+
+    existing = (
         ContentReminder.query
         .filter_by(
-
-            content_item_id=(
-                item.id
-            ),
-
+            content_item_id=item.id,
             push_subscriber_id=(
                 push_subscriber.id
             ),
-
             reminder_minutes_before=(
-                reminder_minutes
+                minutes_before
             ),
-
             status="pending",
-
         )
         .first()
     )
 
 
-    if existing_reminder:
+    if existing:
 
-        return {
+        return jsonify({
 
-            "success": True,
+            "success":
+                True,
 
-            "already_exists": True,
+            "already_exists":
+                True,
 
-            "message": (
-                "Reminder already saved."
-            ),
+            "reminder_id":
+                existing.id,
 
-            "scheduled_for": (
-                existing_reminder
-                .scheduled_for
-                .isoformat()
-                if existing_reminder.scheduled_for
-                else None
-            ),
+            "minutes_before":
+                existing.reminder_minutes_before,
 
-        }, 200
+            "scheduled_for":
+                (
+                    existing
+                    .scheduled_for
+                    .isoformat()
+                    if existing.scheduled_for
+                    else None
+                ),
+
+            "message":
+                "Reminder already saved.",
+
+        }), 200
 
 
     # =====================================================
-    # STORE UTC DATETIME
+    # CANCEL OTHER PENDING REMINDERS FOR SAME ITEM
+    #
+    # A user only needs ONE active reminder per listing.
+    #
+    # If they change:
+    #
+    # 1 hour -> 3 hours
+    #
+    # replace the old preference.
+    # =====================================================
+
+    existing_reminders = (
+        ContentReminder.query
+        .filter_by(
+            content_item_id=item.id,
+            push_subscriber_id=(
+                push_subscriber.id
+            ),
+            status="pending",
+        )
+        .all()
+    )
+
+
+    for old_reminder in existing_reminders:
+
+        old_reminder.status = (
+            "cancelled"
+        )
+
+
+    # =====================================================
+    # STORE UTC-NAIVE DATETIME
     # =====================================================
 
     scheduled_for_utc = (
@@ -1725,83 +1795,101 @@ def create_content_reminder(
 
     reminder = ContentReminder(
 
-        content_item_id=(
-            item.id
-        ),
+        content_item_id=
+            item.id,
 
         zone_id=(
             zone_id
             or push_subscriber.zone_id
         ),
 
-        access_point_id=(
-            access_point_id
-        ),
+        access_point_id=
+            access_point_id,
 
-        push_subscriber_id=(
-            push_subscriber.id
-        ),
+        push_subscriber_id=
+            push_subscriber.id,
 
-        reminder_type=(
-            "before_start"
-        ),
+        reminder_type=
+            "before_start",
 
-        reminder_minutes_before=(
-            reminder_minutes
-        ),
+        reminder_minutes_before=
+            minutes_before,
 
-        scheduled_for=(
-            scheduled_for_utc
-        ),
+        scheduled_for=
+            scheduled_for_utc,
 
-        status="pending",
+        status=
+            "pending",
 
     )
 
 
-    db.session.add(
-        reminder
-    )
+    try:
 
-    db.session.commit()
+        db.session.add(
+            reminder
+        )
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Kalxa Reminder] "
+            "Unable to create reminder "
+            "content_item_id=%s "
+            "subscriber_id=%s "
+            "error=%s",
+            item.id,
+            push_subscriber.id,
+            exc,
+        )
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Could not save reminder.",
+
+        }), 500
 
 
     # =====================================================
-    # ENGAGEMENT EVENT
+    # ANALYTICS
     # =====================================================
 
     try:
 
-        engagement = EngagementEvent(
+        event = EngagementEvent(
 
-            event_type=(
-                "reminder_created"
-            ),
+            event_type=
+                "reminder_created",
 
             zone_id=(
                 zone_id
                 or push_subscriber.zone_id
             ),
 
-            access_point_id=(
-                access_point_id
-            ),
+            access_point_id=
+                access_point_id,
 
-            content_item_id=(
-                item.id
-            ),
+            content_item_id=
+                item.id,
 
-            category=(
+            category=
                 normalize_category(
                     item.category
-                )
-            ),
+                ),
 
         )
 
-
         db.session.add(
-            engagement
+            event
         )
 
         db.session.commit()
@@ -1812,30 +1900,45 @@ def create_content_reminder(
         db.session.rollback()
 
         current_app.logger.warning(
-            "Reminder engagement tracking failed: %s",
+            "[Kalxa Reminder] "
+            "Reminder saved but analytics "
+            "could not be recorded "
+            "reminder_id=%s "
+            "error=%s",
+            reminder.id,
             exc,
         )
 
 
     # =====================================================
-    # SUCCESS RESPONSE
+    # RESPONSE
     # =====================================================
 
-    return {
+    return jsonify({
 
-        "success": True,
+        "success":
+            True,
 
-        "already_exists": False,
+        "already_exists":
+            False,
 
-        "message": (
-            "Reminder saved."
-        ),
+        "reminder_id":
+            reminder.id,
 
-        "scheduled_for": (
-            scheduled_for.isoformat()
-        ),
+        "minutes_before":
+            reminder.reminder_minutes_before,
 
-    }, 201
+        "scheduled_for":
+            (
+                reminder
+                .scheduled_for
+                .isoformat()
+            ),
+
+        "message":
+            "Reminder saved.",
+
+    }), 201
 
 
 def parse_optional_time(
