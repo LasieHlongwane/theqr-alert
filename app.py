@@ -369,6 +369,138 @@ def home():
         zone_access_points=zone_access_points,
     )
 
+def is_sponsorship_active(
+    item,
+    now_utc=None,
+):
+    """
+    Return True only when the listing has an active,
+    currently valid Kalxa sponsorship.
+
+    This is completely separate from:
+    - pricing_model
+    - payment_status
+    - commercial_starts_at
+    - commercial_expires_at
+
+    It does not alter the existing Presence/Campaign
+    payment workflow.
+    """
+
+    if not item:
+        return False
+
+
+    if not getattr(
+        item,
+        "is_sponsored",
+        False,
+    ):
+        return False
+
+
+    if (
+        getattr(
+            item,
+            "sponsorship_status",
+            "inactive",
+        )
+        != "active"
+    ):
+        return False
+
+
+    if now_utc is None:
+
+        now_utc = datetime.utcnow()
+
+
+    sponsored_starts_at = getattr(
+        item,
+        "sponsored_starts_at",
+        None,
+    )
+
+
+    sponsored_expires_at = getattr(
+        item,
+        "sponsored_expires_at",
+        None,
+    )
+
+
+    if (
+        sponsored_starts_at
+        and sponsored_starts_at > now_utc
+    ):
+        return False
+
+
+    if (
+        sponsored_expires_at
+        and sponsored_expires_at <= now_utc
+    ):
+        return False
+
+
+    return True
+
+
+def attach_sponsorship_state(
+    item,
+    now_utc=None,
+):
+    """
+    Attach a temporary runtime property:
+
+        item.sponsorship_active
+
+    This lets Jinja safely use:
+
+        {% if item.sponsorship_active %}
+
+    without changing the database again.
+    """
+
+    if not item:
+        return item
+
+
+    item.sponsorship_active = (
+        is_sponsorship_active(
+            item,
+            now_utc=now_utc,
+        )
+    )
+
+
+    return item
+
+
+def attach_sponsorship_states(
+    items,
+):
+    """
+    Attach sponsorship_active to every item in a result list.
+    """
+
+    if not items:
+        return []
+
+
+    now_utc = datetime.utcnow()
+
+
+    for item in items:
+
+        attach_sponsorship_state(
+            item,
+            now_utc=now_utc,
+        )
+
+
+    return items
+
 @app.route("/app")
 def pwa_app():
     return render_template(
