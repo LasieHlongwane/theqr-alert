@@ -387,60 +387,46 @@ def pwa_app():
 def send_due_content_reminders(
     limit=100,
 ):
-    """
-    Send pending Kalxa reminders whose scheduled time has arrived.
 
-    This function is designed to be called by:
-    - a scheduled job
-    - a worker
-    - a manual Flask shell test
-
-    It reuses the existing PushSubscriber destination.
-    """
+    # =====================================================
+    # CURRENT UTC TIME
+    #
+    # ContentReminder.scheduled_for is stored as
+    # UTC-naive datetime.
+    # =====================================================
 
     now_utc = datetime.utcnow()
 
 
     # =====================================================
-    # LOAD DUE REMINDERS
+    # FIND DUE REMINDERS
     # =====================================================
 
     reminders = (
         ContentReminder.query
         .filter(
-
             ContentReminder.status
             == "pending",
 
-            ContentReminder.scheduled_for.is_not(
-                None
-            ),
+            ContentReminder.scheduled_for
+            .is_not(None),
 
             ContentReminder.scheduled_for
             <= now_utc,
-
         )
         .order_by(
-            ContentReminder.scheduled_for.asc()
+            ContentReminder.scheduled_for.asc(),
+            ContentReminder.id.asc(),
         )
-        .limit(
-            limit
-        )
+        .limit(limit)
         .all()
     )
 
 
-    if not reminders:
-
-        return {
-            "processed": 0,
-            "sent": 0,
-            "failed": 0,
-        }
-
-
-    sent_count = 0
-    failed_count = 0
+    processed = 0
+    sent = 0
+    failed = 0
+    cancelled = 0
 
 
     # =====================================================
@@ -449,187 +435,330 @@ def send_due_content_reminders(
 
     for reminder in reminders:
 
+        processed += 1
+
+
+        # -------------------------------------------------
+        # LOAD CONTENT
+        # -------------------------------------------------
+
+        item = reminder.content_item
+
+
+        if not item:
+
+            reminder.status = "failed"
+
+            failed += 1
+
+            current_app.logger.warning(
+                "[Kalxa Reminder] Missing content item "
+                "reminder_id=%s",
+                reminder.id,
+            )
+
+            continue
+
+
+        # -------------------------------------------------
+        # CONTENT MUST STILL BE ACTIVE
+        # -------------------------------------------------
+
+        if not item.active:
+
+            reminder.status = "cancelled"
+
+            cancelled += 1
+
+            current_app.logger.info(
+                "[Kalxa Reminder] Cancelled because "
+                "content is inactive "
+                "reminder_id=%s "
+                "content_item_id=%s",
+                reminder.id,
+                item.id,
+            )
+
+            continue
+
+
+        # -------------------------------------------------
+        # LOAD PUSH SUBSCRIBER
+        # -------------------------------------------------
+
+        subscriber = (
+            reminder.push_subscriber
+        )
+
+
+        if not subscriber:
+
+            reminder.status = "failed"
+
+            failed += 1
+
+            current_app.logger.warning(
+                "[Kalxa Reminder] Missing push subscriber "
+                "reminder_id=%s",
+                reminder.id,
+            )
+
+            continue
+
+
+        if not subscriber.active:
+
+            reminder.status = "failed"
+
+            failed += 1
+
+            current_app.logger.warning(
+                "[Kalxa Reminder] Push subscriber inactive "
+                "reminder_id=%s "
+                "subscriber_id=%s",
+                reminder.id,
+                subscriber.id,
+            )
+
+            continue
+
+
+        # -------------------------------------------------
+        # CATEGORY
+        # -------------------------------------------------
+
+        canonical_category = (
+            normalize_category(
+                item.category
+            )
+        )
+
+
+        # -------------------------------------------------
+        # NOTIFICATION TITLE
+        # -------------------------------------------------
+
+        notification_title = (
+            "🔔 Kalxa Reminder"
+        )
+
+
+        # -------------------------------------------------
+        # CATEGORY-SPECIFIC BODY
+        # -------------------------------------------------
+
+        if canonical_category == "events":
+
+            notification_body = (
+                f"{item.title} is coming up soon."
+            )
+
+
+        elif canonical_category == "retail_specials":
+
+            notification_body = (
+                f"{item.title} is available soon."
+            )
+
+
+        elif canonical_category == "jobs":
+
+            notification_body = (
+                f"{item.title} is opening soon."
+            )
+
+
+        elif canonical_category == "rentals":
+
+            notification_body = (
+                f"{item.title} is available soon."
+            )
+
+
+        elif canonical_category == "restaurants":
+
+            notification_body = (
+                f"{item.title} is happening soon."
+            )
+
+
+        elif canonical_category == "beauty":
+
+            notification_body = (
+                f"{item.title} is happening soon."
+            )
+
+
+        elif canonical_category == "accommodation":
+
+            notification_body = (
+                f"{item.title} is available soon."
+            )
+
+
+        elif canonical_category == "building":
+
+            notification_body = (
+                f"{item.title} is available soon."
+            )
+
+
+        else:
+
+            notification_body = (
+                f"{item.title} is coming up soon."
+            )
+
+
+        # -------------------------------------------------
+        # TARGET URL
+        #
+        # Open the listing when notification is tapped.
+        # -------------------------------------------------
+
+        target_url = url_for(
+            "listing_detail",
+            item_id=item.id,
+            _external=True,
+        )
+
+
+        # -------------------------------------------------
+        # SEND PUSH
+        # -------------------------------------------------
+
         try:
 
-            # =================================================
-            # CONTENT
-            # =================================================
-
-            item = reminder.content_item
-
-
-            if not item:
-
-                reminder.status = "failed"
-
-                failed_count += 1
-
-                continue
-
-
-            # =================================================
-            # ACTIVE CONTENT CHECK
-            # =================================================
-
-            if not item.active:
-
-                reminder.status = "cancelled"
-
-                continue
-
-
-            # =================================================
-            # PUSH SUBSCRIBER
-            # =================================================
-
-            subscriber = (
-                reminder.push_subscriber
-            )
-
-
-            if not subscriber:
-
-                reminder.status = "failed"
-
-                failed_count += 1
-
-                continue
-
-
-            if not subscriber.active:
-
-                reminder.status = "failed"
-
-                failed_count += 1
-
-                continue
-
-
-            # =================================================
-            # BUILD NOTIFICATION
-            # =================================================
-
-            notification_title = (
-                "🔔 Kalxa Reminder"
-            )
-
-
-            canonical_category = (
-                normalize_category(
-                    item.category
+            was_sent = (
+                send_push_notification(
+                    subscriber=subscriber,
+                    title=notification_title,
+                    body=notification_body,
+                    url=target_url,
+                    tag=(
+                        f"kalxa-reminder-{reminder.id}"
+                    ),
                 )
             )
 
 
-            if canonical_category == "events":
+            if was_sent:
 
-                notification_body = (
-                    f"{item.title} starts soon."
+                reminder.status = "sent"
+
+                reminder.sent_at = (
+                    datetime.utcnow()
                 )
 
-
-            elif canonical_category == "jobs":
-
-                notification_body = (
-                    f"Don't miss {item.title}."
-                )
+                sent += 1
 
 
-            elif canonical_category == "retail_specials":
-
-                notification_body = (
-                    f"{item.title} is coming up soon."
+                current_app.logger.info(
+                    "[Kalxa Reminder] SENT "
+                    "reminder_id=%s "
+                    "content_item_id=%s "
+                    "subscriber_id=%s",
+                    reminder.id,
+                    item.id,
+                    subscriber.id,
                 )
 
 
             else:
 
-                notification_body = (
-                    f"{item.title} is coming up soon."
+                reminder.status = "failed"
+
+                failed += 1
+
+
+                current_app.logger.warning(
+                    "[Kalxa Reminder] Push send returned False "
+                    "reminder_id=%s "
+                    "content_item_id=%s "
+                    "subscriber_id=%s",
+                    reminder.id,
+                    item.id,
+                    subscriber.id,
                 )
-
-
-            # =================================================
-            # TARGET URL
-            # =================================================
-
-            target_url = url_for(
-                "listing_detail",
-                item_id=item.id,
-                _external=True,
-            )
-
-
-            # =================================================
-            # SEND PUSH
-            #
-            # IMPORTANT:
-            #
-            # Replace send_push_notification(...)
-            # with your EXISTING push send helper if the
-            # function has another name.
-            # =================================================
-
-            send_push_notification(
-                subscriber=subscriber,
-                title=notification_title,
-                body=notification_body,
-                url=target_url,
-            )
-
-
-            # =================================================
-            # MARK SENT
-            # =================================================
-
-            reminder.status = "sent"
-
-            reminder.sent_at = (
-                datetime.utcnow()
-            )
-
-
-            sent_count += 1
 
 
         except Exception as exc:
 
             reminder.status = "failed"
 
-            failed_count += 1
+            failed += 1
 
 
             current_app.logger.exception(
-                "Kalxa reminder send failed "
-                "for reminder_id=%s: %s",
+                "[Kalxa Reminder] Unexpected send error "
+                "reminder_id=%s "
+                "content_item_id=%s "
+                "subscriber_id=%s "
+                "error=%s",
                 reminder.id,
+                item.id,
+                subscriber.id,
                 exc,
             )
 
 
     # =====================================================
-    # SAVE ALL STATUS CHANGES
+    # SAVE REMINDER STATUS CHANGES
     # =====================================================
 
-    db.session.commit()
+    try:
+
+        db.session.commit()
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Kalxa Reminder] Unable to save "
+            "reminder processing results "
+            "error=%s",
+            exc,
+        )
+
+        raise
 
 
-    return {
+    # =====================================================
+    # RESULT
+    # =====================================================
 
-        "processed": (
-            len(reminders)
-        ),
+    result = {
 
-        "sent": (
-            sent_count
-        ),
+        "processed":
+            processed,
 
-        "failed": (
-            failed_count
-        ),
+        "sent":
+            sent,
+
+        "failed":
+            failed,
+
+        "cancelled":
+            cancelled,
 
     }
 
+
+    current_app.logger.info(
+        "[Kalxa Reminder] Batch complete "
+        "processed=%s "
+        "sent=%s "
+        "failed=%s "
+        "cancelled=%s",
+        processed,
+        sent,
+        failed,
+        cancelled,
+    )
+
+
+    return result
 
 @app.route(
     "/internal/run-content-reminders",
