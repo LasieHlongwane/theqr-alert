@@ -5993,6 +5993,674 @@ def get_active_content(
 
     return items
 
+
+# =========================================================
+# QR ACCESS POINT
+# =========================================================
+
+@app.route("/q/<access_code>")
+def qr_access(access_code):
+
+    # =====================================================
+    # FIND ACCESS POINT
+    # =====================================================
+
+    access_point = (
+        AccessPoint.query
+        .filter_by(
+            code=access_code,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+    zone = access_point.zone
+
+
+    # =====================================================
+    # RECORD PHYSICAL QR SCAN
+    # =====================================================
+
+    try:
+
+        scan = QRScan(
+            access_point_id=access_point.id,
+            event_type="scan",
+            user_agent=request.headers.get(
+                "User-Agent",
+                "",
+            ),
+        )
+
+        db.session.add(scan)
+        db.session.commit()
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        app.logger.exception(
+            "Failed to record QR scan for %s: %s",
+            access_point.code,
+            exc,
+        )
+
+
+    # =====================================================
+    # CATEGORY-SPECIFIC QR
+    # =====================================================
+
+    if access_point.default_category:
+
+        category_slug = (
+            str(
+                access_point.default_category
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+
+        category_record = (
+            get_category_by_slug(
+                category_slug,
+                active_only=True,
+            )
+        )
+
+        if not category_record:
+            abort(404)
+
+        return redirect(
+            url_for(
+                "qr_category",
+                code=access_point.code,
+                category=category_slug,
+            )
+        )
+
+
+    # =====================================================
+    # GENERAL QR
+    # =====================================================
+
+    categories = get_active_categories()
+
+    today = date.today()
+
+
+    # =====================================================
+    # ZONE-SPECIFIC CATEGORY APPEARANCES
+    # =====================================================
+
+    zone_category_appearances = (
+        ZoneCategoryAppearance.query
+        .filter_by(
+            zone_id=zone.id,
+        )
+        .all()
+    )
+
+
+    zone_category_appearance_lookup = {
+
+        appearance.category_id:
+            appearance
+
+        for appearance
+        in zone_category_appearances
+    }
+
+
+    # =====================================================
+    # CATEGORY BACKGROUND IMAGES
+    # =====================================================
+
+    category_background_images = {}
+
+
+    for category in categories:
+
+        appearance = (
+            zone_category_appearance_lookup.get(
+                category.id
+            )
+        )
+
+
+        image_1 = (
+
+            appearance.image_url
+
+            if (
+                appearance
+                and appearance.image_url
+            )
+
+            else category.image_url
+        )
+
+
+        image_2 = (
+
+            appearance.image_url_2
+
+            if (
+                appearance
+                and appearance.image_url_2
+            )
+
+            else category.image_url_2
+        )
+
+
+        image_3 = (
+
+            appearance.image_url_3
+
+            if (
+                appearance
+                and appearance.image_url_3
+            )
+
+            else category.image_url_3
+        )
+
+
+        category_background_images[
+            category.id
+        ] = [
+
+            image
+
+            for image in [
+                image_1,
+                image_2,
+                image_3,
+            ]
+
+            if image
+        ]
+
+
+    # =====================================================
+    # CATEGORY LOOKUP
+    # =====================================================
+
+    category_lookup = {}
+
+
+    for category in categories:
+
+        category_lookup[
+            category.slug
+        ] = category
+
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+
+        if canonical_key not in category_lookup:
+
+            category_lookup[
+                canonical_key
+            ] = category
+
+
+    # =====================================================
+    # CONSUMER CATEGORY LOOKUP
+    # =====================================================
+
+    consumer_category_lookup = {}
+
+
+    for category in categories:
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        presentation = get_consumer_category(
+            canonical_key
+        )
+
+
+        presentation_data = {
+
+            "key":
+                canonical_key,
+
+            "title":
+                presentation["title"],
+
+            "subtitle":
+                presentation["subtitle"],
+
+            "icon":
+                presentation["icon"],
+        }
+
+
+        consumer_category_lookup[
+            category.slug
+        ] = presentation_data
+
+
+        if (
+            canonical_key
+            not in consumer_category_lookup
+        ):
+
+            consumer_category_lookup[
+                canonical_key
+            ] = presentation_data
+
+
+    # =====================================================
+    # UNIQUE CONSUMER CATEGORY DIRECTORY
+    # =====================================================
+
+    consumer_categories = []
+
+    seen_consumer_category_keys = set()
+
+
+    for category in categories:
+
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+
+        if (
+            canonical_key
+            in seen_consumer_category_keys
+        ):
+
+            continue
+
+
+        seen_consumer_category_keys.add(
+            canonical_key
+        )
+
+
+        presentation = get_consumer_category(
+            canonical_key
+        )
+
+
+        consumer_categories.append({
+
+            "key":
+                canonical_key,
+
+            "category":
+                category,
+
+            "title":
+                presentation["title"],
+
+            "subtitle":
+                presentation["subtitle"],
+
+            "icon":
+                presentation["icon"],
+
+            "url":
+                url_for(
+                    "qr_category",
+                    code=access_point.code,
+                    category=canonical_key,
+                ),
+
+        })
+
+
+    # =====================================================
+    # CATEGORY STATS
+    # =====================================================
+
+    category_stats = {}
+
+
+    new_cutoff = (
+        datetime.utcnow()
+        - timedelta(days=7)
+    )
+
+
+    for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category["key"]
+        )
+
+        representative_category = (
+            consumer_category["category"]
+        )
+
+
+        try:
+
+            active_items = get_active_content(
+                zone_id=zone.id,
+                category_slug=canonical_key,
+            )
+
+        except Exception as exc:
+
+            app.logger.exception(
+                "Unable to calculate category stats. "
+                "zone=%s category=%s error=%s",
+                zone.id,
+                canonical_key,
+                exc,
+            )
+
+            active_items = []
+
+
+        unique_active_items = []
+
+        seen_active_item_ids = set()
+
+
+        for item in active_items:
+
+            if item.id in seen_active_item_ids:
+                continue
+
+            seen_active_item_ids.add(
+                item.id
+            )
+
+            unique_active_items.append(
+                item
+            )
+
+
+        item_count = len(
+            unique_active_items
+        )
+
+
+        new_count = 0
+
+
+        for item in unique_active_items:
+
+            created_at = getattr(
+                item,
+                "created_at",
+                None,
+            )
+
+            if (
+                created_at
+                and created_at >= new_cutoff
+            ):
+
+                new_count += 1
+
+
+        if canonical_key == "events":
+
+            badge_icon = "📅"
+            badge_label = "UPCOMING"
+
+
+        elif canonical_key == "rentals":
+
+            badge_icon = "🏠"
+            badge_label = "AVAILABLE"
+
+
+        elif canonical_key == "accommodation":
+
+            badge_icon = "🛏️"
+            badge_label = "AVAILABLE"
+
+
+        elif canonical_key == "jobs":
+
+            badge_icon = "💼"
+            badge_label = "OPEN"
+
+
+        elif canonical_key == "emergency":
+
+            badge_icon = "🚨"
+            badge_label = "INFO"
+
+
+        elif canonical_key == "announcements":
+
+            badge_icon = "📢"
+            badge_label = "UPDATE"
+
+
+        else:
+
+            badge_icon = "🔥"
+            badge_label = "LIVE"
+
+
+        stats_data = {
+
+            "count":
+                item_count,
+
+            "new_count":
+                new_count,
+
+            "label":
+                badge_label,
+
+            "icon":
+                badge_icon,
+
+            "canonical_key":
+                canonical_key,
+        }
+
+
+        category_stats[
+            canonical_key
+        ] = stats_data
+
+
+        category_stats[
+            representative_category.slug
+        ] = stats_data
+
+
+    # =====================================================
+    # NEW NEAR YOU
+    # =====================================================
+
+    new_items_pool = []
+
+    seen_new_item_ids = set()
+
+
+    for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category["key"]
+        )
+
+
+        try:
+
+            category_items = (
+                get_active_content(
+                    zone_id=zone.id,
+                    category_slug=canonical_key,
+                )
+            )
+
+        except Exception as exc:
+
+            app.logger.exception(
+                "Unable to load New Near You items. "
+                "zone=%s category=%s error=%s",
+                zone.id,
+                canonical_key,
+                exc,
+            )
+
+            continue
+
+
+        for item in category_items:
+
+            if item.id in seen_new_item_ids:
+                continue
+
+            seen_new_item_ids.add(
+                item.id
+            )
+
+            new_items_pool.append(
+                item
+            )
+
+
+    new_items_pool.sort(
+
+        key=lambda item: (
+            item.created_at
+            or datetime.min
+        ),
+
+        reverse=True,
+    )
+
+
+    new_items = (
+        new_items_pool[:8]
+    )
+
+
+    # =====================================================
+    # FEATURED LOCAL CONTENT
+    # =====================================================
+
+    featured_items_pool = []
+
+    seen_featured_item_ids = set()
+
+
+    for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category["key"]
+        )
+
+
+        try:
+
+            category_items = (
+                get_active_content(
+                    zone_id=zone.id,
+                    category_slug=canonical_key,
+                )
+            )
+
+        except Exception as exc:
+
+            app.logger.exception(
+                "Unable to load featured items. "
+                "zone=%s category=%s error=%s",
+                zone.id,
+                canonical_key,
+                exc,
+            )
+
+            continue
+
+
+        for item in category_items:
+
+            if not item.featured:
+                continue
+
+            if item.id in seen_featured_item_ids:
+                continue
+
+            seen_featured_item_ids.add(
+                item.id
+            )
+
+            featured_items_pool.append(
+                item
+            )
+
+
+    featured_items_pool.sort(
+
+        key=lambda item: (
+            item.created_at
+            or datetime.min
+        ),
+
+        reverse=True,
+    )
+
+
+    featured_items = (
+        featured_items_pool[:6]
+    )
+
+
+    # =====================================================
+    # RENDER ACCESS PAGE
+    # =====================================================
+
+    return render_template(
+
+        "access.html",
+
+        zone=zone,
+
+        access_point=access_point,
+
+        categories=categories,
+
+        consumer_categories=(
+            consumer_categories
+        ),
+
+        consumer_category_lookup=(
+            consumer_category_lookup
+        ),
+
+        category_stats=(
+            category_stats
+        ),
+
+        new_items=(
+            new_items
+        ),
+
+        category_lookup=(
+            category_lookup
+        ),
+
+        featured_items=(
+            featured_items
+        ),
+
+        category_background_images=(
+            category_background_images
+        ),
+
+        today=today,
+
+    )
 # =========================================================
 # PUSH NOTIFICATION UNSUBSCRIBE
 # =========================================================
