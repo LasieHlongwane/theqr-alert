@@ -59,6 +59,7 @@ from models import (
     PushSubscriber,
     ListingClaim,
     EngagementEvent,
+    ContentReminder,
 )
 from categories import (
     BUSINESS_CATEGORIES,
