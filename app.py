@@ -1486,7 +1486,6 @@ def get_reminder_datetime(
     return reminder_datetime
 
 
-
 @app.route(
     "/listing/<int:item_id>/remind",
     methods=["POST"],
@@ -1939,6 +1938,287 @@ def create_content_reminder(
             "Reminder saved.",
 
     }), 201
+
+
+@app.route(
+    "/listing/<int:item_id>/reminder-status",
+    methods=["POST"],
+)
+def content_reminder_status(
+    item_id,
+):
+
+    # =====================================================
+    # PUSH ENDPOINT
+    # =====================================================
+
+    data = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    push_endpoint = (
+        str(
+            data.get(
+                "push_endpoint",
+                ""
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not push_endpoint:
+
+        return jsonify({
+
+            "success":
+                True,
+
+            "has_reminder":
+                False,
+
+        }), 200
+
+
+    # =====================================================
+    # FIND SUBSCRIBER
+    # =====================================================
+
+    subscriber = (
+        PushSubscriber.query
+        .filter_by(
+            endpoint=push_endpoint,
+            active=True,
+        )
+        .first()
+    )
+
+
+    if not subscriber:
+
+        return jsonify({
+
+            "success":
+                True,
+
+            "has_reminder":
+                False,
+
+        }), 200
+
+
+    # =====================================================
+    # FIND ACTIVE REMINDER
+    # =====================================================
+
+    reminder = (
+        ContentReminder.query
+        .filter_by(
+            content_item_id=item_id,
+            push_subscriber_id=(
+                subscriber.id
+            ),
+            status="pending",
+        )
+        .order_by(
+            ContentReminder
+            .created_at
+            .desc()
+        )
+        .first()
+    )
+
+
+    if not reminder:
+
+        return jsonify({
+
+            "success":
+                True,
+
+            "has_reminder":
+                False,
+
+        }), 200
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "has_reminder":
+            True,
+
+        "reminder_id":
+            reminder.id,
+
+        "minutes_before":
+            reminder.reminder_minutes_before,
+
+        "scheduled_for":
+            (
+                reminder
+                .scheduled_for
+                .isoformat()
+                if reminder.scheduled_for
+                else None
+            ),
+
+    }), 200
+
+
+
+@app.route(
+    "/reminders/<int:reminder_id>/cancel",
+    methods=["POST"],
+)
+def cancel_content_reminder(
+    reminder_id,
+):
+
+    data = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    push_endpoint = (
+        str(
+            data.get(
+                "push_endpoint",
+                ""
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not push_endpoint:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Notification subscription missing.",
+
+        }), 400
+
+
+    # =====================================================
+    # FIND SUBSCRIBER
+    # =====================================================
+
+    subscriber = (
+        PushSubscriber.query
+        .filter_by(
+            endpoint=push_endpoint,
+            active=True,
+        )
+        .first()
+    )
+
+
+    if not subscriber:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Notification subscription not found.",
+
+        }), 404
+
+
+    # =====================================================
+    # FIND REMINDER
+    #
+    # Subscriber ownership prevents another browser from
+    # cancelling another user's reminder.
+    # =====================================================
+
+    reminder = (
+        ContentReminder.query
+        .filter_by(
+            id=reminder_id,
+            push_subscriber_id=(
+                subscriber.id
+            ),
+            status="pending",
+        )
+        .first()
+    )
+
+
+    if not reminder:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Active reminder not found.",
+
+        }), 404
+
+
+    reminder.status = (
+        "cancelled"
+    )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Kalxa Reminder] "
+            "Unable to cancel reminder "
+            "reminder_id=%s "
+            "error=%s",
+            reminder_id,
+            exc,
+        )
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Could not cancel reminder.",
+
+        }), 500
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "message":
+            "Reminder cancelled.",
+
+    }), 200
+
 
 
 def parse_optional_time(
