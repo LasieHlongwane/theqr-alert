@@ -1547,6 +1547,27 @@ class ContentReminder(db.Model):
         nullable=True,
         index=True,
     )
+    retry_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    next_retry_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    last_attempt_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    last_error = db.Column(
+        db.Text,
+        nullable=True,
+    )
 
 
     # -----------------------------------------------------
