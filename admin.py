@@ -55,6 +55,7 @@ from models import (
     PushSubscriber,
     EngagementEvent,
     ContentDistributionZone,
+    ContentReminder,
 )
 ONGOING_CATEGORIES = {
     "property",
