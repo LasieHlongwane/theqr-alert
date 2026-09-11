@@ -369,51 +369,85 @@ def home():
         zone_access_points=zone_access_points,
     )
 
+
 def is_sponsorship_active(
     item,
     now_utc=None,
 ):
     """
-    Return True only when the listing has an active,
-    currently valid Kalxa sponsorship.
+    Return True only when a listing currently has a valid
+    Kalxa sponsored placement.
 
-    This is completely separate from:
+    Sponsorship remains completely separate from:
+
     - pricing_model
     - payment_status
+    - amount_due
+    - amount_paid
     - commercial_starts_at
     - commercial_expires_at
-
-    It does not alter the existing Presence/Campaign
-    payment workflow.
     """
 
     if not item:
         return False
 
 
+    # =====================================================
+    # SPONSORED FLAG
+    # =====================================================
+
     if not getattr(
         item,
         "is_sponsored",
         False,
     ):
+
         return False
+
+
+    # =====================================================
+    # SPONSORSHIP STATUS
+    #
+    # Only explicitly active sponsorships receive
+    # sponsored treatment.
+    #
+    # scheduled / inactive / expired receive no advantage.
+    # =====================================================
+
+    sponsorship_status = (
+        str(
+            getattr(
+                item,
+                "sponsorship_status",
+                "inactive",
+            )
+            or "inactive"
+        )
+        .strip()
+        .lower()
+    )
 
 
     if (
-        getattr(
-            item,
-            "sponsorship_status",
-            "inactive",
-        )
+        sponsorship_status
         != "active"
     ):
+
         return False
 
+
+    # =====================================================
+    # CURRENT UTC TIME
+    # =====================================================
 
     if now_utc is None:
 
         now_utc = datetime.utcnow()
 
+
+    # =====================================================
+    # SPONSORSHIP WINDOW
+    # =====================================================
 
     sponsored_starts_at = getattr(
         item,
@@ -429,19 +463,35 @@ def is_sponsorship_active(
     )
 
 
+    # =====================================================
+    # HAS NOT STARTED YET
+    # =====================================================
+
     if (
         sponsored_starts_at
-        and sponsored_starts_at > now_utc
+        and
+        sponsored_starts_at > now_utc
     ):
+
         return False
 
+
+    # =====================================================
+    # ALREADY EXPIRED
+    # =====================================================
 
     if (
         sponsored_expires_at
-        and sponsored_expires_at <= now_utc
+        and
+        sponsored_expires_at <= now_utc
     ):
+
         return False
 
+
+    # =====================================================
+    # ACTIVE SPONSORSHIP
+    # =====================================================
 
     return True
 
@@ -451,27 +501,71 @@ def attach_sponsorship_state(
     now_utc=None,
 ):
     """
-    Attach a temporary runtime property:
+    Attach runtime-only sponsorship information to a listing.
+
+    Produces:
 
         item.sponsorship_active
+        item.effective_sponsored_priority
 
-    This lets Jinja safely use:
-
-        {% if item.sponsorship_active %}
-
-    without changing the database again.
+    No database values are modified.
     """
 
     if not item:
         return item
 
 
-    item.sponsorship_active = (
+    sponsorship_active = (
         is_sponsorship_active(
             item,
             now_utc=now_utc,
         )
     )
+
+
+    item.sponsorship_active = (
+        sponsorship_active
+    )
+
+
+    # =====================================================
+    # EFFECTIVE PRIORITY
+    #
+    # Inactive sponsorship receives priority 0 even if an
+    # old sponsored_priority value somehow exists.
+    # =====================================================
+
+    if sponsorship_active:
+
+        try:
+
+            item.effective_sponsored_priority = max(
+                0,
+                int(
+                    getattr(
+                        item,
+                        "sponsored_priority",
+                        0,
+                    )
+                    or 0
+                ),
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            item.effective_sponsored_priority = (
+                0
+            )
+
+
+    else:
+
+        item.effective_sponsored_priority = (
+            0
+        )
 
 
     return item
@@ -481,7 +575,10 @@ def attach_sponsorship_states(
     items,
 ):
     """
-    Attach sponsorship_active to every item in a result list.
+    Attach sponsorship runtime state to every listing.
+
+    One shared timestamp is used so every listing on the page
+    is evaluated against the same moment.
     """
 
     if not items:
