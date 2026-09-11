@@ -298,18 +298,146 @@
 
 
         /* =========================================================
-           STEP 10 — REMIND ME
+           STEP 10H — REMINDER PANEL
         ========================================================= */
 
         .kalxa-reminder-wrap {
-            margin-top: 12px;
+
+            margin-top: 14px;
+
+            padding: 14px;
+
+            box-sizing: border-box;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.10);
+
+            border-radius: 14px;
+
+            background:
+                rgba(255, 255, 255, 0.035);
         }
 
+
+        .kalxa-reminder-header {
+
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+
+            margin-bottom: 11px;
+        }
+
+
+        .kalxa-reminder-title {
+
+            color: #fff4df;
+
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+
+        .kalxa-reminder-subtitle {
+
+            color:
+                rgba(255, 255, 255, 0.50);
+
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+
+        /* =========================================================
+           REMINDER TIME OPTIONS
+        ========================================================= */
+
+        .kalxa-reminder-options {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 7px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .kalxa-reminder-options[hidden] {
+            display: none;
+        }
+
+
+        .kalxa-reminder-option {
+
+            min-height: 36px;
+
+            padding: 8px 6px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.04);
+
+            color:
+                rgba(255, 255, 255, 0.68);
+
+            font-size: 10px;
+            font-weight: 800;
+
+            cursor: pointer;
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.15s ease;
+        }
+
+
+        .kalxa-reminder-option:hover {
+
+            background:
+                rgba(255, 255, 255, 0.08);
+        }
+
+
+        .kalxa-reminder-option:active {
+            transform: scale(0.97);
+        }
+
+
+        .kalxa-reminder-option.is-selected {
+
+            background: #fff4df;
+
+            color: #252525;
+
+            border-color: #fff4df;
+        }
+
+
+        /* =========================================================
+           SET REMINDER BUTTON
+        ========================================================= */
 
         .kalxa-remind-btn {
 
             width: 100%;
-            min-height: 45px;
+            min-height: 44px;
 
             display: inline-flex;
             align-items: center;
@@ -322,17 +450,17 @@
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.10);
+                rgba(255, 244, 223, 0.16);
 
-            border-radius: 12px;
+            border-radius: 11px;
 
             background:
-                rgba(255, 255, 255, 0.05);
+                rgba(255, 244, 223, 0.08);
 
             color: #fff4df;
 
-            font-size: 12px;
-            font-weight: 850;
+            font-size: 11px;
+            font-weight: 900;
 
             cursor: pointer;
 
@@ -341,22 +469,20 @@
 
             transition:
                 background 0.2s ease,
-                transform 0.2s ease,
-                opacity 0.2s ease;
+                opacity 0.2s ease,
+                transform 0.15s ease;
         }
 
 
         .kalxa-remind-btn:hover {
 
             background:
-                rgba(255, 255, 255, 0.09);
+                rgba(255, 244, 223, 0.13);
         }
 
 
         .kalxa-remind-btn:active {
-
-            transform:
-                scale(0.98);
+            transform: scale(0.98);
         }
 
 
@@ -365,31 +491,103 @@
         }
 
 
-        .kalxa-remind-btn.is-saving {
-            opacity: 0.65;
+        .kalxa-remind-btn[hidden] {
+            display: none;
         }
 
 
-        .kalxa-remind-btn.is-saved {
+        .kalxa-remind-btn.is-saving {
+            opacity: 0.60;
+        }
+
+
+        /* =========================================================
+           SAVED REMINDER
+        ========================================================= */
+
+        .kalxa-reminder-saved {
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 12px;
+
+            padding: 11px 12px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.10);
+
+            border-radius: 11px;
 
             background:
-                rgba(255, 244, 223, 0.09);
+                rgba(255, 244, 223, 0.08);
+        }
 
-            border-color:
-                rgba(255, 244, 223, 0.16);
+
+        .kalxa-reminder-saved[hidden] {
+            display: none;
+        }
+
+
+        .kalxa-reminder-saved strong {
+
+            display: block;
 
             color: #fff4df;
 
-            opacity: 0.82;
-
-            cursor: default;
+            font-size: 11px;
+            font-weight: 900;
         }
 
 
-        .kalxa-remind-btn.is-error {
+        .kalxa-reminder-saved-detail {
 
-            border-color:
-                rgba(217, 45, 32, 0.35);
+            display: block;
+
+            margin-top: 3px;
+
+            color:
+                rgba(255, 255, 255, 0.55);
+
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+
+        .kalxa-reminder-cancel {
+
+            flex-shrink: 0;
+
+            padding: 7px 9px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 9px;
+
+            background:
+                transparent;
+
+            color:
+                rgba(255, 255, 255, 0.65);
+
+            font-size: 9px;
+            font-weight: 800;
+
+            cursor: pointer;
+
+            -webkit-tap-highlight-color:
+                transparent;
+        }
+
+
+        .kalxa-reminder-cancel:hover {
+
+            background:
+                rgba(255, 255, 255, 0.05);
         }
 
 
@@ -944,6 +1142,11 @@
             .kalxa-quick-action {
                 width: 100%;
             }
+
+
+            .kalxa-reminder-option {
+                font-size: 9px;
+            }
         }
 
 
@@ -989,14 +1192,16 @@
         @media (prefers-reduced-motion: reduce) {
 
             .lac-empty-primary,
-            .kalxa-remind-btn {
+            .kalxa-remind-btn,
+            .kalxa-reminder-option {
 
                 transition: none;
             }
 
 
             .lac-empty-primary:active,
-            .kalxa-remind-btn:active {
+            .kalxa-remind-btn:active,
+            .kalxa-reminder-option:active {
 
                 transform: none;
             }
@@ -1854,7 +2059,7 @@
 
 
                     <!-- =================================
-                         STEP 10 — REMIND ME
+                         STEP 10H — REMINDER CONTROLS
                     ================================== -->
 
                     {% if
@@ -1863,7 +2068,55 @@
                         and not item.campaign_state.is_ended
                     %}
 
-                    <div class="kalxa-reminder-wrap">
+                    <div
+                        class="kalxa-reminder-wrap"
+                        data-reminder-wrap
+                        data-item-id="{{ item.id }}"
+                    >
+
+                        <div class="kalxa-reminder-header">
+
+                            <span class="kalxa-reminder-title">
+                                🔔 Remind Me
+                            </span>
+
+                            <span class="kalxa-reminder-subtitle">
+                                Get an alert before it starts
+                            </span>
+
+                        </div>
+
+
+                        <div class="kalxa-reminder-options">
+
+                            <button
+                                type="button"
+                                class="kalxa-reminder-option is-selected"
+                                data-reminder-offset="60"
+                            >
+                                1 hour
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="kalxa-reminder-option"
+                                data-reminder-offset="180"
+                            >
+                                3 hours
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="kalxa-reminder-option"
+                                data-reminder-offset="1440"
+                            >
+                                1 day
+                            </button>
+
+                        </div>
+
 
                         <button
                             type="button"
@@ -1872,9 +2125,43 @@
                             data-item-id="{{ item.id }}"
                             data-zone-id="{{ zone.id }}"
                             data-access-point-id="{{ access_point.id }}"
+                            data-minutes-before="60"
                         >
-                            🔔 Remind Me
+                            🔔 Set Reminder
                         </button>
+
+
+                        <div
+                            class="kalxa-reminder-saved"
+                            data-reminder-saved
+                            hidden
+                        >
+
+                            <div>
+
+                                <strong
+                                    data-reminder-saved-label
+                                >
+                                    ✓ Reminder saved
+                                </strong>
+
+                                <span
+                                    class="kalxa-reminder-saved-detail"
+                                    data-reminder-saved-detail
+                                ></span>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="kalxa-reminder-cancel"
+                                data-reminder-cancel
+                            >
+                                Cancel
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -2477,6 +2764,10 @@
 </div>
 
 
+<!-- =====================================================
+     IMAGE MODAL + CATEGORY SEARCH
+===================================================== -->
+
 <script>
 
     // =========================================
@@ -2751,338 +3042,843 @@
 
 
 <!-- =========================================
-     STEP 10D — REMIND ME + WEB PUSH
+     STEP 10H — KALXA REMINDER ENGINE
 ========================================== -->
 
 <script>
 
-async function getKalxaPushSubscription() {
+    // =====================================================
+    // PUSH SUBSCRIPTION
+    // =====================================================
 
-    if (
-        !("serviceWorker" in navigator)
-        ||
-        !("PushManager" in window)
-    ) {
+    async function getKalxaPushSubscription() {
 
-        return null;
-    }
-
-
-    try {
-
-        const registration =
-            await navigator.serviceWorker.ready;
-
-
-        if (!registration) {
+        if (
+            !("serviceWorker" in navigator)
+            ||
+            !("PushManager" in window)
+        ) {
 
             return null;
         }
 
 
-        const subscription =
-            await registration
-                .pushManager
-                .getSubscription();
-
-
-        return subscription;
-
-    }
-    catch (error) {
-
-        console.error(
-            "[Kalxa Reminder] Could not read push subscription:",
-            error
-        );
-
-        return null;
-    }
-}
-
-
-document.addEventListener(
-    "click",
-    async function(event) {
-
-        const button =
-            event.target.closest(
-                "[data-reminder-button]"
-            );
-
-
-        if (!button) {
-
-            return;
-        }
-
-
-        if (
-            button.classList.contains(
-                "is-saved"
-            )
-        ) {
-
-            return;
-        }
-
-
-        const itemId =
-            button.dataset.itemId;
-
-        const zoneId =
-            button.dataset.zoneId;
-
-        const accessPointId =
-            button.dataset.accessPointId;
-
-
-        if (!itemId) {
-
-            return;
-        }
-
-
-        button.disabled =
-            true;
-
-        button.classList.remove(
-            "is-error"
-        );
-
-        button.classList.add(
-            "is-saving"
-        );
-
-        button.textContent =
-            "Checking notifications...";
-
-
         try {
 
-            const pushSubscription =
-                await getKalxaPushSubscription();
-
-
-            if (!pushSubscription) {
-
-                button.disabled =
-                    false;
-
-                button.classList.remove(
-                    "is-saving"
-                );
-
-                button.classList.add(
-                    "is-error"
-                );
-
-                button.textContent =
-                    "🔔 Enable Alerts First";
-
-
-                alert(
-                    "Please enable Kalxa notifications first, then tap Remind Me again."
-                );
-
-
-                return;
-            }
-
-
-            const pushEndpoint =
-                pushSubscription.endpoint;
-
-
-            if (!pushEndpoint) {
-
-                throw new Error(
-                    "Your notification subscription could not be read."
-                );
-            }
-
-
-            const body =
-                new URLSearchParams();
-
-
-            body.append(
-                "minutes_before",
-                "60"
-            );
-
-
-            body.append(
-                "push_endpoint",
-                pushEndpoint
-            );
-
-
-            if (zoneId) {
-
-                body.append(
-                    "zone_id",
-                    zoneId
-                );
-            }
-
-
-            if (accessPointId) {
-
-                body.append(
-                    "access_point_id",
-                    accessPointId
-                );
-            }
-
-
-            button.textContent =
-                "Saving reminder...";
-
-
-            const response =
-                await fetch(
-                    `/listing/${itemId}/remind`,
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-
-                            "Content-Type":
-                                "application/x-www-form-urlencoded",
-
-                        },
-
-                        body:
-                            body.toString(),
-
-                    }
-                );
-
-
-            let result = {};
-
-            try {
-
-                result =
-                    await response.json();
-
-            }
-            catch (jsonError) {
-
-                console.error(
-                    "[Kalxa Reminder] Could not parse response:",
-                    jsonError
-                );
-            }
-
-
-            if (
-                result.requires_push
-            ) {
-
-                button.disabled =
-                    false;
-
-                button.classList.remove(
-                    "is-saving"
-                );
-
-                button.classList.add(
-                    "is-error"
-                );
-
-                button.textContent =
-                    "🔔 Enable Alerts First";
-
-
-                alert(
-                    result.message
-                    ||
-                    "Please enable Kalxa notifications first."
-                );
-
-
-                return;
-            }
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    result.message
-                    ||
-                    "Could not save reminder."
-                );
-            }
-
-
-            button.classList.remove(
-                "is-saving"
-            );
-
-            button.classList.remove(
-                "is-error"
-            );
-
-            button.classList.add(
-                "is-saved"
-            );
-
-            button.disabled =
-                true;
-
-
-            if (
-                result.already_exists
-            ) {
-
-                button.textContent =
-                    "✓ Reminder already saved";
-
-            }
-            else {
-
-                button.textContent =
-                    "✓ Reminder saved";
-
-            }
+            const registration =
+                await navigator
+                    .serviceWorker
+                    .ready;
+
+
+            return await registration
+                .pushManager
+                .getSubscription();
 
         }
         catch (error) {
 
             console.error(
-                "[Kalxa Reminder]",
+                "[Kalxa Reminder] Unable to read push subscription:",
                 error
             );
 
-
-            button.disabled =
-                false;
-
-            button.classList.remove(
-                "is-saving"
-            );
-
-            button.classList.add(
-                "is-error"
-            );
-
-            button.textContent =
-                "🔔 Remind Me";
-
-
-            alert(
-                error.message
-                ||
-                "Could not save reminder."
-            );
+            return null;
         }
 
     }
-);
+
+
+    // =====================================================
+    // HUMAN REMINDER LABEL
+    // =====================================================
+
+    function getReminderOffsetLabel(
+        minutes
+    ) {
+
+        const value =
+            Number(
+                minutes
+            );
+
+
+        if (value === 60) {
+
+            return "1 hour before";
+        }
+
+
+        if (value === 180) {
+
+            return "3 hours before";
+        }
+
+
+        if (value === 1440) {
+
+            return "1 day before";
+        }
+
+
+        return "before it starts";
+    }
+
+
+    // =====================================================
+    // SET SELECTED OFFSET
+    // =====================================================
+
+    function setSelectedReminderOffset(
+        wrap,
+        minutes
+    ) {
+
+        const value =
+            String(
+                minutes
+            );
+
+
+        wrap
+            .querySelectorAll(
+                "[data-reminder-offset]"
+            )
+            .forEach(
+                function(button) {
+
+                    const selected =
+                        button.dataset.reminderOffset
+                        === value;
+
+
+                    button.classList.toggle(
+                        "is-selected",
+                        selected
+                    );
+
+                }
+            );
+
+
+        const saveButton =
+            wrap.querySelector(
+                "[data-reminder-button]"
+            );
+
+
+        if (saveButton) {
+
+            saveButton.dataset.minutesBefore =
+                value;
+        }
+
+    }
+
+
+    // =====================================================
+    // SHOW SAVED STATE
+    // =====================================================
+
+    function showReminderSaved(
+        wrap,
+        reminderId,
+        minutesBefore
+    ) {
+
+        const options =
+            wrap.querySelector(
+                ".kalxa-reminder-options"
+            );
+
+        const saveButton =
+            wrap.querySelector(
+                "[data-reminder-button]"
+            );
+
+        const savedPanel =
+            wrap.querySelector(
+                "[data-reminder-saved]"
+            );
+
+        const detail =
+            wrap.querySelector(
+                "[data-reminder-saved-detail]"
+            );
+
+        const cancelButton =
+            wrap.querySelector(
+                "[data-reminder-cancel]"
+            );
+
+
+        setSelectedReminderOffset(
+            wrap,
+            minutesBefore
+        );
+
+
+        if (options) {
+
+            options.hidden =
+                true;
+        }
+
+
+        if (saveButton) {
+
+            saveButton.hidden =
+                true;
+
+            saveButton.disabled =
+                false;
+
+            saveButton.classList.remove(
+                "is-saving"
+            );
+
+            saveButton.textContent =
+                "🔔 Set Reminder";
+        }
+
+
+        if (savedPanel) {
+
+            savedPanel.hidden =
+                false;
+        }
+
+
+        if (detail) {
+
+            detail.textContent =
+                getReminderOffsetLabel(
+                    minutesBefore
+                );
+        }
+
+
+        if (cancelButton) {
+
+            cancelButton.dataset.reminderId =
+                String(
+                    reminderId
+                );
+        }
+
+    }
+
+
+    // =====================================================
+    // RESET REMINDER UI
+    // =====================================================
+
+    function resetReminderUI(
+        wrap
+    ) {
+
+        const options =
+            wrap.querySelector(
+                ".kalxa-reminder-options"
+            );
+
+        const saveButton =
+            wrap.querySelector(
+                "[data-reminder-button]"
+            );
+
+        const savedPanel =
+            wrap.querySelector(
+                "[data-reminder-saved]"
+            );
+
+        const cancelButton =
+            wrap.querySelector(
+                "[data-reminder-cancel]"
+            );
+
+
+        if (options) {
+
+            options.hidden =
+                false;
+        }
+
+
+        if (saveButton) {
+
+            saveButton.hidden =
+                false;
+
+            saveButton.disabled =
+                false;
+
+            saveButton.classList.remove(
+                "is-saving"
+            );
+
+            saveButton.textContent =
+                "🔔 Set Reminder";
+        }
+
+
+        if (savedPanel) {
+
+            savedPanel.hidden =
+                true;
+        }
+
+
+        if (cancelButton) {
+
+            delete cancelButton.dataset.reminderId;
+        }
+
+
+        setSelectedReminderOffset(
+            wrap,
+            60
+        );
+
+    }
+
+
+    // =====================================================
+    // SELECT REMINDER OFFSET
+    // =====================================================
+
+    document.addEventListener(
+        "click",
+        function(event) {
+
+            const option =
+                event.target.closest(
+                    "[data-reminder-offset]"
+                );
+
+
+            if (!option) {
+
+                return;
+            }
+
+
+            const wrap =
+                option.closest(
+                    "[data-reminder-wrap]"
+                );
+
+
+            if (!wrap) {
+
+                return;
+            }
+
+
+            setSelectedReminderOffset(
+                wrap,
+                option.dataset.reminderOffset
+            );
+
+        }
+    );
+
+
+    // =====================================================
+    // CREATE / UPDATE REMINDER
+    // =====================================================
+
+    document.addEventListener(
+        "click",
+        async function(event) {
+
+            const button =
+                event.target.closest(
+                    "[data-reminder-button]"
+                );
+
+
+            if (!button) {
+
+                return;
+            }
+
+
+            const wrap =
+                button.closest(
+                    "[data-reminder-wrap]"
+                );
+
+
+            if (!wrap) {
+
+                return;
+            }
+
+
+            const itemId =
+                button.dataset.itemId;
+
+            const zoneId =
+                button.dataset.zoneId;
+
+            const accessPointId =
+                button.dataset.accessPointId;
+
+            const minutesBefore =
+                button.dataset.minutesBefore
+                || "60";
+
+
+            if (!itemId) {
+
+                return;
+            }
+
+
+            button.disabled =
+                true;
+
+            button.classList.add(
+                "is-saving"
+            );
+
+            button.textContent =
+                "Checking notifications...";
+
+
+            try {
+
+                const subscription =
+                    await getKalxaPushSubscription();
+
+
+                if (!subscription) {
+
+                    throw new Error(
+                        "Please enable Kalxa notifications first."
+                    );
+                }
+
+
+                if (!subscription.endpoint) {
+
+                    throw new Error(
+                        "Your Kalxa notification subscription could not be read."
+                    );
+                }
+
+
+                const body =
+                    new URLSearchParams();
+
+
+                body.append(
+                    "minutes_before",
+                    minutesBefore
+                );
+
+
+                body.append(
+                    "push_endpoint",
+                    subscription.endpoint
+                );
+
+
+                if (zoneId) {
+
+                    body.append(
+                        "zone_id",
+                        zoneId
+                    );
+                }
+
+
+                if (accessPointId) {
+
+                    body.append(
+                        "access_point_id",
+                        accessPointId
+                    );
+                }
+
+
+                button.textContent =
+                    "Saving reminder...";
+
+
+                const response =
+                    await fetch(
+                        `/listing/${itemId}/remind`,
+                        {
+
+                            method:
+                                "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded",
+
+                            },
+
+                            body:
+                                body.toString(),
+
+                        }
+                    );
+
+
+                let result = {};
+
+
+                try {
+
+                    result =
+                        await response.json();
+
+                }
+                catch (jsonError) {
+
+                    console.error(
+                        "[Kalxa Reminder] Invalid reminder response:",
+                        jsonError
+                    );
+                }
+
+
+                if (
+                    result.requires_push
+                ) {
+
+                    throw new Error(
+                        result.message
+                        ||
+                        "Please enable Kalxa notifications first."
+                    );
+                }
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message
+                        ||
+                        "Could not save reminder."
+                    );
+                }
+
+
+                if (!result.reminder_id) {
+
+                    throw new Error(
+                        "Reminder was saved but its ID was not returned."
+                    );
+                }
+
+
+                showReminderSaved(
+                    wrap,
+                    result.reminder_id,
+                    result.minutes_before
+                    || minutesBefore
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "[Kalxa Reminder]",
+                    error
+                );
+
+
+                button.disabled =
+                    false;
+
+                button.classList.remove(
+                    "is-saving"
+                );
+
+                button.textContent =
+                    "🔔 Set Reminder";
+
+
+                alert(
+                    error.message
+                    ||
+                    "Could not save reminder."
+                );
+            }
+
+        }
+    );
+
+
+    // =====================================================
+    // CANCEL REMINDER
+    // =====================================================
+
+    document.addEventListener(
+        "click",
+        async function(event) {
+
+            const button =
+                event.target.closest(
+                    "[data-reminder-cancel]"
+                );
+
+
+            if (!button) {
+
+                return;
+            }
+
+
+            const reminderId =
+                button.dataset.reminderId;
+
+
+            const wrap =
+                button.closest(
+                    "[data-reminder-wrap]"
+                );
+
+
+            if (
+                !reminderId
+                ||
+                !wrap
+            ) {
+
+                return;
+            }
+
+
+            button.disabled =
+                true;
+
+            button.textContent =
+                "Cancelling...";
+
+
+            try {
+
+                const subscription =
+                    await getKalxaPushSubscription();
+
+
+                if (!subscription) {
+
+                    throw new Error(
+                        "Notification subscription unavailable."
+                    );
+                }
+
+
+                const response =
+                    await fetch(
+                        `/reminders/${reminderId}/cancel`,
+                        {
+
+                            method:
+                                "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    push_endpoint:
+                                        subscription.endpoint,
+
+                                }),
+
+                        }
+                    );
+
+
+                let result = {};
+
+
+                try {
+
+                    result =
+                        await response.json();
+
+                }
+                catch (jsonError) {
+
+                    console.error(
+                        "[Kalxa Reminder] Invalid cancel response:",
+                        jsonError
+                    );
+                }
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message
+                        ||
+                        "Could not cancel reminder."
+                    );
+                }
+
+
+                resetReminderUI(
+                    wrap
+                );
+
+
+                button.disabled =
+                    false;
+
+                button.textContent =
+                    "Cancel";
+
+            }
+            catch (error) {
+
+                console.error(
+                    "[Kalxa Reminder]",
+                    error
+                );
+
+
+                button.disabled =
+                    false;
+
+                button.textContent =
+                    "Cancel";
+
+
+                alert(
+                    error.message
+                    ||
+                    "Could not cancel reminder."
+                );
+            }
+
+        }
+    );
+
+
+    // =====================================================
+    // RESTORE SAVED REMINDERS
+    // =====================================================
+
+    async function restoreKalxaReminders() {
+
+        const subscription =
+            await getKalxaPushSubscription();
+
+
+        if (!subscription) {
+
+            return;
+        }
+
+
+        const wraps =
+            document.querySelectorAll(
+                "[data-reminder-wrap]"
+            );
+
+
+        for (
+            const wrap
+            of wraps
+        ) {
+
+            const itemId =
+                wrap.dataset.itemId;
+
+
+            if (!itemId) {
+
+                continue;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/listing/${itemId}/reminder-status`,
+                        {
+
+                            method:
+                                "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    push_endpoint:
+                                        subscription.endpoint,
+
+                                }),
+
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    continue;
+                }
+
+
+                const result =
+                    await response.json();
+
+
+                if (
+                    result.has_reminder
+                ) {
+
+                    showReminderSaved(
+                        wrap,
+                        result.reminder_id,
+                        result.minutes_before
+                    );
+
+                }
+
+            }
+            catch (error) {
+
+                console.error(
+                    "[Kalxa Reminder] Restore failed:",
+                    error
+                );
+            }
+
+        }
+
+    }
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function() {
+
+            restoreKalxaReminders();
+
+        }
+    );
 
 </script>
 
@@ -3151,3 +3947,6 @@ document.addEventListener(
 </body>
 
 </html>
+
+            
+   
