@@ -3939,389 +3939,840 @@ def logout():
     return redirect(url_for("admin.login"))
 
 
+
 @admin_bp.route("/")
 @admin_bp.route("/analytics")
 def analytics():
+
     auth = require_admin()
+
     if auth:
         return auth
 
+
+    # =========================================================
+    # DATE WINDOWS
+    # =========================================================
+
     now = datetime.utcnow()
-    today_start = datetime(now.year, now.month, now.day)
-    tomorrow_start = today_start + timedelta(days=1)
-    seven_days_ago = today_start - timedelta(days=6)
-    fourteen_days_ago = today_start - timedelta(days=13)
-    thirty_days_ago = today_start - timedelta(days=29)
-    previous_7_start = seven_days_ago - timedelta(days=7)
 
-    total_scans = QRScan.query.filter(QRScan.event_type == "scan").count()
-    today_scans = QRScan.query.filter(
-        QRScan.event_type == "scan",
-        QRScan.scanned_at >= today_start,
-        QRScan.scanned_at < tomorrow_start,
-    ).count()
-    seven_day_scans = QRScan.query.filter(
-        QRScan.event_type == "scan",
-        QRScan.scanned_at >= seven_days_ago,
-    ).count()
-    thirty_day_scans = QRScan.query.filter(
-        QRScan.event_type == "scan",
-        QRScan.scanned_at >= thirty_days_ago,
-    ).count()
-    previous_7_scans = QRScan.query.filter(
-        QRScan.event_type == "scan",
-        QRScan.scanned_at >= previous_7_start,
-        QRScan.scanned_at < seven_days_ago,
-    ).count()
-
-    if previous_7_scans > 0:
-        seven_day_growth = ((seven_day_scans - previous_7_scans) / previous_7_scans) * 100
-    elif seven_day_scans > 0:
-        seven_day_growth = 100.0
-    else:
-        seven_day_growth = 0.0
-
-    total_access_points = AccessPoint.query.count()
-    active_access_points = AccessPoint.query.filter(AccessPoint.active.is_(True)).count()
-    scans_per_access_point = (
-        thirty_day_scans / active_access_points if active_access_points else 0
+    today_start = datetime(
+        now.year,
+        now.month,
+        now.day,
     )
 
-    total_category_views = QRScan.query.filter(
-        QRScan.event_type == "category_view"
-    ).count()
-
-    category_results = (
-        db.session.query(
-            QRScan.category_selected,
-            func.count(QRScan.id).label("view_count"),
-        )
-        .filter(
-            QRScan.event_type == "category_view",
-            QRScan.category_selected.isnot(None),
-        )
-        .group_by(QRScan.category_selected)
-        .order_by(func.count(QRScan.id).desc())
-        .all()
+    tomorrow_start = (
+        today_start
+        + timedelta(days=1)
     )
 
-    category_map = {c.slug: c for c in get_categories(active_only=False)}
-    category_activity = []
-    for result in category_results:
-        percentage = (result.view_count / total_category_views * 100) if total_category_views else 0
-        record = category_map.get(result.category_selected)
-        category_activity.append({
-            "category": result.category_selected,
-            "name": record.name if record else result.category_selected,
-            "icon": record.icon if record else "",
-            "views": result.view_count,
-            "percentage": round(percentage, 1),
-        })
-
-    top_locations_query = (
-        db.session.query(
-            AccessPoint.id,
-            AccessPoint.code,
-            AccessPoint.name,
-            AccessPoint.location_type,
-            Zone.name.label("zone_name"),
-            func.count(QRScan.id).label("scan_count"),
-        )
-        .join(Zone, AccessPoint.zone_id == Zone.id)
-        .outerjoin(
-            QRScan,
-            (QRScan.access_point_id == AccessPoint.id)
-            & (QRScan.event_type == "scan"),
-        )
-        .group_by(
-            AccessPoint.id,
-            AccessPoint.code,
-            AccessPoint.name,
-            AccessPoint.location_type,
-            Zone.name,
-        )
-        .order_by(func.count(QRScan.id).desc())
-        .limit(10)
-        .all()
+    seven_days_ago = (
+        today_start
+        - timedelta(days=6)
     )
 
-    top_locations = []
-    for point in top_locations_query:
-        share = (point.scan_count / total_scans * 100) if total_scans else 0
-        top_locations.append({
-            "id": point.id,
-            "code": point.code,
-            "name": point.name,
-            "location_type": point.location_type,
-            "zone_name": point.zone_name,
-            "scan_count": point.scan_count,
-            "share": round(share, 1),
-        })
-
-    zone_query = (
-        db.session.query(
-            Zone.id,
-            Zone.name,
-            func.count(QRScan.id).label("scan_count"),
-        )
-        .outerjoin(AccessPoint, AccessPoint.zone_id == Zone.id)
-        .outerjoin(
-            QRScan,
-            (QRScan.access_point_id == AccessPoint.id)
-            & (QRScan.event_type == "scan"),
-        )
-        .group_by(Zone.id, Zone.name)
-        .order_by(func.count(QRScan.id).desc())
-        .all()
+    fourteen_days_ago = (
+        today_start
+        - timedelta(days=13)
     )
 
-    zone_activity = []
-    for zone in zone_query:
-        percentage = (zone.scan_count / total_scans * 100) if total_scans else 0
-        zone_activity.append({
-            "name": zone.name,
-            "scan_count": zone.scan_count,
-            "percentage": round(percentage, 1),
-        })
-
-    recent_scan_counts = dict(
-        db.session.query(QRScan.access_point_id, func.count(QRScan.id))
-        .filter(
-            QRScan.event_type == "scan",
-            QRScan.scanned_at >= thirty_days_ago,
-        )
-        .group_by(QRScan.access_point_id)
-        .all()
+    thirty_days_ago = (
+        today_start
+        - timedelta(days=29)
     )
 
-    low_performing_points = []
-    for point in AccessPoint.query.filter(AccessPoint.active.is_(True)).all():
-        scan_count = recent_scan_counts.get(point.id, 0)
-        if scan_count <= 5:
-            low_performing_points.append({
-                "name": point.name,
-                "code": point.code,
-                "zone": point.zone.name,
-                "scan_count": scan_count,
-            })
-    low_performing_points.sort(key=lambda row: row["scan_count"])
-
-    scan_rows = QRScan.query.filter(
-        QRScan.event_type == "scan",
-        QRScan.scanned_at >= fourteen_days_ago,
-    ).all()
-
-    daily_counts = {}
-    for number in range(14):
-        day = fourteen_days_ago.date() + timedelta(days=number)
-        daily_counts[day] = 0
-
-    for scan in scan_rows:
-        scan_day = scan.scanned_at.date()
-        if scan_day in daily_counts:
-            daily_counts[scan_day] += 1
-
-    max_daily_scans = max(daily_counts.values(), default=0)
-    daily_scan_trend = []
-    for scan_date, count in daily_counts.items():
-        bar_percentage = (count / max_daily_scans * 100) if max_daily_scans else 0
-        daily_scan_trend.append({
-            "date": scan_date,
-            "label": scan_date.strftime("%d %b"),
-            "count": count,
-            "bar_percentage": round(bar_percentage, 1),
-        })
-
-    category_engagement_rate = (
-        total_category_views / total_scans * 100 if total_scans else 0
-    )
-
-    recent_scans = (
-        QRScan.query
-        .filter(QRScan.event_type == "scan")
-        .order_by(QRScan.scanned_at.desc())
-        .limit(20)
-        .all()
-    )
-
-    pending_submissions_count = (
-      PendingSubmission.query
-      .filter_by(
-        status="pending"
-      )
-      .count()
+    previous_7_start = (
+        seven_days_ago
+        - timedelta(days=7)
     )
 
 
     # =========================================================
-# ENGAGEMENT ANALYTICS
-# =========================================================
+    # QR SCAN ANALYTICS
+    # =========================================================
+
+    total_scans = (
+        QRScan.query
+        .filter(
+            QRScan.event_type == "scan"
+        )
+        .count()
+    )
+
+
+    today_scans = (
+        QRScan.query
+        .filter(
+            QRScan.event_type == "scan",
+            QRScan.scanned_at >= today_start,
+            QRScan.scanned_at < tomorrow_start,
+        )
+        .count()
+    )
+
+
+    seven_day_scans = (
+        QRScan.query
+        .filter(
+            QRScan.event_type == "scan",
+            QRScan.scanned_at >= seven_days_ago,
+        )
+        .count()
+    )
+
+
+    thirty_day_scans = (
+        QRScan.query
+        .filter(
+            QRScan.event_type == "scan",
+            QRScan.scanned_at >= thirty_days_ago,
+        )
+        .count()
+    )
+
+
+    previous_7_scans = (
+        QRScan.query
+        .filter(
+            QRScan.event_type == "scan",
+            QRScan.scanned_at >= previous_7_start,
+            QRScan.scanned_at < seven_days_ago,
+        )
+        .count()
+    )
+
+
+    if previous_7_scans > 0:
+
+        seven_day_growth = (
+            (
+                seven_day_scans
+                - previous_7_scans
+            )
+            / previous_7_scans
+        ) * 100
+
+    elif seven_day_scans > 0:
+
+        seven_day_growth = 100.0
+
+    else:
+
+        seven_day_growth = 0.0
+
+
+    # =========================================================
+    # ACCESS POINT METRICS
+    # =========================================================
+
+    total_access_points = (
+        AccessPoint.query
+        .count()
+    )
+
+
+    active_access_points = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.active.is_(True)
+        )
+        .count()
+    )
+
+
+    scans_per_access_point = (
+        thirty_day_scans
+        / active_access_points
+
+        if active_access_points
+
+        else 0
+    )
+
+
+    # =========================================================
+    # CATEGORY ACTIVITY
+    # =========================================================
+
+    total_category_views = (
+        QRScan.query
+        .filter(
+            QRScan.event_type
+            == "category_view"
+        )
+        .count()
+    )
+
+
+    category_results = (
+        db.session.query(
+            QRScan.category_selected,
+            func.count(
+                QRScan.id
+            ).label(
+                "view_count"
+            ),
+        )
+        .filter(
+            QRScan.event_type
+            == "category_view",
+
+            QRScan.category_selected
+            .isnot(None),
+        )
+        .group_by(
+            QRScan.category_selected
+        )
+        .order_by(
+            func.count(
+                QRScan.id
+            ).desc()
+        )
+        .all()
+    )
+
+
+    category_map = {
+        c.slug: c
+        for c in get_categories(
+            active_only=False
+        )
+    }
+
+
+    category_activity = []
+
+
+    for result in category_results:
+
+        percentage = (
+            (
+                result.view_count
+                / total_category_views
+            )
+            * 100
+
+            if total_category_views
+
+            else 0
+        )
+
+
+        record = (
+            category_map.get(
+                result.category_selected
+            )
+        )
+
+
+        category_activity.append({
+
+            "category":
+                result.category_selected,
+
+            "name":
+                (
+                    record.name
+                    if record
+                    else result.category_selected
+                ),
+
+            "icon":
+                (
+                    record.icon
+                    if record
+                    else ""
+                ),
+
+            "views":
+                result.view_count,
+
+            "percentage":
+                round(
+                    percentage,
+                    1,
+                ),
+
+        })
+
+
+    # =========================================================
+    # TOP QR LOCATIONS
+    # =========================================================
+
+    top_locations_query = (
+        db.session.query(
+
+            AccessPoint.id,
+
+            AccessPoint.code,
+
+            AccessPoint.name,
+
+            AccessPoint.location_type,
+
+            Zone.name.label(
+                "zone_name"
+            ),
+
+            func.count(
+                QRScan.id
+            ).label(
+                "scan_count"
+            ),
+
+        )
+        .join(
+            Zone,
+            AccessPoint.zone_id
+            == Zone.id,
+        )
+        .outerjoin(
+            QRScan,
+
+            (
+                QRScan.access_point_id
+                == AccessPoint.id
+            )
+            &
+            (
+                QRScan.event_type
+                == "scan"
+            ),
+        )
+        .group_by(
+
+            AccessPoint.id,
+
+            AccessPoint.code,
+
+            AccessPoint.name,
+
+            AccessPoint.location_type,
+
+            Zone.name,
+
+        )
+        .order_by(
+            func.count(
+                QRScan.id
+            ).desc()
+        )
+        .limit(10)
+        .all()
+    )
+
+
+    top_locations = []
+
+
+    for point in top_locations_query:
+
+        share = (
+            (
+                point.scan_count
+                / total_scans
+            )
+            * 100
+
+            if total_scans
+
+            else 0
+        )
+
+
+        top_locations.append({
+
+            "id":
+                point.id,
+
+            "code":
+                point.code,
+
+            "name":
+                point.name,
+
+            "location_type":
+                point.location_type,
+
+            "zone_name":
+                point.zone_name,
+
+            "scan_count":
+                point.scan_count,
+
+            "share":
+                round(
+                    share,
+                    1,
+                ),
+
+        })
+
+
+    # =========================================================
+    # ZONE ACTIVITY
+    # =========================================================
+
+    zone_query = (
+        db.session.query(
+
+            Zone.id,
+
+            Zone.name,
+
+            func.count(
+                QRScan.id
+            ).label(
+                "scan_count"
+            ),
+
+        )
+        .outerjoin(
+            AccessPoint,
+            AccessPoint.zone_id
+            == Zone.id,
+        )
+        .outerjoin(
+            QRScan,
+
+            (
+                QRScan.access_point_id
+                == AccessPoint.id
+            )
+            &
+            (
+                QRScan.event_type
+                == "scan"
+            ),
+        )
+        .group_by(
+            Zone.id,
+            Zone.name,
+        )
+        .order_by(
+            func.count(
+                QRScan.id
+            ).desc()
+        )
+        .all()
+    )
+
+
+    zone_activity = []
+
+
+    for zone in zone_query:
+
+        percentage = (
+            (
+                zone.scan_count
+                / total_scans
+            )
+            * 100
+
+            if total_scans
+
+            else 0
+        )
+
+
+        zone_activity.append({
+
+            "name":
+                zone.name,
+
+            "scan_count":
+                zone.scan_count,
+
+            "percentage":
+                round(
+                    percentage,
+                    1,
+                ),
+
+        })
+
+
+    # =========================================================
+    # LOW PERFORMING ACCESS POINTS
+    # =========================================================
+
+    recent_scan_counts = dict(
+
+        db.session.query(
+            QRScan.access_point_id,
+            func.count(
+                QRScan.id
+            ),
+        )
+        .filter(
+            QRScan.event_type
+            == "scan",
+
+            QRScan.scanned_at
+            >= thirty_days_ago,
+        )
+        .group_by(
+            QRScan.access_point_id
+        )
+        .all()
+
+    )
+
+
+    low_performing_points = []
+
+
+    for point in (
+        AccessPoint.query
+        .filter(
+            AccessPoint.active.is_(True)
+        )
+        .all()
+    ):
+
+        scan_count = (
+            recent_scan_counts.get(
+                point.id,
+                0,
+            )
+        )
+
+
+        if scan_count <= 5:
+
+            low_performing_points.append({
+
+                "name":
+                    point.name,
+
+                "code":
+                    point.code,
+
+                "zone":
+                    point.zone.name,
+
+                "scan_count":
+                    scan_count,
+
+            })
+
+
+    low_performing_points.sort(
+        key=lambda row:
+            row["scan_count"]
+    )
+
+
+    # =========================================================
+    # DAILY SCAN TREND
+    # =========================================================
+
+    scan_rows = (
+        QRScan.query
+        .filter(
+            QRScan.event_type
+            == "scan",
+
+            QRScan.scanned_at
+            >= fourteen_days_ago,
+        )
+        .all()
+    )
+
+
+    daily_counts = {}
+
+
+    for number in range(14):
+
+        day = (
+            fourteen_days_ago.date()
+            + timedelta(
+                days=number
+            )
+        )
+
+        daily_counts[
+            day
+        ] = 0
+
+
+    for scan in scan_rows:
+
+        scan_day = (
+            scan.scanned_at.date()
+        )
+
+
+        if scan_day in daily_counts:
+
+            daily_counts[
+                scan_day
+            ] += 1
+
+
+    max_daily_scans = max(
+        daily_counts.values(),
+        default=0,
+    )
+
+
+    daily_scan_trend = []
+
+
+    for scan_date, count in daily_counts.items():
+
+        bar_percentage = (
+            (
+                count
+                / max_daily_scans
+            )
+            * 100
+
+            if max_daily_scans
+
+            else 0
+        )
+
+
+        daily_scan_trend.append({
+
+            "date":
+                scan_date,
+
+            "label":
+                scan_date.strftime(
+                    "%d %b"
+                ),
+
+            "count":
+                count,
+
+            "bar_percentage":
+                round(
+                    bar_percentage,
+                    1,
+                ),
+
+        })
+
+
+    # =========================================================
+    # CATEGORY ENGAGEMENT RATE
+    # =========================================================
+
+    category_engagement_rate = (
+        (
+            total_category_views
+            / total_scans
+        )
+        * 100
+
+        if total_scans
+
+        else 0
+    )
+
+
+    # =========================================================
+    # RECENT SCANS
+    # =========================================================
+
+    recent_scans = (
+        QRScan.query
+        .filter(
+            QRScan.event_type
+            == "scan"
+        )
+        .order_by(
+            QRScan.scanned_at.desc()
+        )
+        .limit(20)
+        .all()
+    )
+
+
+    # =========================================================
+    # PENDING SUBMISSIONS
+    # =========================================================
+
+    pending_submissions_count = (
+        PendingSubmission.query
+        .filter_by(
+            status="pending"
+        )
+        .count()
+    )
+
+
+    # =========================================================
+    # ENGAGEMENT ANALYTICS
+    # =========================================================
 
     total_listing_views = (
-      EngagementEvent.query
-      .filter_by(
-        event_type="listing_view"
-      )
-      .count()
+        EngagementEvent.query
+        .filter_by(
+            event_type="listing_view"
+        )
+        .count()
     )
 
 
     total_whatsapp_clicks = (
-      EngagementEvent.query
-      .filter_by(
-        event_type="whatsapp_click"
-      )
-      .count()
+        EngagementEvent.query
+        .filter_by(
+            event_type="whatsapp_click"
+        )
+        .count()
     )
 
 
     total_call_clicks = (
-      EngagementEvent.query
-      .filter_by(
-        event_type="call_click"
-      )
-      .count()
+        EngagementEvent.query
+        .filter_by(
+            event_type="call_click"
+        )
+        .count()
     )
 
 
     total_share_clicks = (
-      EngagementEvent.query
-      .filter_by(
-        event_type="share_click"
-      )
-      .count()
+        EngagementEvent.query
+        .filter_by(
+            event_type="share_click"
+        )
+        .count()
     )
 
 
     total_directions_clicks = (
-      EngagementEvent.query
-      .filter_by(
-        event_type="directions_click"
-      )
-      .count()
+        EngagementEvent.query
+        .filter_by(
+            event_type="directions_click"
+        )
+        .count()
     )
 
 
     total_useful_actions = (
 
-      total_whatsapp_clicks
-      +
-      total_call_clicks
-      +
-      total_share_clicks
-      +
-      total_directions_clicks
+        total_whatsapp_clicks
+        +
+        total_call_clicks
+        +
+        total_share_clicks
+        +
+        total_directions_clicks
 
     )
 
 
     if total_listing_views > 0:
 
-      listing_action_rate = round(
-        (
-            total_useful_actions
-            /
-            total_listing_views
+        listing_action_rate = round(
+            (
+                total_useful_actions
+                / total_listing_views
+            )
+            * 100,
+            1,
         )
-        * 100,
-        1,
-      )
 
     else:
 
-      listing_action_rate = 0
-
-
+        listing_action_rate = 0
 
 
     # =========================================================
-# TOP LISTINGS / CONTENT PERFORMANCE
-# =========================================================
+    # TOP LISTINGS / CONTENT PERFORMANCE
+    # =========================================================
 
     content_performance_rows = (
 
-      db.session.query(
+        db.session.query(
 
-        EngagementEvent.content_item_id,
+            EngagementEvent.content_item_id,
 
-        db.func.sum(
-            db.case(
-                (
-                    EngagementEvent.event_type
-                    == "listing_view",
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "listing_views"
-        ),
+            db.func.sum(
+                db.case(
+                    (
+                        EngagementEvent.event_type
+                        == "listing_view",
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label(
+                "listing_views"
+            ),
 
-        db.func.sum(
-            db.case(
-                (
-                    EngagementEvent.event_type
-                    == "whatsapp_click",
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "whatsapp_clicks"
-        ),
+            db.func.sum(
+                db.case(
+                    (
+                        EngagementEvent.event_type
+                        == "whatsapp_click",
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label(
+                "whatsapp_clicks"
+            ),
 
-        db.func.sum(
-            db.case(
-                (
-                    EngagementEvent.event_type
-                    == "call_click",
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "call_clicks"
-        ),
+            db.func.sum(
+                db.case(
+                    (
+                        EngagementEvent.event_type
+                        == "call_click",
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label(
+                "call_clicks"
+            ),
 
-        db.func.sum(
-            db.case(
-                (
-                    EngagementEvent.event_type
-                    == "directions_click",
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "directions_clicks"
-        ),
+            db.func.sum(
+                db.case(
+                    (
+                        EngagementEvent.event_type
+                        == "directions_click",
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label(
+                "directions_clicks"
+            ),
 
-        db.func.sum(
-            db.case(
-                (
-                    EngagementEvent.event_type
-                    == "share_click",
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "share_clicks"
-        ),
+            db.func.sum(
+                db.case(
+                    (
+                        EngagementEvent.event_type
+                        == "share_click",
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label(
+                "share_clicks"
+            ),
 
-      )
-
-      .filter(
-        EngagementEvent.content_item_id.isnot(
-            None
         )
-      )
 
-      .group_by(
-        EngagementEvent.content_item_id
-      )
+        .filter(
+            EngagementEvent.content_item_id
+            .isnot(None)
+        )
 
-      .all()
+        .group_by(
+            EngagementEvent.content_item_id
+        )
+
+        .all()
 
     )
 
@@ -4331,188 +4782,177 @@ def analytics():
 
     for row in content_performance_rows:
 
-      item = db.session.get(
-        ContentItem,
-        row.content_item_id,
-      )
-
-
-    # Content may have been deleted after
-    # historical engagement was recorded.
-
-      if item is None:
-        continue
-
-
-      views = int(
-        row.listing_views or 0
-      )
-
-      whatsapp = int(
-        row.whatsapp_clicks or 0
-      )
-
-      calls = int(
-        row.call_clicks or 0
-      )
-
-      directions = int(
-        row.directions_clicks or 0
-      )
-
-      shares = int(
-        row.share_clicks or 0
-      )
-
-
-      useful_actions = (
-        whatsapp
-        + calls
-        + directions
-        + shares
-      )
-
-
-    # This is not a unique-user conversion rate.
-    #
-    # One listing view can generate several
-    # actions, so this metric can exceed 100%.
-    #
-    # It means:
-    #
-    # useful actions per 100 listing views.
-
-      if views > 0:
-
-        actions_per_100_views = round(
-            (
-                useful_actions
-                /
-                views
+        item = (
+            db.session.get(
+                ContentItem,
+                row.content_item_id,
             )
-            * 100,
-            1,
         )
 
-      else:
 
-        actions_per_100_views = 0
+        # Content may have been deleted after
+        # historical engagement was recorded.
 
-
-      content_performance.append({
-
-        "id":
-            item.id,
-
-        "title":
-            item.title,
-
-        "category":
-            item.category,
-
-        "zone_id":
-            item.zone_id,
-
-        "views":
-            views,
-
-        "whatsapp":
-            whatsapp,
-
-        "calls":
-            calls,
-
-        "directions":
-            directions,
-
-        "shares":
-            shares,
-
-        "useful_actions":
-            useful_actions,
-
-        "actions_per_100_views":
-            actions_per_100_views,
-
-      })
+        if item is None:
+            continue
 
 
-# Highest useful-action listings first.
-# Views break ties.
+        views = int(
+            row.listing_views
+            or 0
+        )
+
+        whatsapp = int(
+            row.whatsapp_clicks
+            or 0
+        )
+
+        calls = int(
+            row.call_clicks
+            or 0
+        )
+
+        directions = int(
+            row.directions_clicks
+            or 0
+        )
+
+        shares = int(
+            row.share_clicks
+            or 0
+        )
+
+
+        useful_actions = (
+            whatsapp
+            + calls
+            + directions
+            + shares
+        )
+
+
+        if views > 0:
+
+            actions_per_100_views = round(
+                (
+                    useful_actions
+                    / views
+                )
+                * 100,
+                1,
+            )
+
+        else:
+
+            actions_per_100_views = 0
+
+
+        content_performance.append({
+
+            "id":
+                item.id,
+
+            "title":
+                item.title,
+
+            "category":
+                item.category,
+
+            "zone_id":
+                item.zone_id,
+
+            "views":
+                views,
+
+            "whatsapp":
+                whatsapp,
+
+            "calls":
+                calls,
+
+            "directions":
+                directions,
+
+            "shares":
+                shares,
+
+            "useful_actions":
+                useful_actions,
+
+            "actions_per_100_views":
+                actions_per_100_views,
+
+        })
+
 
     content_performance.sort(
 
-      key=lambda row: (
-        row["useful_actions"],
-        row["views"],
-      ),
+        key=lambda row: (
+            row["useful_actions"],
+            row["views"],
+        ),
 
-      reverse=True,
+        reverse=True,
 
     )
 
 
     top_content_performance = (
-      content_performance[:10]
+        content_performance[:10]
     )
 
 
-# =========================================================
-# MOST VIEWED LISTINGS
-# =========================================================
+    # =========================================================
+    # MOST VIEWED LISTINGS
+    # =========================================================
 
     most_viewed_listings = sorted(
 
-      content_performance,
+        content_performance,
 
-      key=lambda row:
-        row["views"],
+        key=lambda row:
+            row["views"],
 
-      reverse=True,
+        reverse=True,
 
     )[:5]
 
 
-# =========================================================
-# HIGH INTEREST / LOW ACTION
-# =========================================================
-#
-# These are strategically interesting:
-#
-# people are looking at the listing,
-# but nobody is taking a useful action.
+    # =========================================================
+    # HIGH INTEREST / LOW ACTION
+    # =========================================================
 
     high_interest_low_action = [
 
-      row
+        row
 
-      for row in content_performance
+        for row in content_performance
 
-      if (
-        row["views"] > 0
-        and
-        row["useful_actions"] == 0
-      )
+        if (
+            row["views"] > 0
+            and
+            row["useful_actions"] == 0
+        )
 
     ]
 
 
     high_interest_low_action.sort(
 
-      key=lambda row:
-        row["views"],
+        key=lambda row:
+            row["views"],
 
-      reverse=True,
+        reverse=True,
 
     )
 
 
     high_interest_low_action = (
-      high_interest_low_action[:5]
+        high_interest_low_action[:5]
     )
-    
-    
-       # =========================================================
+
+
+    # =========================================================
     # ACCESS POINT PERFORMANCE
     # =========================================================
 
@@ -4536,9 +4976,8 @@ def analytics():
         )
 
         .filter(
-            EngagementEvent.access_point_id.isnot(
-                None
-            )
+            EngagementEvent.access_point_id
+            .isnot(None)
         )
 
         .group_by(
@@ -4635,8 +5074,7 @@ def analytics():
             actions_per_100_views = round(
                 (
                     useful_actions
-                    /
-                    listing_views
+                    / listing_views
                 )
                 * 100,
                 1,
@@ -4684,9 +5122,8 @@ def analytics():
         )
 
         .filter(
-            EngagementEvent.zone_id.isnot(
-                None
-            )
+            EngagementEvent.zone_id
+            .isnot(None)
         )
 
         .group_by(
@@ -4722,8 +5159,12 @@ def analytics():
 
 
     zone_scan_map = {
-        zone.name: zone.scan_count
+
+        zone.name:
+            zone.scan_count
+
         for zone in zone_query
+
     }
 
 
@@ -4807,10 +5248,8 @@ def analytics():
         percentage = (
 
             scan_count
-            /
-            total_scans
-            *
-            100
+            / total_scans
+            * 100
 
             if total_scans
 
@@ -4876,9 +5315,8 @@ def analytics():
         )
 
         .filter(
-            EngagementEvent.category.isnot(
-                None
-            )
+            EngagementEvent.category
+            .isnot(None)
         )
 
         .group_by(
@@ -4926,10 +5364,14 @@ def analytics():
     category_performance = []
 
 
-    all_category_slugs = set(
-        category_view_map.keys()
-    ) | set(
-        category_engagement_map.keys()
+    all_category_slugs = (
+        set(
+            category_view_map.keys()
+        )
+        |
+        set(
+            category_engagement_map.keys()
+        )
     )
 
 
@@ -5110,10 +5552,15 @@ def analytics():
 
 
     useful_event_types = {
+
         "whatsapp_click",
+
         "call_click",
+
         "directions_click",
+
         "share_click",
+
     }
 
 
@@ -5161,7 +5608,10 @@ def analytics():
 
     for scan_day in daily_scan_trend:
 
-        day = scan_day["date"]
+        day = (
+            scan_day["date"]
+        )
+
 
         engagement = (
             daily_engagement_counts.get(
@@ -5196,81 +5646,152 @@ def analytics():
 
         })
 
-    return render_template(
-        "admin/analytics.html",
-        total_scans=total_scans,
-        today_scans=today_scans,
-        seven_day_scans=seven_day_scans,
-        thirty_day_scans=thirty_day_scans,
-        seven_day_growth=round(seven_day_growth, 1),
-        total_access_points=total_access_points,
-        active_access_points=active_access_points,
-        scans_per_access_point=round(scans_per_access_point, 1),
-        total_category_views=total_category_views,
-        category_engagement_rate=round(category_engagement_rate, 1),
-        category_activity=category_activity,
-        top_locations=top_locations,
-        zone_activity=zone_activity,
-        low_performing_points=low_performing_points,
-        daily_scan_trend=daily_scan_trend,
-        recent_scans=recent_scans,
-        pending_submissions_count=pending_submissions_count,
-        total_listing_views=total_listing_views,
 
-        total_whatsapp_clicks=(
-          total_whatsapp_clicks
-        ),
+    # =========================================================
+    # REMINDER ANALYTICS
+    # =========================================================
 
-        total_call_clicks=(
-          total_call_clicks
-        ),
-
-        total_share_clicks=(
-          total_share_clicks
-        ),
-
-        total_directions_clicks=(
-          total_directions_clicks
-        ),
-
-        total_useful_actions=(
-          total_useful_actions
-        ),
-        
-        listing_action_rate=(
-            listing_action_rate
-        ),
-
-        top_content_performance=(
-            top_content_performance
-        ),
-
-        most_viewed_listings=(
-            most_viewed_listings
-        ),
-
-        high_interest_low_action=(
-            high_interest_low_action
-        ),
-
-        access_point_performance=(
-            access_point_performance
-        ),
-
-        zone_performance=(
-            zone_performance
-        ),
-
-        category_performance=(
-            category_performance
-        ),
-
-        daily_activity=(
-            daily_activity
-        ),
-  
+    reminder_analytics = (
+        get_reminder_analytics(
+            top_limit=10
+        )
     )
 
+
+    # =========================================================
+    # RENDER DASHBOARD
+    # =========================================================
+
+    return render_template(
+
+        "admin/analytics.html",
+
+        total_scans=
+            total_scans,
+
+        today_scans=
+            today_scans,
+
+        seven_day_scans=
+            seven_day_scans,
+
+        thirty_day_scans=
+            thirty_day_scans,
+
+        seven_day_growth=
+            round(
+                seven_day_growth,
+                1,
+            ),
+
+        total_access_points=
+            total_access_points,
+
+        active_access_points=
+            active_access_points,
+
+        scans_per_access_point=
+            round(
+                scans_per_access_point,
+                1,
+            ),
+
+        total_category_views=
+            total_category_views,
+
+        category_engagement_rate=
+            round(
+                category_engagement_rate,
+                1,
+            ),
+
+        category_activity=
+            category_activity,
+
+        top_locations=
+            top_locations,
+
+        zone_activity=
+            zone_activity,
+
+        low_performing_points=
+            low_performing_points,
+
+        daily_scan_trend=
+            daily_scan_trend,
+
+        recent_scans=
+            recent_scans,
+
+        pending_submissions_count=
+            pending_submissions_count,
+
+
+        # =====================================================
+        # REMINDER ANALYTICS
+        # =====================================================
+
+        reminder_analytics=
+            reminder_analytics,
+
+
+        # =====================================================
+        # ENGAGEMENT METRICS
+        # =====================================================
+
+        total_listing_views=
+            total_listing_views,
+
+        total_whatsapp_clicks=
+            total_whatsapp_clicks,
+
+        total_call_clicks=
+            total_call_clicks,
+
+        total_share_clicks=
+            total_share_clicks,
+
+        total_directions_clicks=
+            total_directions_clicks,
+
+        total_useful_actions=
+            total_useful_actions,
+
+        listing_action_rate=
+            listing_action_rate,
+
+
+        # =====================================================
+        # CONTENT PERFORMANCE
+        # =====================================================
+
+        top_content_performance=
+            top_content_performance,
+
+        most_viewed_listings=
+            most_viewed_listings,
+
+        high_interest_low_action=
+            high_interest_low_action,
+
+
+        # =====================================================
+        # NETWORK PERFORMANCE
+        # =====================================================
+
+        access_point_performance=
+            access_point_performance,
+
+        zone_performance=
+            zone_performance,
+
+        category_performance=
+            category_performance,
+
+        daily_activity=
+            daily_activity,
+
+    )
 
 @admin_bp.route(
     "/notifications"
