@@ -49,8 +49,8 @@ jobs:
 
         env:
 
-          KALXA_REMINDER_CRON_TOKEN:
-            ${{ secrets.KALXA_REMINDER_CRON_TOKEN }}
+          REMINDER_CRON_TOKEN:
+            ${{ secrets.REMINDER_CRON_TOKEN }}
 
 
         run: |
@@ -73,7 +73,7 @@ jobs:
               --write-out "%{http_code}" \
               --request POST \
               "https://lac-local-access.onrender.com/internal/run-content-reminders" \
-              --header "Authorization: Bearer ${KALXA_REMINDER_CRON_TOKEN}" \
+              --header "Authorization: Bearer ${REMINDER_CRON_TOKEN}" \
               --header "Accept: application/json" \
               --max-time 120
           )"
