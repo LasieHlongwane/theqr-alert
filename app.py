@@ -616,10 +616,16 @@ def send_due_content_reminders(
         # Open the listing when notification is tapped.
         # -------------------------------------------------
 
-        target_url = url_for(
-            "listing_detail",
-            item_id=item.id,
-            _external=True,
+        public_base_url = (
+         os.environ.get(
+          "PUBLIC_BASE_URL",
+          "https://lac-local-access.onrender.com",
+         )
+         .rstrip("/")
+        )
+
+        target_url = (
+         f"{public_base_url}/listing/{item.id}"
         )
 
 
