@@ -1542,6 +1542,12 @@ class ContentReminder(db.Model):
         index=True,
     )
 
+    processing_started_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
 
     # -----------------------------------------------------
     # TIMESTAMPS
