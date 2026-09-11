@@ -1246,6 +1246,11 @@ def run_content_reminders():
                 0,
             ),
 
+            "retried": result.get(
+                "retried",
+                0,
+            ),
+
             "skipped_claimed": result.get(
                 "skipped_claimed",
                 0,
