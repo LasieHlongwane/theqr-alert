@@ -2436,6 +2436,90 @@ def cancel_content_reminder(
 
 
 
+def recover_stale_content_reminders(
+    stale_after_minutes=10,
+):
+
+    """
+    Recover reminders that became stuck in 'processing'.
+
+    Example:
+
+        pending
+        -> processing
+        -> worker crashes
+
+    If processing_started_at is older than the timeout,
+    return the reminder to pending so a later scheduler run
+    can safely claim it again.
+    """
+
+    now_utc = datetime.utcnow()
+
+    stale_before = (
+        now_utc
+        - timedelta(
+            minutes=stale_after_minutes
+        )
+    )
+
+
+    try:
+
+        recovered_count = (
+            ContentReminder.query
+            .filter(
+                ContentReminder.status
+                == "processing",
+
+                ContentReminder.processing_started_at
+                .isnot(None),
+
+                ContentReminder.processing_started_at
+                <= stale_before,
+            )
+            .update(
+                {
+                    ContentReminder.status:
+                        "pending",
+
+                    ContentReminder.processing_started_at:
+                        None,
+                },
+                synchronize_session=False,
+            )
+        )
+
+
+        db.session.commit()
+
+
+        if recovered_count:
+
+            current_app.logger.warning(
+                "[Kalxa Reminder] "
+                "Recovered %s stale processing reminder(s).",
+                recovered_count,
+            )
+
+
+        return recovered_count
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            "[Kalxa Reminder] "
+            "Failed to recover stale reminders: %s",
+            exc,
+        )
+
+
+        return 0
+
 def parse_optional_time(
     value,
 ):
