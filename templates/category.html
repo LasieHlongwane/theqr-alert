@@ -105,6 +105,62 @@
         }
 
 
+        /* =========================================================
+           SPONSORED LISTING
+        ========================================================= */
+
+        .public-listing-card.is-sponsored {
+
+            border-color:
+                rgba(255, 244, 223, 0.20);
+
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, 0.18);
+        }
+
+
+        .sponsored-badge {
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+
+            padding: 6px 10px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.40);
+
+            border-radius: 999px;
+
+            background: #fff4df;
+
+            color: #111316;
+
+            font-size: 9px;
+            font-weight: 950;
+            line-height: 1;
+
+            letter-spacing: 0.8px;
+
+            text-transform: uppercase;
+
+            white-space: nowrap;
+        }
+
+
+        .sponsored-badge::before {
+
+            content: "◆";
+
+            font-size: 6px;
+
+            opacity: 0.85;
+        }
+
+
         .listing-level-badge {
 
             display: inline-flex;
@@ -464,8 +520,8 @@
             cursor: pointer;
 
             box-shadow:
-               0 4px 14px
-               rgba(0, 0, 0, 0.18);
+                0 4px 14px
+                rgba(0, 0, 0, 0.18);
 
             -webkit-tap-highlight-color:
                 transparent;
@@ -473,19 +529,18 @@
             transition:
                 background 0.2s ease,
                 opacity 0.2s ease,
-                transform 0.15s ease;
+                transform 0.15s ease,
                 box-shadow 0.2s ease;
         }
 
 
         .kalxa-remind-btn:hover {
 
-                background: #f7e8ca;
+            background: #f7e8ca;
 
-                box-shadow:
-                   0 6px 18px
-                   rgba(0, 0, 0, 0.22);
-            
+            box-shadow:
+                0 6px 18px
+                rgba(0, 0, 0, 0.22);
         }
 
 
@@ -1372,12 +1427,29 @@
 
 
                 <article
-                    class="content-card public-listing-card"
+                    class="
+                        content-card
+                        public-listing-card
+                        {% if
+                            item.sponsorship_active is defined
+                            and item.sponsorship_active
+                        %}
+                            is-sponsored
+                        {% endif %}
+                    "
                     data-title="{{ item.title|lower }}"
                     data-business="{{ (item.business_name or '')|lower }}"
                     data-venue="{{ (item.venue or '')|lower }}"
                     data-listing-level="{{ item.listing_level }}"
                     data-content-item-id="{{ item.id }}"
+                    data-sponsored="{{
+                        'true'
+                        if (
+                            item.sponsorship_active is defined
+                            and item.sponsorship_active
+                        )
+                        else 'false'
+                    }}"
                 >
 
 
@@ -1594,6 +1666,34 @@
                     <div class="listing-badge-row">
 
 
+                        <!-- =============================
+                             SPONSORED
+
+                             Only the runtime-calculated
+                             sponsorship_active flag is used.
+
+                             Raw is_sponsored alone is NOT enough.
+                        ============================== -->
+
+                        {% if
+                            item.sponsorship_active is defined
+                            and item.sponsorship_active
+                        %}
+
+                        <span
+                            class="sponsored-badge"
+                            title="Paid placement"
+                        >
+                            SPONSORED
+                        </span>
+
+                        {% endif %}
+
+
+                        <!-- =============================
+                             FEATURED
+                        ============================== -->
+
                         {% if item.featured %}
 
                         <span class="featured">
@@ -1602,6 +1702,10 @@
 
                         {% endif %}
 
+
+                        <!-- =============================
+                             VERIFIED
+                        ============================== -->
 
                         {% if
                             item.can_use_business_features()
@@ -1615,6 +1719,10 @@
                         {% endif %}
 
 
+                        <!-- =============================
+                             BUSINESS
+                        ============================== -->
+
                         {% if
                             item.listing_level == "business"
                             and not item.is_verified
@@ -1626,6 +1734,10 @@
 
                         {% endif %}
 
+
+                        <!-- =============================
+                             UPCOMING NON-EVENT
+                        ============================== -->
 
                         {% if
                             canonical_category != "events"
@@ -1639,6 +1751,10 @@
 
                         {% endif %}
 
+
+                        <!-- =============================
+                             UPCOMING EVENT
+                        ============================== -->
 
                         {% if
                             canonical_category == "events"
@@ -3955,6 +4071,3 @@ document.addEventListener(
 </body>
 
 </html>
-
-            
-   
