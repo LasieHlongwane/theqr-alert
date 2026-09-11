@@ -5080,7 +5080,6 @@ def get_active_category_by_slug(
         .first()
     )
 
-
 def get_active_content(
     zone_id,
     category_slug,
@@ -5150,6 +5149,10 @@ def get_active_content(
 
     # =====================================================
     # FEATURED PRIORITY
+    #
+    # This remains useful for the database pre-order.
+    #
+    # Final public ordering happens in Python below.
     # =====================================================
 
     featured_priority = db.case(
@@ -5175,39 +5178,35 @@ def get_active_content(
 
     zone_visibility = db.or_(
 
-    # =================================================
-    # HOME / ORIGIN ZONE
-    # =================================================
+        # =================================================
+        # HOME / ORIGIN ZONE
+        # =================================================
 
         ContentItem.zone_id == zone_id,
 
 
-    # =================================================
-    # CAMPAIGN DISTRIBUTION ZONE
-    #
-    # We query ContentDistributionZone directly instead
-    # of depending on a relationship/backref existing
-    # on ContentItem.
-    # =================================================
+        # =================================================
+        # CAMPAIGN DISTRIBUTION ZONE
+        # =================================================
 
         db.and_(
 
-          ContentItem.pricing_model
-          == PRICING_MODEL_CAMPAIGN,
+            ContentItem.pricing_model
+            == PRICING_MODEL_CAMPAIGN,
 
-          db.exists().where(
+            db.exists().where(
 
-            db.and_(
+                db.and_(
 
-                ContentDistributionZone.content_item_id
-                == ContentItem.id,
+                    ContentDistributionZone.content_item_id
+                    == ContentItem.id,
 
-                ContentDistributionZone.zone_id
-                == zone_id,
+                    ContentDistributionZone.zone_id
+                    == zone_id,
 
-            )
+                )
 
-          ),
+            ),
 
         ),
 
@@ -5216,6 +5215,14 @@ def get_active_content(
 
     # =====================================================
     # COMMERCIAL VISIBILITY
+    #
+    # IMPORTANT:
+    #
+    # Sponsorship does NOT participate here.
+    #
+    # A sponsorship can only boost a listing that is already
+    # legitimately visible through the existing commercial
+    # rules.
     # =====================================================
 
     legacy_admin_commercial_content = db.and_(
@@ -5321,25 +5328,9 @@ def get_active_content(
 
 
     # =====================================================
-    # STEP 9 — URGENCY RANKING
+    # CAMPAIGN URGENCY PRIORITY
     #
-    # Smaller number = higher priority.
-    #
-    # IMPORTANT:
-    #
-    # Featured remains the FIRST priority.
-    #
-    # Inside featured/non-featured groups:
-    #
-    # HAPPENING NOW
-    # ENDING SOON
-    # TONIGHT
-    # ENDS TODAY / CLOSES TODAY
-    # TODAY
-    # TOMORROW
-    # UPCOMING
-    # AVAILABLE NOW
-    # NORMAL / UNDATED
+    # Smaller number = more urgent.
     # =====================================================
 
     urgency_priority = {
@@ -5368,22 +5359,143 @@ def get_active_content(
 
 
     # =====================================================
-    # PYTHON SORT KEY
+    # FINAL PUBLIC SORT KEY
     #
-    # Campaign state is calculated in Python, not SQL,
-    # so final urgency ordering happens after .all().
+    # ORDER:
+    #
+    # 1. LIVE / HAPPENING NOW
+    #
+    # 2. ACTIVE SPONSORED
+    #
+    # 3. FEATURED
+    #
+    # 4. REMAINING CAMPAIGN URGENCY
+    #
+    # 5. CLOSEST DATE / NEWEST FALLBACK
+    #
+    #
+    # IMPORTANT:
+    #
+    # Expired, scheduled and inactive sponsorships receive
+    # no ranking advantage because sponsorship_active is
+    # calculated by attach_sponsorship_states().
     # =====================================================
 
     def campaign_sort_key(
         item,
     ):
 
-        # ---------------------------------------------
+        # =================================================
+        # CAMPAIGN STATE
+        # =================================================
+
+        campaign_state = (
+            getattr(
+                item,
+                "campaign_state",
+                None,
+            )
+            or {}
+        )
+
+
+        state = (
+            campaign_state.get(
+                "state"
+            )
+        )
+
+
+        # =================================================
+        # LIVE PRIORITY
+        #
+        # LIVE = 0
+        # everything else = 1
+        #
+        # This ensures HAPPENING NOW always stays above
+        # paid sponsored placement.
+        # =================================================
+
+        live_rank = (
+            0
+            if state == "live"
+            else 1
+        )
+
+
+        # =================================================
+        # SPONSORED PRIORITY
+        #
+        # Active sponsored = 0
+        # everyone else = 1
+        # =================================================
+
+        sponsorship_active = bool(
+            getattr(
+                item,
+                "sponsorship_active",
+                False,
+            )
+        )
+
+
+        sponsored_rank = (
+            0
+            if sponsorship_active
+            else 1
+        )
+
+
+        # =================================================
+        # SPONSORED PRIORITY VALUE
+        #
+        # Higher numbers must appear first.
+        #
+        # priority 30
+        # before
+        # priority 20
+        # before
+        # priority 10
+        #
+        # Negative value gives descending order while using
+        # Python's normal ascending sort().
+        # =================================================
+
+        if sponsorship_active:
+
+            try:
+
+                sponsored_priority_rank = -int(
+                    getattr(
+                        item,
+                        "effective_sponsored_priority",
+                        getattr(
+                            item,
+                            "sponsored_priority",
+                            0,
+                        ),
+                    )
+                    or 0
+                )
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                sponsored_priority_rank = 0
+
+        else:
+
+            sponsored_priority_rank = 0
+
+
+        # =================================================
         # FEATURED
         #
         # Featured = 0
         # Normal   = 1
-        # ---------------------------------------------
+        # =================================================
 
         featured_rank = (
             0
@@ -5396,24 +5508,9 @@ def get_active_content(
         )
 
 
-        # ---------------------------------------------
-        # CAMPAIGN STATE
-        # ---------------------------------------------
-
-        campaign_state = (
-            getattr(
-                item,
-                "campaign_state",
-                None,
-            )
-            or {}
-        )
-
-
-        state = campaign_state.get(
-            "state"
-        )
-
+        # =================================================
+        # URGENCY
+        # =================================================
 
         urgency_rank = (
             urgency_priority.get(
@@ -5423,15 +5520,13 @@ def get_active_content(
         )
 
 
-        # ---------------------------------------------
+        # =================================================
         # DAYS TO GO
         #
-        # Example:
-        #
         # 2 DAYS TO GO
-        # appears before
+        # before
         # 5 DAYS TO GO
-        # ---------------------------------------------
+        # =================================================
 
         days_to_go = (
             campaign_state.get(
@@ -5460,17 +5555,15 @@ def get_active_content(
                 days_rank = 999999
 
 
-        # ---------------------------------------------
+        # =================================================
         # RELEVANT DATE
         #
         # Events:
-        #
         #     event_date
         #
-        # Other campaigns:
-        #
+        # Other content:
         #     start_date
-        # ---------------------------------------------
+        # =================================================
 
         if (
             normalize_category(
@@ -5515,9 +5608,9 @@ def get_active_content(
             date_rank = 999999999
 
 
-        # ---------------------------------------------
+        # =================================================
         # NEWEST LISTING FALLBACK
-        # ---------------------------------------------
+        # =================================================
 
         created_at = (
             getattr(
@@ -5548,21 +5641,34 @@ def get_active_content(
             created_rank = 0
 
 
+        # =================================================
+        # FINAL ORDER
+        # =================================================
+
         return (
 
-            # 1. FEATURED FIRST
+            # 1. HAPPENING NOW FIRST
+            live_rank,
+
+            # 2. ACTIVE SPONSORED
+            sponsored_rank,
+
+            # 3. HIGHER SPONSORED PRIORITY FIRST
+            sponsored_priority_rank,
+
+            # 4. FEATURED
             featured_rank,
 
-            # 2. URGENCY
+            # 5. CAMPAIGN URGENCY
             urgency_rank,
 
-            # 3. CLOSEST UPCOMING
+            # 6. CLOSEST UPCOMING
             days_rank,
 
-            # 4. CLOSEST RELEVANT DATE
+            # 7. CLOSEST RELEVANT DATE
             date_rank,
 
-            # 5. NEWEST CREATED
+            # 8. NEWEST CREATED
             created_rank,
 
         )
@@ -5580,15 +5686,14 @@ def get_active_content(
         # =================================================
         # EVENT NATURAL VISIBILITY
         #
-        # NEW EVENT STRUCTURE:
+        # NEW:
         #
         #     event_date
         #     event_end_date
         #
-        # LEGACY SUPPORT:
+        # LEGACY:
         #
         #     end_date
-        #
         # =================================================
 
         event_natural_visibility = db.or_(
@@ -5611,8 +5716,6 @@ def get_active_content(
 
             # -----------------------------------------
             # LEGACY EVENTS USING end_date
-            #
-            # Only when event_end_date is missing.
             # -----------------------------------------
 
             db.and_(
@@ -5633,8 +5736,6 @@ def get_active_content(
 
             # -----------------------------------------
             # SINGLE-DAY EVENT
-            #
-            # No explicit end date.
             # -----------------------------------------
 
             db.and_(
@@ -5688,8 +5789,8 @@ def get_active_content(
         # =================================================
         # DATABASE PRE-ORDER
         #
-        # This gives us sensible deterministic results
-        # before Python campaign urgency sorting.
+        # Final priority is applied in Python after campaign
+        # and sponsorship state are attached.
         # =================================================
 
         items = (
@@ -5722,7 +5823,23 @@ def get_active_content(
 
 
         # =================================================
-        # STEP 9 FINAL URGENCY SORT
+        # ATTACH SPONSORSHIP STATE
+        #
+        # Gives every item:
+        #
+        # item.sponsorship_active
+        # item.effective_sponsored_priority
+        # =================================================
+
+        items = (
+            attach_sponsorship_states(
+                items
+            )
+        )
+
+
+        # =================================================
+        # FINAL PUBLIC ORDER
         # =================================================
 
         items.sort(
@@ -5739,70 +5856,79 @@ def get_active_content(
 
     natural_content_visibility = db.or_(
 
-     db.and_(
+        # =================================================
+        # CAMPAIGN CONTENT
+        #
+        # Future campaign start dates remain allowed.
+        #
+        # Only the campaign end date determines whether
+        # natural content visibility has expired.
+        # =================================================
 
-        ContentItem.pricing_model
-        == PRICING_MODEL_CAMPAIGN,
-
-        db.or_(
-
-            ContentItem.end_date.is_(
-                None
-            ),
-
-            ContentItem.end_date
-            >= today,
-
-        ),
-
-     ),
-
-
-    # =====================================================
-    # NON-CAMPAIGN / PRESENCE CONTENT
-    #
-    # Preserve the original behaviour:
-    #
-    #     start_date must have arrived
-    #     end_date must not have passed
-    # =====================================================
-
-     db.and_(
-
-        db.or_(
-
-            ContentItem.pricing_model.is_(
-                None
-            ),
+        db.and_(
 
             ContentItem.pricing_model
-            != PRICING_MODEL_CAMPAIGN,
+            == PRICING_MODEL_CAMPAIGN,
 
-        ),
+            db.or_(
 
-        db.or_(
+                ContentItem.end_date.is_(
+                    None
+                ),
 
-            ContentItem.start_date.is_(
-                None
+                ContentItem.end_date
+                >= today,
+
             ),
 
-            ContentItem.start_date
-            <= today,
-
         ),
 
-        db.or_(
 
-            ContentItem.end_date.is_(
-                None
+        # =================================================
+        # NON-CAMPAIGN / PRESENCE CONTENT
+        #
+        # Preserve original behaviour:
+        #
+        # start_date must have arrived
+        # end_date must not have passed
+        # =================================================
+
+        db.and_(
+
+            db.or_(
+
+                ContentItem.pricing_model.is_(
+                    None
+                ),
+
+                ContentItem.pricing_model
+                != PRICING_MODEL_CAMPAIGN,
+
             ),
 
-            ContentItem.end_date
-            >= today,
+            db.or_(
+
+                ContentItem.start_date.is_(
+                    None
+                ),
+
+                ContentItem.start_date
+                <= today,
+
+            ),
+
+            db.or_(
+
+                ContentItem.end_date.is_(
+                    None
+                ),
+
+                ContentItem.end_date
+                >= today,
+
+            ),
 
         ),
-
-     ),
 
     )
 
@@ -5814,11 +5940,6 @@ def get_active_content(
 
     # =====================================================
     # NON-EVENT DATABASE PRE-ORDER
-    #
-    # NOTE:
-    #
-    # This now correctly uses start_date instead of
-    # event_date.
     # =====================================================
 
     items = (
@@ -5840,7 +5961,7 @@ def get_active_content(
 
 
     # =====================================================
-    # ATTACH CAMPAIGN STATES
+    # ATTACH CAMPAIGN STATE
     # =====================================================
 
     items = (
@@ -5851,7 +5972,18 @@ def get_active_content(
 
 
     # =====================================================
-    # STEP 9 FINAL URGENCY SORT
+    # ATTACH SPONSORSHIP STATE
+    # =====================================================
+
+    items = (
+        attach_sponsorship_states(
+            items
+        )
+    )
+
+
+    # =====================================================
+    # FINAL PUBLIC ORDER
     # =====================================================
 
     items.sort(
@@ -5861,992 +5993,6 @@ def get_active_content(
 
     return items
 
-# CONTENT EXPIRY HELPERS
-# =========================================================
-
-def get_content_expiry_date(item):
-
-    if item.category == "events":
-
-        return (
-            item.event_end_date
-            or item.event_date
-        )
-
-    return item.end_date
-
-
-def content_is_expired(
-    item,
-    today=None,
-):
-
-    today = (
-        today
-        or date.today()
-    )
-
-    expiry_date = (
-        get_content_expiry_date(
-            item
-        )
-    )
-
-    if not expiry_date:
-        return False
-
-    return (
-        expiry_date < today
-    )
-
-# =========================================================
-# QR ACCESS POINT
-# =========================================================
-@app.route("/q/<access_code>")
-def qr_access(access_code):
-
-    # =====================================================
-    # FIND ACCESS POINT
-    # =====================================================
-
-    access_point = (
-        AccessPoint.query
-        .filter_by(
-            code=access_code,
-            active=True,
-        )
-        .first_or_404()
-    )
-
-    zone = access_point.zone
-
-
-    # =====================================================
-    # RECORD PHYSICAL QR SCAN
-    # =====================================================
-
-    try:
-
-        scan = QRScan(
-            access_point_id=access_point.id,
-            event_type="scan",
-            user_agent=request.headers.get(
-                "User-Agent",
-                "",
-            ),
-        )
-
-        db.session.add(scan)
-        db.session.commit()
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-        app.logger.exception(
-            "Failed to record QR scan for %s: %s",
-            access_point.code,
-            exc,
-        )
-
-
-    # =====================================================
-    # CATEGORY-SPECIFIC QR
-    #
-    # IMPORTANT:
-    #
-    # Existing access points may still contain legacy
-    # category slugs.
-    #
-    # Example:
-    #
-    #     upcoming-event-🥹🔥
-    #     check-out-our-specials
-    #     foods
-    #
-    # We validate them through the compatibility-aware
-    # category lookup, then redirect using the original
-    # stored slug.
-    #
-    # qr_category() can resolve both legacy and canonical
-    # category URLs.
-    # =====================================================
-
-    if access_point.default_category:
-
-        category_slug = (
-            str(
-                access_point.default_category
-                or ""
-            )
-            .strip()
-            .lower()
-        )
-
-        category_record = (
-            get_category_by_slug(
-                category_slug,
-                active_only=True,
-            )
-        )
-
-        if not category_record:
-            abort(404)
-
-        return redirect(
-            url_for(
-                "qr_category",
-                code=access_point.code,
-                category=category_slug,
-            )
-        )
-
-
-    # =====================================================
-    # GENERAL QR
-    #
-    # Keep the REAL active Category database rows.
-    #
-    # These are still required because:
-    #
-    # - category images depend on Category.id
-    # - zone appearance depends on Category.id
-    # - existing admin configuration uses Category rows
-    # - legacy QR/category URLs still exist
-    #
-    # Consumer navigation is built as a separate layer.
-    # =====================================================
-
-    categories = get_active_categories()
-
-    today = date.today()
-
-
-    # =====================================================
-    # ZONE-SPECIFIC CATEGORY APPEARANCES
-    # =====================================================
-
-    zone_category_appearances = (
-        ZoneCategoryAppearance.query
-        .filter_by(
-            zone_id=zone.id,
-        )
-        .all()
-    )
-
-
-    # =====================================================
-    # APPEARANCE LOOKUP
-    #
-    # Key:
-    #     real Category.id
-    #
-    # Value:
-    #     ZoneCategoryAppearance
-    # =====================================================
-
-    zone_category_appearance_lookup = {
-
-        appearance.category_id:
-            appearance
-
-        for appearance
-        in zone_category_appearances
-    }
-
-
-    # =====================================================
-    # RESOLVE CATEGORY BACKGROUND IMAGES
-    #
-    # Priority:
-    #
-    # 1. Zone-specific category image
-    # 2. Default Category image
-    #
-    # Images remain attached to REAL Category.id values.
-    # =====================================================
-
-    category_background_images = {}
-
-
-    for category in categories:
-
-        appearance = (
-            zone_category_appearance_lookup.get(
-                category.id
-            )
-        )
-
-
-        # -------------------------------------------------
-        # IMAGE 1
-        # -------------------------------------------------
-
-        image_1 = (
-
-            appearance.image_url
-
-            if (
-                appearance
-                and appearance.image_url
-            )
-
-            else category.image_url
-        )
-
-
-        # -------------------------------------------------
-        # IMAGE 2
-        # -------------------------------------------------
-
-        image_2 = (
-
-            appearance.image_url_2
-
-            if (
-                appearance
-                and appearance.image_url_2
-            )
-
-            else category.image_url_2
-        )
-
-
-        # -------------------------------------------------
-        # IMAGE 3
-        # -------------------------------------------------
-
-        image_3 = (
-
-            appearance.image_url_3
-
-            if (
-                appearance
-                and appearance.image_url_3
-            )
-
-            else category.image_url_3
-        )
-
-
-        category_background_images[
-            category.id
-        ] = [
-
-            image
-
-            for image in [
-                image_1,
-                image_2,
-                image_3,
-            ]
-
-            if image
-        ]
-
-
-    # =====================================================
-    # CATEGORY LOOKUP
-    #
-    # Allows listings using either:
-    #
-    #     old public slug
-    #
-    # or:
-    #
-    #     canonical taxonomy key
-    #
-    # to resolve back to a real Category row.
-    # =====================================================
-
-    category_lookup = {}
-
-
-    for category in categories:
-
-        # -------------------------------------------------
-        # REAL / LEGACY SLUG
-        # -------------------------------------------------
-
-        category_lookup[
-            category.slug
-        ] = category
-
-
-        # -------------------------------------------------
-        # CANONICAL TAXONOMY KEY
-        # -------------------------------------------------
-
-        canonical_key = normalize_category(
-            category.slug
-        )
-
-        if canonical_key not in category_lookup:
-
-            category_lookup[
-                canonical_key
-            ] = category
-
-
-    # =====================================================
-    # CONSUMER CATEGORY LOOKUP
-    #
-    # This remains useful for Featured and What's New
-    # cards because those listings may contain either
-    # legacy or canonical category values.
-    #
-    # Example:
-    #
-    #     check-out-our-specials
-    #
-    # becomes:
-    #
-    #     {
-    #         "key": "restaurants",
-    #         "title": "HUNGRY?",
-    #         "subtitle": "Find something good to eat",
-    #         "icon": "🍔"
-    #     }
-    # =====================================================
-
-    consumer_category_lookup = {}
-
-
-    for category in categories:
-
-        canonical_key = normalize_category(
-            category.slug
-        )
-
-        presentation = get_consumer_category(
-            canonical_key
-        )
-
-        presentation_data = {
-
-            "key":
-                canonical_key,
-
-            "title":
-                presentation["title"],
-
-            "subtitle":
-                presentation["subtitle"],
-
-            "icon":
-                presentation["icon"],
-        }
-
-
-        # -------------------------------------------------
-        # REAL DATABASE SLUG
-        # -------------------------------------------------
-
-        consumer_category_lookup[
-            category.slug
-        ] = presentation_data
-
-
-        # -------------------------------------------------
-        # CANONICAL KEY
-        #
-        # This is important for newly submitted listings
-        # whose ContentItem.category may already contain
-        # the canonical taxonomy.
-        # -------------------------------------------------
-
-        if (
-            canonical_key
-            not in consumer_category_lookup
-        ):
-
-            consumer_category_lookup[
-                canonical_key
-            ] = presentation_data
-
-
-    # =====================================================
-    # BUILD UNIQUE CONSUMER CATEGORY DIRECTORY
-    #
-    # This is the important taxonomy separation.
-    #
-    # DATABASE:
-    #
-    #     foods
-    #     check-out-our-specials
-    #
-    # CONSUMER:
-    #
-    #     HUNGRY?
-    #
-    # Only ONE consumer card is created for each canonical
-    # category.
-    #
-    # The first active Category row encountered becomes
-    # the representative database row for:
-    #
-    # - images
-    # - zone appearance
-    # - fallback icon
-    #
-    # The public link itself uses the CANONICAL key.
-    # =====================================================
-
-    consumer_categories = []
-
-    seen_consumer_category_keys = set()
-
-
-    for category in categories:
-
-        canonical_key = normalize_category(
-            category.slug
-        )
-
-
-        if (
-            canonical_key
-            in seen_consumer_category_keys
-        ):
-
-            continue
-
-
-        seen_consumer_category_keys.add(
-            canonical_key
-        )
-
-
-        presentation = get_consumer_category(
-            canonical_key
-        )
-
-
-        consumer_categories.append({
-
-            # ---------------------------------------------
-            # CANONICAL DATABASE / BUSINESS TAXONOMY
-            # ---------------------------------------------
-
-            "key":
-                canonical_key,
-
-
-            # ---------------------------------------------
-            # REAL REPRESENTATIVE CATEGORY ROW
-            # ---------------------------------------------
-
-            "category":
-                category,
-
-
-            # ---------------------------------------------
-            # CONSUMER PRESENTATION
-            # ---------------------------------------------
-
-            "title":
-                presentation["title"],
-
-            "subtitle":
-                presentation["subtitle"],
-
-            "icon":
-                presentation["icon"],
-
-
-            # ---------------------------------------------
-            # CANONICAL PUBLIC CATEGORY URL
-            # ---------------------------------------------
-
-            "url":
-                url_for(
-                    "qr_category",
-                    code=access_point.code,
-                    category=canonical_key,
-                ),
-
-        })
-
-
-    # =====================================================
-    # CATEGORY STATS
-    #
-    # Stats are calculated ONCE per canonical consumer
-    # category.
-    #
-    # Because get_active_content() is alias-aware,
-    # asking for "restaurants" can include:
-    #
-    #     restaurants
-    #     foods
-    #     check-out-our-specials
-    #
-    # without displaying duplicate category cards.
-    # =====================================================
-
-    category_stats = {}
-
-
-    # -----------------------------------------------------
-    # NEW LISTING CUTOFF
-    # -----------------------------------------------------
-
-    new_cutoff = (
-        datetime.utcnow()
-        - timedelta(days=7)
-    )
-
-
-    for consumer_category in consumer_categories:
-
-        canonical_key = (
-            consumer_category["key"]
-        )
-
-        representative_category = (
-            consumer_category["category"]
-        )
-
-
-        try:
-
-            active_items = get_active_content(
-                zone_id=zone.id,
-                category_slug=canonical_key,
-            )
-
-        except Exception as exc:
-
-            app.logger.exception(
-                "Unable to calculate category stats. "
-                "zone=%s category=%s error=%s",
-                zone.id,
-                canonical_key,
-                exc,
-            )
-
-            active_items = []
-
-
-        # -------------------------------------------------
-        # REMOVE ANY DUPLICATE ITEMS
-        #
-        # Normally get_active_content() should already
-        # return unique ContentItem rows, but this keeps
-        # the home stats defensive during migration.
-        # -------------------------------------------------
-
-        unique_active_items = []
-
-        seen_active_item_ids = set()
-
-
-        for item in active_items:
-
-            if item.id in seen_active_item_ids:
-                continue
-
-            seen_active_item_ids.add(
-                item.id
-            )
-
-            unique_active_items.append(
-                item
-            )
-
-
-        item_count = len(
-            unique_active_items
-        )
-
-
-        # -------------------------------------------------
-        # NEW ITEMS
-        # -------------------------------------------------
-
-        new_count = 0
-
-
-        for item in unique_active_items:
-
-            created_at = getattr(
-                item,
-                "created_at",
-                None,
-            )
-
-            if (
-                created_at
-                and created_at >= new_cutoff
-            ):
-
-                new_count += 1
-
-
-        # -------------------------------------------------
-        # CONSUMER-AWARE BADGE WORDING
-        # -------------------------------------------------
-
-        if canonical_key == "events":
-
-            badge_icon = "📅"
-            badge_label = "UPCOMING"
-
-
-        elif canonical_key == "rentals":
-
-            badge_icon = "🏠"
-            badge_label = "AVAILABLE"
-
-
-        elif canonical_key == "accommodation":
-
-            badge_icon = "🛏️"
-            badge_label = "AVAILABLE"
-
-
-        elif canonical_key == "jobs":
-
-            badge_icon = "💼"
-            badge_label = "OPEN"
-
-
-        elif canonical_key == "emergency":
-
-            badge_icon = "🚨"
-            badge_label = "INFO"
-
-
-        elif canonical_key == "announcements":
-
-            badge_icon = "📢"
-            badge_label = "UPDATE"
-
-
-        else:
-
-            badge_icon = "🔥"
-            badge_label = "LIVE"
-
-
-        stats_data = {
-
-            "count":
-                item_count,
-
-            "new_count":
-                new_count,
-
-            "label":
-                badge_label,
-
-            "icon":
-                badge_icon,
-
-            "canonical_key":
-                canonical_key,
-        }
-
-
-        # -------------------------------------------------
-        # CANONICAL LOOKUP
-        #
-        # New access.html can use:
-        #
-        # category_stats["restaurants"]
-        # -------------------------------------------------
-
-        category_stats[
-            canonical_key
-        ] = stats_data
-
-
-        # -------------------------------------------------
-        # REPRESENTATIVE LEGACY LOOKUP
-        #
-        # Keep this temporarily so existing template code
-        # using category.slug does not immediately break.
-        # -------------------------------------------------
-
-        category_stats[
-            representative_category.slug
-        ] = stats_data
-
-
-    # =====================================================
-    # NEW NEAR YOU
-    #
-    # Iterate through canonical consumer categories rather
-    # than every legacy Category row.
-    #
-    # This reduces duplicate queries and duplicate results.
-    # =====================================================
-
-    new_items_pool = []
-
-    seen_new_item_ids = set()
-
-
-    for consumer_category in consumer_categories:
-
-        canonical_key = (
-            consumer_category["key"]
-        )
-
-
-        try:
-
-            category_items = (
-                get_active_content(
-                    zone_id=zone.id,
-                    category_slug=canonical_key,
-                )
-            )
-
-        except Exception as exc:
-
-            app.logger.exception(
-                "Unable to load New Near You items. "
-                "zone=%s category=%s error=%s",
-                zone.id,
-                canonical_key,
-                exc,
-            )
-
-            continue
-
-
-        for item in category_items:
-
-            if item.id in seen_new_item_ids:
-                continue
-
-            seen_new_item_ids.add(
-                item.id
-            )
-
-            new_items_pool.append(
-                item
-            )
-
-
-    # =====================================================
-    # SORT NEWEST FIRST
-    # =====================================================
-
-    new_items_pool.sort(
-
-        key=lambda item: (
-            item.created_at
-            or datetime.min
-        ),
-
-        reverse=True,
-    )
-
-
-    # =====================================================
-    # LIMIT HOME "WHAT'S NEW" RAIL
-    # =====================================================
-
-    new_items = (
-        new_items_pool[:8]
-    )
-
-
-    # =====================================================
-    # FEATURED LOCAL CONTENT
-    #
-    # Featured is intentionally independent from:
-    #
-    # - listing_level
-    # - promotion
-    # - notification eligibility
-    #
-    # Any visible listing can be featured.
-    # =====================================================
-
-    featured_items_pool = []
-
-    seen_featured_item_ids = set()
-
-
-    for consumer_category in consumer_categories:
-
-        canonical_key = (
-            consumer_category["key"]
-        )
-
-
-        try:
-
-            category_items = (
-                get_active_content(
-                    zone_id=zone.id,
-                    category_slug=canonical_key,
-                )
-            )
-
-        except Exception as exc:
-
-            app.logger.exception(
-                "Unable to load featured items. "
-                "zone=%s category=%s error=%s",
-                zone.id,
-                canonical_key,
-                exc,
-            )
-
-            continue
-
-
-        for item in category_items:
-
-            if not item.featured:
-                continue
-
-            if item.id in seen_featured_item_ids:
-                continue
-
-            seen_featured_item_ids.add(
-                item.id
-            )
-
-            featured_items_pool.append(
-                item
-            )
-
-
-    # =====================================================
-    # NEWEST FEATURED CONTENT FIRST
-    # =====================================================
-
-    featured_items_pool.sort(
-
-        key=lambda item: (
-            item.created_at
-            or datetime.min
-        ),
-
-        reverse=True,
-    )
-
-
-    # =====================================================
-    # LIMIT FEATURED CAROUSEL
-    # =====================================================
-
-    featured_items = (
-        featured_items_pool[:6]
-    )
-
-
-    # =====================================================
-    # RENDER ACCESS PAGE
-    # =====================================================
-
-    return render_template(
-
-        "access.html",
-
-        zone=zone,
-
-        access_point=access_point,
-
-
-        # -------------------------------------------------
-        # REAL DATABASE CATEGORY ROWS
-        #
-        # Keep these because notification subscriptions
-        # still use existing real category slugs during
-        # the migration.
-        # -------------------------------------------------
-
-        categories=categories,
-
-
-        # -------------------------------------------------
-        # UNIQUE CONSUMER NAVIGATION
-        #
-        # This is now the preferred source for the main
-        # Explore section.
-        #
-        # Each entry contains:
-        #
-        # {
-        #     "key": "restaurants",
-        #     "category": <Category>,
-        #     "title": "HUNGRY?",
-        #     "subtitle": "...",
-        #     "icon": "🍔",
-        #     "url": "/q/.../restaurants"
-        # }
-        # -------------------------------------------------
-
-        consumer_categories=(
-            consumer_categories
-        ),
-
-
-        # -------------------------------------------------
-        # CONSUMER PRESENTATION LOOKUP
-        #
-        # Used by Featured / What's New cards.
-        # Supports both old slugs and canonical keys.
-        # -------------------------------------------------
-
-        consumer_category_lookup=(
-            consumer_category_lookup
-        ),
-
-
-        # -------------------------------------------------
-        # CATEGORY STATS
-        # -------------------------------------------------
-
-        category_stats=(
-            category_stats
-        ),
-
-
-        # -------------------------------------------------
-        # WHAT'S NEW
-        # -------------------------------------------------
-
-        new_items=(
-            new_items
-        ),
-
-
-        # -------------------------------------------------
-        # CATEGORY OBJECT LOOKUP
-        # -------------------------------------------------
-
-        category_lookup=(
-            category_lookup
-        ),
-
-
-        # -------------------------------------------------
-        # FEATURED
-        # -------------------------------------------------
-
-        featured_items=(
-            featured_items
-        ),
-
-
-        # -------------------------------------------------
-        # CATEGORY IMAGES
-        #
-        # Still keyed by the representative real
-        # Category.id.
-        # -------------------------------------------------
-
-        category_background_images=(
-            category_background_images
-        ),
-    )
 # =========================================================
 # PUSH NOTIFICATION UNSUBSCRIBE
 # =========================================================
