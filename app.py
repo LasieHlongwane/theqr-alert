@@ -1123,6 +1123,22 @@ def run_content_reminders():
                 0,
             ),
 
+            "cancelled": result.get(
+                "cancelled",
+                0,
+            ),
+
+            "skipped_claimed": result.get(
+                "skipped_claimed",
+                0,
+            ),
+
+            "recovered_stale": result.get(
+                "recovered_stale",
+                0,
+            ),
+
+
         }, 200
 
 
