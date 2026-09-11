@@ -1,56 +1,113 @@
 name: Kalxa Reminder Scheduler
 
 on:
+
+  # =====================================================
+  # AUTOMATIC SCHEDULE
+  #
+  # GitHub Actions' shortest cron interval is 5 minutes.
+  # This checks Kalxa for due reminders every 5 minutes.
+  # =====================================================
+
   schedule:
-    # Run every 5 minutes.
     - cron: "*/5 * * * *"
 
-  # Allows manual testing from GitHub Actions.
+
+  # =====================================================
+  # MANUAL TEST BUTTON
+  #
+  # Allows:
+  #
+  # GitHub
+  # → Actions
+  # → Kalxa Reminder Scheduler
+  # → Run workflow
+  #
+  # =====================================================
+
   workflow_dispatch:
 
 
 jobs:
 
-  send-reminders:
+  send-due-reminders:
+
+    name: Send Due Kalxa Reminders
 
     runs-on: ubuntu-latest
-
-    timeout-minutes: 5
 
 
     steps:
 
-      - name: Run Kalxa reminder processor
+      # =================================================
+      # CALL KALXA REMINDER ENDPOINT
+      # =================================================
+
+      - name: Run Kalxa reminder scheduler
+
         shell: bash
+
         env:
-          REMINDER_CRON_TOKEN: ${{ secrets.REMINDER_CRON_TOKEN }}
+
+          KALXA_REMINDER_CRON_TOKEN:
+            ${{ secrets.KALXA_REMINDER_CRON_TOKEN }}
+
 
         run: |
 
-          echo "Triggering Kalxa reminder processor..."
+          echo "=========================================="
+          echo "Kalxa Reminder Scheduler"
+          echo "=========================================="
 
-          HTTP_STATUS=$(curl \
-            --silent \
-            --show-error \
-            --output response.json \
-            --write-out "%{http_code}" \
-            --request POST \
-            --header "Authorization: Bearer ${REMINDER_CRON_TOKEN}" \
-            --header "Content-Type: application/json" \
-            "https://lac-local-access.onrender.com/internal/run-content-reminders"
-          )
+          echo "Calling Kalxa reminder service..."
 
-          echo "HTTP status: ${HTTP_STATUS}"
 
-          if [ -f response.json ]; then
-            cat response.json
-          fi
+          RESPONSE_FILE="$(mktemp)"
 
-          if [ "${HTTP_STATUS}" -lt 200 ] || [ "${HTTP_STATUS}" -ge 300 ]; then
-            echo ""
-            echo "Kalxa reminder processor failed."
-            exit 1
-          fi
+
+          HTTP_STATUS="$(
+            curl \
+              --silent \
+              --show-error \
+              --output "$RESPONSE_FILE" \
+              --write-out "%{http_code}" \
+              --request POST \
+              "https://lac-local-access.onrender.com/internal/run-content-reminders" \
+              --header "Authorization: Bearer ${KALXA_REMINDER_CRON_TOKEN}" \
+              --header "Accept: application/json" \
+              --max-time 120
+          )"
+
 
           echo ""
-          echo "Kalxa reminder processor completed successfully."
+          echo "HTTP status: ${HTTP_STATUS}"
+
+          echo ""
+          echo "Kalxa response:"
+
+          cat "$RESPONSE_FILE"
+
+          echo ""
+
+
+          # =============================================
+          # FAIL WORKFLOW FOR NON-2XX RESPONSE
+          # =============================================
+
+          if [[ "$HTTP_STATUS" -lt 200 || "$HTTP_STATUS" -ge 300 ]]; then
+
+              echo ""
+              echo "Kalxa reminder scheduler request failed."
+
+              rm -f "$RESPONSE_FILE"
+
+              exit 1
+
+          fi
+
+
+          echo ""
+          echo "Kalxa reminder scheduler completed successfully."
+
+
+          rm -f "$RESPONSE_FILE"
