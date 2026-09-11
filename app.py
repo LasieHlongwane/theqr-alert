@@ -6929,7 +6929,10 @@ def qr_category(
         .first_or_404()
     )
 
-    zone = access_point.zone
+
+    zone = (
+        access_point.zone
+    )
 
 
     # =====================================================
@@ -6945,8 +6948,12 @@ def qr_category(
         .lower()
     )
 
+
     if not category_slug:
-        abort(404)
+
+        abort(
+            404
+        )
 
 
     # =====================================================
@@ -6959,14 +6966,18 @@ def qr_category(
         )
     )
 
+
     if not canonical_category:
-        abort(404)
+
+        abort(
+            404
+        )
 
 
     # =====================================================
     # VALIDATE CATEGORY
     #
-    # Supports both:
+    # Supports:
     #
     # - legacy category slugs
     # - canonical taxonomy keys
@@ -6979,8 +6990,12 @@ def qr_category(
         )
     )
 
+
     if not category_record:
-        abort(404)
+
+        abort(
+            404
+        )
 
 
     # =====================================================
@@ -6997,63 +7012,86 @@ def qr_category(
     # =====================================================
     # GET ACTIVE CONTENT
     #
-    # Alias-aware.
+    # get_active_content() remains responsible for:
     #
-    # Example:
-    #
-    # "events" can include:
-    #
-    #     upcoming-event-🥹🔥
-    #     local-events
-    #     events
+    # - category aliases
+    # - home-zone visibility
+    # - campaign distribution
+    # - commercial visibility
+    # - campaign urgency ordering
+    # - sponsored ordering
     #
     # =====================================================
 
     items = (
         get_active_content(
-            zone_id=access_point.zone_id,
-            category_slug=category_slug,
+            zone_id=(
+                access_point.zone_id
+            ),
+            category_slug=(
+                category_slug
+            ),
         )
     )
 
 
     # =====================================================
-    # STEP 10 / CAMPAIGN STATE
+    # CAMPAIGN STATE
+    #
+    # Provides:
+    #
+    # item.campaign_state
+    #
+    # Examples:
+    #
+    # 2 DAYS TO GO
+    # TOMORROW
+    # TODAY
+    # TONIGHT
+    # HAPPENING NOW
+    # ENDING SOON
+    # =====================================================
+
+    items = (
+        attach_campaign_states(
+            items
+        )
+    )
+
+
+    # =====================================================
+    # SPONSORED STATE
+    #
+    # Provides:
+    #
+    # item.sponsorship_active
+    # item.effective_sponsored_priority
+    #
+    # category.html will use sponsorship_active to decide
+    # whether the SPONSORED badge should be visible.
     #
     # IMPORTANT:
     #
-    # Attach state BEFORE rendering category.html.
+    # This does not change:
     #
-    # This gives each applicable listing:
-    #
-    #     item.campaign_state
-    #
-    # Example states:
-    #
-    #     2 DAYS TO GO
-    #     TOMORROW
-    #     TODAY
-    #     TONIGHT
-    #     HAPPENING NOW
-    #     ENDING SOON
-    #
-    # category.html uses this to display:
-    #
-    #     campaign badge
-    #     Remind Me button
-    #
+    # payment_status
+    # pricing_model
+    # amount_due
+    # commercial dates
     # =====================================================
 
-    items = attach_campaign_states(
-        items
+    items = (
+        attach_sponsorship_states(
+            items
+        )
     )
 
 
     # =====================================================
     # RECORD CATEGORY VIEW
     #
-    # Keep the requested/public category slug in QRScan
-    # for historical analytics continuity.
+    # Keep the originally requested/public category slug
+    # for analytics continuity.
     # =====================================================
 
     try:
@@ -7081,9 +7119,11 @@ def qr_category(
 
         )
 
+
         db.session.add(
             category_event
         )
+
 
         db.session.commit()
 
@@ -7092,12 +7132,15 @@ def qr_category(
 
         db.session.rollback()
 
+
         app.logger.exception(
-            "Failed to record category view. "
-            "access_point=%s "
-            "category=%s "
-            "canonical_category=%s "
-            "error=%s",
+            (
+                "Failed to record category view. "
+                "access_point=%s "
+                "category=%s "
+                "canonical_category=%s "
+                "error=%s"
+            ),
             access_point.code,
             category_slug,
             canonical_category,
@@ -7113,9 +7156,13 @@ def qr_category(
 
         "category.html",
 
-        zone=zone,
+        zone=(
+            zone
+        ),
 
-        category=category_record,
+        category=(
+            category_record
+        ),
 
         canonical_category=(
             canonical_category
@@ -7125,11 +7172,17 @@ def qr_category(
             consumer_category
         ),
 
-        items=items,
+        items=(
+            items
+        ),
 
-        access_point=access_point,
+        access_point=(
+            access_point
+        ),
 
-        today=date.today(),
+        today=(
+            date.today()
+        ),
 
     )
 # =========================================================
