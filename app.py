@@ -9891,12 +9891,14 @@ def submit_content():
             current_app.logger.info(
                 "[Kalxa Submission] Created "
                 "submission_id=%s "
+                "organizer_id=%s "
                 "zone_id=%s "
                 "category=%s "
                 "notification_eligible=%s "
                 "pricing_model=%s "
                 "payment_status=%s",
                 submission.id,
+                submission.organizer_id,
                 submission.zone_id,
                 submission.category,
                 submission.notification_eligible,
