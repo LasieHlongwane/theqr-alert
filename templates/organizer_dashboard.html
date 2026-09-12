@@ -83,7 +83,10 @@
 
                 {% for category, message in messages %}
 
-                    <div class="alert">
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
                         {{ message }}
                     </div>
 
@@ -120,7 +123,7 @@
 
                 {% endif %}
 
-                Manage your listings and event access.
+                Manage your Kalxa listings and event ticketing.
 
             </p>
 
@@ -189,7 +192,7 @@
             </strong>
 
             <small class="muted">
-                Eligible for ticketing
+                Approved event listings
             </small>
 
         </div>
@@ -216,6 +219,11 @@
                     Kalxa Ticketing
                 </h2>
 
+                <p class="muted">
+                    Ticketing is activated from an approved
+                    event listing below.
+                </p>
+
             </div>
 
         </div>
@@ -224,29 +232,18 @@
         {% if ticketing_eligible %}
 
             <div class="success-box">
-                🎟 Your account is eligible for Kalxa Ticketing.
+                🎟 Your organizer account has access to Kalxa Ticketing.
             </div>
 
-
             <p class="muted">
-                Ticketing becomes available for your approved
-                event listings.
+                Choose an approved event below and select
+                <strong>Manage Tickets</strong>.
             </p>
 
-
-            <!--
-                We will replace this button with the actual
-                Kalxa Ticketing URL once the Discovery →
-                Ticketing authentication bridge is created.
-            -->
-
-            <button
-                type="button"
-                class="button disabled"
-                disabled
-            >
-                Manage Tickets — Connection Coming Next
-            </button>
+            <p class="muted">
+                Kalxa securely verifies that the event belongs
+                to your organizer account before opening Ticketing.
+            </p>
 
 
         {% else %}
@@ -262,9 +259,9 @@
                 </h3>
 
                 <p class="muted">
-                    Submit an event to Kalxa. Once the event
-                    is approved and published, ticketing access
-                    will become available automatically.
+                    Submit an event to Kalxa. Once it is approved
+                    and published, the Manage Tickets option will
+                    appear automatically.
                 </p>
 
 
@@ -358,10 +355,22 @@
                                 </strong>
 
 
-                                {% if item.active %}
+                                {% if item.active and not item.archived %}
 
                                     <span class="admin-price-badge">
                                         LIVE
+                                    </span>
+
+                                {% elif item.archived %}
+
+                                    <span class="admin-count-badge">
+                                        ARCHIVED
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="admin-count-badge">
+                                        INACTIVE
                                     </span>
 
                                 {% endif %}
@@ -383,8 +392,29 @@
                                 <div class="muted">
 
                                     📅
-                                    {{ item.event_date.strftime('%d %B %Y') }}
+                                    {{ item.event_date.strftime(
+                                        '%d %B %Y'
+                                    ) }}
 
+                                    {% if item.start_time %}
+
+                                        ·
+
+                                        {{ item.start_time.strftime(
+                                            '%H:%M'
+                                        ) }}
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endif %}
+
+
+                            {% if item.price %}
+
+                                <div class="muted">
+                                    🎟 {{ item.price }}
                                 </div>
 
                             {% endif %}
@@ -417,23 +447,59 @@
                             </a>
 
 
-                          <form
-                              action="{{ url_for(
-                               'open_ticketing',
-                               content_id=item.id
-                              ) }}"
-                              method="POST"
-                          >
+                            <!-- =====================
+                                 SECURE TICKETING BRIDGE
+                            ====================== -->
+                            <!--
+                                No organizer_id is sent.
 
-                            <button
-                                type="submit"
-                                class="button disabled"
-                                disabled
-                            >
-                                🎟 Manage Tickets
-                            </button>
+                                Discovery obtains organizer
+                                ownership from the authenticated
+                                organizer session and verifies:
 
-                          </form>
+                                item.organizer_id
+                                    ==
+                                organizer.id
+
+                                before creating the signed
+                                Ticketing bridge token.
+                            -->
+
+                            {% if
+                                item.active
+                                and
+                                not item.archived
+                            %}
+
+                                <form
+                                    action="{{ url_for(
+                                        'open_ticketing',
+                                        content_id=item.id
+                                    ) }}"
+                                    method="POST"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="button"
+                                    >
+                                        🎟 Manage Tickets
+                                    </button>
+
+                                </form>
+
+
+                            {% else %}
+
+                                <button
+                                    type="button"
+                                    class="button disabled"
+                                    disabled
+                                >
+                                    Ticketing Unavailable
+                                </button>
+
+                            {% endif %}
 
 
                         </div>
@@ -459,7 +525,18 @@
 
                 <p class="muted">
                     Your approved event listings will appear here.
+                    Once approved, you can activate ticketing directly
+                    from this dashboard.
                 </p>
+
+
+                <a
+                    href="{{ url_for('submit_content') }}"
+                    class="button"
+                    style="margin-top: 18px;"
+                >
+                    Submit an Event
+                </a>
 
             </div>
 
@@ -544,11 +621,13 @@
 
 
                             <div class="muted">
+
                                 {{ submission.category
                                     .replace("_", " ")
                                     .replace("-", " ")
                                     .title()
                                 }}
+
                             </div>
 
 
@@ -567,8 +646,10 @@
 
 
                             <div class="muted">
+
                                 Tracking:
                                 {{ submission.tracking_code }}
+
                             </div>
 
                         </div>
@@ -715,11 +796,40 @@
             </span>
 
             <strong>
+
                 {% if organizer.active %}
+
                     Active
+
                 {% else %}
+
                     Inactive
+
                 {% endif %}
+
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span class="muted">
+                Ticketing Access
+            </span>
+
+            <strong>
+
+                {% if ticketing_eligible %}
+
+                    Available
+
+                {% else %}
+
+                    Waiting for approved event
+
+                {% endif %}
+
             </strong>
 
         </div>
