@@ -9658,6 +9658,11 @@ def submit_content():
 
         submission = PendingSubmission(
 
+            organizer_id=(
+                organizer.id
+                if organizer
+                else None
+            ),
             # ---------------------------------------------
             # LOCATION
             # ---------------------------------------------
