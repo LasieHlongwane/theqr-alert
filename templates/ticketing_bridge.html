@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Opening Kalxa Ticketing
+    </title>
+
+</head>
+
+<body>
+
+    <form
+        id="ticketing-bridge-form"
+        action="{{ ticketing_auth_url }}"
+        method="POST"
+    >
+
+        <input
+            type="hidden"
+            name="token"
+            value="{{ token }}"
+        >
+
+        <noscript>
+
+            <button type="submit">
+                Continue to Ticketing
+            </button>
+
+        </noscript>
+
+    </form>
+
+
+    <script>
+
+        document
+            .getElementById(
+                "ticketing-bridge-form"
+            )
+            .submit();
+
+    </script>
+
+</body>
+
+</html>
