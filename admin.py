@@ -13495,6 +13495,78 @@ def confirm_submission_payment(submission_id):
         )
 
     # =====================================================
+    # ORGANIZER OWNERSHIP CONSISTENCY
+    # =====================================================
+    #
+    # New approvals already copy organizer_id.
+    #
+    # This additionally repairs older approved listings
+    # if their PendingSubmission has ownership but the
+    # ContentItem was created before organizer ownership
+    # was introduced.
+    # =====================================================
+
+    if (
+        submission.organizer_id
+        and content.organizer_id is None
+    ):
+
+        content.organizer_id = (
+            submission.organizer_id
+        )
+
+
+        current_app.logger.info(
+            (
+                "[Kalxa Ownership] Repaired organizer "
+                "ownership during payment confirmation "
+                "submission_id=%s "
+                "content_id=%s "
+                "organizer_id=%s"
+            ),
+            submission.id,
+            content.id,
+            submission.organizer_id,
+        )
+
+
+    elif (
+        submission.organizer_id
+        and content.organizer_id
+        != submission.organizer_id
+    ):
+
+        current_app.logger.error(
+            (
+                "[Kalxa Ownership] Ownership mismatch "
+                "submission_id=%s "
+                "submission_organizer_id=%s "
+                "content_id=%s "
+                "content_organizer_id=%s"
+            ),
+            submission.id,
+            submission.organizer_id,
+            content.id,
+            content.organizer_id,
+        )
+
+
+        flash(
+            (
+                "Payment cannot be confirmed because "
+                "the listing ownership does not match."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+    # =====================================================
     # MUST BE COMMERCIAL CONTENT
     # =====================================================
 
