@@ -1,1 +1,172 @@
-#1234
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Organizer Login | Kalxa
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="page-shell">
+
+
+    <!-- =========================================
+         BRAND
+    ========================================== -->
+
+    <div class="brand">
+        KALXA
+    </div>
+
+
+    <!-- =========================================
+         LOGIN CARD
+    ========================================== -->
+
+    <div class="form-card">
+
+        <span class="eyebrow">
+            ORGANIZER ACCESS
+        </span>
+
+        <h1>
+            Welcome back
+        </h1>
+
+        <p class="muted">
+            Sign in to manage your Kalxa event listings
+            and ticketing access.
+        </p>
+
+
+        <!-- =====================================
+             FLASH MESSAGES
+        ====================================== -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- =====================================
+             LOGIN FORM
+        ====================================== -->
+
+        <form
+            method="POST"
+            action="{{ request.url }}"
+            class="form-stack"
+        >
+
+
+            <div class="form-group">
+
+                <label for="login">
+                    Email or Phone Number
+                </label>
+
+                <input
+                    id="login"
+                    type="text"
+                    name="login"
+                    placeholder="Email or phone number"
+                    value="{{ request.form.get('login', '') }}"
+                    required
+                    autocomplete="username"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="Your password"
+                    required
+                    autocomplete="current-password"
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Sign In
+            </button>
+
+        </form>
+
+
+        <!-- =====================================
+             SIGNUP LINK
+        ====================================== -->
+
+        <div
+            style="
+                margin-top: 22px;
+                text-align: center;
+            "
+        >
+
+            <p class="muted">
+                New to Kalxa as an organizer?
+            </p>
+
+            <a
+                href="{{ url_for('organizer_signup') }}"
+                class="small-button"
+            >
+                Create Account
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
