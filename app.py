@@ -19,6 +19,7 @@ from push_service import (
     send_push_notification,
     send_zone_push_notification,
 )
+from itsdangerous import URLSafeTimedSerializer
 from urllib.parse import quote
 from flask import send_from_directory
 import cloudinary.uploader
@@ -333,6 +334,30 @@ VAPID_SUBJECT = os.environ.get(
 # =========================================================
 # HOME
 # =========================================================
+
+
+# ============================================================
+# KALXA → TICKETING SECURE BRIDGE
+# ============================================================
+
+def get_ticketing_bridge_serializer():
+
+    bridge_secret = os.environ.get(
+        "KALXA_TICKETING_BRIDGE_SECRET"
+    )
+
+    if not bridge_secret:
+
+        raise RuntimeError(
+            "KALXA_TICKETING_BRIDGE_SECRET "
+            "is not configured."
+        )
+
+
+    return URLSafeTimedSerializer(
+        secret_key=bridge_secret,
+        salt="kalxa-ticketing-bridge-v1",
+    )
 
 @app.route("/")
 def home():
