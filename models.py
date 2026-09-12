@@ -666,6 +666,19 @@ class ContentItem(db.Model):
         index=True,
     )
 
+    sponsored_duration_days = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    sponsorship_amount_due = db.Column(
+        db.Numeric(
+          10,
+          2,
+        ),
+        nullable=True,
+    )
+
     sponsored_starts_at = db.Column(
         db.DateTime,
         nullable=True,
