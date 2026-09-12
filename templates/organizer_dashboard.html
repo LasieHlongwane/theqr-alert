@@ -417,18 +417,23 @@
                             </a>
 
 
-                            <!--
-                                Ticketing connection will be
-                                activated in the next step.
-                            -->
+                          <form
+                              action="{{ url_for(
+                               'open_ticketing',
+                               content_id=item.id
+                              ) }}"
+                              method="POST"
+                          >
 
                             <button
-                                type="button"
+                                type="submit"
                                 class="button disabled"
                                 disabled
                             >
-                                Manage Tickets
+                                🎟 Manage Tickets
                             </button>
+
+                          </form>
 
 
                         </div>
