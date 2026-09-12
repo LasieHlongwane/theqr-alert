@@ -359,6 +359,241 @@ def get_ticketing_bridge_serializer():
         salt="kalxa-ticketing-bridge-v1",
     )
 
+# ============================================================
+# OPEN KALXA TICKETING
+# ============================================================
+
+@app.route(
+    "/organizer/ticketing/<int:content_id>",
+    methods=["POST"],
+)
+def open_ticketing(content_id):
+
+    # =====================================================
+    # REQUIRE ORGANIZER
+    # =====================================================
+
+    auth = require_organizer()
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    # =====================================================
+    # FIND CONTENT
+    # =====================================================
+
+    content = (
+        db.session.get(
+            ContentItem,
+            content_id,
+        )
+    )
+
+
+    if not content:
+
+        abort(404)
+
+
+    # =====================================================
+    # OWNERSHIP CHECK
+    # =====================================================
+    #
+    # CRITICAL:
+    #
+    # Never accept organizer_id from:
+    #
+    # query string
+    # hidden form field
+    # JavaScript
+    # URL
+    #
+    # Ownership comes from the logged-in session.
+    # =====================================================
+
+    if (
+        content.organizer_id
+        != organizer.id
+    ):
+
+        current_app.logger.warning(
+            (
+                "[Ticketing Bridge] Unauthorized "
+                "ticketing attempt "
+                "organizer_id=%s "
+                "content_id=%s "
+                "content_owner=%s"
+            ),
+            organizer.id,
+            content.id,
+            content.organizer_id,
+        )
+
+
+        abort(403)
+
+
+    # =====================================================
+    # MUST BE EVENT
+    # =====================================================
+
+    if (
+        content.category
+        != "events"
+    ):
+
+        flash(
+            (
+                "Kalxa Ticketing is currently "
+                "available only for events."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_dashboard"
+            )
+        )
+
+
+    # =====================================================
+    # MUST BE ACTIVE / PUBLISHED
+    # =====================================================
+
+    if (
+        not content.active
+        or content.archived
+    ):
+
+        flash(
+            (
+                "This event is not currently eligible "
+                "for ticketing."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_dashboard"
+            )
+        )
+
+
+    # =====================================================
+    # CREATE ONE-TIME BRIDGE ID
+    # =====================================================
+
+    bridge_id = (
+        secrets.token_urlsafe(32)
+    )
+
+
+    # =====================================================
+    # TOKEN PAYLOAD
+    # =====================================================
+
+    payload = {
+
+        "aud":
+            "kalxa-ticketing",
+
+        "purpose":
+            "organizer-login",
+
+        "bridge_id":
+            bridge_id,
+
+        "organizer_id":
+            organizer.id,
+
+        "content_item_id":
+            content.id,
+
+    }
+
+
+    serializer = (
+        get_ticketing_bridge_serializer()
+    )
+
+
+    token = serializer.dumps(
+        payload
+    )
+
+
+    # =====================================================
+    # TICKETING ENDPOINT
+    # =====================================================
+
+    ticketing_base_url = (
+        os.environ.get(
+            "KALXA_TICKETING_URL",
+            ""
+        )
+        .rstrip("/")
+    )
+
+
+    if not ticketing_base_url:
+
+        current_app.logger.error(
+            (
+                "KALXA_TICKETING_URL "
+                "is not configured."
+            )
+        )
+
+        flash(
+            (
+                "Kalxa Ticketing is temporarily "
+                "unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_dashboard"
+            )
+        )
+
+
+    ticketing_auth_url = (
+        f"{ticketing_base_url}/auth/kalxa"
+    )
+
+
+    # =====================================================
+    # POST TOKEN TO TICKETING
+    # =====================================================
+    #
+    # We use a POST form instead of:
+    #
+    # ?token=xxxxx
+    #
+    # so the token does not normally appear in browser
+    # history, analytics URLs or referrer URLs.
+    # =====================================================
+
+    return render_template(
+        "ticketing_bridge.html",
+
+        token=
+            token,
+
+        ticketing_auth_url=
+            ticketing_auth_url,
+    )
+
 @app.route("/")
 def home():
 
