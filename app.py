@@ -8899,6 +8899,38 @@ def submit_content():
 
 
         # =================================================
+        # ORGANIZER IDENTITY SNAPSHOT
+        # =================================================
+        #
+        # For authenticated organizers we preserve the
+        # account identity on the submission.
+        #
+        # The form values are still useful for legacy/public
+        # submissions, but an authenticated organizer's
+        # account is the authoritative identity.
+        # =================================================
+
+        if organizer:
+
+            submitter_name = (
+                organizer.name
+                or submitter_name
+            )
+
+            if organizer.email:
+
+                submitter_email = (
+                    organizer.email
+                )
+
+            if organizer.phone:
+
+                submitter_phone = (
+                    organizer.phone
+                )
+
+
+        # =================================================
         # REQUIRED FIELDS
         # =================================================
 
