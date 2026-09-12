@@ -8673,6 +8673,9 @@ def submit_content():
 
             selected_zone=
                 selected_zone,
+
+            organizer=
+                organizer,
         )
 
 
