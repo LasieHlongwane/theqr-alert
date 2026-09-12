@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -214,7 +214,6 @@
         .kalxa-sponsored-package h4 {
 
             margin-top: 0;
-
             margin-bottom: 8px;
         }
 
@@ -282,6 +281,45 @@
             display: block;
 
             margin-bottom: 4px;
+        }
+
+
+        .kalxa-auto-expiry-note {
+
+            margin-top: 12px;
+
+            padding: 12px 14px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 244, 223, 0.06);
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.12);
+
+            font-size: 11px;
+
+            line-height: 1.55;
+        }
+
+
+        .kalxa-auto-expiry-note strong {
+
+            display: block;
+
+            margin-bottom: 4px;
+
+            color: #fff4df;
+        }
+
+
+        #sponsored-expires-at[readonly] {
+
+            opacity: 0.85;
+
+            cursor: not-allowed;
         }
 
 
@@ -1687,9 +1725,9 @@
 
                             <small class="muted">
                                 The browser displays an estimate.
-                                The backend will calculate the
-                                official Sponsored amount from
-                                the selected duration.
+                                The backend calculates the official
+                                Sponsored amount from the selected
+                                duration.
                             </small>
 
                         </div>
@@ -1753,16 +1791,16 @@
 
 
                         <small class="muted">
-                            Only Active sponsorships within their
-                            start/end window receive Sponsored
-                            treatment publicly.
+                            Choose Active after you have manually
+                            confirmed payment. Use Scheduled when
+                            the boost should start later.
                         </small>
 
                     </label>
 
 
                     <!-- =========================================
-                         START / EXPIRY
+                         MANUAL START / AUTOMATIC EXPIRY
                     ========================================== -->
 
                     <div class="form-two-column">
@@ -1785,9 +1823,8 @@
 
 
                             <small class="muted">
-                                Optional during manual testing.
-                                Later Kalxa can start this
-                                automatically after payment.
+                                Choose when the paid Sponsored
+                                period should begin.
                             </small>
 
                         </label>
@@ -1806,16 +1843,32 @@
                                     if item and item.sponsored_expires_at
                                     else ''
                                 }}"
+                                readonly
                             >
 
 
                             <small class="muted">
-                                Currently retained for compatibility
-                                with the existing Sponsored system.
+                                Calculated automatically from
+                                Sponsored Starts + selected duration.
                             </small>
 
                         </label>
 
+
+                    </div>
+
+
+                    <div class="kalxa-auto-expiry-note">
+
+                        <strong>
+                            Automatic expiry
+                        </strong>
+
+                        You choose the start date and Sponsored
+                        package. Kalxa calculates the expiry.
+                        For example, a 7-day boost starting
+                        12 September at 10:00 expires
+                        19 September at 10:00.
 
                     </div>
 
@@ -1876,7 +1929,8 @@
 
                         <small class="muted">
                             Optional internal reference for the
-                            sponsorship agreement or campaign.
+                            manually confirmed payment or
+                            sponsorship agreement.
                         </small>
 
                     </label>
@@ -1892,11 +1946,11 @@
                             Separate visibility add-on
                         </strong>
 
-                        Sponsored does not modify the existing
-                        Kalxa Presence/Campaign amount,
-                        payment status, Yoco payment state,
-                        commercial start date or commercial
-                        expiry date.
+                        Sponsored payment is currently handled
+                        manually. This boost does not modify the
+                        listing's existing Presence/Campaign
+                        amount, payment status, Yoco payment state,
+                        commercial start date or commercial expiry.
 
                     </div>
 
@@ -4156,8 +4210,9 @@
     // =====================================================
     // SPONSORED PRICING
     //
-    // Backend pricing.py remains the official source.
-    // This table is only for immediate browser display.
+    // Browser display only.
+    //
+    // pricing.py remains the authoritative source.
     // =====================================================
 
     const sponsoredPricing = {
@@ -4229,12 +4284,6 @@
         );
 
 
-    const sponsorshipReference =
-        document.getElementById(
-            "sponsorship-reference"
-        );
-
-
     // =====================================================
     // SPONSORED PRICE
     // =====================================================
@@ -4295,6 +4344,152 @@
         displayedSponsorshipAmountInput.value =
             String(
                 amount
+            );
+
+    }
+
+
+    // =====================================================
+    // FORMAT DATETIME-LOCAL VALUE
+    // =====================================================
+
+    function formatDateTimeLocal(
+        dateObject
+    ) {
+
+        const pad =
+            function(value) {
+
+                return String(
+                    value
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+            };
+
+
+        return (
+            dateObject.getFullYear()
+            +
+            "-"
+            +
+            pad(
+                dateObject.getMonth() + 1
+            )
+            +
+            "-"
+            +
+            pad(
+                dateObject.getDate()
+            )
+            +
+            "T"
+            +
+            pad(
+                dateObject.getHours()
+            )
+            +
+            ":"
+            +
+            pad(
+                dateObject.getMinutes()
+            )
+        );
+
+    }
+
+
+    // =====================================================
+    // AUTOMATIC SPONSORED EXPIRY PREVIEW
+    //
+    // The browser calculates this for immediate feedback.
+    //
+    // IMPORTANT:
+    //
+    // The backend independently calculates the real expiry.
+    // =====================================================
+
+    function updateSponsoredExpiry() {
+
+        if (
+            !sponsoredDurationSelect
+            ||
+            !sponsoredStartsAt
+            ||
+            !sponsoredExpiresAt
+        ) {
+
+            return;
+
+        }
+
+
+        const durationDays =
+            Number(
+                sponsoredDurationSelect.value
+                || 0
+            );
+
+
+        const startValue =
+            String(
+                sponsoredStartsAt.value
+                || ""
+            );
+
+
+        if (
+            !durationDays
+            ||
+            !startValue
+        ) {
+
+            sponsoredExpiresAt.value =
+                "";
+
+            return;
+
+        }
+
+
+        const startDate =
+            new Date(
+                startValue
+            );
+
+
+        if (
+            Number.isNaN(
+                startDate.getTime()
+            )
+        ) {
+
+            sponsoredExpiresAt.value =
+                "";
+
+            return;
+
+        }
+
+
+        const expiryDate =
+            new Date(
+                startDate.getTime()
+            );
+
+
+        expiryDate.setDate(
+            expiryDate.getDate()
+            +
+            durationDays
+        );
+
+
+        sponsoredExpiresAt.value =
+            formatDateTimeLocal(
+                expiryDate
             );
 
     }
@@ -4376,10 +4571,6 @@
         }
 
 
-        // -------------------------------------------------
-        // DEFAULT PRIORITY
-        // -------------------------------------------------
-
         if (
             sponsoredPriority
             &&
@@ -4394,11 +4585,13 @@
 
         updateSponsoredPrice();
 
+        updateSponsoredExpiry();
+
     }
 
 
     // =====================================================
-    // ENABLE / DISABLE
+    // ENABLE / DISABLE SPONSORED
     // =====================================================
 
     if (isSponsoredInput) {
@@ -4416,7 +4609,12 @@
 
 
     // =====================================================
-    // DURATION CHANGE
+    // SPONSORED DURATION CHANGE
+    //
+    // Update BOTH:
+    //
+    // - price
+    // - expiry
     // =====================================================
 
     if (sponsoredDurationSelect) {
@@ -4426,6 +4624,39 @@
             function() {
 
                 updateSponsoredPrice();
+
+                updateSponsoredExpiry();
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // SPONSORED START CHANGE
+    //
+    // Changing the manually selected start immediately
+    // recalculates the expiry preview.
+    // =====================================================
+
+    if (sponsoredStartsAt) {
+
+        sponsoredStartsAt.addEventListener(
+            "change",
+            function() {
+
+                updateSponsoredExpiry();
+
+            }
+        );
+
+
+        sponsoredStartsAt.addEventListener(
+            "input",
+            function() {
+
+                updateSponsoredExpiry();
 
             }
         );
@@ -4444,9 +4675,15 @@
             function() {
 
                 if (
-                    sponsorshipStatus.value
-                    ===
-                    "scheduled"
+                    (
+                        sponsorshipStatus.value
+                        ===
+                        "scheduled"
+                        ||
+                        sponsorshipStatus.value
+                        ===
+                        "active"
+                    )
                     &&
                     sponsoredStartsAt
                     &&
