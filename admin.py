@@ -8927,16 +8927,9 @@ def create_content():
         # =================================================
         # SPONSORED VISIBILITY
         #
-        # Completely separate from:
-        #
-        # - pricing_model
-        # - payment_status
-        # - amount_due
-        # - amount_paid
-        # - commercial_starts_at
-        # - commercial_expires_at
-        #
-        # Sponsored price is ALWAYS recalculated server-side.
+        # MANUAL PAYMENT
+        # MANUAL START
+        # AUTOMATIC EXPIRY
         # =================================================
 
         is_sponsored = (
@@ -8998,10 +8991,7 @@ def create_content():
             if not sponsored_duration_raw:
 
                 flash(
-                    (
-                        "Please select a Sponsored "
-                        "Boost duration."
-                    ),
+                    "Please select a Sponsored Boost duration.",
                     "error",
                 )
 
@@ -9032,10 +9022,7 @@ def create_content():
             ):
 
                 flash(
-                    (
-                        "Invalid Sponsored Boost "
-                        "duration selected."
-                    ),
+                    "Invalid Sponsored Boost duration selected.",
                     "error",
                 )
 
@@ -9096,7 +9083,7 @@ def create_content():
 
 
         # =================================================
-        # SPONSORED START / EXPIRY
+        # MANUAL SPONSORED START
         # =================================================
 
         sponsored_starts_raw = (
@@ -9108,77 +9095,71 @@ def create_content():
         )
 
 
-        sponsored_expires_raw = (
-            request.form.get(
-                "sponsored_expires_at",
-                "",
-            )
-            .strip()
-        )
+        sponsored_starts_at = None
+
+        sponsored_expires_at = None
 
 
-        try:
+        if is_sponsored:
 
-            sponsored_starts_at = (
+            if not sponsored_starts_raw:
 
-                datetime.fromisoformat(
-                    sponsored_starts_raw
+                flash(
+                    (
+                        "Please select when the Sponsored "
+                        "Boost should start."
+                    ),
+                    "error",
                 )
 
-                if sponsored_starts_raw
+                return _render_content_form(
+                    zones,
+                    categories,
+                    None,
+                )
 
-                else None
-            )
 
+            try:
+
+                sponsored_starts_at = (
+                    datetime.fromisoformat(
+                        sponsored_starts_raw
+                    )
+                )
+
+            except ValueError:
+
+                flash(
+                    "Please enter a valid Sponsored start date.",
+                    "error",
+                )
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    None,
+                )
+
+
+            # =============================================
+            # AUTOMATIC SPONSORED EXPIRY
+            #
+            # Example:
+            #
+            # start = 12 Sep 10:00
+            # duration = 7 days
+            #
+            # expiry = 19 Sep 10:00
+            #
+            # Browser expiry input is deliberately ignored.
+            # =============================================
 
             sponsored_expires_at = (
-
-                datetime.fromisoformat(
-                    sponsored_expires_raw
+                sponsored_starts_at
+                +
+                timedelta(
+                    days=sponsored_duration_days
                 )
-
-                if sponsored_expires_raw
-
-                else None
-            )
-
-        except ValueError:
-
-            flash(
-                "Please enter valid sponsorship dates.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # SPONSORSHIP DATE VALIDATION
-        # =================================================
-
-        if (
-            sponsored_starts_at
-            and sponsored_expires_at
-            and sponsored_expires_at
-            <= sponsored_starts_at
-        ):
-
-            flash(
-                (
-                    "Sponsored expiry must be after "
-                    "the sponsored start time."
-                ),
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
             )
 
 
@@ -9316,8 +9297,7 @@ def create_content():
 
             if (
                 uploaded_file
-                and
-                uploaded_file.filename
+                and uploaded_file.filename
             ):
 
                 uploaded_images.append(
@@ -9364,9 +9344,7 @@ def create_content():
 
 
         if (
-            len(
-                uploaded_images
-            )
+            len(uploaded_images)
             > maximum_images
         ):
 
@@ -9493,37 +9471,21 @@ def create_content():
 
         item = ContentItem(
 
-            zone_id=(
-                zone_id
-            ),
+            zone_id=zone_id,
 
-            category=(
-                category
-            ),
+            category=category,
 
-            content_type=(
-                content_type
-            ),
+            content_type=content_type,
 
-            lifetime_type=(
-                lifetime_type
-            ),
+            lifetime_type=lifetime_type,
 
-            availability_status=(
-                "available"
-            ),
+            availability_status="available",
 
-            title=(
-                title
-            ),
+            title=title,
 
-            start_time=(
-                start_time
-            ),
+            start_time=start_time,
 
-            end_time=(
-                end_time
-            ),
+            end_time=end_time,
 
             description=(
                 request.form.get(
@@ -9561,90 +9523,60 @@ def create_content():
                 or None
             ),
 
-            contact=(
-                contact
-            ),
+            contact=contact,
 
-            whatsapp_number=(
-                whatsapp_number
-            ),
+            whatsapp_number=whatsapp_number,
 
-            directions_url=(
-                directions_url
-            ),
+            directions_url=directions_url,
 
-            ticket_url=(
-                ticket_url
-            ),
+            ticket_url=ticket_url,
 
-            listing_level=(
-                listing_level
-            ),
+            listing_level=listing_level,
 
-            ownership_status=(
-                ownership_status
-            ),
+            ownership_status=ownership_status,
 
-            is_verified=(
-                is_verified
-            ),
+            is_verified=is_verified,
 
-            opening_hours=(
-                opening_hours
-            ),
+            opening_hours=opening_hours,
 
-            menu_highlights=(
-                menu_highlights
-            ),
+            menu_highlights=menu_highlights,
 
-            special_offer=(
-                special_offer
-            ),
+            special_offer=special_offer,
 
-            image_url=(
-                primary_image_url
-            ),
+            image_url=primary_image_url,
 
             image_url_2=(
 
                 second_image_url
 
-                if listing_level
-                in {
+                if listing_level in {
                     "business",
                     "promotion",
                 }
 
                 else None
-
             ),
 
             image_url_3=(
 
                 third_image_url
 
-                if listing_level
-                in {
+                if listing_level in {
                     "business",
                     "promotion",
                 }
 
                 else None
-
             ),
 
-            featured=(
-                featured
-            ),
+            featured=featured,
 
 
             # =============================================
             # SPONSORED
             # =============================================
 
-            is_sponsored=(
-                is_sponsored
-            ),
+            is_sponsored=is_sponsored,
 
             sponsorship_status=(
                 sponsorship_status
@@ -9709,8 +9641,6 @@ def create_content():
 
         # =================================================
         # CONFIGURE EXISTING COMMERCIAL PACKAGE
-        #
-        # Sponsored does NOT enter this helper.
         # =================================================
 
         try:
@@ -9729,9 +9659,7 @@ def create_content():
 
 
             flash(
-                str(
-                    error
-                ),
+                str(error),
                 "error",
             )
 
@@ -9807,13 +9735,11 @@ def create_content():
             == PRICING_MODEL_PRESENCE
         ):
 
-            distribution_zone_ids = (
-                []
-            )
+            distribution_zone_ids = []
 
 
         # =================================================
-        # SAVE CONTENT + DISTRIBUTION AS ONE TRANSACTION
+        # SAVE CONTENT + DISTRIBUTION
         # =================================================
 
         try:
@@ -9830,23 +9756,11 @@ def create_content():
                 distribution_zone_ids
             ):
 
-                distribution_link = (
-                    ContentDistributionZone(
-
-                        content_item_id=(
-                            item.id
-                        ),
-
-                        zone_id=(
-                            distribution_zone_id
-                        ),
-
-                    )
-                )
-
-
                 db.session.add(
-                    distribution_link
+                    ContentDistributionZone(
+                        content_item_id=item.id,
+                        zone_id=distribution_zone_id,
+                    )
                 )
 
 
@@ -9928,15 +9842,16 @@ def create_content():
 
         if (
             item.is_sponsored
-            and
-            item.sponsored_duration_days
+            and item.sponsored_duration_days
         ):
 
             flash(
                 (
                     "Sponsored Boost configured: "
                     f"{item.sponsored_duration_days} days — "
-                    f"{format_kalxa_price(item.sponsorship_amount_due)}."
+                    f"{format_kalxa_price(item.sponsorship_amount_due)}. "
+                    f"Expires: "
+                    f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
                 ),
                 "success",
             )
@@ -9958,7 +9873,6 @@ def create_content():
         categories,
         None,
     )
-
 
 @admin_bp.route(
     "/content/<int:item_id>/edit",
@@ -10025,8 +9939,6 @@ def edit_content(
 
         # =================================================
         # SNAPSHOT EXISTING COMMERCIAL PACKAGE
-        #
-        # Sponsorship remains completely separate.
         # =================================================
 
         old_pricing_model = (
@@ -10575,10 +10487,6 @@ def edit_content(
         )
 
 
-        # =================================================
-        # PUBLIC CONTACT + ACTION DATA
-        # =================================================
-
         item.contact = (
             contact
         )
@@ -10709,6 +10617,10 @@ def edit_content(
 
         # =================================================
         # SPONSORED VISIBILITY
+        #
+        # MANUAL PAYMENT
+        # MANUAL START
+        # AUTOMATIC EXPIRY
         # =================================================
 
         is_sponsored = (
@@ -10750,10 +10662,6 @@ def edit_content(
 
         # =================================================
         # SPONSORED DURATION + OFFICIAL PRICE
-        #
-        # Browser price is NOT trusted.
-        #
-        # pricing.py is the official source.
         # =================================================
 
         sponsored_duration_days = None
@@ -10775,10 +10683,7 @@ def edit_content(
             if not sponsored_duration_raw:
 
                 flash(
-                    (
-                        "Please select a Sponsored "
-                        "Boost duration."
-                    ),
+                    "Please select a Sponsored Boost duration.",
                     "error",
                 )
 
@@ -10809,10 +10714,7 @@ def edit_content(
             ):
 
                 flash(
-                    (
-                        "Invalid Sponsored Boost "
-                        "duration selected."
-                    ),
+                    "Invalid Sponsored Boost duration selected.",
                     "error",
                 )
 
@@ -10874,7 +10776,7 @@ def edit_content(
 
 
         # =================================================
-        # SPONSORED START / EXPIRY
+        # MANUAL START + AUTOMATIC EXPIRY
         # =================================================
 
         sponsored_starts_raw = (
@@ -10886,77 +10788,58 @@ def edit_content(
         )
 
 
-        sponsored_expires_raw = (
-            request.form.get(
-                "sponsored_expires_at",
-                "",
-            )
-            .strip()
-        )
+        sponsored_starts_at = None
+
+        sponsored_expires_at = None
 
 
-        try:
+        if is_sponsored:
 
-            sponsored_starts_at = (
+            if not sponsored_starts_raw:
 
-                datetime.fromisoformat(
-                    sponsored_starts_raw
+                flash(
+                    (
+                        "Please select when the Sponsored "
+                        "Boost should start."
+                    ),
+                    "error",
                 )
 
-                if sponsored_starts_raw
+                return _render_content_form(
+                    zones,
+                    categories,
+                    item,
+                )
 
-                else None
-            )
+
+            try:
+
+                sponsored_starts_at = (
+                    datetime.fromisoformat(
+                        sponsored_starts_raw
+                    )
+                )
+
+            except ValueError:
+
+                flash(
+                    "Please enter a valid Sponsored start date.",
+                    "error",
+                )
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    item,
+                )
 
 
             sponsored_expires_at = (
-
-                datetime.fromisoformat(
-                    sponsored_expires_raw
+                sponsored_starts_at
+                +
+                timedelta(
+                    days=sponsored_duration_days
                 )
-
-                if sponsored_expires_raw
-
-                else None
-            )
-
-        except ValueError:
-
-            flash(
-                "Please enter valid sponsorship dates.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # SPONSORSHIP DATE VALIDATION
-        # =================================================
-
-        if (
-            sponsored_starts_at
-            and sponsored_expires_at
-            and sponsored_expires_at
-            <= sponsored_starts_at
-        ):
-
-            flash(
-                (
-                    "Sponsored expiry must be after "
-                    "the sponsored start time."
-                ),
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
             )
 
 
@@ -11090,10 +10973,6 @@ def edit_content(
             )
 
 
-        # =================================================
-        # APPLY CAMPAIGN TIMES
-        # =================================================
-
         item.start_time = (
             start_time
         )
@@ -11116,8 +10995,7 @@ def edit_content(
 
             if (
                 uploaded_file
-                and
-                uploaded_file.filename
+                and uploaded_file.filename
             ):
 
                 uploaded_images.append(
@@ -11147,26 +11025,15 @@ def edit_content(
         # IMAGE LIMIT
         # =================================================
 
-        if (
-            listing_level
-            == "discovery"
-        ):
-
-            maximum_images = (
-                1
-            )
-
-        else:
-
-            maximum_images = (
-                3
-            )
+        maximum_images = (
+            1
+            if listing_level == "discovery"
+            else 3
+        )
 
 
         if (
-            len(
-                uploaded_images
-            )
+            len(uploaded_images)
             > maximum_images
         ):
 
@@ -11258,6 +11125,7 @@ def edit_content(
 
 
             item.image_url = (
+
                 uploaded_image_urls[0]
 
                 if len(
@@ -11277,6 +11145,7 @@ def edit_content(
             ):
 
                 item.image_url_2 = (
+
                     uploaded_image_urls[1]
 
                     if len(
@@ -11288,6 +11157,7 @@ def edit_content(
 
 
                 item.image_url_3 = (
+
                     uploaded_image_urls[2]
 
                     if len(
@@ -11299,37 +11169,23 @@ def edit_content(
 
             else:
 
-                item.image_url_2 = (
-                    None
-                )
+                item.image_url_2 = None
 
-                item.image_url_3 = (
-                    None
-                )
+                item.image_url_3 = None
 
-
-        # =================================================
-        # FINAL DISCOVERY IMAGE SAFETY
-        # =================================================
 
         if (
             listing_level
             == "discovery"
         ):
 
-            item.image_url_2 = (
-                None
-            )
+            item.image_url_2 = None
 
-            item.image_url_3 = (
-                None
-            )
+            item.image_url_3 = None
 
 
         # =================================================
         # CONFIGURE EXISTING COMMERCIAL PACKAGE
-        #
-        # Sponsored does NOT affect this calculation.
         # =================================================
 
         try:
@@ -11348,9 +11204,7 @@ def edit_content(
 
 
             flash(
-                str(
-                    error
-                ),
+                str(error),
                 "error",
             )
 
@@ -11426,16 +11280,11 @@ def edit_content(
             == PRICING_MODEL_PRESENCE
         ):
 
-            distribution_zone_ids = (
-                []
-            )
+            distribution_zone_ids = []
 
 
         # =================================================
-        # DETERMINE WHETHER ORIGINAL COMMERCIAL PACKAGE
-        # CHANGED
-        #
-        # Sponsored remains intentionally excluded.
+        # DETERMINE WHETHER ORIGINAL PACKAGE CHANGED
         # =================================================
 
         new_distribution_zone_ids = set(
@@ -11476,7 +11325,6 @@ def edit_content(
                 item.pricing_model
                 != PRICING_MODEL_CAMPAIGN
             )
-
         )
 
 
@@ -11486,11 +11334,9 @@ def edit_content(
 
         if (
             not package_changed
-            and
-            old_payment_status
+            and old_payment_status
             == item.payment_status
-            and
-            item.payment_status
+            and item.payment_status
             in {
                 "paid",
                 "waived",
@@ -11521,25 +11367,19 @@ def edit_content(
 
             else:
 
-                item.paid_at = (
-                    None
-                )
+                item.paid_at = None
 
-                item.amount_paid = (
-                    None
-                )
+                item.amount_paid = None
 
 
         # =================================================
-        # PRESERVE PAYMENT REFERENCE WHEN FORM LEFT EMPTY
+        # PRESERVE PAYMENT REFERENCE
         # =================================================
 
         if (
             not item.payment_reference
-            and
-            old_payment_reference
-            and
-            not package_changed
+            and old_payment_reference
+            and not package_changed
         ):
 
             item.payment_reference = (
@@ -11548,7 +11388,7 @@ def edit_content(
 
 
         # =================================================
-        # SAVE EVERYTHING AS ONE TRANSACTION
+        # SAVE EVERYTHING
         # =================================================
 
         try:
@@ -11570,15 +11410,8 @@ def edit_content(
 
                 db.session.add(
                     ContentDistributionZone(
-
-                        content_item_id=(
-                            item.id
-                        ),
-
-                        zone_id=(
-                            distribution_zone_id
-                        ),
-
+                        content_item_id=item.id,
+                        zone_id=distribution_zone_id,
                     )
                 )
 
@@ -11617,7 +11450,7 @@ def edit_content(
 
 
         # =================================================
-        # SUCCESS MESSAGE
+        # SUCCESS
         # =================================================
 
         if (
@@ -11661,15 +11494,16 @@ def edit_content(
 
         if (
             item.is_sponsored
-            and
-            item.sponsored_duration_days
+            and item.sponsored_duration_days
         ):
 
             flash(
                 (
                     "Sponsored Boost: "
                     f"{item.sponsored_duration_days} days — "
-                    f"{format_kalxa_price(item.sponsorship_amount_due)}."
+                    f"{format_kalxa_price(item.sponsorship_amount_due)}. "
+                    f"Expires: "
+                    f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
                 ),
                 "success",
             )
@@ -11691,6 +11525,7 @@ def edit_content(
         categories,
         item,
     )
+
        
 @admin_bp.route(
     "/content/<int:item_id>/toggle",
