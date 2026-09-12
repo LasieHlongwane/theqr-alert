@@ -10050,13 +10050,17 @@ def submission_status(code):
 
 
 # =========================================================
-# BUSINESS / ORGANISER DASHBOARD
+# BUSINESS / ORGANISER SUBMISSION DASHBOARD
 # =========================================================
 
 @app.route(
     "/submission/dashboard/<code>"
 )
 def submission_dashboard(code):
+
+    # =====================================================
+    # LOAD SUBMISSION
+    # =====================================================
 
     submission = (
         PendingSubmission.query
@@ -10065,6 +10069,96 @@ def submission_dashboard(code):
         )
         .first_or_404()
     )
+
+
+    # =====================================================
+    # ORGANIZER OWNERSHIP SECURITY
+    # =====================================================
+    #
+    # A tracking code identifies a submission.
+    #
+    # It does NOT prove that the visitor owns the
+    # organizer account.
+    #
+    # For organizer-owned submissions we therefore require
+    # the authenticated organizer session to match the
+    # submission's organizer_id.
+    # =====================================================
+
+    if submission.organizer_id:
+
+        organizer_id = (
+            session.get(
+                "organizer_id"
+            )
+        )
+
+
+        if (
+            not organizer_id
+            or organizer_id
+            != submission.organizer_id
+        ):
+
+            flash(
+                (
+                    "Please sign in with the organizer "
+                    "account that owns this listing."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "submission_status",
+                    code=
+                        submission.tracking_code,
+                )
+            )
+
+
+        organizer = (
+            db.session.get(
+                Organizer,
+                organizer_id,
+            )
+        )
+
+
+        if (
+            not organizer
+            or not organizer.active
+        ):
+
+            session.pop(
+                "organizer_id",
+                None,
+            )
+
+            flash(
+                (
+                    "Your organizer session is no longer "
+                    "valid. Please sign in again."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "submission_status",
+                    code=
+                        submission.tracking_code,
+                )
+            )
+
+    else:
+
+        organizer = None
+
+
+    # =====================================================
+    # PAGE STATE
+    # =====================================================
 
     published_content = None
     live_access_point = None
@@ -10076,15 +10170,17 @@ def submission_dashboard(code):
     expiry_date = None
     days_remaining = None
 
+
     lifetime_type = (
         get_legacy_lifetime_type(
             submission
         )
     )
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # CATEGORY
-    # -----------------------------------------------------
+    # =====================================================
 
     category_record = (
         Category.query
@@ -10094,9 +10190,10 @@ def submission_dashboard(code):
         .first()
     )
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # APPROVED CONTENT
-    # -----------------------------------------------------
+    # =====================================================
 
     if submission.published_content_id:
 
@@ -10107,9 +10204,45 @@ def submission_dashboard(code):
             )
         )
 
-    # -----------------------------------------------------
+
+        # -------------------------------------------------
+        # EXTRA OWNERSHIP CONSISTENCY CHECK
+        # -------------------------------------------------
+        #
+        # Once content is published, its organizer_id should
+        # match the original PendingSubmission.organizer_id.
+        #
+        # If it does not, we log it because that would mean
+        # the approval/publishing workflow lost ownership.
+        # -------------------------------------------------
+
+        if (
+            submission.organizer_id
+            and published_content
+            and (
+                published_content.organizer_id
+                != submission.organizer_id
+            )
+        ):
+
+            current_app.logger.warning(
+                (
+                    "[Kalxa Ownership] Organizer mismatch "
+                    "submission_id=%s "
+                    "submission_organizer_id=%s "
+                    "content_item_id=%s "
+                    "content_organizer_id=%s"
+                ),
+                submission.id,
+                submission.organizer_id,
+                published_content.id,
+                published_content.organizer_id,
+            )
+
+
+    # =====================================================
     # LIVE ACCESS POINT
-    # -----------------------------------------------------
+    # =====================================================
 
     if published_content:
 
@@ -10119,15 +10252,17 @@ def submission_dashboard(code):
             )
         )
 
+
         lifetime_type = (
             get_legacy_lifetime_type(
                 published_content
             )
         )
 
-        # -------------------------------------------------
+
+        # =================================================
         # AVAILABILITY STATUS
-        # -------------------------------------------------
+        # =================================================
 
         closed_statuses = {
             "taken",
@@ -10137,17 +10272,17 @@ def submission_dashboard(code):
             "expired",
         }
 
+
         listing_closed = (
             published_content
             .availability_status
             in closed_statuses
         )
 
-        # -------------------------------------------------
+
+        # =================================================
         # EXPIRY
-        #
-        # Only time-specific content automatically expires.
-        # -------------------------------------------------
+        # =================================================
 
         if (
             lifetime_type
@@ -10174,6 +10309,7 @@ def submission_dashboard(code):
                     .end_date
                 )
 
+
             if expiry_date:
 
                 days_remaining = (
@@ -10181,16 +10317,12 @@ def submission_dashboard(code):
                     - date.today()
                 ).days
 
+
                 listing_expired = (
                     expiry_date
                     < date.today()
                 )
 
-        # -------------------------------------------------
-        # UNTIL-UNAVAILABLE / ONGOING
-        #
-        # These intentionally have no automatic expiry date.
-        # -------------------------------------------------
 
         else:
 
@@ -10198,12 +10330,16 @@ def submission_dashboard(code):
             days_remaining = None
             listing_expired = False
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # TEMPLATE
-    # -----------------------------------------------------
+    # =====================================================
 
     return render_template(
         "submission_dashboard.html",
+
+        organizer=
+            organizer,
 
         submission=
             submission,
@@ -10232,8 +10368,6 @@ def submission_dashboard(code):
         listing_closed=
             listing_closed,
     )
-
-#TESTING ONLY
 
 
 
