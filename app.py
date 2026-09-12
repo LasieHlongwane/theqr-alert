@@ -61,6 +61,8 @@ from models import (
     ListingClaim,
     EngagementEvent,
     ContentReminder,
+    Organizer
+
 )
 from categories import (
     BUSINESS_CATEGORIES,
