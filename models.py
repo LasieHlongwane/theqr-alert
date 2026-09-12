@@ -1,11 +1,209 @@
-
-from datetime import datetime
+from datetime import datetime, time
 import secrets
 
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash,
+)
 
 
 db = SQLAlchemy()
+
+
+# ============================================================
+# ORGANIZER
+# ============================================================
+
+class Organizer(db.Model):
+    """
+    A person or organization that submits content to Kalxa.
+
+    This becomes the ownership identity shared between:
+
+        Organizer
+            ↓
+        PendingSubmission
+            ↓
+        ContentItem
+            ↓
+        Kalxa Ticketing
+
+    IMPORTANT:
+
+    Existing Kalxa content may not have an organizer yet.
+    For that reason organizer_id is initially nullable on
+    PendingSubmission and ContentItem.
+
+    New organizer submissions should always be linked to an
+    Organizer account.
+    """
+
+    __tablename__ = "organizers"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    # --------------------------------------------------------
+    # IDENTITY
+    # --------------------------------------------------------
+
+    name = db.Column(
+        db.String(150),
+        nullable=False,
+    )
+
+    business_name = db.Column(
+        db.String(200),
+        nullable=True,
+    )
+
+    email = db.Column(
+        db.String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    phone = db.Column(
+        db.String(50),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # AUTHENTICATION
+    # --------------------------------------------------------
+
+    password_hash = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    # --------------------------------------------------------
+    # ACCOUNT STATUS
+    # --------------------------------------------------------
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+    is_verified = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    # --------------------------------------------------------
+    # TIMESTAMPS
+    # --------------------------------------------------------
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    # --------------------------------------------------------
+    # RELATIONSHIPS
+    # --------------------------------------------------------
+
+    pending_submissions = db.relationship(
+        "PendingSubmission",
+        back_populates="organizer",
+        lazy=True,
+    )
+
+    content_items = db.relationship(
+        "ContentItem",
+        back_populates="organizer",
+        lazy=True,
+    )
+
+    # --------------------------------------------------------
+    # PASSWORD HELPERS
+    # --------------------------------------------------------
+
+    def set_password(
+        self,
+        password,
+    ):
+
+        self.password_hash = (
+            generate_password_hash(
+                password
+            )
+        )
+
+
+    def check_password(
+        self,
+        password,
+    ):
+
+        if not self.password_hash:
+            return False
+
+        return check_password_hash(
+            self.password_hash,
+            password,
+        )
+
+
+    # --------------------------------------------------------
+    # EVENT HELPERS
+    # --------------------------------------------------------
+
+    @property
+    def event_content_items(self):
+        """
+        Return this organizer's published event listings.
+
+        We deliberately support both "events" and
+        "local-events" while Kalxa's category naming evolves.
+        """
+
+        return [
+            item
+            for item in self.content_items
+            if (
+                item.category
+                in {
+                    "events",
+                    "local-events",
+                }
+            )
+        ]
+
+
+    @property
+    def has_event_listing(self):
+
+        return bool(
+            self.event_content_items
+        )
+
+
+    def __repr__(self):
+
+        return (
+            f"<Organizer "
+            f"id={self.id} "
+            f"name={self.name}>"
+        )
 
 
 # ============================================================
@@ -38,25 +236,19 @@ class Category(db.Model):
         nullable=True,
     )
 
-    # --------------------------------------------------------
-    # CATEGORY IMAGE
-    # Used on public category cards.
-    # If no image is available, the existing icon can be shown.
-    # --------------------------------------------------------
-
     image_url = db.Column(
         db.String(500),
         nullable=True,
     )
 
     image_url_2 = db.Column(
-       db.String(500),
-       nullable=True,
+        db.String(500),
+        nullable=True,
     )
 
     image_url_3 = db.Column(
-       db.String(500),
-       nullable=True,
+        db.String(500),
+        nullable=True,
     )
 
     display_order = db.Column(
@@ -78,30 +270,18 @@ class Category(db.Model):
     )
 
     def __repr__(self):
+
         return (
             f"<Category "
             f"{self.slug}>"
         )
 
-        
- # ============================================================
+
+# ============================================================
 # ZONE CATEGORY APPEARANCE
 # ============================================================
 
 class ZoneCategoryAppearance(db.Model):
-    """
-    Stores zone-specific visual settings for a category.
-
-    Example:
-        KwaMhlanga + Events
-        Mamelodi + Events
-
-    Each zone/category combination may have its own background
-    images.
-
-    If no ZoneCategoryAppearance exists, the application can
-    fall back to the default images stored on Category.
-    """
 
     __tablename__ = "zone_category_appearances"
 
@@ -110,31 +290,25 @@ class ZoneCategoryAppearance(db.Model):
         primary_key=True,
     )
 
-    # --------------------------------------------------------
-    # ZONE
-    # --------------------------------------------------------
-
     zone_id = db.Column(
         db.Integer,
-        db.ForeignKey("zones.id", ondelete="CASCADE"),
+        db.ForeignKey(
+            "zones.id",
+            ondelete="CASCADE",
+        ),
         nullable=False,
         index=True,
     )
-
-    # --------------------------------------------------------
-    # CATEGORY
-    # --------------------------------------------------------
 
     category_id = db.Column(
         db.Integer,
-        db.ForeignKey("categories.id", ondelete="CASCADE"),
+        db.ForeignKey(
+            "categories.id",
+            ondelete="CASCADE",
+        ),
         nullable=False,
         index=True,
     )
-
-    # --------------------------------------------------------
-    # ZONE-SPECIFIC CATEGORY IMAGES
-    # --------------------------------------------------------
 
     image_url = db.Column(
         db.String(500),
@@ -151,10 +325,6 @@ class ZoneCategoryAppearance(db.Model):
         nullable=True,
     )
 
-    # --------------------------------------------------------
-    # TIMESTAMPS
-    # --------------------------------------------------------
-
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow,
@@ -167,10 +337,6 @@ class ZoneCategoryAppearance(db.Model):
         onupdate=datetime.utcnow,
         nullable=False,
     )
-
-    # --------------------------------------------------------
-    # RELATIONSHIPS
-    # --------------------------------------------------------
 
     zone = db.relationship(
         "Zone",
@@ -190,27 +356,18 @@ class ZoneCategoryAppearance(db.Model):
         ),
     )
 
-    # --------------------------------------------------------
-    # CONSTRAINTS
-    # --------------------------------------------------------
-
     __table_args__ = (
+
         db.UniqueConstraint(
             "zone_id",
             "category_id",
             name="uq_zone_category_appearance",
         ),
-    )
 
-    # --------------------------------------------------------
-    # HELPERS
-    # --------------------------------------------------------
+    )
 
     @property
     def images(self):
-        """
-        Return only configured zone-specific images.
-        """
 
         return [
             image
@@ -223,11 +380,14 @@ class ZoneCategoryAppearance(db.Model):
         ]
 
     def __repr__(self):
+
         return (
             f"<ZoneCategoryAppearance "
             f"zone_id={self.zone_id} "
             f"category_id={self.category_id}>"
         )
+
+
 # ============================================================
 # ZONE
 # ============================================================
@@ -348,6 +508,25 @@ class ContentItem(db.Model):
         db.Integer,
         db.ForeignKey("zones.id"),
         nullable=False,
+    )
+
+    # ========================================================
+    # ORGANIZER OWNERSHIP
+    # ========================================================
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+        back_populates="content_items",
     )
 
 
@@ -507,24 +686,7 @@ class ContentItem(db.Model):
 
 
     # ========================================================
-    # COMMERCIAL / MONETIZATION MODEL
-    # ========================================================
-    #
-    # presence:
-    #     Long-life business presence.
-    #     Price depends mainly on duration.
-    #
-    # campaign:
-    #     Short-life promotional content.
-    #     Price depends on duration + distribution reach.
-    #
-    # None:
-    #     Legacy / Kalxa-curated / non-commercial content.
-    #
-    # IMPORTANT:
-    #
-    # Sponsored visibility is intentionally kept separate
-    # from this existing commercial model.
+    # COMMERCIAL / MONETIZATION
     # ========================================================
 
     pricing_model = db.Column(
@@ -532,11 +694,6 @@ class ContentItem(db.Model):
         nullable=True,
         index=True,
     )
-
-
-    # ========================================================
-    # COMMERCIAL DURATION
-    # ========================================================
 
     commercial_duration_days = db.Column(
         db.Integer,
@@ -558,24 +715,6 @@ class ContentItem(db.Model):
 
     # ========================================================
     # PAYMENT
-    # ========================================================
-    #
-    # Existing listing payment workflow.
-    #
-    # DO NOT use these fields yet for sponsored placement.
-    #
-    # unpaid:
-    #     Customer has not yet paid.
-    #
-    # paid:
-    #     Customer payment confirmed.
-    #
-    # waived:
-    #     Kalxa intentionally allows the listing without
-    #     customer payment, e.g. pilot / partner / seeded.
-    #
-    # refunded:
-    #     Payment refunded.
     # ========================================================
 
     payment_status = db.Column(
@@ -614,42 +753,7 @@ class ContentItem(db.Model):
 
 
     # ========================================================
-    # SPONSORED / PAID VISIBILITY LAYER
-    # ========================================================
-    #
-    # This is deliberately independent from:
-    #
-    # pricing_model
-    # payment_status
-    # amount_due
-    # amount_paid
-    # commercial_starts_at
-    # commercial_expires_at
-    #
-    # Initial MVP:
-    #
-    # Admin activates sponsorship manually.
-    #
-    # Later:
-    # A dedicated sponsorship checkout can be added without
-    # modifying the existing Presence/Campaign payment flow.
-    #
-    # sponsorship_status:
-    #
-    # inactive
-    # scheduled
-    # active
-    # expired
-    #
-    # sponsored_priority:
-    #
-    # Higher number = stronger sponsored ranking.
-    #
-    # Example:
-    #
-    # 0 = default
-    # 10 = standard sponsored
-    # 20 = premium sponsored
+    # SPONSORED VISIBILITY
     # ========================================================
 
     is_sponsored = db.Column(
@@ -673,8 +777,8 @@ class ContentItem(db.Model):
 
     sponsorship_amount_due = db.Column(
         db.Numeric(
-          10,
-          2,
+            10,
+            2,
         ),
         nullable=True,
     )
@@ -805,6 +909,31 @@ class ContentItem(db.Model):
 
 
     # ========================================================
+    # ORGANIZER HELPERS
+    # ========================================================
+
+    @property
+    def has_organizer(self):
+
+        return (
+            self.organizer_id
+            is not None
+        )
+
+
+    @property
+    def is_event_listing(self):
+
+        return (
+            self.category
+            in {
+                "events",
+                "local-events",
+            }
+        )
+
+
+    # ========================================================
     # LIFECYCLE HELPERS
     # ========================================================
 
@@ -878,10 +1007,6 @@ class ContentItem(db.Model):
     # ========================================================
 
     def can_be_claimed(self):
-        """
-        Only an unclaimed Discovery listing can enter
-        the public claim workflow.
-        """
 
         return (
             self.listing_level
@@ -892,13 +1017,6 @@ class ContentItem(db.Model):
 
 
     def has_pending_claim(self):
-        """
-        Returns True when this listing already has a
-        pending claim waiting for admin review.
-
-        This can later be used to prevent duplicate
-        claim submissions.
-        """
 
         return any(
             claim.status == "pending"
@@ -911,10 +1029,6 @@ class ContentItem(db.Model):
     # ========================================================
 
     def has_campaign_dates(self):
-        """
-        Return True when the content has date/time information
-        that can participate in Kalxa's Campaign State Engine.
-        """
 
         return bool(
             self.start_date
@@ -926,22 +1040,13 @@ class ContentItem(db.Model):
 
 
     def get_campaign_target_date(self):
-        """
-        Return the most meaningful date for countdown purposes.
 
-        Events count down toward event_date.
-
-        Other campaigns count down toward start_date.
-        """
-
-        canonical_category = normalize_category(
-            self.category
+        canonical_category = (
+            normalize_category(
+                self.category
+            )
         )
 
-
-        # ====================================================
-        # EVENTS
-        # ====================================================
 
         if canonical_category == "events":
 
@@ -951,22 +1056,10 @@ class ContentItem(db.Model):
             )
 
 
-        # ====================================================
-        # OTHER CAMPAIGNS
-        # ====================================================
-
         return self.start_date
 
 
     def get_campaign_start_datetime(self):
-        """
-        Build the campaign's effective start datetime.
-
-        Events use event_date as their primary target date.
-        Other campaigns use start_date.
-
-        If no start_time exists, midnight is used temporarily.
-        """
 
         target_date = (
             self.get_campaign_target_date()
@@ -990,17 +1083,6 @@ class ContentItem(db.Model):
 
 
     def get_campaign_end_datetime(self):
-        """
-        Build the campaign's effective end datetime.
-
-        If end_date exists, combine it with end_time.
-
-        If there is an end_date but no end_time, use the end
-        of that day rather than midnight so the campaign does
-        not disappear at 00:00.
-
-        If no end_date exists, return None.
-        """
 
         if not self.end_date:
             return None
@@ -1016,26 +1098,20 @@ class ContentItem(db.Model):
             self.end_date,
             effective_time,
         )
-        
-        
+
+
+# ============================================================
+# LISTING CLAIM
+# ============================================================
+
 class ListingClaim(db.Model):
 
     __tablename__ = "listing_claims"
-
-
-    # ========================================================
-    # PRIMARY KEY
-    # ========================================================
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
-
-
-    # ========================================================
-    # LISTING BEING CLAIMED
-    # ========================================================
 
     content_item_id = db.Column(
         db.Integer,
@@ -1046,11 +1122,6 @@ class ListingClaim(db.Model):
         nullable=False,
         index=True,
     )
-
-
-    # ========================================================
-    # CLAIMANT INFORMATION
-    # ========================================================
 
     claimant_name = db.Column(
         db.String(120),
@@ -1072,34 +1143,10 @@ class ListingClaim(db.Model):
         nullable=True,
     )
 
-
-    # ========================================================
-    # OWNERSHIP / VERIFICATION INFORMATION
-    # ========================================================
-    #
-    # The claimant can explain how they are connected
-    # to the business.
-    #
-    # Later we can add proof-file uploads without changing
-    # the basic claim workflow.
-    #
-    # ========================================================
-
     proof_notes = db.Column(
         db.Text,
         nullable=True,
     )
-
-
-    # ========================================================
-    # REVIEW STATUS
-    # ========================================================
-    #
-    # pending
-    # approved
-    # rejected
-    #
-    # ========================================================
 
     status = db.Column(
         db.String(30),
@@ -1107,11 +1154,6 @@ class ListingClaim(db.Model):
         default="pending",
         index=True,
     )
-
-
-    # ========================================================
-    # ADMIN REVIEW
-    # ========================================================
 
     admin_notes = db.Column(
         db.Text,
@@ -1123,31 +1165,16 @@ class ListingClaim(db.Model):
         nullable=True,
     )
 
-
-    # ========================================================
-    # TIMESTAMPS
-    # ========================================================
-
     created_at = db.Column(
         db.DateTime,
         nullable=False,
         default=datetime.utcnow,
     )
 
-
-    # ========================================================
-    # RELATIONSHIP
-    # ========================================================
-
     content_item = db.relationship(
         "ContentItem",
         back_populates="claims",
     )
-
-
-    # ========================================================
-    # STATUS HELPERS
-    # ========================================================
 
     @property
     def is_pending(self):
@@ -1175,9 +1202,7 @@ class ListingClaim(db.Model):
             == "rejected"
         )
 
-# ============================================================
-# PENDING SUBMISSION IMAGE
-# ============================================================
+
 # ============================================================
 # PENDING SUBMISSION
 # ============================================================
@@ -1196,6 +1221,22 @@ class PendingSubmission(db.Model):
         db.ForeignKey("zones.id"),
         nullable=False,
     )
+
+
+    # ========================================================
+    # ORGANIZER OWNERSHIP
+    # ========================================================
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
 
     category = db.Column(
         db.String(100),
@@ -1236,13 +1277,6 @@ class PendingSubmission(db.Model):
 
     # --------------------------------------------------------
     # COMMERCIAL PACKAGE
-    #
-    # Stores what the public submitter requested.
-    #
-    # IMPORTANT:
-    # These are NOT yet an active commercial period.
-    # commercial_starts_at / commercial_expires_at belong
-    # on ContentItem after payment + approval.
     # --------------------------------------------------------
 
     pricing_model = db.Column(
@@ -1257,7 +1291,10 @@ class PendingSubmission(db.Model):
     )
 
     amount_due = db.Column(
-        db.Numeric(10, 2),
+        db.Numeric(
+            10,
+            2,
+        ),
         nullable=True,
     )
 
@@ -1270,20 +1307,7 @@ class PendingSubmission(db.Model):
 
 
     # --------------------------------------------------------
-    # REQUESTED CAMPAIGN DISTRIBUTION
-    #
-    # Example:
-    #
-    # [1]
-    # = KwaMhlanga only
-    #
-    # [1, 2]
-    # = KwaMhlanga + Siyabuswa
-    #
-    # Presence listings store [].
-    #
-    # When approved, these IDs are converted into
-    # ContentDistributionZone records for ContentItem.
+    # REQUESTED DISTRIBUTION
     # --------------------------------------------------------
 
     distribution_zone_ids = db.Column(
@@ -1294,7 +1318,7 @@ class PendingSubmission(db.Model):
 
 
     # --------------------------------------------------------
-    # YOCO PAYMENT
+    # YOCO
     # --------------------------------------------------------
 
     yoco_checkout_id = db.Column(
@@ -1343,7 +1367,7 @@ class PendingSubmission(db.Model):
 
 
     # --------------------------------------------------------
-    # PUBLIC CONTACT / ACTION INFORMATION
+    # PUBLIC CONTACT
     # --------------------------------------------------------
 
     contact = db.Column(
@@ -1378,7 +1402,15 @@ class PendingSubmission(db.Model):
 
 
     # --------------------------------------------------------
-    # SUBMITTER INFORMATION
+    # SUBMITTER SNAPSHOT
+    # --------------------------------------------------------
+    #
+    # Keep these fields.
+    #
+    # organizer_id identifies the account.
+    #
+    # These fields preserve the information that was entered
+    # at the moment the listing was submitted.
     # --------------------------------------------------------
 
     submitter_name = db.Column(
@@ -1418,7 +1450,7 @@ class PendingSubmission(db.Model):
 
 
     # --------------------------------------------------------
-    # GENERAL VALIDITY DATES
+    # GENERAL VALIDITY
     # --------------------------------------------------------
 
     start_date = db.Column(
@@ -1430,7 +1462,7 @@ class PendingSubmission(db.Model):
         db.Date,
         nullable=True,
     )
-    
+
     start_time = db.Column(
         db.Time,
         nullable=True,
@@ -1443,7 +1475,7 @@ class PendingSubmission(db.Model):
 
 
     # --------------------------------------------------------
-    # MODERATION STATUS
+    # MODERATION
     # --------------------------------------------------------
 
     status = db.Column(
@@ -1471,7 +1503,9 @@ class PendingSubmission(db.Model):
 
     published_content_id = db.Column(
         db.Integer,
-        db.ForeignKey("content_items.id"),
+        db.ForeignKey(
+            "content_items.id"
+        ),
         nullable=True,
     )
 
@@ -1495,6 +1529,45 @@ class PendingSubmission(db.Model):
         "Zone",
         backref="pending_submissions",
     )
+
+    organizer = db.relationship(
+        "Organizer",
+        back_populates="pending_submissions",
+    )
+
+    published_content = db.relationship(
+        "ContentItem",
+        foreign_keys=[
+            published_content_id,
+        ],
+    )
+
+
+    # --------------------------------------------------------
+    # HELPERS
+    # --------------------------------------------------------
+
+    @property
+    def is_event_submission(self):
+
+        return (
+            self.category
+            in {
+                "events",
+                "local-events",
+            }
+        )
+
+
+    @property
+    def belongs_to_organizer(self):
+
+        return (
+            self.organizer_id
+            is not None
+        )
+
+
 # ============================================================
 # PENDING SUBMISSION IMAGE
 # ============================================================
@@ -1543,23 +1616,20 @@ class PendingSubmissionImage(db.Model):
             cascade="all, delete-orphan",
         ),
     )
-    
-    
-    
+
+
+# ============================================================
+# CONTENT REMINDER
+# ============================================================
+
 class ContentReminder(db.Model):
 
     __tablename__ = "content_reminders"
-
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
-
-
-    # -----------------------------------------------------
-    # CONTENT
-    # -----------------------------------------------------
 
     content_item_id = db.Column(
         db.Integer,
@@ -1571,11 +1641,6 @@ class ContentReminder(db.Model):
         index=True,
     )
 
-
-    # -----------------------------------------------------
-    # LOCATION CONTEXT
-    # -----------------------------------------------------
-
     zone_id = db.Column(
         db.Integer,
         db.ForeignKey(
@@ -1585,7 +1650,6 @@ class ContentReminder(db.Model):
         nullable=True,
         index=True,
     )
-
 
     access_point_id = db.Column(
         db.Integer,
@@ -1597,11 +1661,6 @@ class ContentReminder(db.Model):
         index=True,
     )
 
-
-    # -----------------------------------------------------
-    # STEP 10D — PUSH SUBSCRIBER
-    # -----------------------------------------------------
-
     push_subscriber_id = db.Column(
         db.Integer,
         db.ForeignKey(
@@ -1612,11 +1671,6 @@ class ContentReminder(db.Model):
         index=True,
     )
 
-
-    # -----------------------------------------------------
-    # REMINDER CONFIG
-    # -----------------------------------------------------
-
     reminder_type = db.Column(
         db.String(30),
         nullable=False,
@@ -1624,24 +1678,17 @@ class ContentReminder(db.Model):
         index=True,
     )
 
-
     reminder_minutes_before = db.Column(
         db.Integer,
         nullable=False,
         default=60,
     )
 
-
     scheduled_for = db.Column(
         db.DateTime,
         nullable=True,
         index=True,
     )
-
-
-    # -----------------------------------------------------
-    # STATUS
-    # -----------------------------------------------------
 
     status = db.Column(
         db.String(30),
@@ -1655,6 +1702,7 @@ class ContentReminder(db.Model):
         nullable=True,
         index=True,
     )
+
     retry_count = db.Column(
         db.Integer,
         nullable=False,
@@ -1677,11 +1725,6 @@ class ContentReminder(db.Model):
         nullable=True,
     )
 
-
-    # -----------------------------------------------------
-    # TIMESTAMPS
-    # -----------------------------------------------------
-
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -1689,16 +1732,10 @@ class ContentReminder(db.Model):
         index=True,
     )
 
-
     sent_at = db.Column(
         db.DateTime,
         nullable=True,
     )
-
-
-    # -----------------------------------------------------
-    # RELATIONSHIPS
-    # -----------------------------------------------------
 
     content_item = db.relationship(
         "ContentItem",
@@ -1709,7 +1746,6 @@ class ContentReminder(db.Model):
         ),
     )
 
-
     zone = db.relationship(
         "Zone",
         backref=db.backref(
@@ -1717,7 +1753,6 @@ class ContentReminder(db.Model):
             lazy=True,
         ),
     )
-
 
     access_point = db.relationship(
         "AccessPoint",
@@ -1727,7 +1762,6 @@ class ContentReminder(db.Model):
         ),
     )
 
-
     push_subscriber = db.relationship(
         "PushSubscriber",
         backref=db.backref(
@@ -1735,7 +1769,6 @@ class ContentReminder(db.Model):
             lazy=True,
         ),
     )
-
 
     def __repr__(self):
 
@@ -1746,6 +1779,7 @@ class ContentReminder(db.Model):
             f"push_subscriber_id={self.push_subscriber_id} "
             f"status={self.status}>"
         )
+
 
 # ============================================================
 # QR SCAN
@@ -1762,12 +1796,11 @@ class QRScan(db.Model):
 
     access_point_id = db.Column(
         db.Integer,
-        db.ForeignKey("access_points.id"),
+        db.ForeignKey(
+            "access_points.id"
+        ),
         nullable=False,
     )
-
-    # scan = physical QR opened
-    # category_view = category selected
 
     event_type = db.Column(
         db.String(30),
@@ -1843,41 +1876,34 @@ class ContentImage(db.Model):
             "images",
             lazy=True,
             cascade="all, delete-orphan",
-            order_by=
-                "ContentImage.display_order",
+            order_by=(
+                "ContentImage.display_order"
+            ),
         ),
     )
 
-# =========================================================
-# PUSH SUBSCRIBERS
-# =========================================================
+
+# ============================================================
+# PUSH SUBSCRIBER
+# ============================================================
 
 class PushSubscriber(db.Model):
 
     __tablename__ = "push_subscribers"
-
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-
-    # -----------------------------------------------------
-    # ZONE
-    # -----------------------------------------------------
-
     zone_id = db.Column(
         db.Integer,
-        db.ForeignKey("zones.id"),
+        db.ForeignKey(
+            "zones.id"
+        ),
         nullable=False,
         index=True,
     )
-
-
-    # -----------------------------------------------------
-    # BROWSER PUSH SUBSCRIPTION
-    # -----------------------------------------------------
 
     endpoint = db.Column(
         db.Text,
@@ -1885,22 +1911,15 @@ class PushSubscriber(db.Model):
         unique=True,
     )
 
-
     p256dh = db.Column(
         db.Text,
         nullable=False,
     )
 
-
     auth_key = db.Column(
         db.Text,
         nullable=False,
     )
-
-
-    # -----------------------------------------------------
-    # STATUS
-    # -----------------------------------------------------
 
     active = db.Column(
         db.Boolean,
@@ -1909,17 +1928,11 @@ class PushSubscriber(db.Model):
         index=True,
     )
 
-
-    # -----------------------------------------------------
-    # TIMESTAMPS
-    # -----------------------------------------------------
-
     created_at = db.Column(
         db.DateTime,
         nullable=False,
         server_default=db.func.now(),
     )
-
 
     updated_at = db.Column(
         db.DateTime,
@@ -1927,11 +1940,6 @@ class PushSubscriber(db.Model):
         server_default=db.func.now(),
         onupdate=db.func.now(),
     )
-
-
-    # -----------------------------------------------------
-    # RELATIONSHIPS
-    # -----------------------------------------------------
 
     zone = db.relationship(
         "Zone",
@@ -1941,14 +1949,12 @@ class PushSubscriber(db.Model):
         ),
     )
 
-
     notification_preferences = db.relationship(
         "PushSubscriberPreference",
         back_populates="subscriber",
         cascade="all, delete-orphan",
         lazy=True,
     )
-
 
     def __repr__(self):
 
@@ -1960,24 +1966,20 @@ class PushSubscriber(db.Model):
         )
 
 
-# =========================================================
-# PUSH SUBSCRIBER CATEGORY PREFERENCES
-# =========================================================
+# ============================================================
+# PUSH SUBSCRIBER PREFERENCE
+# ============================================================
 
 class PushSubscriberPreference(db.Model):
 
-    __tablename__ = "push_subscriber_preferences"
-
+    __tablename__ = (
+        "push_subscriber_preferences"
+    )
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
-
-
-    # -----------------------------------------------------
-    # SUBSCRIBER
-    # -----------------------------------------------------
 
     subscriber_id = db.Column(
         db.Integer,
@@ -1989,35 +1991,11 @@ class PushSubscriberPreference(db.Model):
         index=True,
     )
 
-
-    # -----------------------------------------------------
-    # CATEGORY
-    # -----------------------------------------------------
-    #
-    # Store the Category slug here.
-    #
-    # Examples:
-    #
-    # local-events
-    # jobs
-    # property
-    # specials
-    #
-    # We deliberately store the slug rather than the
-    # display name because ContentItem.category also uses
-    # the category slug.
-    # -----------------------------------------------------
-
     category = db.Column(
         db.String(100),
         nullable=False,
         index=True,
     )
-
-
-    # -----------------------------------------------------
-    # TIMESTAMP
-    # -----------------------------------------------------
 
     created_at = db.Column(
         db.DateTime,
@@ -2025,39 +2003,38 @@ class PushSubscriberPreference(db.Model):
         server_default=db.func.now(),
     )
 
-
-    # -----------------------------------------------------
-    # RELATIONSHIP
-    # -----------------------------------------------------
-
     subscriber = db.relationship(
         "PushSubscriber",
-        back_populates="notification_preferences",
+        back_populates=(
+            "notification_preferences"
+        ),
     )
-
-
-    # -----------------------------------------------------
-    # PREVENT DUPLICATE PREFERENCES
-    # -----------------------------------------------------
 
     __table_args__ = (
 
         db.UniqueConstraint(
             "subscriber_id",
             "category",
-            name="uq_push_subscriber_category",
+            name=(
+                "uq_push_subscriber_category"
+            ),
         ),
 
     )
 
-
     def __repr__(self):
 
         return (
-            f"<PushSubscriberPreference "
-            f"subscriber_id={self.subscriber_id} "
+            "<PushSubscriberPreference "
+            f"subscriber_id="
+            f"{self.subscriber_id} "
             f"category={self.category}>"
         )
+
+
+# ============================================================
+# PUSH NOTIFICATION
+# ============================================================
 
 class PushNotification(db.Model):
 
@@ -2070,14 +2047,18 @@ class PushNotification(db.Model):
 
     content_item_id = db.Column(
         db.Integer,
-        db.ForeignKey("content_items.id"),
+        db.ForeignKey(
+            "content_items.id"
+        ),
         nullable=True,
         index=True,
     )
 
     zone_id = db.Column(
         db.Integer,
-        db.ForeignKey("zones.id"),
+        db.ForeignKey(
+            "zones.id"
+        ),
         nullable=False,
         index=True,
     )
@@ -2129,10 +2110,14 @@ class PushNotification(db.Model):
     )
 
     __table_args__ = (
-      db.UniqueConstraint(
-        "content_item_id",
-        name="uq_push_notification_content_item",
-      ),
+
+        db.UniqueConstraint(
+            "content_item_id",
+            name=(
+                "uq_push_notification_content_item"
+            ),
+        ),
+
     )
 
     last_error = db.Column(
@@ -2152,6 +2137,10 @@ class PushNotification(db.Model):
     )
 
 
+# ============================================================
+# ENGAGEMENT EVENT
+# ============================================================
+
 class EngagementEvent(db.Model):
 
     __tablename__ = "engagement_events"
@@ -2169,21 +2158,27 @@ class EngagementEvent(db.Model):
 
     zone_id = db.Column(
         db.Integer,
-        db.ForeignKey("zones.id"),
+        db.ForeignKey(
+            "zones.id"
+        ),
         nullable=True,
         index=True,
     )
 
     access_point_id = db.Column(
         db.Integer,
-        db.ForeignKey("access_points.id"),
+        db.ForeignKey(
+            "access_points.id"
+        ),
         nullable=True,
         index=True,
     )
 
     content_item_id = db.Column(
         db.Integer,
-        db.ForeignKey("content_items.id"),
+        db.ForeignKey(
+            "content_items.id"
+        ),
         nullable=True,
         index=True,
     )
@@ -2226,26 +2221,20 @@ class EngagementEvent(db.Model):
     )
 
 
+# ============================================================
+# CONTENT DISTRIBUTION ZONE
+# ============================================================
+
 class ContentDistributionZone(db.Model):
 
     __tablename__ = (
         "content_distribution_zones"
     )
 
-
-    # =====================================================
-    # PRIMARY KEY
-    # =====================================================
-
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
-
-
-    # =====================================================
-    # CONTENT ITEM
-    # =====================================================
 
     content_item_id = db.Column(
         db.Integer,
@@ -2257,11 +2246,6 @@ class ContentDistributionZone(db.Model):
         index=True,
     )
 
-
-    # =====================================================
-    # DISTRIBUTION ZONE
-    # =====================================================
-
     zone_id = db.Column(
         db.Integer,
         db.ForeignKey(
@@ -2272,11 +2256,6 @@ class ContentDistributionZone(db.Model):
         index=True,
     )
 
-
-    # =====================================================
-    # RELATIONSHIPS
-    # =====================================================
-
     content_item = db.relationship(
         "ContentItem",
         backref=db.backref(
@@ -2286,7 +2265,6 @@ class ContentDistributionZone(db.Model):
         ),
     )
 
-
     zone = db.relationship(
         "Zone",
         backref=db.backref(
@@ -2294,11 +2272,6 @@ class ContentDistributionZone(db.Model):
             lazy=True,
         ),
     )
-
-
-    # =====================================================
-    # CONSTRAINTS
-    # =====================================================
 
     __table_args__ = (
 
@@ -2312,15 +2285,11 @@ class ContentDistributionZone(db.Model):
 
     )
 
-
-    # =====================================================
-    # DEBUG REPRESENTATION
-    # =====================================================
-
     def __repr__(self):
 
         return (
             "<ContentDistributionZone "
-            f"content_item_id={self.content_item_id} "
+            f"content_item_id="
+            f"{self.content_item_id} "
             f"zone_id={self.zone_id}>"
         )
