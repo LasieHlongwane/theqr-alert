@@ -8989,6 +8989,32 @@ def submit_content():
 
 
         # =================================================
+        # EVENT ORGANIZER OWNERSHIP
+        # =================================================
+        #
+        # Events that will later use Kalxa Ticketing must
+        # belong to an authenticated Kalxa organizer.
+        #
+        # Other content can continue through the existing
+        # public submission workflow for now.
+        # =================================================
+
+        if (
+            category_key == "events"
+            and organizer is None
+        ):
+
+            flash(
+                (
+                    "Please sign in or create an organizer "
+                    "account before submitting an event."
+                ),
+                "error",
+            )
+
+            return render_submit_form()
+
+        # =================================================
         # INTERNAL WORKFLOW CATEGORY
         # =================================================
         #
