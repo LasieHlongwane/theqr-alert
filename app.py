@@ -13,6 +13,7 @@ from datetime import (
     timedelta,
     time, 
 )
+from sqlalchemy import or_
 from zoneinfo import ZoneInfo
 from push_service import (
     send_push_notification,
@@ -496,6 +497,911 @@ def is_sponsorship_active(
     return True
 
 
+
+
+
+# ============================================================
+# ORGANIZER SIGNUP
+# ============================================================
+
+@app.route(
+    "/organizer/signup",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def organizer_signup():
+
+    # =====================================================
+    # ALREADY LOGGED IN
+    # =====================================================
+
+    organizer_id = (
+        session.get(
+            "organizer_id"
+        )
+    )
+
+
+    if organizer_id:
+
+        organizer = (
+            db.session.get(
+                Organizer,
+                organizer_id,
+            )
+        )
+
+
+        if (
+            organizer
+            and organizer.active
+        ):
+
+            return redirect(
+                url_for(
+                    "organizer_dashboard"
+                )
+            )
+
+
+        session.pop(
+            "organizer_id",
+            None,
+        )
+
+
+    # =====================================================
+    # POST
+    # =====================================================
+
+    if request.method == "POST":
+
+        # -------------------------------------------------
+        # FORM DATA
+        # -------------------------------------------------
+
+        name = (
+            request.form.get(
+                "name",
+                "",
+            )
+            .strip()
+        )
+
+
+        business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        email = (
+            request.form.get(
+                "email",
+                "",
+            )
+            .strip()
+            .lower()
+            or None
+        )
+
+
+        phone = (
+            request.form.get(
+                "phone",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        password = (
+            request.form.get(
+                "password",
+                "",
+            )
+        )
+
+
+        confirm_password = (
+            request.form.get(
+                "confirm_password",
+                "",
+            )
+        )
+
+
+        # =================================================
+        # VALIDATION
+        # =================================================
+
+        if not name:
+
+            flash(
+                "Your name is required.",
+                "error",
+            )
+
+            return render_template(
+                "organizer_signup.html"
+            )
+
+
+        if (
+            not email
+            and not phone
+        ):
+
+            flash(
+                (
+                    "Please provide an email address "
+                    "or phone number."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer_signup.html"
+            )
+
+
+        if not password:
+
+            flash(
+                "Please create a password.",
+                "error",
+            )
+
+            return render_template(
+                "organizer_signup.html"
+            )
+
+
+        if len(password) < 8:
+
+            flash(
+                (
+                    "Your password must be at least "
+                    "8 characters long."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer_signup.html"
+            )
+
+
+        if (
+            password
+            != confirm_password
+        ):
+
+            flash(
+                "Passwords do not match.",
+                "error",
+            )
+
+            return render_template(
+                "organizer_signup.html"
+            )
+
+
+        # =================================================
+        # DUPLICATE ACCOUNT CHECK
+        # =================================================
+
+        duplicate_filters = []
+
+
+        if email:
+
+            duplicate_filters.append(
+                Organizer.email
+                == email
+            )
+
+
+        if phone:
+
+            duplicate_filters.append(
+                Organizer.phone
+                == phone
+            )
+
+
+        existing_organizer = None
+
+
+        if duplicate_filters:
+
+            existing_organizer = (
+                Organizer.query
+                .filter(
+                    or_(
+                        *duplicate_filters
+                    )
+                )
+                .first()
+            )
+
+
+        if existing_organizer:
+
+            flash(
+                (
+                    "An organizer account already exists "
+                    "with that email or phone number. "
+                    "Please sign in instead."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_login"
+                )
+            )
+
+
+        # =================================================
+        # CREATE ORGANIZER
+        # =================================================
+
+        organizer = Organizer(
+
+            name=(
+                name
+            ),
+
+            business_name=(
+                business_name
+            ),
+
+            email=(
+                email
+            ),
+
+            phone=(
+                phone
+            ),
+
+            active=True,
+
+            is_verified=False,
+        )
+
+
+        organizer.set_password(
+            password
+        )
+
+
+        # =================================================
+        # SAVE
+        # =================================================
+
+        try:
+
+            db.session.add(
+                organizer
+            )
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa Organizer] Signup failed "
+                    "email=%s phone=%s error=%s"
+                ),
+                email,
+                phone,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Unable to create your organizer "
+                    "account. Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer_signup.html"
+            )
+
+
+        # =================================================
+        # LOGIN IMMEDIATELY
+        # =================================================
+
+        session.clear()
+
+        session[
+            "organizer_id"
+        ] = organizer.id
+
+
+        current_app.logger.info(
+            (
+                "[Kalxa Organizer] Account created "
+                "organizer_id=%s"
+            ),
+            organizer.id,
+        )
+
+
+        flash(
+            (
+                "Organizer account created. "
+                "You can now submit your event."
+            ),
+            "success",
+        )
+
+
+        # =================================================
+        # CONTINUE TO SUBMIT
+        # =================================================
+
+        return redirect(
+            url_for(
+                "submit_content"
+            )
+        )
+
+
+    # =====================================================
+    # GET
+    # =====================================================
+
+    return render_template(
+        "organizer_signup.html"
+    )
+
+
+# ============================================================
+# ORGANIZER LOGIN
+# ============================================================
+
+@app.route(
+    "/organizer/login",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def organizer_login():
+
+    # =====================================================
+    # ALREADY LOGGED IN
+    # =====================================================
+
+    organizer_id = (
+        session.get(
+            "organizer_id"
+        )
+    )
+
+
+    if organizer_id:
+
+        organizer = (
+            db.session.get(
+                Organizer,
+                organizer_id,
+            )
+        )
+
+
+        if (
+            organizer
+            and organizer.active
+        ):
+
+            return redirect(
+                url_for(
+                    "organizer_dashboard"
+                )
+            )
+
+
+        session.pop(
+            "organizer_id",
+            None,
+        )
+
+
+    # =====================================================
+    # POST
+    # =====================================================
+
+    if request.method == "POST":
+
+        login_value = (
+            request.form.get(
+                "login",
+                "",
+            )
+            .strip()
+        )
+
+
+        password = (
+            request.form.get(
+                "password",
+                "",
+            )
+        )
+
+
+        if (
+            not login_value
+            or not password
+        ):
+
+            flash(
+                (
+                    "Enter your email or phone number "
+                    "and password."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer_login.html"
+            )
+
+
+        # =================================================
+        # FIND ORGANIZER
+        # =================================================
+
+        normalized_email = (
+            login_value.lower()
+        )
+
+
+        organizer = (
+            Organizer.query
+            .filter(
+                or_(
+                    Organizer.email
+                    == normalized_email,
+
+                    Organizer.phone
+                    == login_value,
+                )
+            )
+            .first()
+        )
+
+
+        # =================================================
+        # VALIDATE LOGIN
+        # =================================================
+
+        if (
+            not organizer
+            or not organizer.check_password(
+                password
+            )
+        ):
+
+            flash(
+                (
+                    "Incorrect login details."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer_login.html"
+            )
+
+
+        if not organizer.active:
+
+            flash(
+                (
+                    "This organizer account is "
+                    "currently inactive."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer_login.html"
+            )
+
+
+        # =================================================
+        # CREATE SESSION
+        # =================================================
+
+        session.clear()
+
+        session[
+            "organizer_id"
+        ] = organizer.id
+
+
+        current_app.logger.info(
+            (
+                "[Kalxa Organizer] Login "
+                "organizer_id=%s"
+            ),
+            organizer.id,
+        )
+
+
+        flash(
+            "Welcome back.",
+            "success",
+        )
+
+
+        # =================================================
+        # OPTIONAL REDIRECT TARGET
+        # =================================================
+        #
+        # Example:
+        #
+        # /organizer/login?next=/submit
+        #
+        # For safety, we only handle the known /submit
+        # destination at this stage.
+        # =================================================
+
+        next_url = (
+            request.args.get(
+                "next",
+                "",
+            )
+            .strip()
+        )
+
+
+        if next_url == "/submit":
+
+            return redirect(
+                url_for(
+                    "submit_content"
+                )
+            )
+
+
+        return redirect(
+            url_for(
+                "organizer_dashboard"
+            )
+        )
+
+
+    # =====================================================
+    # GET
+    # =====================================================
+
+    return render_template(
+        "organizer_login.html"
+    )
+
+
+# ============================================================
+# ORGANIZER LOGOUT
+# ============================================================
+
+@app.route(
+    "/organizer/logout",
+    methods=[
+        "POST",
+        "GET",
+    ],
+)
+def organizer_logout():
+
+    organizer_id = (
+        session.get(
+            "organizer_id"
+        )
+    )
+
+
+    session.pop(
+        "organizer_id",
+        None,
+    )
+
+
+    current_app.logger.info(
+        (
+            "[Kalxa Organizer] Logout "
+            "organizer_id=%s"
+        ),
+        organizer_id,
+    )
+
+
+    flash(
+        "You have been signed out.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "organizer_login"
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER AUTH HELPER
+# ============================================================
+
+def get_current_organizer():
+
+    organizer_id = (
+        session.get(
+            "organizer_id"
+        )
+    )
+
+
+    if not organizer_id:
+
+        return None
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if (
+        not organizer
+        or not organizer.active
+    ):
+
+        session.pop(
+            "organizer_id",
+            None,
+        )
+
+        return None
+
+
+    return organizer
+
+
+# ============================================================
+# REQUIRE ORGANIZER
+# ============================================================
+
+def require_organizer():
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if organizer:
+
+        return None
+
+
+    flash(
+        (
+            "Please sign in to your organizer "
+            "account."
+        ),
+        "error",
+    )
+
+
+    return redirect(
+        url_for(
+            "organizer_login"
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER DASHBOARD
+# ============================================================
+
+@app.route(
+    "/organizer/dashboard"
+)
+def organizer_dashboard():
+
+    auth = (
+        require_organizer()
+    )
+
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    # =====================================================
+    # ORGANIZER'S SUBMISSIONS
+    # =====================================================
+
+    submissions = (
+        PendingSubmission.query
+        .filter_by(
+            organizer_id=(
+                organizer.id
+            )
+        )
+        .order_by(
+            PendingSubmission
+            .created_at
+            .desc()
+        )
+        .all()
+    )
+
+
+    # =====================================================
+    # ORGANIZER'S PUBLISHED CONTENT
+    # =====================================================
+
+    content_items = (
+        ContentItem.query
+        .filter_by(
+            organizer_id=(
+                organizer.id
+            )
+        )
+        .order_by(
+            ContentItem
+            .created_at
+            .desc()
+        )
+        .all()
+    )
+
+
+    # =====================================================
+    # EVENT LISTINGS
+    # =====================================================
+
+    event_items = [
+        item
+        for item
+        in content_items
+        if (
+            item.category
+            == "events"
+        )
+    ]
+
+
+    # =====================================================
+    # TICKETING ELIGIBILITY
+    # =====================================================
+    #
+    # For the first version:
+    #
+    # Organizer becomes eligible for ticketing only after
+    # at least one EVENT has actually been approved and
+    # published as a ContentItem.
+    #
+    # Merely having a pending event submission is not enough.
+    # =====================================================
+
+    ticketing_eligible = bool(
+        event_items
+    )
+
+
+    # =====================================================
+    # DASHBOARD COUNTERS
+    # =====================================================
+
+    pending_count = sum(
+        1
+        for item
+        in submissions
+        if item.status == "pending"
+    )
+
+
+    approved_count = sum(
+        1
+        for item
+        in submissions
+        if item.status == "approved"
+    )
+
+
+    rejected_count = sum(
+        1
+        for item
+        in submissions
+        if item.status == "rejected"
+    )
+
+
+    # =====================================================
+    # TEMPLATE
+    # =====================================================
+
+    return render_template(
+        "organizer_dashboard.html",
+
+        organizer=(
+            organizer
+        ),
+
+        submissions=(
+            submissions
+        ),
+
+        content_items=(
+            content_items
+        ),
+
+        event_items=(
+            event_items
+        ),
+
+        ticketing_eligible=(
+            ticketing_eligible
+        ),
+
+        pending_count=(
+            pending_count
+        ),
+
+        approved_count=(
+            approved_count
+        ),
+
+        rejected_count=(
+            rejected_count
+        ),
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 def attach_sponsorship_state(
     item,
     now_utc=None,
