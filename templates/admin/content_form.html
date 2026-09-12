@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -191,6 +191,72 @@
             border-top:
                 1px solid
                 rgba(255, 255, 255, 0.07);
+        }
+
+
+        .kalxa-sponsored-package {
+
+            margin-bottom: 20px;
+
+            padding: 18px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.16);
+
+            border-radius: 12px;
+
+            background:
+                rgba(255, 244, 223, 0.025);
+        }
+
+
+        .kalxa-sponsored-package h4 {
+
+            margin-top: 0;
+
+            margin-bottom: 8px;
+        }
+
+
+        .kalxa-sponsored-price {
+
+            margin-top: 14px;
+
+            padding: 16px;
+
+            border-radius: 12px;
+
+            background:
+                rgba(255, 244, 223, 0.08);
+        }
+
+
+        .kalxa-sponsored-price-label {
+
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            letter-spacing: 0.7px;
+
+            text-transform: uppercase;
+
+            opacity: 0.75;
+        }
+
+
+        .kalxa-sponsored-price-value {
+
+            font-size: 2rem;
+
+            font-weight: 900;
+
+            color: #fff4df;
         }
 
 
@@ -1046,8 +1112,7 @@
 
 
                         <small class="muted">
-                            Example: 02:00 for an overnight
-                            event.
+                            Example: 02:00 for an overnight event.
                         </small>
 
                     </label>
@@ -1449,15 +1514,16 @@
 
 
                         <h3>
-                            Sponsored Placement
+                            Sponsored Boost
                         </h3>
 
 
                         <p class="muted">
                             Give this listing additional visibility
                             in Kalxa discovery surfaces.
-                            Sponsorship is independent from the
-                            Presence or Campaign package above.
+                            Sponsored is a separate visibility boost
+                            and does not replace the listing's
+                            Presence or Campaign package.
                         </p>
 
                     </div>
@@ -1494,9 +1560,9 @@
 
 
                     <small class="muted">
-                        Checking this does not change the listing's
-                        existing payment status, package price or
-                        commercial expiry.
+                        Sponsored placement gives this listing
+                        additional ranking visibility without
+                        changing its existing commercial package.
                     </small>
 
                 </div>
@@ -1511,6 +1577,124 @@
                     class="kalxa-sponsored-fields"
                     style="display: none;"
                 >
+
+
+                    <!-- =========================================
+                         SPONSORED PACKAGE
+                    ========================================== -->
+
+                    <div class="kalxa-sponsored-package">
+
+                        <p class="admin-eyebrow">
+                            SPONSORED PACKAGE
+                        </p>
+
+
+                        <h4>
+                            Choose Boost Duration
+                        </h4>
+
+
+                        <p class="muted">
+                            Select how long this listing should
+                            receive Sponsored visibility.
+                        </p>
+
+
+                        <label>
+
+                            Sponsored Duration
+
+                            <select
+                                name="sponsored_duration_days"
+                                id="sponsored-duration-days"
+                                data-current-duration="{{
+                                    item.sponsored_duration_days
+                                    if (
+                                        item
+                                        and item.sponsored_duration_days is defined
+                                        and item.sponsored_duration_days
+                                    )
+                                    else ''
+                                }}"
+                            >
+
+                                <option value="">
+                                    Select sponsored duration
+                                </option>
+
+
+                                <option value="7">
+                                    7 days — R50
+                                </option>
+
+
+                                <option value="14">
+                                    14 days — R80
+                                </option>
+
+
+                                <option value="30">
+                                    30 days — R150
+                                </option>
+
+                            </select>
+
+
+                            <small class="muted">
+                                Sponsored pricing is separate
+                                from the listing's Presence or
+                                Campaign package.
+                            </small>
+
+                        </label>
+
+
+                        <!-- =====================================
+                             SPONSORED PRICE
+                        ====================================== -->
+
+                        <div class="kalxa-sponsored-price">
+
+                            <span class="kalxa-sponsored-price-label">
+                                SPONSORED BOOST PRICE
+                            </span>
+
+
+                            <div
+                                id="sponsored-price-display"
+                                class="kalxa-sponsored-price-value"
+                            >
+                                —
+                            </div>
+
+
+                            <input
+                                type="hidden"
+                                name="displayed_sponsorship_amount_due"
+                                id="displayed-sponsorship-amount-due"
+                                value="{{
+                                    item.sponsorship_amount_due
+                                    if (
+                                        item
+                                        and item.sponsorship_amount_due is defined
+                                        and item.sponsorship_amount_due is not none
+                                    )
+                                    else ''
+                                }}"
+                            >
+
+
+                            <small class="muted">
+                                The browser displays an estimate.
+                                The backend will calculate the
+                                official Sponsored amount from
+                                the selected duration.
+                            </small>
+
+                        </div>
+
+                    </div>
 
 
                     <!-- =========================================
@@ -1570,7 +1754,7 @@
 
                         <small class="muted">
                             Only Active sponsorships within their
-                            start/end window will receive sponsored
+                            start/end window receive Sponsored
                             treatment publicly.
                         </small>
 
@@ -1601,8 +1785,9 @@
 
 
                             <small class="muted">
-                                Optional. Leave empty to allow
-                                immediate activation.
+                                Optional during manual testing.
+                                Later Kalxa can start this
+                                automatically after payment.
                             </small>
 
                         </label>
@@ -1625,8 +1810,8 @@
 
 
                             <small class="muted">
-                                Optional while testing, but recommended
-                                for real sponsored campaigns.
+                                Currently retained for compatibility
+                                with the existing Sponsored system.
                             </small>
 
                         </label>
@@ -1653,15 +1838,15 @@
                             value="{{
                                 item.sponsored_priority
                                 if item and item.sponsored_priority is not none
-                                else 0
+                                else 10
                             }}"
                         >
 
 
                         <small class="muted">
-                            Higher numbers can rank ahead of lower
-                            sponsored listings. Suggested:
-                            10 = standard, 20 = premium.
+                            Higher numbers rank ahead of lower
+                            Sponsored listings. Standard Sponsored
+                            placement can use priority 10.
                         </small>
 
                     </label>
@@ -1704,13 +1889,14 @@
                     <div class="kalxa-sponsored-note">
 
                         <strong>
-                            Independent monetization layer
+                            Separate visibility add-on
                         </strong>
 
-                        These fields do not modify the existing
-                        Kalxa Presence/Campaign amount, payment
-                        reference, Yoco payment state, commercial
-                        start date or commercial expiry date.
+                        Sponsored does not modify the existing
+                        Kalxa Presence/Campaign amount,
+                        payment status, Yoco payment state,
+                        commercial start date or commercial
+                        expiry date.
 
                     </div>
 
@@ -2660,7 +2846,7 @@
 
 
     // =====================================================
-    // PRICING TABLES
+    // MAIN COMMERCIAL PRICING TABLES
     // =====================================================
 
     const presencePricing = {
@@ -3967,6 +4153,28 @@
 
 <script>
 
+    // =====================================================
+    // SPONSORED PRICING
+    //
+    // Backend pricing.py remains the official source.
+    // This table is only for immediate browser display.
+    // =====================================================
+
+    const sponsoredPricing = {
+
+        7: 50,
+
+        14: 80,
+
+        30: 150
+
+    };
+
+
+    // =====================================================
+    // ELEMENTS
+    // =====================================================
+
     const isSponsoredInput =
         document.getElementById(
             "is-sponsored"
@@ -3982,6 +4190,24 @@
     const sponsorshipStatus =
         document.getElementById(
             "sponsorship-status"
+        );
+
+
+    const sponsoredDurationSelect =
+        document.getElementById(
+            "sponsored-duration-days"
+        );
+
+
+    const sponsoredPriceDisplay =
+        document.getElementById(
+            "sponsored-price-display"
+        );
+
+
+    const displayedSponsorshipAmountInput =
+        document.getElementById(
+            "displayed-sponsorship-amount-due"
         );
 
 
@@ -4007,6 +4233,113 @@
         document.getElementById(
             "sponsorship-reference"
         );
+
+
+    // =====================================================
+    // SPONSORED PRICE
+    // =====================================================
+
+    function updateSponsoredPrice() {
+
+        if (
+            !sponsoredDurationSelect
+            ||
+            !sponsoredPriceDisplay
+            ||
+            !displayedSponsorshipAmountInput
+        ) {
+
+            return;
+
+        }
+
+
+        const duration =
+            Number(
+                sponsoredDurationSelect.value
+                || 0
+            );
+
+
+        const amount =
+            sponsoredPricing[
+                duration
+            ];
+
+
+        if (
+            !duration
+            ||
+            amount === undefined
+        ) {
+
+            sponsoredPriceDisplay.textContent =
+                "—";
+
+
+            displayedSponsorshipAmountInput.value =
+                "";
+
+
+            return;
+
+        }
+
+
+        sponsoredPriceDisplay.textContent =
+            formatKalxaPrice(
+                amount
+            );
+
+
+        displayedSponsorshipAmountInput.value =
+            String(
+                amount
+            );
+
+    }
+
+
+    // =====================================================
+    // RESTORE CURRENT SPONSORED DURATION
+    // =====================================================
+
+    function restoreSponsoredDuration() {
+
+        if (!sponsoredDurationSelect) {
+
+            return;
+
+        }
+
+
+        const currentDuration =
+            String(
+                sponsoredDurationSelect.dataset.currentDuration
+                || ""
+            );
+
+
+        if (
+            currentDuration
+            &&
+            sponsoredPricing[
+                Number(
+                    currentDuration
+                )
+            ] !== undefined
+        ) {
+
+            sponsoredDurationSelect.value =
+                currentDuration;
+
+        }
+
+
+        sponsoredDurationSelect.dataset.currentDuration =
+            "";
+
+    }
 
 
     // =====================================================
@@ -4043,21 +4376,9 @@
         }
 
 
-        // ---------------------------------------------
-        // SENSIBLE DEFAULT FOR NEW SPONSORSHIP
-        // ---------------------------------------------
-
-        if (
-            sponsorshipStatus
-            &&
-            !sponsorshipStatus.value
-        ) {
-
-            sponsorshipStatus.value =
-                "inactive";
-
-        }
-
+        // -------------------------------------------------
+        // DEFAULT PRIORITY
+        // -------------------------------------------------
 
         if (
             sponsoredPriority
@@ -4070,18 +4391,14 @@
 
         }
 
+
+        updateSponsoredPrice();
+
     }
 
 
     // =====================================================
-    // OPTIONAL ADMIN CONVENIENCE
-    //
-    // If Active is selected and no start datetime exists,
-    // the backend safely treats the missing start as
-    // "no lower time boundary".
-    //
-    // We therefore do not automatically create timestamps
-    // here.
+    // ENABLE / DISABLE
     // =====================================================
 
     if (isSponsoredInput) {
@@ -4091,6 +4408,24 @@
             function() {
 
                 updateSponsoredUI();
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // DURATION CHANGE
+    // =====================================================
+
+    if (sponsoredDurationSelect) {
+
+        sponsoredDurationSelect.addEventListener(
+            "change",
+            function() {
+
+                updateSponsoredPrice();
 
             }
         );
@@ -4131,6 +4466,8 @@
     // =====================================================
     // INITIAL STATE
     // =====================================================
+
+    restoreSponsoredDuration();
 
     updateSponsoredUI();
 
@@ -4404,5 +4741,4 @@
 
 </body>
 
-</html> 
-      
+</html>
