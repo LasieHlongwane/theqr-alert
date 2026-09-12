@@ -1,1 +1,729 @@
-#12345
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Organizer Dashboard | Kalxa
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body class="admin-body">
+
+<div class="admin-shell">
+
+
+    <!-- =========================================
+         NAVIGATION
+    ========================================== -->
+
+    <nav class="admin-nav">
+
+        <div>
+
+            <strong>
+                KALXA
+            </strong>
+
+            <div class="muted">
+                Organizer Centre
+            </div>
+
+        </div>
+
+
+        <div class="admin-nav-actions">
+
+            <a
+                href="{{ url_for('submit_content') }}"
+                class="admin-nav-link"
+            >
+                + Add Listing
+            </a>
+
+            <a
+                href="{{ url_for('organizer_logout') }}"
+                class="admin-nav-link"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =========================================
+         FLASH MESSAGES
+    ========================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div class="alert">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="admin-header">
+
+        <div>
+
+            <span class="section-kicker">
+                ORGANIZER
+            </span>
+
+            <h1>
+                Welcome, {{ organizer.name }}
+            </h1>
+
+            <p class="muted">
+
+                {% if organizer.business_name %}
+
+                    {{ organizer.business_name }} ·
+
+                {% endif %}
+
+                Manage your listings and event access.
+
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('submit_content') }}"
+            class="button"
+        >
+            + Submit New Content
+        </a>
+
+    </header>
+
+
+    <!-- =========================================
+         METRICS
+    ========================================== -->
+
+    <div class="metrics">
+
+
+        <div class="metric">
+
+            <span>
+                Pending
+            </span>
+
+            <strong>
+                {{ pending_count }}
+            </strong>
+
+            <small class="muted">
+                Waiting for Kalxa review
+            </small>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span>
+                Approved
+            </span>
+
+            <strong>
+                {{ approved_count }}
+            </strong>
+
+            <small class="muted">
+                Published submissions
+            </small>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span>
+                Event Listings
+            </span>
+
+            <strong>
+                {{ event_items|length }}
+            </strong>
+
+            <small class="muted">
+                Eligible for ticketing
+            </small>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =========================================
+         TICKETING ACCESS
+    ========================================== -->
+
+    <section class="admin-section">
+
+        <div class="admin-section-header">
+
+            <div>
+
+                <span class="section-kicker">
+                    TICKETING
+                </span>
+
+                <h2>
+                    Kalxa Ticketing
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        {% if ticketing_eligible %}
+
+            <div class="success-box">
+                🎟 Your account is eligible for Kalxa Ticketing.
+            </div>
+
+
+            <p class="muted">
+                Ticketing becomes available for your approved
+                event listings.
+            </p>
+
+
+            <!--
+                We will replace this button with the actual
+                Kalxa Ticketing URL once the Discovery →
+                Ticketing authentication bridge is created.
+            -->
+
+            <button
+                type="button"
+                class="button disabled"
+                disabled
+            >
+                Manage Tickets — Connection Coming Next
+            </button>
+
+
+        {% else %}
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    🎟
+                </div>
+
+                <h3>
+                    Ticketing is not available yet
+                </h3>
+
+                <p class="muted">
+                    Submit an event to Kalxa. Once the event
+                    is approved and published, ticketing access
+                    will become available automatically.
+                </p>
+
+
+                <a
+                    href="{{ url_for('submit_content') }}"
+                    class="button"
+                    style="margin-top: 18px;"
+                >
+                    Submit an Event
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================
+         APPROVED EVENT LISTINGS
+    ========================================== -->
+
+    <section class="admin-section">
+
+        <div class="admin-section-header">
+
+            <div>
+
+                <span class="section-kicker">
+                    EVENTS
+                </span>
+
+                <h2>
+                    Your Event Listings
+                </h2>
+
+                <p class="muted">
+                    Approved Kalxa events owned by your account.
+                </p>
+
+            </div>
+
+
+            <span class="admin-count-badge">
+                {{ event_items|length }}
+            </span>
+
+        </div>
+
+
+        {% if event_items %}
+
+            <div class="admin-event-list">
+
+
+                {% for item in event_items %}
+
+                    <article class="admin-event-row">
+
+
+                        <!-- =========================
+                             IMAGE
+                        ========================== -->
+
+                        {% if item.image_url %}
+
+                            <div class="admin-event-image">
+
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- =========================
+                             EVENT INFO
+                        ========================== -->
+
+                        <div class="admin-event-info">
+
+
+                            <div class="admin-event-topline">
+
+                                <strong class="admin-event-title">
+                                    {{ item.title }}
+                                </strong>
+
+
+                                {% if item.active %}
+
+                                    <span class="admin-price-badge">
+                                        LIVE
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            {% if item.venue %}
+
+                                <div class="muted">
+                                    📍 {{ item.venue }}
+                                </div>
+
+                            {% endif %}
+
+
+                            {% if item.event_date %}
+
+                                <div class="muted">
+
+                                    📅
+                                    {{ item.event_date.strftime('%d %B %Y') }}
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <div class="muted">
+                                Kalxa Listing #{{ item.id }}
+                            </div>
+
+                        </div>
+
+
+                        <!-- =========================
+                             ACTIONS
+                        ========================== -->
+
+                        <div class="admin-event-actions">
+
+
+                            <a
+                                href="{{ url_for(
+                                    'listing_detail',
+                                    content_id=item.id
+                                ) }}"
+                                class="button button-secondary"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View Listing
+                            </a>
+
+
+                            <!--
+                                Ticketing connection will be
+                                activated in the next step.
+                            -->
+
+                            <button
+                                type="button"
+                                class="button disabled"
+                                disabled
+                            >
+                                Manage Tickets
+                            </button>
+
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+
+            </div>
+
+        {% else %}
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    📅
+                </div>
+
+                <h3>
+                    No approved events yet
+                </h3>
+
+                <p class="muted">
+                    Your approved event listings will appear here.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================
+         ALL SUBMISSIONS
+    ========================================== -->
+
+    <section class="admin-section">
+
+        <div class="admin-section-header">
+
+            <div>
+
+                <span class="section-kicker">
+                    SUBMISSIONS
+                </span>
+
+                <h2>
+                    Your Kalxa Submissions
+                </h2>
+
+                <p class="muted">
+                    Follow the review status of your content.
+                </p>
+
+            </div>
+
+
+            <span class="admin-count-badge">
+                {{ submissions|length }}
+            </span>
+
+        </div>
+
+
+        {% if submissions %}
+
+            <div class="admin-event-list">
+
+
+                {% for submission in submissions %}
+
+                    <article class="admin-event-row">
+
+
+                        <div class="admin-event-info">
+
+
+                            <div class="admin-event-topline">
+
+                                <strong class="admin-event-title">
+                                    {{ submission.title }}
+                                </strong>
+
+
+                                {% if submission.status == "approved" %}
+
+                                    <span class="admin-price-badge">
+                                        APPROVED
+                                    </span>
+
+                                {% elif submission.status == "pending" %}
+
+                                    <span class="admin-count-badge">
+                                        PENDING
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="admin-count-badge">
+                                        {{ submission.status|upper }}
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="muted">
+                                {{ submission.category
+                                    .replace("_", " ")
+                                    .replace("-", " ")
+                                    .title()
+                                }}
+                            </div>
+
+
+                            {% if submission.created_at %}
+
+                                <div class="muted">
+
+                                    Submitted
+                                    {{ submission.created_at.strftime(
+                                        '%d %B %Y'
+                                    ) }}
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <div class="muted">
+                                Tracking:
+                                {{ submission.tracking_code }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="admin-event-actions">
+
+                            <a
+                                href="{{ url_for(
+                                    'submission_status',
+                                    code=submission.tracking_code
+                                ) }}"
+                                class="button button-secondary"
+                            >
+                                View Status
+                            </a>
+
+                        </div>
+
+
+                    </article>
+
+                {% endfor %}
+
+
+            </div>
+
+        {% else %}
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    📄
+                </div>
+
+                <h3>
+                    No submissions yet
+                </h3>
+
+                <p class="muted">
+                    Add your first event, special, business
+                    or local service to Kalxa.
+                </p>
+
+
+                <a
+                    href="{{ url_for('submit_content') }}"
+                    class="button"
+                    style="margin-top: 18px;"
+                >
+                    Submit Content
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =========================================
+         ACCOUNT
+    ========================================== -->
+
+    <section class="admin-section">
+
+        <span class="section-kicker">
+            ACCOUNT
+        </span>
+
+        <h2>
+            Organizer Account
+        </h2>
+
+
+        <div class="summary-row">
+
+            <span class="muted">
+                Name
+            </span>
+
+            <strong>
+                {{ organizer.name }}
+            </strong>
+
+        </div>
+
+
+        {% if organizer.business_name %}
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Organizer / Business
+                </span>
+
+                <strong>
+                    {{ organizer.business_name }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if organizer.email %}
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Email
+                </span>
+
+                <strong>
+                    {{ organizer.email }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if organizer.phone %}
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Phone
+                </span>
+
+                <strong>
+                    {{ organizer.phone }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+
+        <div class="summary-row">
+
+            <span class="muted">
+                Account Status
+            </span>
+
+            <strong>
+                {% if organizer.active %}
+                    Active
+                {% else %}
+                    Inactive
+                {% endif %}
+            </strong>
+
+        </div>
+
+    </section>
+
+
+</div>
+
+</body>
+
+</html>
