@@ -8522,6 +8522,63 @@ def submit_content():
     # WHAT'S ON? is NOT used here.
     # =====================================================
 
+
+    # =====================================================
+    # CURRENT ORGANIZER
+    # =====================================================
+    #
+    # Organizer identity comes from the authenticated
+    # Kalxa organizer session.
+    #
+    # IMPORTANT:
+    #
+    # We do NOT trust submitter_name, email or phone as
+    # proof of ownership.
+    #
+    # Those fields remain snapshots/contact information.
+    #
+    # Ownership comes only from:
+    #
+    # session["organizer_id"]
+    # =====================================================
+
+    organizer = None
+
+    organizer_id = (
+        session.get(
+            "organizer_id"
+        )
+    )
+
+
+    if organizer_id:
+
+        organizer = (
+            db.session.get(
+                Organizer,
+                organizer_id,
+            )
+        )
+
+
+        # -------------------------------------------------
+        # REMOVE INVALID / DISABLED SESSION
+        # -------------------------------------------------
+
+        if (
+            not organizer
+            or not organizer.active
+        ):
+
+            session.pop(
+                "organizer_id",
+                None,
+            )
+
+            organizer = None
+
+
+    
     zones = (
         Zone.query
         .filter_by(
@@ -9826,11 +9883,10 @@ def submit_content():
         )
 
 
-    # =====================================================
-    # GET
-    # =====================================================
-
     return render_submit_form()
+
+
+
 # =========================================================
 # SUBMISSION SUCCESS
 # =========================================================
