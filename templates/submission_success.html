@@ -687,61 +687,42 @@
                     <!-- =================================
                          PAYMENT REQUIRED
                     ================================== -->
-
                     {% if payment_required %}
 
-                        <form
-                            method="POST"
-                            action="{{ url_for(
-                                'create_yoco_checkout',
-                                code=submission.tracking_code
-                            ) }}"
-                        >
+                     <div class="kalxa-payment-status-pending">
 
-                            <button
-                                type="submit"
-                                class="kalxa-pay-button"
-                            >
-                                Pay R{{ "%.2f"|format(amount_due) }}
-                                with Yoco →
-                            </button>
+                      <strong>
+                       Payment required
+                      </strong>
 
-                        </form>
+                      <p>
+                       Your submission was received successfully.
+                       Payment processing is temporarily unavailable.
+                      </p>
 
+                      <p>
+                       Kalxa will keep your submission pending
+                       until payment is confirmed.
+                      </p>
 
-                        <p class="kalxa-payment-security">
-                            Secure payment powered by Yoco
-                        </p>
-
-
-                        <p class="kalxa-payment-notice">
-
-                            Payment does not automatically
-                            approve your listing. Kalxa will
-                            review the submitted content before
-                            it becomes publicly visible.
-
-                        </p>
-
-
+                     </div>
                     {% elif submission.payment_status == "paid" %}
 
-                        <div class="kalxa-payment-status-paid">
+                     <div class="kalxa-payment-status-paid">
 
-                            <strong>
-                                ✓ Payment received
-                            </strong>
+                      <strong>
+                       ✓ Payment received
+                      </strong>
 
-                            <p>
-                                Your payment has been confirmed.
-                                Your submission will become
-                                publicly visible once approved.
-                            </p>
-
-                        </div>
+                      <p>
+                       Your payment has been confirmed.
+                       Your submission will become
+                       publicly visible once approved.
+                      </p>
+                     </div>
 
                     {% endif %}
-
+                    
                 </div>
 
             {% endif %}
