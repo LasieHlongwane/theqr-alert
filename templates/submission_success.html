@@ -703,6 +703,68 @@
 
 
         /* =========================================
+           PAYMENT PROCESSING
+        ========================================== */
+
+        .kalxa-payment-status-processing {
+
+            margin-top:
+                20px;
+
+            padding:
+                16px;
+
+            background:
+                #fffaf0 !important;
+
+            color:
+                #111111 !important;
+
+            border:
+                1px solid #f0d9a6;
+
+            border-radius:
+                14px;
+        }
+
+
+        .kalxa-payment-status-processing strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                7px;
+
+            color:
+                #111111 !important;
+        }
+
+
+        .kalxa-payment-status-processing p {
+
+            margin:
+                0;
+
+            color:
+                #111111 !important;
+
+            font-size:
+                13px;
+
+            line-height:
+                1.65;
+        }
+
+
+        .kalxa-payment-status-processing p + p {
+
+            margin-top:
+                8px;
+        }
+
+
+        /* =========================================
            PAID
         ========================================== */
 
@@ -1205,34 +1267,78 @@
             ====================================== -->
 
             <p class="access-eyebrow">
-                SUBMISSION RECEIVED
+
+                {% if payment_processing %}
+
+                    PAYMENT PROCESSING
+
+                {% elif submission.payment_status == "paid" %}
+
+                    PAYMENT RECEIVED
+
+                {% else %}
+
+                    SUBMISSION RECEIVED
+
+                {% endif %}
+
             </p>
 
 
             <h1>
-                Your listing has been received.
+
+                {% if payment_processing %}
+
+                    Your payment is being confirmed.
+
+                {% elif submission.payment_status == "paid" %}
+
+                    Payment received successfully.
+
+                {% else %}
+
+                    Your listing has been received.
+
+                {% endif %}
+
             </h1>
 
 
             <p class="submission-success-intro">
 
-                Your Kalxa submission has been saved
-                successfully and is not publicly visible yet.
+                {% if payment_processing %}
 
-                {% if payment_required %}
+                    Your Yoco checkout has been completed
+                    and Kalxa is securely confirming the
+                    payment.
+
+                    You do not need to pay again.
+
+                    Your listing will remain hidden until
+                    payment is confirmed and Kalxa approves
+                    the submission.
+
+                {% elif submission.payment_status == "paid" %}
+
+                    Your payment has been confirmed.
+                    Your submission is now waiting for
+                    Kalxa review before it can appear
+                    publicly.
+
+                {% elif payment_required %}
+
+                    Your Kalxa submission has been saved
+                    successfully and is not publicly visible yet.
 
                     Complete the listing payment below.
                     After payment is confirmed, Kalxa will
                     review your submission before it can
                     appear publicly.
 
-                {% elif submission.payment_status == "paid" %}
-
-                    Your payment has been received.
-                    Your submission is waiting for Kalxa
-                    approval.
-
                 {% else %}
+
+                    Your Kalxa submission has been saved
+                    successfully.
 
                     Your listing is now waiting for
                     Kalxa review.
@@ -1276,6 +1382,10 @@
                             {% if submission.payment_status == "paid" %}
 
                                 🟢 Paid
+
+                            {% elif payment_processing %}
+
+                                🟡 Confirming Payment
 
                             {% elif submission.payment_status == "waived" %}
 
@@ -1397,7 +1507,17 @@
                     <div class="kalxa-payment-total">
 
                         <span class="kalxa-payment-total-label">
-                            Total Due
+
+                            {% if submission.payment_status == "paid" %}
+
+                                Amount Paid
+
+                            {% else %}
+
+                                Total Due
+
+                            {% endif %}
+
                         </span>
 
                         <span class="kalxa-payment-total-amount">
@@ -1455,6 +1575,41 @@
 
 
                     <!-- =================================
+                         PAYMENT PROCESSING
+                    ================================== -->
+
+                    {% elif payment_processing %}
+
+
+                        <div class="kalxa-payment-status-processing">
+
+                            <strong>
+                                ⏳ Confirming payment
+                            </strong>
+
+                            <p>
+                                Your checkout was completed
+                                through Yoco and Kalxa is
+                                securely confirming the
+                                transaction.
+                            </p>
+
+                            <p>
+                                <strong>
+                                    You do not need to pay again.
+                                </strong>
+                            </p>
+
+                            <p>
+                                Once payment confirmation is
+                                received, the payment status
+                                will change to Paid.
+                            </p>
+
+                        </div>
+
+
+                    <!-- =================================
                          PAYMENT RECEIVED
                     ================================== -->
 
@@ -1477,6 +1632,10 @@
 
                         </div>
 
+
+                    <!-- =================================
+                         PAYMENT WAIVED
+                    ================================== -->
 
                     {% elif submission.payment_status == "waived" %}
 
@@ -1541,6 +1700,10 @@
                 </h2>
 
 
+                <!-- =================================
+                     PAYMENT STILL REQUIRED
+                ================================== -->
+
                 {% if payment_required %}
 
 
@@ -1579,9 +1742,8 @@
                             </strong>
 
                             <p>
-                                Your submission remains hidden
-                                while its payment and listing
-                                status are processed.
+                                Kalxa securely confirms your
+                                Yoco payment.
                             </p>
 
                         </div>
@@ -1634,6 +1796,109 @@
 
                     </div>
 
+
+                <!-- =================================
+                     PAYMENT PROCESSING
+                ================================== -->
+
+                {% elif payment_processing %}
+
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            1
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Payment submitted
+                            </strong>
+
+                            <p>
+                                Your Yoco checkout has been
+                                completed.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            2
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Kalxa confirms the payment
+                            </strong>
+
+                            <p>
+                                The secure Yoco payment
+                                notification is being processed.
+
+                                You do not need to pay again.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            3
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Kalxa reviews your listing
+                            </strong>
+
+                            <p>
+                                Once payment is confirmed,
+                                your content remains pending
+                                until Kalxa approves it.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="submission-step">
+
+                        <span class="submission-step-number">
+                            4
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Approved listing goes live
+                            </strong>
+
+                            <p>
+                                After approval, your content
+                                becomes publicly discoverable
+                                on Kalxa.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                <!-- =================================
+                     PAYMENT CONFIRMED
+                ================================== -->
 
                 {% elif submission.payment_status == "paid" %}
 
@@ -1703,6 +1968,10 @@
 
                     </div>
 
+
+                <!-- =================================
+                     NON-COMMERCIAL / WAIVED
+                ================================== -->
 
                 {% else %}
 
@@ -1791,7 +2060,17 @@
                 ) }}"
                 class="submission-success-button"
             >
-                Check Submission Status →
+
+                {% if payment_processing %}
+
+                    Check Payment Status →
+
+                {% else %}
+
+                    Check Submission Status →
+
+                {% endif %}
+
             </a>
 
 
