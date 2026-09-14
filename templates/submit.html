@@ -1,6 +1,4 @@
 
-
-  
 <!DOCTYPE html>
 <html lang="en">
 
@@ -29,20 +27,29 @@
 
     <link
         rel="manifest"
-        href="{{ url_for('static', filename='manifest.json') }}"
+        href="{{ url_for(
+            'static',
+            filename='manifest.json'
+        ) }}"
     >
 
     <link
         rel="icon"
         type="image/png"
         sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
     >
 
     <link
         rel="apple-touch-icon"
         sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
+        href="{{ url_for(
+            'static',
+            filename='icons/lac-192.png'
+        ) }}"
     >
 
     <meta
@@ -108,8 +115,6 @@
             min-height: 100vh;
 
             background: #ffffff !important;
-            background-color: #ffffff !important;
-
             color: #111111 !important;
 
             font-family:
@@ -125,7 +130,6 @@
             min-height: 100vh;
 
             background: #ffffff !important;
-
             color: #111111 !important;
         }
 
@@ -254,6 +258,75 @@
             font-size: 14px;
 
             line-height: 1.65;
+        }
+
+
+        /* =========================================
+           PUBLIC SUBMISSION NOTICE
+        ========================================== */
+
+        .public-submission-note {
+            display: flex;
+
+            gap: 13px;
+
+            margin-top: 22px;
+
+            padding: 16px;
+
+            border:
+                1px solid #dbe5dc;
+
+            border-radius: 15px;
+
+            background: #f5fbf6;
+
+            color: #111111;
+        }
+
+
+        .public-submission-note-icon {
+            width: 30px;
+            height: 30px;
+
+            flex: 0 0 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #15803d;
+
+            color: #ffffff;
+
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+
+        .public-submission-note strong {
+            display: block;
+
+            color: #111111;
+
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+
+        .public-submission-note p {
+            margin:
+                5px
+                0
+                0;
+
+            color: #55705b;
+
+            font-size: 11px;
+
+            line-height: 1.55;
         }
 
 
@@ -612,11 +685,6 @@
 
         .kalxa-action-field .public-field {
             margin-bottom: 0;
-        }
-
-
-        .kalxa-action-icon {
-            margin-right: 5px;
         }
 
 
@@ -1161,7 +1229,9 @@
            MOBILE
         ========================================== */
 
-        @media (max-width: 600px) {
+        @media (
+            max-width: 600px
+        ) {
 
             .public-submit-container {
                 padding:
@@ -1172,7 +1242,8 @@
 
 
             .public-form-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
 
                 gap: 0;
             }
@@ -1261,6 +1332,33 @@
             </p>
 
 
+            <!-- =================================
+                 NO ACCOUNT REQUIRED
+            ================================== -->
+
+            <div class="public-submission-note">
+
+                <span class="public-submission-note-icon">
+                    ✓
+                </span>
+
+                <div>
+
+                    <strong>
+                        No account or sign-in required
+                    </strong>
+
+                    <p>
+                        Anyone can submit a listing to Kalxa.
+                        Event organizers can also add an
+                        optional ticket or booking link.
+                    </p>
+
+                </div>
+
+            </div>
+
+
             <div class="submit-review-note">
 
                 <span class="submit-review-note-icon">
@@ -1274,10 +1372,10 @@
                     </strong>
 
                     <p>
-                        Your submission is reviewed before
-                        it becomes publicly visible on Kalxa.
-                        Commercial listings only become visible
-                        after payment has been confirmed.
+                        Your submission is saved as pending
+                        first. Commercial listings remain
+                        hidden until payment is confirmed
+                        and Kalxa approves the content.
                     </p>
 
                 </div>
@@ -1293,13 +1391,17 @@
 
         {% with messages = get_flashed_messages() %}
 
-            {% for message in messages %}
+            {% if messages %}
 
-                <div class="public-submit-alert">
-                    {{ message }}
-                </div>
+                {% for message in messages %}
 
-            {% endfor %}
+                    <div class="public-submit-alert">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
 
         {% endwith %}
 
@@ -1343,21 +1445,75 @@
                 </div>
 
 
+                <label class="public-field">
+
+                    <span>
+                        Name *
+                    </span>
+
+                    <input
+                        type="text"
+                        name="submitter_name"
+                        required
+                        value="{{ request.form.get(
+                            'submitter_name',
+                            ''
+                        ) }}"
+                        placeholder="Your full name"
+                        autocomplete="name"
+                    >
+
+                </label>
+
+
                 <div class="public-form-grid">
 
                     <label class="public-field">
 
                         <span>
-                            Name *
+                            Email
                         </span>
 
                         <input
-                            type="text"
-                            name="submitter_name"
-                            required
-                            value="{{ request.form.get('submitter_name', '') }}"
-                            placeholder="Your full name"
+                            type="email"
+                            name="submitter_email"
+                            value="{{ request.form.get(
+                                'submitter_email',
+                                ''
+                            ) }}"
+                            placeholder="you@example.com"
+                            autocomplete="email"
                         >
+
+                        <small>
+                            Optional. Useful for payment and
+                            submission communication.
+                        </small>
+
+                    </label>
+
+
+                    <label class="public-field">
+
+                        <span>
+                            Phone Number
+                        </span>
+
+                        <input
+                            type="tel"
+                            name="submitter_phone"
+                            value="{{ request.form.get(
+                                'submitter_phone',
+                                ''
+                            ) }}"
+                            placeholder="Example: 079 123 4567"
+                            autocomplete="tel"
+                        >
+
+                        <small>
+                            Optional contact number for your
+                            submission.
+                        </small>
 
                     </label>
 
@@ -1475,7 +1631,9 @@
                                     <option
                                         value="{{ zone_option.id }}"
 
-                                        {% if request.form.get('zone_id') == zone_option.id|string %}
+                                        {% if request.form.get(
+                                            'zone_id'
+                                        ) == zone_option.id|string %}
                                             selected
 
                                         {% elif selected_zone_id == zone_option.id %}
@@ -1519,12 +1677,15 @@
                             </option>
 
 
-                            {% for category_key, category_config in business_categories.items() %}
+                            {% for category_key, category_config
+                               in business_categories.items() %}
 
                                 <option
                                     value="{{ category_key }}"
 
-                                    {% if request.form.get('category') == category_key %}
+                                    {% if request.form.get(
+                                        'category'
+                                    ) == category_key %}
                                         selected
                                     {% endif %}
                                 >
@@ -1636,7 +1797,10 @@
                         type="text"
                         name="title"
                         required
-                        value="{{ request.form.get('title', '') }}"
+                        value="{{ request.form.get(
+                            'title',
+                            ''
+                        ) }}"
                         placeholder="Example: Weekend Grocery Special"
                     >
 
@@ -1652,7 +1816,10 @@
                     <input
                         type="text"
                         name="business_name"
-                        value="{{ request.form.get('business_name', '') }}"
+                        value="{{ request.form.get(
+                            'business_name',
+                            ''
+                        ) }}"
                         placeholder="Business or organisation name"
                     >
 
@@ -1669,7 +1836,10 @@
                         name="description"
                         rows="5"
                         placeholder="Tell people what they need to know."
-                    >{{ request.form.get('description', '') }}</textarea>
+                    >{{ request.form.get(
+                        'description',
+                        ''
+                    ) }}</textarea>
 
                 </label>
 
@@ -1685,7 +1855,10 @@
                         <input
                             type="text"
                             name="venue"
-                            value="{{ request.form.get('venue', '') }}"
+                            value="{{ request.form.get(
+                                'venue',
+                                ''
+                            ) }}"
                             placeholder="Example: KwaMhlanga Community Hall"
                         >
 
@@ -1701,7 +1874,10 @@
                         <input
                             type="text"
                             name="price"
-                            value="{{ request.form.get('price', '') }}"
+                            value="{{ request.form.get(
+                                'price',
+                                ''
+                            ) }}"
                             placeholder="R750 / Free / Negotiable"
                         >
 
@@ -1754,7 +1930,10 @@
                             <input
                                 type="tel"
                                 name="contact"
-                                value="{{ request.form.get('contact', '') }}"
+                                value="{{ request.form.get(
+                                    'contact',
+                                    ''
+                                ) }}"
                                 placeholder="Example: 079 123 4567"
                             >
 
@@ -1774,7 +1953,10 @@
                             <input
                                 type="tel"
                                 name="whatsapp_number"
-                                value="{{ request.form.get('whatsapp_number', '') }}"
+                                value="{{ request.form.get(
+                                    'whatsapp_number',
+                                    ''
+                                ) }}"
                                 placeholder="Example: 079 123 4567"
                             >
 
@@ -1798,7 +1980,10 @@
                             <input
                                 type="url"
                                 name="directions_url"
-                                value="{{ request.form.get('directions_url', '') }}"
+                                value="{{ request.form.get(
+                                    'directions_url',
+                                    ''
+                                ) }}"
                                 placeholder="https://maps.google.com/..."
                             >
 
@@ -1822,7 +2007,10 @@
                                 type="url"
                                 name="ticket_url"
                                 id="ticket-url"
-                                value="{{ request.form.get('ticket_url', '') }}"
+                                value="{{ request.form.get(
+                                    'ticket_url',
+                                    ''
+                                ) }}"
                                 placeholder="https://..."
                             >
 
@@ -1833,9 +2021,11 @@
                             class="kalxa-event-ticket-note"
                             id="event-ticket-note"
                         >
-                            🎟️ This is an event. If tickets are
-                            available online, add the ticket link
-                            so Kalxa can display a Get Tickets button.
+                            This field is optional. If this is
+                            a ticketed event, paste your public
+                            ticket or booking URL here. It can
+                            be a Kalxa Ticketing URL or another
+                            ticket provider.
                         </div>
 
                     </div>
@@ -1953,7 +2143,10 @@
                             type="date"
                             id="publish-from"
                             name="publish_from"
-                            value="{{ request.form.get('publish_from', '') }}"
+                            value="{{ request.form.get(
+                                'publish_from',
+                                ''
+                            ) }}"
                         >
 
                         <small>
@@ -1975,7 +2168,10 @@
                             type="date"
                             id="event-date"
                             name="event_date"
-                            value="{{ request.form.get('event_date', '') }}"
+                            value="{{ request.form.get(
+                                'event_date',
+                                ''
+                            ) }}"
                         >
 
                     </label>
@@ -1993,7 +2189,10 @@
                         type="date"
                         id="event-end-date"
                         name="event_end_date"
-                        value="{{ request.form.get('event_end_date', '') }}"
+                        value="{{ request.form.get(
+                            'event_end_date',
+                            ''
+                        ) }}"
                     >
 
                     <small>
@@ -2052,7 +2251,10 @@
                             type="date"
                             id="start-date"
                             name="start_date"
-                            value="{{ request.form.get('start_date', '') }}"
+                            value="{{ request.form.get(
+                                'start_date',
+                                ''
+                            ) }}"
                         >
 
                     </label>
@@ -2068,7 +2270,10 @@
                             type="date"
                             id="end-date"
                             name="end_date"
-                            value="{{ request.form.get('end_date', '') }}"
+                            value="{{ request.form.get(
+                                'end_date',
+                                ''
+                            ) }}"
                         >
 
                     </label>
@@ -2087,10 +2292,6 @@
 
             <!-- =================================
                  06C — CAMPAIGN TIMES
-
-                 IMPORTANT:
-                 Only ONE start_time/end_time pair exists
-                 in the entire form.
             ================================== -->
 
             <section
@@ -2135,7 +2336,10 @@
                             id="start-time"
                             name="start_time"
                             step="60"
-                            value="{{ request.form.get('start_time', '') }}"
+                            value="{{ request.form.get(
+                                'start_time',
+                                ''
+                            ) }}"
                         >
 
                         <small>
@@ -2156,7 +2360,10 @@
                             id="end-time"
                             name="end_time"
                             step="60"
-                            value="{{ request.form.get('end_time', '') }}"
+                            value="{{ request.form.get(
+                                'end_time',
+                                ''
+                            ) }}"
                         >
 
                         <small>
@@ -2278,7 +2485,10 @@
                     type="hidden"
                     name="pricing_model"
                     id="pricing-model"
-                    value="{{ request.form.get('pricing_model', '') }}"
+                    value="{{ request.form.get(
+                        'pricing_model',
+                        ''
+                    ) }}"
                 >
 
 
@@ -2312,7 +2522,10 @@
                     <select
                         name="commercial_duration_days"
                         id="commercial-duration-days"
-                        data-previous-duration="{{ request.form.get('commercial_duration_days', '') }}"
+                        data-previous-duration="{{ request.form.get(
+                            'commercial_duration_days',
+                            ''
+                        ) }}"
                     >
 
                         <option value="">
@@ -2366,7 +2579,10 @@
                                     data-zone-id="{{ zone_option.id }}"
                                     class="distribution-zone-checkbox"
 
-                                    {% if zone_option.id|string in request.form.getlist('distribution_zone_ids') %}
+                                    {% if zone_option.id|string
+                                       in request.form.getlist(
+                                           'distribution_zone_ids'
+                                       ) %}
                                         checked
                                     {% endif %}
                                 >
@@ -2438,10 +2654,10 @@
 
 
                     <p>
-                        Your listing will be submitted for
-                        review. Kalxa will confirm payment
-                        before commercial content becomes
-                        publicly visible.
+                        This displayed amount is an estimate
+                        for your convenience. Kalxa calculates
+                        the final amount securely on the server
+                        after submission.
                     </p>
 
                 </div>
@@ -2466,11 +2682,13 @@
                     </h2>
 
                     <p>
-                        After submission, you'll receive
-                        a tracking reference. Your listing
-                        will be reviewed and payment will
-                        be confirmed before paid content
-                        becomes publicly visible.
+                        No account is required. After
+                        submission, you'll receive a tracking
+                        reference. If payment is required,
+                        the payment option will appear on
+                        the next page. Your content remains
+                        hidden until payment is confirmed
+                        and Kalxa approves it.
                     </p>
 
                 </div>
@@ -2489,6 +2707,10 @@
 
     </main>
 
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
 
     <footer class="public-footer">
 
@@ -2516,110 +2738,120 @@
             "zone-select"
         );
 
+
     const categorySelect =
         document.getElementById(
             "category-select"
         );
+
 
     const contentTypeWrapper =
         document.getElementById(
             "content-type-wrapper"
         );
 
+
     const contentTypeSelect =
         document.getElementById(
             "content-type-select"
         );
+
 
     const contentTypeLabel =
         document.getElementById(
             "content-type-label"
         );
 
+
     const listingWorkflowNote =
         document.getElementById(
             "listing-workflow-note"
         );
+
 
     const workflowNoteTitle =
         document.getElementById(
             "workflow-note-title"
         );
 
+
     const workflowNoteText =
         document.getElementById(
             "workflow-note-text"
         );
+
 
     const eventDateFields =
         document.getElementById(
             "event-date-fields"
         );
 
+
     const generalDateFields =
         document.getElementById(
             "general-date-fields"
         );
+
 
     const campaignTimeFields =
         document.getElementById(
             "campaign-time-fields"
         );
 
+
     const campaignTimeTitle =
         document.getElementById(
             "campaign-time-title"
         );
+
 
     const campaignTimeDescription =
         document.getElementById(
             "campaign-time-description"
         );
 
+
     const statusLifetimeSection =
         document.getElementById(
             "status-lifetime-section"
         );
+
 
     const statusLifetimeTitle =
         document.getElementById(
             "status-lifetime-title"
         );
 
+
     const statusLifetimeText =
         document.getElementById(
             "status-lifetime-text"
         );
+
 
     const statusCardTitle =
         document.getElementById(
             "status-card-title"
         );
 
+
     const statusCardText =
         document.getElementById(
             "status-card-text"
         );
+
 
     const eventDateInput =
         document.getElementById(
             "event-date"
         );
 
+
     const endDateInput =
         document.getElementById(
             "end-date"
         );
 
-    const startTimeInput =
-        document.getElementById(
-            "start-time"
-        );
-
-    const endTimeInput =
-        document.getElementById(
-            "end-time"
-        );
 
     const eventTicketNote =
         document.getElementById(
@@ -2636,50 +2868,60 @@
             "kalxa-package-section"
         );
 
+
     const pricingModelInput =
         document.getElementById(
             "pricing-model"
         );
+
 
     const packageModelTitle =
         document.getElementById(
             "package-model-title"
         );
 
+
     const packageModelDescription =
         document.getElementById(
             "package-model-description"
         );
+
 
     const durationSelect =
         document.getElementById(
             "commercial-duration-days"
         );
 
+
     const campaignReachSection =
         document.getElementById(
             "campaign-reach-section"
         );
+
 
     const zoneCheckboxes =
         document.querySelectorAll(
             ".distribution-zone-checkbox"
         );
 
+
     const campaignZoneCount =
         document.getElementById(
             "campaign-zone-count"
         );
+
 
     const packageSummary =
         document.getElementById(
             "kalxa-package-summary"
         );
 
+
     const priceDisplay =
         document.getElementById(
             "kalxa-price-display"
         );
+
 
     const displayedAmountInput =
         document.getElementById(
@@ -2692,31 +2934,39 @@
     // =====================================================
 
     const presencePricing = {
+
         30: 99,
         90: 179,
         180: 299,
         365: 499
+
     };
 
 
     const campaignPricing = {
 
         7: {
+
             1: 79,
             2: 99,
             3: 119
+
         },
 
         14: {
+
             1: 99,
             2: 119,
             3: 159
+
         },
 
         30: {
+
             1: 179,
             2: 199,
             3: 249
+
         }
 
     };
@@ -2728,9 +2978,14 @@
 
     function getSelectedCategory() {
 
-        if (!categorySelect) {
+        if (
+            !categorySelect
+        ) {
+
             return "";
+
         }
+
 
         return String(
             categorySelect.value || ""
@@ -2747,12 +3002,18 @@
 
     function updateTicketContext() {
 
-        if (!eventTicketNote) {
+        if (
+            !eventTicketNote
+        ) {
+
             return;
+
         }
+
 
         const category =
             getSelectedCategory();
+
 
         eventTicketNote.style.display =
             category === "events"
@@ -2774,12 +3035,37 @@
                 "What type of event is this?",
 
             options: [
-                { value: "event", label: "📅 General Event" },
-                { value: "entertainment", label: "🎵 Entertainment / Party" },
-                { value: "church_event", label: "⛪ Church / Religious Event" },
-                { value: "sports_event", label: "⚽ Sports Event" },
-                { value: "community_event", label: "👥 Community Event" },
-                { value: "business_event", label: "💼 Business Event" }
+
+                {
+                    value: "event",
+                    label: "📅 General Event"
+                },
+
+                {
+                    value: "entertainment",
+                    label: "🎵 Entertainment / Party"
+                },
+
+                {
+                    value: "church_event",
+                    label: "⛪ Church / Religious Event"
+                },
+
+                {
+                    value: "sports_event",
+                    label: "⚽ Sports Event"
+                },
+
+                {
+                    value: "community_event",
+                    label: "👥 Community Event"
+                },
+
+                {
+                    value: "business_event",
+                    label: "💼 Business Event"
+                }
+
             ]
 
         },
@@ -2791,11 +3077,32 @@
                 "What are you listing?",
 
             options: [
-                { value: "restaurant", label: "🍽 Restaurant" },
-                { value: "takeaway", label: "🍔 Takeaway / Fast Food" },
-                { value: "daily_special", label: "🍟 Daily Special" },
-                { value: "weekend_special", label: "📆 Weekend Special" },
-                { value: "food_deal", label: "🏷 Food Deal / Promotion" }
+
+                {
+                    value: "restaurant",
+                    label: "🍽 Restaurant"
+                },
+
+                {
+                    value: "takeaway",
+                    label: "🍔 Takeaway / Fast Food"
+                },
+
+                {
+                    value: "daily_special",
+                    label: "🍟 Daily Special"
+                },
+
+                {
+                    value: "weekend_special",
+                    label: "📆 Weekend Special"
+                },
+
+                {
+                    value: "food_deal",
+                    label: "🏷 Food Deal / Promotion"
+                }
+
             ]
 
         },
@@ -2807,10 +3114,27 @@
                 "What are you listing?",
 
             options: [
-                { value: "salon", label: "💇 Salon" },
-                { value: "barber", label: "💈 Barber" },
-                { value: "beauty_service", label: "💅 Beauty Service" },
-                { value: "beauty_special", label: "🏷 Beauty / Salon Special" }
+
+                {
+                    value: "salon",
+                    label: "💇 Salon"
+                },
+
+                {
+                    value: "barber",
+                    label: "💈 Barber"
+                },
+
+                {
+                    value: "beauty_service",
+                    label: "💅 Beauty Service"
+                },
+
+                {
+                    value: "beauty_special",
+                    label: "🏷 Beauty / Salon Special"
+                }
+
             ]
 
         },
@@ -2822,11 +3146,32 @@
                 "What kind of retail listing is this?",
 
             options: [
-                { value: "store", label: "🏪 Retail Store" },
-                { value: "grocery_special", label: "🛒 Grocery Special" },
-                { value: "product_discount", label: "🏷 Product Discount" },
-                { value: "weekend_special", label: "📆 Weekend Special" },
-                { value: "clearance", label: "🔥 Clearance Deal" }
+
+                {
+                    value: "store",
+                    label: "🏪 Retail Store"
+                },
+
+                {
+                    value: "grocery_special",
+                    label: "🛒 Grocery Special"
+                },
+
+                {
+                    value: "product_discount",
+                    label: "🏷 Product Discount"
+                },
+
+                {
+                    value: "weekend_special",
+                    label: "📆 Weekend Special"
+                },
+
+                {
+                    value: "clearance",
+                    label: "🔥 Clearance Deal"
+                }
+
             ]
 
         },
@@ -2838,11 +3183,32 @@
                 "What type of accommodation is this?",
 
             options: [
-                { value: "hotel", label: "🏨 Hotel" },
-                { value: "lodge", label: "🛏 Lodge" },
-                { value: "guest_house", label: "🏡 Guest House" },
-                { value: "bnb", label: "🛌 B&B / Short Stay" },
-                { value: "accommodation_special", label: "🏷 Accommodation Special" }
+
+                {
+                    value: "hotel",
+                    label: "🏨 Hotel"
+                },
+
+                {
+                    value: "lodge",
+                    label: "🛏 Lodge"
+                },
+
+                {
+                    value: "guest_house",
+                    label: "🏡 Guest House"
+                },
+
+                {
+                    value: "bnb",
+                    label: "🛌 B&B / Short Stay"
+                },
+
+                {
+                    value: "accommodation_special",
+                    label: "🏷 Accommodation Special"
+                }
+
             ]
 
         },
@@ -2854,9 +3220,22 @@
                 "What property are you listing?",
 
             options: [
-                { value: "room", label: "🏠 Room to Rent" },
-                { value: "rental", label: "🏘 House / Apartment to Rent" },
-                { value: "property_sale", label: "🏡 Property for Sale" }
+
+                {
+                    value: "room",
+                    label: "🏠 Room to Rent"
+                },
+
+                {
+                    value: "rental",
+                    label: "🏘 House / Apartment to Rent"
+                },
+
+                {
+                    value: "property_sale",
+                    label: "🏡 Property for Sale"
+                }
+
             ]
 
         },
@@ -2868,10 +3247,27 @@
                 "What delivery service are you listing?",
 
             options: [
-                { value: "delivery_service", label: "🛵 Delivery Service" },
-                { value: "pickup_service", label: "📦 Pickup Service" },
-                { value: "courier_service", label: "🚚 Courier Service" },
-                { value: "local_delivery", label: "📍 Local Delivery" }
+
+                {
+                    value: "delivery_service",
+                    label: "🛵 Delivery Service"
+                },
+
+                {
+                    value: "pickup_service",
+                    label: "📦 Pickup Service"
+                },
+
+                {
+                    value: "courier_service",
+                    label: "🚚 Courier Service"
+                },
+
+                {
+                    value: "local_delivery",
+                    label: "📍 Local Delivery"
+                }
+
             ]
 
         },
@@ -2883,12 +3279,37 @@
                 "What type of service is this?",
 
             options: [
-                { value: "service_provider", label: "🛠 General Service" },
-                { value: "plumber", label: "🔧 Plumber" },
-                { value: "mechanic", label: "🚗 Mechanic" },
-                { value: "electrician", label: "⚡ Electrician" },
-                { value: "builder", label: "🧱 Builder" },
-                { value: "cleaning_service", label: "🧹 Cleaning Service" }
+
+                {
+                    value: "service_provider",
+                    label: "🛠 General Service"
+                },
+
+                {
+                    value: "plumber",
+                    label: "🔧 Plumber"
+                },
+
+                {
+                    value: "mechanic",
+                    label: "🚗 Mechanic"
+                },
+
+                {
+                    value: "electrician",
+                    label: "⚡ Electrician"
+                },
+
+                {
+                    value: "builder",
+                    label: "🧱 Builder"
+                },
+
+                {
+                    value: "cleaning_service",
+                    label: "🧹 Cleaning Service"
+                }
+
             ]
 
         },
@@ -2900,12 +3321,37 @@
                 "What kind of opportunity is this?",
 
             options: [
-                { value: "job", label: "💼 Job Vacancy" },
-                { value: "learnership", label: "🎓 Learnership" },
-                { value: "internship", label: "🧑‍💻 Internship" },
-                { value: "training", label: "📚 Training Programme" },
-                { value: "tender", label: "📄 Tender" },
-                { value: "business_opportunity", label: "🤝 Business Opportunity" }
+
+                {
+                    value: "job",
+                    label: "💼 Job Vacancy"
+                },
+
+                {
+                    value: "learnership",
+                    label: "🎓 Learnership"
+                },
+
+                {
+                    value: "internship",
+                    label: "🧑‍💻 Internship"
+                },
+
+                {
+                    value: "training",
+                    label: "📚 Training Programme"
+                },
+
+                {
+                    value: "tender",
+                    label: "📄 Tender"
+                },
+
+                {
+                    value: "business_opportunity",
+                    label: "🤝 Business Opportunity"
+                }
+
             ]
 
         },
@@ -2917,11 +3363,32 @@
                 "What type of emergency information is this?",
 
             options: [
-                { value: "emergency_service", label: "🚨 Emergency Service" },
-                { value: "police", label: "👮 Police" },
-                { value: "medical", label: "🚑 Medical / Ambulance" },
-                { value: "fire", label: "🚒 Fire & Rescue" },
-                { value: "safety_alert", label: "⚠️ Safety Alert" }
+
+                {
+                    value: "emergency_service",
+                    label: "🚨 Emergency Service"
+                },
+
+                {
+                    value: "police",
+                    label: "👮 Police"
+                },
+
+                {
+                    value: "medical",
+                    label: "🚑 Medical / Ambulance"
+                },
+
+                {
+                    value: "fire",
+                    label: "🚒 Fire & Rescue"
+                },
+
+                {
+                    value: "safety_alert",
+                    label: "⚠️ Safety Alert"
+                }
+
             ]
 
         },
@@ -2933,10 +3400,27 @@
                 "What kind of announcement is this?",
 
             options: [
-                { value: "community_notice", label: "📢 Community Notice" },
-                { value: "service_notice", label: "ℹ️ Service Notice" },
-                { value: "public_update", label: "📍 Public Update" },
-                { value: "community_meeting", label: "👥 Community Meeting" }
+
+                {
+                    value: "community_notice",
+                    label: "📢 Community Notice"
+                },
+
+                {
+                    value: "service_notice",
+                    label: "ℹ️ Service Notice"
+                },
+
+                {
+                    value: "public_update",
+                    label: "📍 Public Update"
+                },
+
+                {
+                    value: "community_meeting",
+                    label: "👥 Community Meeting"
+                }
+
             ]
 
         },
@@ -2948,10 +3432,27 @@
                 "What are you listing?",
 
             options: [
-                { value: "hardware_store", label: "🧱 Hardware Store" },
-                { value: "building_materials", label: "🏗 Building Materials" },
-                { value: "builder", label: "👷 Builder / Contractor" },
-                { value: "hardware_special", label: "🏷 Hardware Special" }
+
+                {
+                    value: "hardware_store",
+                    label: "🧱 Hardware Store"
+                },
+
+                {
+                    value: "building_materials",
+                    label: "🏗 Building Materials"
+                },
+
+                {
+                    value: "builder",
+                    label: "👷 Builder / Contractor"
+                },
+
+                {
+                    value: "hardware_special",
+                    label: "🏷 Hardware Special"
+                }
+
             ]
 
         }
@@ -2965,10 +3466,12 @@
             "What are you listing?",
 
         options: [
+
             {
                 value: "general_listing",
                 label: "General Listing"
             }
+
         ]
 
     };
@@ -3050,28 +3553,34 @@
 
     const presenceCategories =
         new Set([
+
             "restaurants",
             "beauty",
             "accommodation",
             "delivery",
             "services",
             "building"
+
         ]);
 
 
     const campaignCategories =
         new Set([
+
             "events",
             "retail_specials",
             "rentals",
             "jobs"
+
         ]);
 
 
     const nonCommercialCategories =
         new Set([
+
             "emergency",
             "announcements"
+
         ]);
 
 
@@ -3083,6 +3592,7 @@
 
         const category =
             getSelectedCategory();
+
 
         const contentType =
             String(
@@ -3099,7 +3609,9 @@
             ||
             !contentType
         ) {
+
             return "";
+
         }
 
 
@@ -3111,8 +3623,14 @@
             contentType;
 
 
-        if (pricingModelOverrides[key]) {
-            return pricingModelOverrides[key];
+        if (
+            pricingModelOverrides[key]
+        ) {
+
+            return (
+                pricingModelOverrides[key]
+            );
+
         }
 
 
@@ -3121,7 +3639,9 @@
                 category
             )
         ) {
+
             return "";
+
         }
 
 
@@ -3130,7 +3650,9 @@
                 category
             )
         ) {
+
             return "presence";
+
         }
 
 
@@ -3139,7 +3661,9 @@
                 category
             )
         ) {
+
             return "campaign";
+
         }
 
 
@@ -3154,39 +3678,63 @@
 
     function hideLifetimeSections() {
 
-        if (eventDateFields) {
+        if (
+            eventDateFields
+        ) {
+
             eventDateFields.style.display =
                 "none";
+
         }
 
 
-        if (generalDateFields) {
+        if (
+            generalDateFields
+        ) {
+
             generalDateFields.style.display =
                 "none";
+
         }
 
 
-        if (campaignTimeFields) {
+        if (
+            campaignTimeFields
+        ) {
+
             campaignTimeFields.style.display =
                 "none";
+
         }
 
 
-        if (statusLifetimeSection) {
+        if (
+            statusLifetimeSection
+        ) {
+
             statusLifetimeSection.style.display =
                 "none";
+
         }
 
 
-        if (eventDateInput) {
+        if (
+            eventDateInput
+        ) {
+
             eventDateInput.required =
                 false;
+
         }
 
 
-        if (endDateInput) {
+        if (
+            endDateInput
+        ) {
+
             endDateInput.required =
                 false;
+
         }
 
     }
@@ -3200,8 +3748,12 @@
         mode
     ) {
 
-        if (!campaignTimeFields) {
+        if (
+            !campaignTimeFields
+        ) {
+
             return;
+
         }
 
 
@@ -3209,32 +3761,50 @@
             "block";
 
 
-        if (mode === "event") {
+        if (
+            mode === "event"
+        ) {
 
-            if (campaignTimeTitle) {
+            if (
+                campaignTimeTitle
+            ) {
+
                 campaignTimeTitle.textContent =
                     "Event Start & End Time";
+
             }
 
 
-            if (campaignTimeDescription) {
+            if (
+                campaignTimeDescription
+            ) {
+
                 campaignTimeDescription.textContent =
                     "Add the event times so Kalxa can automatically show TONIGHT and HAPPENING NOW.";
+
             }
 
         }
 
         else {
 
-            if (campaignTimeTitle) {
+            if (
+                campaignTimeTitle
+            ) {
+
                 campaignTimeTitle.textContent =
                     "Campaign Start & End Time";
+
             }
 
 
-            if (campaignTimeDescription) {
+            if (
+                campaignTimeDescription
+            ) {
+
                 campaignTimeDescription.textContent =
                     "Optional. Add exact times when this campaign starts or ends.";
+
             }
 
         }
@@ -3251,8 +3821,12 @@
         message
     ) {
 
-        if (!listingWorkflowNote) {
+        if (
+            !listingWorkflowNote
+        ) {
+
             return;
+
         }
 
 
@@ -3260,15 +3834,23 @@
             "flex";
 
 
-        if (workflowNoteTitle) {
+        if (
+            workflowNoteTitle
+        ) {
+
             workflowNoteTitle.textContent =
                 title;
+
         }
 
 
-        if (workflowNoteText) {
+        if (
+            workflowNoteText
+        ) {
+
             workflowNoteText.textContent =
                 message;
+
         }
 
     }
@@ -3276,9 +3858,13 @@
 
     function hideWorkflowNote() {
 
-        if (listingWorkflowNote) {
+        if (
+            listingWorkflowNote
+        ) {
+
             listingWorkflowNote.style.display =
                 "none";
+
         }
 
     }
@@ -3299,7 +3885,9 @@
             ||
             !contentTypeWrapper
         ) {
+
             return;
+
         }
 
 
@@ -3332,7 +3920,9 @@
         );
 
 
-        if (!category) {
+        if (
+            !category
+        ) {
 
             contentTypeWrapper.style.display =
                 "none";
@@ -3357,7 +3947,9 @@
             fallbackContentType;
 
 
-        if (contentTypeLabel) {
+        if (
+            contentTypeLabel
+        ) {
 
             contentTypeLabel.textContent =
                 config.label + " *";
@@ -3366,7 +3958,9 @@
 
 
         config.options.forEach(
-            function(optionConfig) {
+            function(
+                optionConfig
+            ) {
 
                 const option =
                     document.createElement(
@@ -3407,7 +4001,9 @@
                     contentTypeSelect.options
                 )
                 .some(
-                    function(option) {
+                    function(
+                        option
+                    ) {
 
                         return (
                             option.value
@@ -3419,9 +4015,13 @@
                 );
 
 
-            if (previousExists) {
+            if (
+                previousExists
+            ) {
+
                 contentTypeSelect.value =
                     previousContentType;
+
             }
 
         }
@@ -3448,7 +4048,9 @@
             ||
             !contentTypeSelect
         ) {
+
             return;
+
         }
 
 
@@ -3458,7 +4060,9 @@
 
         const contentType =
             String(
-                contentTypeSelect.value || ""
+                contentTypeSelect.value
+                ||
+                ""
             )
             .trim()
             .toLowerCase();
@@ -3487,17 +4091,27 @@
         // EVENTS
         // =============================================
 
-        if (category === "events") {
+        if (
+            category === "events"
+        ) {
 
-            if (eventDateFields) {
+            if (
+                eventDateFields
+            ) {
+
                 eventDateFields.style.display =
                     "block";
+
             }
 
 
-            if (eventDateInput) {
+            if (
+                eventDateInput
+            ) {
+
                 eventDateInput.required =
                     true;
+
             }
 
 
@@ -3521,39 +4135,59 @@
 
         // =============================================
         // RENTALS
-        //
-        // Remain availability-based for now.
         // =============================================
 
-        if (category === "rentals") {
+        if (
+            category === "rentals"
+        ) {
 
-            if (statusLifetimeSection) {
+            if (
+                statusLifetimeSection
+            ) {
+
                 statusLifetimeSection.style.display =
                     "block";
+
             }
 
 
-            if (statusLifetimeTitle) {
+            if (
+                statusLifetimeTitle
+            ) {
+
                 statusLifetimeTitle.textContent =
                     "Availability-based Listing";
+
             }
 
 
-            if (statusLifetimeText) {
+            if (
+                statusLifetimeText
+            ) {
+
                 statusLifetimeText.textContent =
                     "This listing remains relevant until the room or property is no longer available.";
+
             }
 
 
-            if (statusCardTitle) {
+            if (
+                statusCardTitle
+            ) {
+
                 statusCardTitle.textContent =
                     "No natural expiry date required";
+
             }
 
 
-            if (statusCardText) {
+            if (
+                statusCardText
+            ) {
+
                 statusCardText.textContent =
                     "Your selected Kalxa package still controls how long the listing is publicly discoverable.";
+
             }
 
 
@@ -3572,29 +4206,29 @@
 
         // =============================================
         // COMMERCIAL CAMPAIGNS
-        //
-        // This catches:
-        //
-        // restaurant special
-        // beauty special
-        // retail special
-        // accommodation special
-        // jobs
-        // hardware special
-        // etc.
         // =============================================
 
-        if (pricingModel === "campaign") {
+        if (
+            pricingModel === "campaign"
+        ) {
 
-            if (generalDateFields) {
+            if (
+                generalDateFields
+            ) {
+
                 generalDateFields.style.display =
                     "block";
+
             }
 
 
-            if (endDateInput) {
+            if (
+                endDateInput
+            ) {
+
                 endDateInput.required =
                     true;
+
             }
 
 
@@ -3620,17 +4254,27 @@
         // ANNOUNCEMENTS
         // =============================================
 
-        if (category === "announcements") {
+        if (
+            category === "announcements"
+        ) {
 
-            if (generalDateFields) {
+            if (
+                generalDateFields
+            ) {
+
                 generalDateFields.style.display =
                     "block";
+
             }
 
 
-            if (endDateInput) {
+            if (
+                endDateInput
+            ) {
+
                 endDateInput.required =
                     true;
+
             }
 
 
@@ -3662,33 +4306,53 @@
             category === "emergency"
         ) {
 
-            if (statusLifetimeSection) {
+            if (
+                statusLifetimeSection
+            ) {
+
                 statusLifetimeSection.style.display =
                     "block";
+
             }
 
 
-            if (statusLifetimeTitle) {
+            if (
+                statusLifetimeTitle
+            ) {
+
                 statusLifetimeTitle.textContent =
                     "Ongoing Listing";
+
             }
 
 
-            if (statusLifetimeText) {
+            if (
+                statusLifetimeText
+            ) {
+
                 statusLifetimeText.textContent =
                     "This business, service or information does not have a natural expiry date.";
+
             }
 
 
-            if (statusCardTitle) {
+            if (
+                statusCardTitle
+            ) {
+
                 statusCardTitle.textContent =
                     "Ongoing local information";
+
             }
 
 
-            if (statusCardText) {
+            if (
+                statusCardText
+            ) {
+
                 statusCardText.textContent =
                     "If this is commercial content, your Kalxa Presence package determines how long it remains publicly discoverable.";
+
             }
 
 
@@ -3709,9 +4373,13 @@
         // FALLBACK TIME-SPECIFIC CONTENT
         // =============================================
 
-        if (generalDateFields) {
+        if (
+            generalDateFields
+        ) {
+
             generalDateFields.style.display =
                 "block";
+
         }
 
 
@@ -3746,7 +4414,9 @@
             ||
             amount === ""
         ) {
+
             return "—";
+
         }
 
 
@@ -3767,14 +4437,21 @@
 
     function getSelectedZoneCount() {
 
-        let count = 0;
+        let count =
+            0;
 
 
         zoneCheckboxes.forEach(
-            function(checkbox) {
+            function(
+                checkbox
+            ) {
 
-                if (checkbox.checked) {
+                if (
+                    checkbox.checked
+                ) {
+
                     count += 1;
+
                 }
 
             }
@@ -3788,24 +4465,36 @@
 
     function ensureHomeZoneSelected() {
 
-        if (!zoneSelect) {
+        if (
+            !zoneSelect
+        ) {
+
             return;
+
         }
 
 
         const homeZoneId =
             String(
-                zoneSelect.value || ""
+                zoneSelect.value
+                ||
+                ""
             );
 
 
-        if (!homeZoneId) {
+        if (
+            !homeZoneId
+        ) {
+
             return;
+
         }
 
 
         zoneCheckboxes.forEach(
-            function(checkbox) {
+            function(
+                checkbox
+            ) {
 
                 if (
                     String(
@@ -3834,8 +4523,12 @@
         pricingModel
     ) {
 
-        if (!durationSelect) {
+        if (
+            !durationSelect
+        ) {
+
             return;
+
         }
 
 
@@ -3869,34 +4562,45 @@
         );
 
 
-        let durations = [];
+        let durations =
+            [];
 
 
-        if (pricingModel === "presence") {
+        if (
+            pricingModel === "presence"
+        ) {
 
             durations = [
+
                 30,
                 90,
                 180,
                 365
+
             ];
 
         }
 
 
-        else if (pricingModel === "campaign") {
+        else if (
+            pricingModel === "campaign"
+        ) {
 
             durations = [
+
                 7,
                 14,
                 30
+
             ];
 
         }
 
 
         durations.forEach(
-            function(days) {
+            function(
+                days
+            ) {
 
                 const option =
                     document.createElement(
@@ -3905,10 +4609,14 @@
 
 
                 option.value =
-                    String(days);
+                    String(
+                        days
+                    );
 
 
-                if (pricingModel === "presence") {
+                if (
+                    pricingModel === "presence"
+                ) {
 
                     option.textContent =
                         (
@@ -3917,7 +4625,9 @@
                             " days — "
                             +
                             formatKalxaPrice(
-                                presencePricing[days]
+                                presencePricing[
+                                    days
+                                ]
                             )
                         );
 
@@ -3978,7 +4688,9 @@
             ||
             !priceDisplay
         ) {
+
             return;
+
         }
 
 
@@ -3988,7 +4700,9 @@
 
         const duration =
             Number(
-                durationSelect.value || 0
+                durationSelect.value
+                ||
+                0
             );
 
 
@@ -3996,11 +4710,15 @@
             getSelectedZoneCount();
 
 
-        if (campaignZoneCount) {
+        if (
+            campaignZoneCount
+        ) {
+
             campaignZoneCount.textContent =
                 String(
                     zoneCount
                 );
+
         }
 
 
@@ -4015,7 +4733,9 @@
         ) {
 
             amount =
-                presencePricing[duration];
+                presencePricing[
+                    duration
+                ];
 
         }
 
@@ -4031,18 +4751,24 @@
         ) {
 
             const durationPrices =
-                campaignPricing[duration];
+                campaignPricing[
+                    duration
+                ];
 
 
             if (
                 durationPrices
                 &&
-                durationPrices[zoneCount]
+                durationPrices[
+                    zoneCount
+                ]
                 !== undefined
             ) {
 
                 amount =
-                    durationPrices[zoneCount];
+                    durationPrices[
+                        zoneCount
+                    ];
 
             }
 
@@ -4059,15 +4785,23 @@
                 "—";
 
 
-            if (displayedAmountInput) {
+            if (
+                displayedAmountInput
+            ) {
+
                 displayedAmountInput.value =
                     "";
+
             }
 
 
-            if (packageSummary) {
+            if (
+                packageSummary
+            ) {
+
                 packageSummary.textContent =
                     "Select a package duration.";
+
             }
 
 
@@ -4082,17 +4816,25 @@
             );
 
 
-        if (displayedAmountInput) {
+        if (
+            displayedAmountInput
+        ) {
+
             displayedAmountInput.value =
                 String(
                     amount
                 );
+
         }
 
 
-        if (packageSummary) {
+        if (
+            packageSummary
+        ) {
 
-            if (pricingModel === "presence") {
+            if (
+                pricingModel === "presence"
+            ) {
 
                 packageSummary.textContent =
                     (
@@ -4143,23 +4885,37 @@
             getSelectedPricingModel();
 
 
-        if (pricingModelInput) {
+        if (
+            pricingModelInput
+        ) {
+
             pricingModelInput.value =
                 pricingModel;
+
         }
 
 
-        if (!pricingModel) {
+        if (
+            !pricingModel
+        ) {
 
-            if (packageSection) {
+            if (
+                packageSection
+            ) {
+
                 packageSection.style.display =
                     "none";
+
             }
 
 
-            if (durationSelect) {
+            if (
+                durationSelect
+            ) {
+
                 durationSelect.required =
                     false;
+
             }
 
 
@@ -4168,57 +4924,90 @@
         }
 
 
-        if (packageSection) {
+        if (
+            packageSection
+        ) {
+
             packageSection.style.display =
                 "block";
+
         }
 
 
-        if (durationSelect) {
+        if (
+            durationSelect
+        ) {
+
             durationSelect.required =
                 true;
+
         }
 
 
-        if (pricingModel === "presence") {
+        if (
+            pricingModel === "presence"
+        ) {
 
-            if (packageModelTitle) {
+            if (
+                packageModelTitle
+            ) {
+
                 packageModelTitle.textContent =
                     "Kalxa Presence";
+
             }
 
 
-            if (packageModelDescription) {
+            if (
+                packageModelDescription
+            ) {
+
                 packageModelDescription.textContent =
                     "Keep your business discoverable in its local community. Presence pricing is based on duration.";
+
             }
 
 
-            if (campaignReachSection) {
+            if (
+                campaignReachSection
+            ) {
+
                 campaignReachSection.style.display =
                     "none";
+
             }
 
         }
-
 
         else {
 
-            if (packageModelTitle) {
+            if (
+                packageModelTitle
+            ) {
+
                 packageModelTitle.textContent =
                     "Kalxa Campaign";
+
             }
 
 
-            if (packageModelDescription) {
+            if (
+                packageModelDescription
+            ) {
+
                 packageModelDescription.textContent =
                     "Promote time-sensitive information for a selected period and geographic reach.";
+
             }
 
 
-            if (campaignReachSection) {
+            if (
+                campaignReachSection
+            ) {
+
                 campaignReachSection.style.display =
                     "block";
+
             }
 
 
@@ -4241,7 +5030,9 @@
     // CATEGORY CHANGE
     // =====================================================
 
-    if (categorySelect) {
+    if (
+        categorySelect
+    ) {
 
         categorySelect.addEventListener(
             "change",
@@ -4263,7 +5054,9 @@
     // CONTENT TYPE CHANGE
     // =====================================================
 
-    if (contentTypeSelect) {
+    if (
+        contentTypeSelect
+    ) {
 
         contentTypeSelect.addEventListener(
             "change",
@@ -4316,7 +5109,9 @@
     // DURATION CHANGE
     // =====================================================
 
-    if (durationSelect) {
+    if (
+        durationSelect
+    ) {
 
         durationSelect.addEventListener(
             "change",
@@ -4331,7 +5126,9 @@
     // =====================================================
 
     zoneCheckboxes.forEach(
-        function(checkbox) {
+        function(
+            checkbox
+        ) {
 
             checkbox.addEventListener(
                 "change",
@@ -4342,7 +5139,9 @@
                         !==
                         "campaign"
                     ) {
+
                         return;
+
                     }
 
 
@@ -4353,7 +5152,9 @@
                         getSelectedZoneCount();
 
 
-                    if (count > 3) {
+                    if (
+                        count > 3
+                    ) {
 
                         const homeZoneId =
                             zoneSelect
@@ -4374,8 +5175,10 @@
                             !==
                             homeZoneId
                         ) {
+
                             checkbox.checked =
                                 false;
+
                         }
 
 
@@ -4402,7 +5205,9 @@
     // INITIAL PAGE LOAD
     // =====================================================
 
-    if (categorySelect) {
+    if (
+        categorySelect
+    ) {
 
         updateContentTypes(
             true
@@ -4434,13 +5239,18 @@
         );
 
 
-    let selectedImages = [];
+    let selectedImages =
+        [];
 
 
     function rebuildImageInput() {
 
-        if (!imageInput) {
+        if (
+            !imageInput
+        ) {
+
             return;
+
         }
 
 
@@ -4449,7 +5259,9 @@
 
 
         selectedImages.forEach(
-            function(file) {
+            function(
+                file
+            ) {
 
                 dataTransfer.items.add(
                     file
@@ -4467,8 +5279,12 @@
 
     function renderImagePreviews() {
 
-        if (!imagePreview) {
+        if (
+            !imagePreview
+        ) {
+
             return;
+
         }
 
 
@@ -4477,7 +5293,10 @@
 
 
         selectedImages.forEach(
-            function(file, index) {
+            function(
+                file,
+                index
+            ) {
 
                 const wrapper =
                     document.createElement(
@@ -4574,11 +5393,15 @@
     }
 
 
-    if (imageInput) {
+    if (
+        imageInput
+    ) {
 
         imageInput.addEventListener(
             "change",
-            function(event) {
+            function(
+                event
+            ) {
 
                 const newFiles =
                     Array.from(
@@ -4597,7 +5420,9 @@
 
                     const duplicate =
                         selectedImages.some(
-                            function(existing) {
+                            function(
+                                existing
+                            ) {
 
                                 return (
                                     existing.name
@@ -4617,14 +5442,19 @@
                         );
 
 
-                    if (duplicate) {
+                    if (
+                        duplicate
+                    ) {
+
                         continue;
+
                     }
 
 
                     if (
                         selectedImages.length
-                        >= 3
+                        >=
+                        3
                     ) {
 
                         maximumExceeded =
@@ -4642,7 +5472,9 @@
                 }
 
 
-                if (maximumExceeded) {
+                if (
+                    maximumExceeded
+                ) {
 
                     alert(
                         "You can upload a maximum of 3 images."
@@ -4669,6 +5501,8 @@
 
 </script>
 
+
 </body>
 
 </html>
+
