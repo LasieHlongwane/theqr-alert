@@ -3265,6 +3265,7 @@ def _get_content_workflow(
 
     return workflow
 
+
 def _calculate_content_price(
     category,
     content_type,
@@ -3273,7 +3274,7 @@ def _calculate_content_price(
 ):
 
     # =====================================================
-    # GET CONTENT WORKFLOW
+    # GET WORKFLOW
     # =====================================================
 
     workflow = (
@@ -3292,18 +3293,35 @@ def _calculate_content_price(
 
 
     # =====================================================
-    # CONTENT WITHOUT COMMERCIAL PRICING
+    # VALIDATE PRICING MODEL
+    # =====================================================
+    #
+    # With the current MVP rule, every valid submission
+    # should have either:
+    #
+    # presence
+    #
+    # or
+    #
+    # campaign
+    #
     # =====================================================
 
     if not pricing_model:
 
-        return None
+        raise KalxaPricingError(
+            (
+                "This listing does not have a valid "
+                "Kalxa pricing model."
+            )
+        )
 
 
     # =====================================================
     # PRESENCE
+    # =====================================================
     #
-    # Geographic reach does not affect Presence pricing.
+    # Presence always uses one home zone.
     # =====================================================
 
     if (
@@ -3315,18 +3333,158 @@ def _calculate_content_price(
 
 
     # =====================================================
-    # CALCULATE
+    # CALCULATE PRICE
     # =====================================================
 
-    return calculate_kalxa_price(
-        pricing_model=
-            pricing_model,
+    return (
+        calculate_kalxa_price(
 
-        duration_days=
-            duration_days,
+            pricing_model=
+                pricing_model,
 
-        zone_count=
-            zone_count,
+            duration_days=
+                duration_days,
+
+            zone_count=
+                zone_count,
+        )
+    )
+
+def calculate_kalxa_price(
+    pricing_model,
+    duration_days,
+    zone_count=1,
+):
+
+    # =====================================================
+    # NORMALIZE PRICING MODEL
+    # =====================================================
+
+    pricing_model = (
+        str(
+            pricing_model
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    # =====================================================
+    # VALIDATE DURATION
+    # =====================================================
+
+    try:
+
+        duration_days = int(
+            duration_days
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        raise KalxaPricingError(
+            "Please select a valid Kalxa package duration."
+        )
+
+
+    if (
+        duration_days
+        <= 0
+    ):
+
+        raise KalxaPricingError(
+            "Kalxa package duration must be greater than zero."
+        )
+
+
+    # =====================================================
+    # VALIDATE ZONE COUNT
+    # =====================================================
+
+    try:
+
+        zone_count = int(
+            zone_count
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        raise KalxaPricingError(
+            "Please select a valid campaign reach."
+        )
+
+
+    if (
+        zone_count
+        <= 0
+    ):
+
+        raise KalxaPricingError(
+            "A Kalxa listing must include at least one area."
+        )
+
+
+    # =====================================================
+    # PRESENCE
+    # =====================================================
+    #
+    # Reach does NOT affect Presence pricing.
+    #
+    # Presence always represents the business's home area.
+    # =====================================================
+
+    if (
+        pricing_model
+        == PRICING_MODEL_PRESENCE
+    ):
+
+        return (
+            calculate_presence_price(
+                duration_days
+            )
+        )
+
+
+    # =====================================================
+    # CAMPAIGN
+    # =====================================================
+    #
+    # Campaign pricing depends on:
+    #
+    # duration
+    # +
+    # number of distribution zones
+    #
+    # =====================================================
+
+    if (
+        pricing_model
+        == PRICING_MODEL_CAMPAIGN
+    ):
+
+        return (
+            calculate_campaign_price(
+                duration_days,
+                zone_count,
+            )
+        )
+
+
+    # =====================================================
+    # INVALID MODEL
+    # =====================================================
+
+    raise KalxaPricingError(
+        (
+            "Unsupported pricing model: "
+            f"{pricing_model or 'empty'}."
+        )
     )
 
 
