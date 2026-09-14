@@ -9772,12 +9772,21 @@ def create_yoco_checkout(
 # ============================================================
 # YOCO SUCCESS RETURN
 # ============================================================
+# ============================================================
+# YOCO SUCCESS RETURN
+# ============================================================
 #
 # IMPORTANT:
 #
-# Reaching this page does NOT mark the submission paid.
+# Reaching this route means Yoco redirected the customer's
+# browser after checkout.
 #
-# The webhook is authoritative.
+# It does NOT by itself prove payment.
+#
+# The Yoco webhook remains the authoritative source that
+# changes:
+#
+# payment_status = "paid"
 #
 # ============================================================
 
@@ -9797,6 +9806,10 @@ def yoco_payment_return(
     )
 
 
+    # =====================================================
+    # PAYMENT ALREADY CONFIRMED
+    # =====================================================
+
     if (
         submission.payment_status
         == "paid"
@@ -9805,23 +9818,40 @@ def yoco_payment_return(
         flash(
             (
                 "Payment received successfully. "
-                "Your listing is waiting for "
-                "Kalxa approval."
+                "Your listing is now waiting for "
+                "Kalxa review."
             ),
             "success",
         )
 
 
-    else:
-
-        flash(
-            (
-                "Your payment was submitted to Yoco. "
-                "Kalxa is waiting for secure payment "
-                "confirmation."
-            ),
-            "success",
+        return redirect(
+            url_for(
+                "submission_success",
+                code=
+                    submission.tracking_code,
+            )
         )
+
+
+    # =====================================================
+    # PAYMENT RETURNED BUT WEBHOOK STILL PROCESSING
+    # =====================================================
+    #
+    # Yoco may redirect the customer before our webhook
+    # finishes updating the database.
+    #
+    # Do NOT mark the submission paid here.
+    # =====================================================
+
+    flash(
+        (
+            "Payment completed. "
+            "Kalxa is confirming your payment securely. "
+            "Your listing will remain pending review."
+        ),
+        "success",
+    )
 
 
     return redirect(
