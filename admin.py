@@ -3278,7 +3278,7 @@ def calculate_content_price(
     # =====================================================
 
     workflow = (
-        _get_content_workflow(
+        get_content_workflow(
             category,
             content_type,
         )
@@ -8634,7 +8634,7 @@ def create_content():
         # =================================================
 
         workflow = (
-            _get_content_workflow(
+            get_content_workflow(
                 category,
                 content_type,
             )
@@ -10170,7 +10170,7 @@ def edit_content(
         # =================================================
 
         workflow = (
-            _get_content_workflow(
+            get_content_workflow(
                 category,
                 content_type,
             )
