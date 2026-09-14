@@ -7396,24 +7396,24 @@ def claim_listing_success(
 # =========================================================
 # WORKFLOW HELPERS
 # =========================================================
-
-def get_content_workflow(
-    category_slug,
+def _get_content_workflow(
+    category,
     content_type,
 ):
 
     # =====================================================
-    # CLEAN INPUT
+    # NORMALIZE INPUT
     # =====================================================
 
-    category_slug = (
+    category = (
         str(
-            category_slug
+            category
             or ""
         )
         .strip()
         .lower()
     )
+
 
     content_type = (
         str(
@@ -7426,38 +7426,12 @@ def get_content_workflow(
 
 
     # =====================================================
-    # NORMALIZE TO BUSINESS TAXONOMY
-    #
-    # Examples:
-    #
-    # upcoming-event-🥹🔥
-    #       -> events
-    #
-    # check-out-our-specials
-    #       -> restaurants
-    #
-    # beauty-salon
-    #       -> beauty
-    #
-    # property
-    #       -> rentals
-    #
-    # transport
-    #       -> delivery
-    # =====================================================
-
-    canonical_category = normalize_category(
-        category_slug
-    )
-
-
-    # =====================================================
-    # CATEGORY WORKFLOW
+    # CHECK EXISTING CONTENT-TYPE WORKFLOW
     # =====================================================
 
     category_workflows = (
-        CONTENT_WORKFLOWS.get(
-            canonical_category,
+        ADMIN_CONTENT_WORKFLOWS.get(
+            category,
             {},
         )
     )
@@ -7470,22 +7444,28 @@ def get_content_workflow(
     )
 
 
+    # =====================================================
+    # EXISTING SPECIFIC WORKFLOW
+    # =====================================================
+
     if workflow:
-        return workflow
+
+        workflow = dict(
+            workflow
+        )
 
 
     # =====================================================
-    # SAFE CATEGORY FALLBACKS
-    # =====================================================
-
-
-    # -----------------------------------------------------
     # EVENTS
-    # -----------------------------------------------------
+    # =====================================================
 
-    if canonical_category == "events":
+    elif (
+        category
+        == "events"
+    ):
 
-        return {
+        workflow = {
+
             "lifetime_type":
                 "time_specific",
 
@@ -7494,85 +7474,108 @@ def get_content_workflow(
         }
 
 
-    # -----------------------------------------------------
-    # RETAIL SPECIALS
-    # -----------------------------------------------------
-
-    if canonical_category == "retail_specials":
-
-        return {
-            "lifetime_type":
-                "time_specific",
-
-            "notification_eligible":
-                True,
-        }
-
-
-    # -----------------------------------------------------
-    # RENTALS
-    # -----------------------------------------------------
-
-    if canonical_category == "rentals":
-
-        return {
-            "lifetime_type":
-                "availability_based",
-
-            "notification_eligible":
-                False,
-        }
-
-
-    # -----------------------------------------------------
-    # JOBS / OPPORTUNITIES
-    # -----------------------------------------------------
-
-    if canonical_category == "jobs":
-
-        return {
-            "lifetime_type":
-                "time_specific",
-
-            "notification_eligible":
-                True,
-        }
-
-
-    # -----------------------------------------------------
-    # ANNOUNCEMENTS
-    # -----------------------------------------------------
-
-    if canonical_category == "announcements":
-
-        return {
-            "lifetime_type":
-                "time_specific",
-
-            "notification_eligible":
-                False,
-        }
-
-
-    # -----------------------------------------------------
-    # DEFAULT ONGOING BUSINESS PRESENCE
+    # =====================================================
+    # PRESENCE / ONGOING CATEGORIES
+    # =====================================================
     #
-    # restaurants
-    # beauty
-    # accommodation
-    # delivery
-    # services
-    # building
+    # These are generally businesses/services rather than
+    # temporary campaigns.
+    #
+    # Individual content types may still override this
+    # through ADMIN_CONTENT_WORKFLOWS.
+    # =====================================================
+
+    elif (
+        category
+        in {
+            "restaurants",
+            "beauty",
+            "accommodation",
+            "delivery",
+            "services",
+            "building",
+            "transport",
+        }
+    ):
+
+        workflow = {
+
+            "lifetime_type":
+                "ongoing",
+
+            "notification_eligible":
+                True,
+        }
+
+
+    # =====================================================
+    # RENTALS
+    # =====================================================
+
+    elif (
+        category
+        in {
+            "rentals",
+            "property",
+        }
+    ):
+
+        workflow = {
+
+            "lifetime_type":
+                "until_unavailable",
+
+            "notification_eligible":
+                True,
+        }
+
+
+    # =====================================================
+    # EVERYTHING ELSE
+    # =====================================================
+    #
+    # Includes:
+    #
+    # retail_specials
+    # jobs
+    # announcements
     # emergency
-    # -----------------------------------------------------
+    # future campaign categories
+    #
+    # =====================================================
 
-    return {
-        "lifetime_type":
-            "ongoing",
+    else:
 
-        "notification_eligible":
-            False,
-    }
+        workflow = {
+
+            "lifetime_type":
+                "time_specific",
+
+            "notification_eligible":
+                True,
+        }
+
+
+    # =====================================================
+    # ADD COMMERCIAL PRICING MODEL
+    # =====================================================
+
+    workflow[
+        "pricing_model"
+    ] = (
+        _get_pricing_model(
+            category,
+            content_type,
+        )
+    )
+
+
+    # =====================================================
+    # RETURN COMPLETE WORKFLOW
+    # =====================================================
+
+    return workflow
+
 
 def get_legacy_lifetime_type(
     item,
