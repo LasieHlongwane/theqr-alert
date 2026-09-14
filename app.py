@@ -762,654 +762,7 @@ def is_sponsorship_active(
 
 
 
-# ============================================================
-# ORGANIZER SIGNUP
-# ============================================================
 
-@app.route(
-    "/organizer/signup",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-def organizer_signup():
-
-    # =====================================================
-    # ALREADY LOGGED IN
-    # =====================================================
-
-    organizer_id = (
-        session.get(
-            "organizer_id"
-        )
-    )
-
-
-    if organizer_id:
-
-        organizer = (
-            db.session.get(
-                Organizer,
-                organizer_id,
-            )
-        )
-
-
-        if (
-            organizer
-            and organizer.active
-        ):
-
-            return redirect(
-                url_for(
-                    "organizer_dashboard"
-                )
-            )
-
-
-        session.pop(
-            "organizer_id",
-            None,
-        )
-
-
-    # =====================================================
-    # POST
-    # =====================================================
-
-    if request.method == "POST":
-
-        # -------------------------------------------------
-        # FORM DATA
-        # -------------------------------------------------
-
-        name = (
-            request.form.get(
-                "name",
-                "",
-            )
-            .strip()
-        )
-
-
-        business_name = (
-            request.form.get(
-                "business_name",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        email = (
-            request.form.get(
-                "email",
-                "",
-            )
-            .strip()
-            .lower()
-            or None
-        )
-
-
-        phone = (
-            request.form.get(
-                "phone",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        password = (
-            request.form.get(
-                "password",
-                "",
-            )
-        )
-
-
-        confirm_password = (
-            request.form.get(
-                "confirm_password",
-                "",
-            )
-        )
-
-
-        # =================================================
-        # VALIDATION
-        # =================================================
-
-        if not name:
-
-            flash(
-                "Your name is required.",
-                "error",
-            )
-
-            return render_template(
-                "organizer_signup.html"
-            )
-
-
-        if (
-            not email
-            and not phone
-        ):
-
-            flash(
-                (
-                    "Please provide an email address "
-                    "or phone number."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "organizer_signup.html"
-            )
-
-
-        if not password:
-
-            flash(
-                "Please create a password.",
-                "error",
-            )
-
-            return render_template(
-                "organizer_signup.html"
-            )
-
-
-        if len(password) < 8:
-
-            flash(
-                (
-                    "Your password must be at least "
-                    "8 characters long."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "organizer_signup.html"
-            )
-
-
-        if (
-            password
-            != confirm_password
-        ):
-
-            flash(
-                "Passwords do not match.",
-                "error",
-            )
-
-            return render_template(
-                "organizer_signup.html"
-            )
-
-
-        # =================================================
-        # DUPLICATE ACCOUNT CHECK
-        # =================================================
-
-        duplicate_filters = []
-
-
-        if email:
-
-            duplicate_filters.append(
-                Organizer.email
-                == email
-            )
-
-
-        if phone:
-
-            duplicate_filters.append(
-                Organizer.phone
-                == phone
-            )
-
-
-        existing_organizer = None
-
-
-        if duplicate_filters:
-
-            existing_organizer = (
-                Organizer.query
-                .filter(
-                    or_(
-                        *duplicate_filters
-                    )
-                )
-                .first()
-            )
-
-
-        if existing_organizer:
-
-            flash(
-                (
-                    "An organizer account already exists "
-                    "with that email or phone number. "
-                    "Please sign in instead."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "organizer_login"
-                )
-            )
-
-
-        # =================================================
-        # CREATE ORGANIZER
-        # =================================================
-
-        organizer = Organizer(
-
-            name=(
-                name
-            ),
-
-            business_name=(
-                business_name
-            ),
-
-            email=(
-                email
-            ),
-
-            phone=(
-                phone
-            ),
-
-            active=True,
-
-            is_verified=False,
-        )
-
-
-        organizer.set_password(
-            password
-        )
-
-
-        # =================================================
-        # SAVE
-        # =================================================
-
-        try:
-
-            db.session.add(
-                organizer
-            )
-
-            db.session.commit()
-
-
-        except Exception as error:
-
-            db.session.rollback()
-
-
-            current_app.logger.exception(
-                (
-                    "[Kalxa Organizer] Signup failed "
-                    "email=%s phone=%s error=%s"
-                ),
-                email,
-                phone,
-                error,
-            )
-
-
-            flash(
-                (
-                    "Unable to create your organizer "
-                    "account. Please try again."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "organizer_signup.html"
-            )
-
-
-        # =================================================
-        # LOGIN IMMEDIATELY
-        # =================================================
-
-        session.clear()
-
-        session[
-            "organizer_id"
-        ] = organizer.id
-
-
-        current_app.logger.info(
-            (
-                "[Kalxa Organizer] Account created "
-                "organizer_id=%s"
-            ),
-            organizer.id,
-        )
-
-
-        flash(
-            (
-                "Organizer account created. "
-                "You can now submit your event."
-            ),
-            "success",
-        )
-
-
-        # =================================================
-        # CONTINUE TO SUBMIT
-        # =================================================
-
-        return redirect(
-            url_for(
-                "submit_content"
-            )
-        )
-
-
-    # =====================================================
-    # GET
-    # =====================================================
-
-    return render_template(
-        "organizer_signup.html"
-    )
-
-
-# ============================================================
-# ORGANIZER LOGIN
-# ============================================================
-
-@app.route(
-    "/organizer/login",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-def organizer_login():
-
-    # =====================================================
-    # ALREADY LOGGED IN
-    # =====================================================
-
-    organizer_id = (
-        session.get(
-            "organizer_id"
-        )
-    )
-
-
-    if organizer_id:
-
-        organizer = (
-            db.session.get(
-                Organizer,
-                organizer_id,
-            )
-        )
-
-
-        if (
-            organizer
-            and organizer.active
-        ):
-
-            return redirect(
-                url_for(
-                    "organizer_dashboard"
-                )
-            )
-
-
-        session.pop(
-            "organizer_id",
-            None,
-        )
-
-
-    # =====================================================
-    # POST
-    # =====================================================
-
-    if request.method == "POST":
-
-        login_value = (
-            request.form.get(
-                "login",
-                "",
-            )
-            .strip()
-        )
-
-
-        password = (
-            request.form.get(
-                "password",
-                "",
-            )
-        )
-
-
-        if (
-            not login_value
-            or not password
-        ):
-
-            flash(
-                (
-                    "Enter your email or phone number "
-                    "and password."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "organizer_login.html"
-            )
-
-
-        # =================================================
-        # FIND ORGANIZER
-        # =================================================
-
-        normalized_email = (
-            login_value.lower()
-        )
-
-
-        organizer = (
-            Organizer.query
-            .filter(
-                or_(
-                    Organizer.email
-                    == normalized_email,
-
-                    Organizer.phone
-                    == login_value,
-                )
-            )
-            .first()
-        )
-
-
-        # =================================================
-        # VALIDATE LOGIN
-        # =================================================
-
-        if (
-            not organizer
-            or not organizer.check_password(
-                password
-            )
-        ):
-
-            flash(
-                (
-                    "Incorrect login details."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "organizer_login.html"
-            )
-
-
-        if not organizer.active:
-
-            flash(
-                (
-                    "This organizer account is "
-                    "currently inactive."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "organizer_login.html"
-            )
-
-
-        # =================================================
-        # CREATE SESSION
-        # =================================================
-
-        session.clear()
-
-        session[
-            "organizer_id"
-        ] = organizer.id
-
-
-        current_app.logger.info(
-            (
-                "[Kalxa Organizer] Login "
-                "organizer_id=%s"
-            ),
-            organizer.id,
-        )
-
-
-        flash(
-            "Welcome back.",
-            "success",
-        )
-
-
-        # =================================================
-        # OPTIONAL REDIRECT TARGET
-        # =================================================
-        #
-        # Example:
-        #
-        # /organizer/login?next=/submit
-        #
-        # For safety, we only handle the known /submit
-        # destination at this stage.
-        # =================================================
-
-        next_url = (
-            request.args.get(
-                "next",
-                "",
-            )
-            .strip()
-        )
-
-
-        if next_url == "/submit":
-
-            return redirect(
-                url_for(
-                    "submit_content"
-                )
-            )
-
-
-        return redirect(
-            url_for(
-                "organizer_dashboard"
-            )
-        )
-
-
-    # =====================================================
-    # GET
-    # =====================================================
-
-    return render_template(
-        "organizer_login.html"
-    )
-
-
-# ============================================================
-# ORGANIZER LOGOUT
-# ============================================================
-
-@app.route(
-    "/organizer/logout",
-    methods=[
-        "POST",
-        "GET",
-    ],
-)
-def organizer_logout():
-
-    organizer_id = (
-        session.get(
-            "organizer_id"
-        )
-    )
-
-
-    session.pop(
-        "organizer_id",
-        None,
-    )
-
-
-    current_app.logger.info(
-        (
-            "[Kalxa Organizer] Logout "
-            "organizer_id=%s"
-        ),
-        organizer_id,
-    )
-
-
-    flash(
-        "You have been signed out.",
-        "success",
-    )
-
-
-    return redirect(
-        url_for(
-            "organizer_login"
-        )
-    )
 
 
 # ============================================================
@@ -9654,99 +9007,64 @@ def get_legacy_lifetime_type(
     return "ongoing"
 
 
-# =========================================================
+
+# ============================================================
 # PUBLIC CONTENT SUBMISSION
-# =========================================================
+# ============================================================
+#
+# MVP RULE:
+#
+# Kalxa Discovery submissions are PUBLIC.
+#
+# No account is required.
+# No organizer login is required.
+#
+# This applies to:
+#
+# - Events
+# - Restaurants
+# - Beauty
+# - Specials
+# - Accommodation
+# - Rentals
+# - Services
+# - Jobs
+# - etc.
+#
+# Event organizers may optionally paste a ticket URL,
+# including a Kalxa Ticketing URL.
+#
+# Submission flow:
+#
+# Submit
+#   ↓
+# PendingSubmission
+#   ↓
+# Payment
+#   ↓
+# Kalxa Admin Review
+#   ↓
+# Approval
+#   ↓
+# ContentItem
+#   ↓
+# Public Discovery
+#
+# ============================================================
+
 @app.route(
     "/submit",
-    methods=["GET", "POST"],
+    methods=[
+        "GET",
+        "POST",
+    ],
 )
 def submit_content():
 
     # =====================================================
     # LOAD FORM OPTIONS
     # =====================================================
-    #
-    # IMPORTANT:
-    #
-    # zones
-    # -----
-    # Still come from the database.
-    #
-    # business_categories
-    # -------------------
-    # Come from categories.py.
-    #
-    # These are the stable business taxonomy values used
-    # by NEW submissions.
-    #
-    # Example:
-    #
-    # restaurants -> Restaurant & Food
-    # events      -> Events & Entertainment
-    # beauty      -> Salon, Barber & Beauty
-    #
-    # Consumer-facing wording such as HUNGRY? and
-    # WHAT'S ON? is NOT used here.
-    # =====================================================
 
-
-    # =====================================================
-    # CURRENT ORGANIZER
-    # =====================================================
-    #
-    # Organizer identity comes from the authenticated
-    # Kalxa organizer session.
-    #
-    # IMPORTANT:
-    #
-    # We do NOT trust submitter_name, email or phone as
-    # proof of ownership.
-    #
-    # Those fields remain snapshots/contact information.
-    #
-    # Ownership comes only from:
-    #
-    # session["organizer_id"]
-    # =====================================================
-
-    organizer = None
-
-    organizer_id = (
-        session.get(
-            "organizer_id"
-        )
-    )
-
-
-    if organizer_id:
-
-        organizer = (
-            db.session.get(
-                Organizer,
-                organizer_id,
-            )
-        )
-
-
-        # -------------------------------------------------
-        # REMOVE INVALID / DISABLED SESSION
-        # -------------------------------------------------
-
-        if (
-            not organizer
-            or not organizer.active
-        ):
-
-            session.pop(
-                "organizer_id",
-                None,
-            )
-
-            organizer = None
-
-
-    
     zones = (
         Zone.query
         .filter_by(
@@ -9758,6 +9076,7 @@ def submit_content():
         .all()
     )
 
+
     business_categories = (
         BUSINESS_CATEGORIES
     )
@@ -9765,13 +9084,14 @@ def submit_content():
 
     # =====================================================
     # PRESELECT ZONE
+    # =====================================================
     #
     # Example:
     #
     # /submit?zone_id=1
     #
-    # If the visitor entered the submission form from a
-    # Kalxa zone page, that zone becomes the default area.
+    # The URL may suggest a default zone, but the database
+    # remains authoritative.
     # =====================================================
 
     selected_zone_id = (
@@ -9780,6 +9100,7 @@ def submit_content():
             type=int,
         )
     )
+
 
     selected_zone = None
 
@@ -9793,8 +9114,6 @@ def submit_content():
             )
         )
 
-        # Never trust the URL alone.
-        # The zone must exist and still be active.
 
         if (
             not selected_zone
@@ -9802,20 +9121,12 @@ def submit_content():
         ):
 
             selected_zone_id = None
+
             selected_zone = None
 
 
     # =====================================================
     # TEMPLATE RENDER HELPER
-    # =====================================================
-    #
-    # Keeping this in one place prevents validation branches
-    # from accidentally passing the old public Category
-    # records back to submit.html.
-    #
-    # We temporarily also expose the same dictionary under
-    # "categories". This makes the transition easier while
-    # submit.html is updated in the next step.
     # =====================================================
 
     def render_submit_form():
@@ -9830,9 +9141,6 @@ def submit_content():
                 business_categories,
 
             # Temporary compatibility alias.
-            #
-            # The updated submit.html should use
-            # business_categories directly.
             categories=
                 business_categories,
 
@@ -9841,9 +9149,6 @@ def submit_content():
 
             selected_zone=
                 selected_zone,
-
-            organizer=
-                organizer,
         )
 
 
@@ -9866,26 +9171,7 @@ def submit_content():
 
 
         # =================================================
-        # STABLE BUSINESS CATEGORY
-        # =================================================
-        #
-        # New forms should POST canonical values:
-        #
-        # events
-        # restaurants
-        # beauty
-        # retail_specials
-        # accommodation
-        # rentals
-        # delivery
-        # services
-        # jobs
-        # emergency
-        # announcements
-        # building
-        #
-        # normalize_category() also allows an old category
-        # value to reach this route during the transition.
+        # BUSINESS CATEGORY
         # =================================================
 
         raw_category = (
@@ -9895,6 +9181,7 @@ def submit_content():
             )
             .strip()
         )
+
 
         category_key = (
             normalize_category(
@@ -9913,6 +9200,7 @@ def submit_content():
             or None
         )
 
+
         title = (
             request.form.get(
                 "title",
@@ -9920,6 +9208,7 @@ def submit_content():
             )
             .strip()
         )
+
 
         description = (
             request.form.get(
@@ -9930,6 +9219,7 @@ def submit_content():
             or None
         )
 
+
         business_name = (
             request.form.get(
                 "business_name",
@@ -9938,6 +9228,7 @@ def submit_content():
             .strip()
             or None
         )
+
 
         venue = (
             request.form.get(
@@ -9948,41 +9239,56 @@ def submit_content():
             or None
         )
 
+
+        # =================================================
+        # TIMES
+        # =================================================
+
         start_time_raw = (
-          request.form.get(
-            "start_time"
-          )
-          or ""
+            request.form.get(
+                "start_time"
+            )
+            or ""
         ).strip()
 
 
         end_time_raw = (
-          request.form.get(
-            "end_time"
-          )
-          or ""
+            request.form.get(
+                "end_time"
+            )
+            or ""
         ).strip()
+
 
         try:
 
-          start_time = parse_optional_time(
-            start_time_raw
-          )
+            start_time = (
+                parse_optional_time(
+                    start_time_raw
+                )
+            )
 
-          end_time = parse_optional_time(
-            end_time_raw
-          )
+
+            end_time = (
+                parse_optional_time(
+                    end_time_raw
+                )
+            )
+
 
         except ValueError:
 
-          flash(
-            "Please enter valid campaign times.",
-            "error",
-          )
+            flash(
+                "Please enter valid campaign times.",
+                "error",
+            )
 
-          return redirect(
-            request.url
-          )
+            return render_submit_form()
+
+
+        # =================================================
+        # PRICE
+        # =================================================
 
         price = (
             request.form.get(
@@ -10007,6 +9313,7 @@ def submit_content():
             or None
         )
 
+
         whatsapp_number = (
             request.form.get(
                 "whatsapp_number",
@@ -10016,6 +9323,7 @@ def submit_content():
             or None
         )
 
+
         directions_url = (
             request.form.get(
                 "directions_url",
@@ -10024,6 +9332,7 @@ def submit_content():
             .strip()
             or None
         )
+
 
         ticket_url = (
             request.form.get(
@@ -10037,6 +9346,11 @@ def submit_content():
 
         # =================================================
         # SUBMITTER INFORMATION
+        # =====================================================
+        #
+        # These are contact details only.
+        #
+        # No login/account ownership is required.
         # =================================================
 
         submitter_name = (
@@ -10047,6 +9361,7 @@ def submit_content():
             .strip()
         )
 
+
         submitter_email = (
             request.form.get(
                 "submitter_email",
@@ -10056,6 +9371,7 @@ def submit_content():
             or None
         )
 
+
         submitter_phone = (
             request.form.get(
                 "submitter_phone",
@@ -10064,38 +9380,6 @@ def submit_content():
             .strip()
             or None
         )
-
-
-        # =================================================
-        # ORGANIZER IDENTITY SNAPSHOT
-        # =================================================
-        #
-        # For authenticated organizers we preserve the
-        # account identity on the submission.
-        #
-        # The form values are still useful for legacy/public
-        # submissions, but an authenticated organizer's
-        # account is the authoritative identity.
-        # =================================================
-
-        if organizer:
-
-            submitter_name = (
-                organizer.name
-                or submitter_name
-            )
-
-            if organizer.email:
-
-                submitter_email = (
-                    organizer.email
-                )
-
-            if organizer.phone:
-
-                submitter_phone = (
-                    organizer.phone
-                )
 
 
         # =================================================
@@ -10128,6 +9412,7 @@ def submit_content():
             )
         )
 
+
         if (
             not zone
             or not zone.active
@@ -10144,14 +9429,11 @@ def submit_content():
         # =================================================
         # RECONSTRUCT SELECTED ZONE FROM POST
         # =================================================
-        #
-        # This keeps the locked-zone display correct if
-        # validation later returns the user to the form.
-        # =================================================
 
         selected_zone_id = (
             zone.id
         )
+
 
         selected_zone = (
             zone
@@ -10159,20 +9441,7 @@ def submit_content():
 
 
         # =================================================
-        # VALIDATE BUSINESS TAXONOMY CATEGORY
-        # =================================================
-        #
-        # OLD:
-        #
-        # get_active_category_by_slug(category_slug)
-        #
-        # That validated against the consumer/public
-        # Category table and therefore tied submission
-        # taxonomy to navigation wording.
-        #
-        # NEW:
-        #
-        # Validate against BUSINESS_CATEGORIES.
+        # VALIDATE BUSINESS CATEGORY
         # =================================================
 
         if (
@@ -10181,7 +9450,8 @@ def submit_content():
         ):
 
             flash(
-                "Please select a valid business/content category.",
+                "Please select a valid "
+                "business/content category.",
                 "error",
             )
 
@@ -10189,45 +9459,23 @@ def submit_content():
 
 
         # =================================================
-        # EVENT ORGANIZER OWNERSHIP
-        # =================================================
+        # IMPORTANT:
+        # NO EVENT LOGIN REQUIREMENT
+        # =====================================================
         #
-        # Events that will later use Kalxa Ticketing must
-        # belong to an authenticated Kalxa organizer.
+        # There is intentionally NO:
         #
-        # Other content can continue through the existing
-        # public submission workflow for now.
-        # =================================================
+        # if category_key == "events":
+        #     require organizer...
+        #
+        # Any business/event organizer can submit.
+        #
+        # ticket_url is optional.
+        # =====================================================
 
-        if (
-            category_key == "events"
-            and organizer is None
-        ):
-
-            flash(
-                (
-                    "Please sign in or create an organizer "
-                    "account before submitting an event."
-                ),
-                "error",
-            )
-
-            return render_submit_form()
 
         # =================================================
         # INTERNAL WORKFLOW CATEGORY
-        # =================================================
-        #
-        # The stable category is now also the starting point
-        # for workflow/pricing.
-        #
-        # Example:
-        #
-        # category_key = "events"
-        # category_key = "restaurants"
-        # category_key = "beauty"
-        #
-        # No consumer-facing wording is involved here.
         # =================================================
 
         workflow_category = (
@@ -10246,6 +9494,7 @@ def submit_content():
             )
         )
 
+
         lifetime_type = (
             workflow.get(
                 "lifetime_type"
@@ -10255,13 +9504,6 @@ def submit_content():
 
         # =================================================
         # NOTIFICATION ELIGIBILITY
-        # =================================================
-        #
-        # Every newly approved public submission is allowed
-        # to enter the notification workflow.
-        #
-        # The actual push system still decides who should
-        # receive the notification.
         # =================================================
 
         notification_eligible = True
@@ -10287,17 +9529,7 @@ def submit_content():
 
 
         # =================================================
-        # DETERMINE COMMERCIAL PRICING MODEL
-        # =================================================
-        #
-        # Pricing now receives the stable taxonomy key.
-        #
-        # Examples:
-        #
-        # events
-        # restaurants
-        # beauty
-        # retail_specials
+        # COMMERCIAL PRICING MODEL
         # =================================================
 
         pricing_model = (
@@ -10307,8 +9539,11 @@ def submit_content():
             )
         )
 
+
         commercial_duration_days = None
+
         amount_due = None
+
         distribution_zone_ids = []
 
 
@@ -10326,11 +9561,13 @@ def submit_content():
                 .strip()
             )
 
+
             try:
 
                 commercial_duration_days = int(
                     raw_duration
                 )
+
 
             except (
                 TypeError,
@@ -10361,6 +9598,7 @@ def submit_content():
                     )
                 )
 
+
                 for raw_zone_id in (
                     raw_distribution_zone_ids
                 ):
@@ -10370,6 +9608,7 @@ def submit_content():
                         distribution_zone_id = int(
                             raw_zone_id
                         )
+
 
                     except (
                         TypeError,
@@ -10443,7 +9682,7 @@ def submit_content():
 
 
                 # -----------------------------------------
-                # VALIDATE SELECTED ZONES
+                # VALIDATE DISTRIBUTION ZONES
                 # -----------------------------------------
 
                 valid_distribution_zones = (
@@ -10457,8 +9696,11 @@ def submit_content():
                     .all()
                 )
 
+
                 valid_distribution_zone_ids = {
+
                     distribution_zone.id
+
                     for distribution_zone
                     in valid_distribution_zones
                 }
@@ -10505,7 +9747,7 @@ def submit_content():
 
 
             # =============================================
-            # INVALID PRICING MODEL
+            # INVALID MODEL
             # =============================================
 
             else:
@@ -10539,6 +9781,7 @@ def submit_content():
                     )
                 )
 
+
             except KalxaPricingError as error:
 
                 flash(
@@ -10565,9 +9808,11 @@ def submit_content():
                 .strip()
             )
 
+
             if not value:
 
                 return None
+
 
             return datetime.strptime(
                 value,
@@ -10587,11 +9832,13 @@ def submit_content():
                 )
             )
 
+
             event_date = (
                 parse_form_date(
                     "event_date"
                 )
             )
+
 
             event_end_date = (
                 parse_form_date(
@@ -10599,17 +9846,20 @@ def submit_content():
                 )
             )
 
+
             start_date = (
                 parse_form_date(
                     "start_date"
                 )
             )
 
+
             end_date = (
                 parse_form_date(
                     "end_date"
                 )
             )
+
 
         except ValueError:
 
@@ -10681,6 +9931,7 @@ def submit_content():
 
 
                 start_date = None
+
                 end_date = None
 
 
@@ -10719,7 +9970,9 @@ def submit_content():
 
 
                 publish_from = None
+
                 event_date = None
+
                 event_end_date = None
 
 
@@ -10733,9 +9986,13 @@ def submit_content():
         ):
 
             publish_from = None
+
             event_date = None
+
             event_end_date = None
+
             start_date = None
+
             end_date = None
 
 
@@ -10749,9 +10006,13 @@ def submit_content():
         ):
 
             publish_from = None
+
             event_date = None
+
             event_end_date = None
+
             start_date = None
+
             end_date = None
 
 
@@ -10765,8 +10026,11 @@ def submit_content():
         ):
 
             publish_from = None
+
             event_date = None
+
             event_end_date = None
+
 
             if (
                 start_date
@@ -10795,10 +10059,14 @@ def submit_content():
             )
         )
 
+
         uploaded_images = [
+
             image
+
             for image
             in uploaded_images
+
             if (
                 image
                 and image.filename
@@ -10807,7 +10075,9 @@ def submit_content():
 
 
         if (
-            len(uploaded_images)
+            len(
+                uploaded_images
+            )
             > 3
         ):
 
@@ -10822,15 +10092,19 @@ def submit_content():
 
         # =================================================
         # CREATE PENDING SUBMISSION
+        # =====================================================
+        #
+        # organizer_id intentionally remains NULL.
+        #
+        # The Discovery MVP does not require an account.
         # =================================================
 
         submission = PendingSubmission(
 
-            organizer_id=(
-                organizer.id
-                if organizer
-                else None
-            ),
+            organizer_id=
+                None,
+
+
             # ---------------------------------------------
             # LOCATION
             # ---------------------------------------------
@@ -10884,7 +10158,7 @@ def submit_content():
 
 
             # ---------------------------------------------
-            # PUBLIC ACTION / CONTACT DATA
+            # PUBLIC ACTION DATA
             # ---------------------------------------------
 
             whatsapp_number=
@@ -10898,7 +10172,7 @@ def submit_content():
 
 
             # ---------------------------------------------
-            # SUBMITTER
+            # SUBMITTER CONTACT
             # ---------------------------------------------
 
             submitter_name=
@@ -10935,7 +10209,6 @@ def submit_content():
 
             end_date=
                 end_date,
-
 
 
             # ---------------------------------------------
@@ -10993,7 +10266,9 @@ def submit_content():
                 submission
             )
 
+
             db.session.flush()
+
 
             first_image_url = None
 
@@ -11009,6 +10284,7 @@ def submit_content():
                 image_url = (
                     upload_lac_image(
                         uploaded_image,
+
                         folder=
                             "lac/submissions",
                     )
@@ -11041,6 +10317,7 @@ def submit_content():
                     )
                 )
 
+
                 db.session.add(
                     submission_image
                 )
@@ -11059,18 +10336,16 @@ def submit_content():
             current_app.logger.info(
                 "[Kalxa Submission] Created "
                 "submission_id=%s "
-                "organizer_id=%s "
                 "zone_id=%s "
                 "category=%s "
-                "notification_eligible=%s "
                 "pricing_model=%s "
+                "amount_due=%s "
                 "payment_status=%s",
                 submission.id,
-                submission.organizer_id,
                 submission.zone_id,
                 submission.category,
-                submission.notification_eligible,
                 submission.pricing_model,
+                submission.amount_due,
                 submission.payment_status,
             )
 
@@ -11079,10 +10354,12 @@ def submit_content():
 
             db.session.rollback()
 
+
             flash(
                 str(error),
                 "error",
             )
+
 
             return render_submit_form()
 
@@ -11091,11 +10368,13 @@ def submit_content():
 
             db.session.rollback()
 
+
             current_app.logger.exception(
                 "[Kalxa Submission] "
                 "Unable to create submission: %s",
                 error,
             )
+
 
             flash(
                 "Unable to submit your listing. "
@@ -11103,24 +10382,37 @@ def submit_content():
                 "error",
             )
 
+
             return render_submit_form()
 
 
         # =================================================
         # SUCCESS
         # =================================================
+        #
+        # Submission remains PENDING.
+        #
+        # It is NOT published to ContentItem here.
+        #
+        # Commercial listings go to the success page where
+        # the submitter can pay the Kalxa listing fee.
+        # =================================================
 
         return redirect(
             url_for(
                 "submission_success",
+
                 code=
                     submission.tracking_code,
             )
         )
 
 
-    return render_submit_form()
+    # =====================================================
+    # GET
+    # =====================================================
 
+    return render_submit_form()
 
 
 # =========================================================
