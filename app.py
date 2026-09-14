@@ -7396,7 +7396,7 @@ def claim_listing_success(
 # =========================================================
 # WORKFLOW HELPERS
 # =========================================================
-def _get_content_workflow(
+def get_content_workflow(
     category,
     content_type,
 ):
