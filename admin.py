@@ -3115,7 +3115,7 @@ def _get_pricing_model(
 
     return None
 
-def _get_content_workflow(
+def get_content_workflow(
     category,
     content_type,
 ):
