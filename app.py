@@ -4172,46 +4172,6 @@ def attach_campaign_states(items):
 # YOCO - CUSTOMER RETURN
 # ============================================================
 
-@app.route(
-    "/payment/yoco/return/<code>"
-)
-def yoco_payment_return(code):
-
-    submission = (
-        PendingSubmission.query
-        .filter_by(
-            tracking_code=code
-        )
-        .first_or_404()
-    )
-
-    # IMPORTANT:
-    #
-    # Reaching this URL does NOT prove payment.
-    #
-    # The Yoco webhook will be responsible for securely
-    # confirming the transaction and changing:
-    #
-    # payment_status = "unpaid"
-    #
-    # to:
-    #
-    # payment_status = "paid"
-
-    flash(
-        "Your payment was submitted. Kalxa is confirming the transaction.",
-        "success",
-    )
-
-    return redirect(
-        url_for(
-            "submission_status",
-            code=submission.tracking_code,
-        )
-    )
-
-
-
 # =========================================================
 # CATEGORY HELPERS
 # =========================================================
