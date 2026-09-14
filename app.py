@@ -2818,9 +2818,7 @@ def get_campaign_state(
             "ends_at": None,
         }
 
-
-    # =====================================================
-    # BUILD START DATETIME
+  # BUILD START DATETIME
     # =====================================================
 
     start_datetime = None
@@ -7430,7 +7428,7 @@ def get_content_workflow(
     # =====================================================
 
     category_workflows = (
-        ADMIN_CONTENT_WORKFLOWS.get(
+        CONTENT_WORKFLOWS.get(
             category,
             {},
         )
@@ -7482,7 +7480,7 @@ def get_content_workflow(
     # temporary campaigns.
     #
     # Individual content types may still override this
-    # through ADMIN_CONTENT_WORKFLOWS.
+    # through CONTENT_WORKFLOWS.
     # =====================================================
 
     elif (
@@ -7563,7 +7561,7 @@ def get_content_workflow(
     workflow[
         "pricing_model"
     ] = (
-        _get_pricing_model(
+        get_pricing_model(
             category,
             content_type,
         )
@@ -11151,3 +11149,4 @@ if __name__ == "__main__":
     app.run(
         debug=True,
     )
+    #
