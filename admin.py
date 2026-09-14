@@ -3252,7 +3252,7 @@ def get_content_workflow(
     workflow[
         "pricing_model"
     ] = (
-        _get_pricing_model(
+        get_pricing_model(
             category,
             content_type,
         )
