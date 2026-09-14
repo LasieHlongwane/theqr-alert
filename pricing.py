@@ -991,7 +991,7 @@ KALXA_PRICING_MODEL_OVERRIDES = {
 # ============================================================
 # GET PRICING MODEL
 # ============================================================
-def _get_pricing_model(
+def get_pricing_model(
     category,
     content_type=None,
 ):
