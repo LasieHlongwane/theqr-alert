@@ -3266,7 +3266,7 @@ def get_content_workflow(
     return workflow
 
 
-def _calculate_content_price(
+def calculate_content_price(
     category,
     content_type,
     duration_days,
