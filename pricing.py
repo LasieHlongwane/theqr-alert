@@ -912,25 +912,14 @@ KALXA_PRICING_MODEL_OVERRIDES = {
 # ============================================================
 # GET PRICING MODEL
 # ============================================================
-
-def get_pricing_model(
+def _get_pricing_model(
     category,
     content_type=None,
 ):
-    """
-    Determine whether Kalxa content uses:
 
-        presence
-        campaign
-        None
-
-    Exact content-type rules take priority over
-    category-level defaults.
-
-    Sponsored is deliberately not returned here because
-    Sponsored is an optional visibility add-on rather than
-    the listing's primary commercial pricing model.
-    """
+    # =====================================================
+    # NORMALIZE VALUES
+    # =====================================================
 
     category = (
         str(
@@ -953,15 +942,42 @@ def get_pricing_model(
     )
 
 
+    # =====================================================
+    # NO CATEGORY
+    # =====================================================
+
+    if not category:
+
+        return None
+
+
+    # =====================================================
+    # CONTENT TYPE OVERRIDE
+    # =====================================================
+    #
+    # The most specific rule always wins.
+    #
+    # Example:
+    #
+    # restaurants + restaurant
+    #     -> presence
+    #
+    # restaurants + daily_special
+    #     -> campaign
+    #
+    # retail_specials + store
+    #     -> presence
+    #
+    # retail_specials + grocery_special
+    #     -> campaign
+    #
+    # =====================================================
+
     override_key = (
         category,
         content_type,
     )
 
-
-    # ========================================================
-    # EXACT CONTENT TYPE OVERRIDE
-    # ========================================================
 
     if (
         override_key
@@ -975,9 +991,12 @@ def get_pricing_model(
         )
 
 
-    # ========================================================
-    # CATEGORY DEFAULT
-    # ========================================================
+    # =====================================================
+    # PRESENCE CATEGORY
+    # =====================================================
+    #
+    # Presence is used for ongoing businesses/services.
+    # =====================================================
 
     if (
         category
@@ -989,6 +1008,14 @@ def get_pricing_model(
         )
 
 
+    # =====================================================
+    # CAMPAIGN CATEGORY
+    # =====================================================
+    #
+    # Campaign is used for temporary/time-sensitive
+    # listings.
+    # =====================================================
+
     if (
         category
         in KALXA_CAMPAIGN_CATEGORIES
@@ -999,8 +1026,30 @@ def get_pricing_model(
         )
 
 
-    # ========================================================
-    # COMMUNITY / NON-COMMERCIAL CATEGORY
-    # ========================================================
+    # =====================================================
+    # DEFAULT COMMERCIAL MODEL
+    # =====================================================
+    #
+    # MVP BUSINESS RULE:
+    #
+    # Every submitted Kalxa listing must have a commercial
+    # pricing model.
+    #
+    # If a new category has not yet been explicitly assigned
+    # to Presence or Campaign, treat it as a Campaign.
+    #
+    # This prevents submissions from silently becoming:
+    #
+    # pricing_model = None
+    # amount_due = None
+    # payment_status = "waived"
+    #
+    # which would bypass Yoco payment.
+    # =====================================================
 
-    return None
+    return (
+        PRICING_MODEL_CAMPAIGN
+    )
+
+
+
