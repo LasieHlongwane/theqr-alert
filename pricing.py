@@ -454,6 +454,10 @@ def calculate_kalxa_price(
     zone_count=1,
 ):
 
+    # =====================================================
+    # NORMALIZE PRICING MODEL
+    # =====================================================
+
     pricing_model = (
         str(
             pricing_model
@@ -465,9 +469,72 @@ def calculate_kalxa_price(
 
 
     # =====================================================
+    # VALIDATE DURATION
+    # =====================================================
+
+    try:
+
+        duration_days = int(
+            duration_days
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        raise KalxaPricingError(
+            "Please select a valid Kalxa package duration."
+        )
+
+
+    if (
+        duration_days
+        <= 0
+    ):
+
+        raise KalxaPricingError(
+            "Kalxa package duration must be greater than zero."
+        )
+
+
+    # =====================================================
+    # VALIDATE ZONE COUNT
+    # =====================================================
+
+    try:
+
+        zone_count = int(
+            zone_count
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        raise KalxaPricingError(
+            "Please select a valid campaign reach."
+        )
+
+
+    if (
+        zone_count
+        <= 0
+    ):
+
+        raise KalxaPricingError(
+            "A Kalxa listing must include at least one area."
+        )
+
+
+    # =====================================================
     # PRESENCE
+    # =====================================================
     #
     # Reach does NOT affect Presence pricing.
+    #
+    # Presence always represents the business's home area.
     # =====================================================
 
     if (
@@ -475,15 +542,23 @@ def calculate_kalxa_price(
         == PRICING_MODEL_PRESENCE
     ):
 
-        return calculate_presence_price(
-            duration_days
+        return (
+            calculate_presence_price(
+                duration_days
+            )
         )
 
 
     # =====================================================
     # CAMPAIGN
+    # =====================================================
     #
-    # Duration + reach determine price.
+    # Campaign pricing depends on:
+    #
+    # duration
+    # +
+    # number of distribution zones
+    #
     # =====================================================
 
     if (
@@ -491,9 +566,11 @@ def calculate_kalxa_price(
         == PRICING_MODEL_CAMPAIGN
     ):
 
-        return calculate_campaign_price(
-            duration_days,
-            zone_count,
+        return (
+            calculate_campaign_price(
+                duration_days,
+                zone_count,
+            )
         )
 
 
@@ -507,6 +584,8 @@ def calculate_kalxa_price(
             f"{pricing_model or 'empty'}."
         )
     )
+
+
 
 
 # =========================================================
