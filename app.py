@@ -9018,9 +9018,11 @@ def submit_content():
     return render_submit_form()
 
 
-# =========================================================
+
+# ============================================================
 # SUBMISSION SUCCESS
-# =========================================================
+# ============================================================
+
 # ============================================================
 # SUBMISSION SUCCESS
 # ============================================================
@@ -9057,11 +9059,35 @@ def submission_success(
     )
 
 
+    # =====================================================
+    # PAYMENT STATE
+    # =====================================================
+
+    payment_confirmed = (
+        submission.payment_status
+        == "paid"
+    )
+
+
+    payment_processing = (
+        is_commercial
+        and
+        submission.payment_status
+        == "unpaid"
+        and
+        bool(
+            submission.yoco_checkout_id
+        )
+    )
+
+
     payment_required = (
         is_commercial
         and
         submission.payment_status
         == "unpaid"
+        and
+        not submission.yoco_checkout_id
     )
 
 
@@ -9082,29 +9108,15 @@ def submission_success(
         payment_required=
             payment_required,
 
+        payment_processing=
+            payment_processing,
+
+        payment_confirmed=
+            payment_confirmed,
+
         amount_due=
             amount_due,
     )
-
-
-# ============================================================
-# CREATE YOCO CHECKOUT
-# ============================================================
-#
-# IMPORTANT:
-#
-# This route:
-#
-# 1. Finds the pending Kalxa submission.
-# 2. Confirms that payment is still required.
-# 3. Calculates the payment amount from the DATABASE.
-# 4. Creates the hosted Yoco Checkout.
-# 5. Stores the Yoco checkout ID.
-# 6. Redirects the submitter to Yoco.
-#
-# Never trust a price posted from the browser.
-#
-# ============================================================
 
 @app.route(
     "/submit/<code>/pay",
