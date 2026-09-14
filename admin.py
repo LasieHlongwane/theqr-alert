@@ -1357,7 +1357,7 @@ def _configure_commercial_content(
     # =====================================================
 
     workflow = (
-        _get_content_workflow(
+        get_content_workflow(
             category,
             content_type,
         )
