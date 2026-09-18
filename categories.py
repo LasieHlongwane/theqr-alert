@@ -92,10 +92,10 @@ CONSUMER_CATEGORIES = {
 
     "events": {
 
-        "title": "WHAT'S ON?",
+        "title": "EVENTS",
 
         "subtitle":
-            "Events happening around you",
+            "Ziwa va?",
 
         "icon": "🎵",
 
@@ -104,7 +104,7 @@ CONSUMER_CATEGORIES = {
 
     "restaurants": {
 
-        "title": "HUNGRY?",
+        "title": "RESTAURANTS",
 
         "subtitle":
             "Find something good to eat",
@@ -131,7 +131,7 @@ CONSUMER_CATEGORIES = {
         "title": "SPECIALS TODAY",
 
         "subtitle":
-            "Deals worth knowing about",
+            "Deals",
 
         "icon": "🛒",
 
@@ -140,7 +140,7 @@ CONSUMER_CATEGORIES = {
 
     "accommodation": {
 
-        "title": "STAY TONIGHT",
+        "title": "APARTMENT RENTALS",
 
         "subtitle":
             "Find somewhere to stay",
@@ -152,7 +152,7 @@ CONSUMER_CATEGORIES = {
 
     "rentals": {
 
-        "title": "NEED A ROOM?",
+        "title": "APARTMENTS?",
 
         "subtitle":
             "Rooms · Houses · Rentals",
@@ -164,7 +164,7 @@ CONSUMER_CATEGORIES = {
 
     "delivery": {
 
-        "title": "BRING IT TO ME",
+        "title": "SERVICE DELIVERY",
 
         "subtitle":
             "Delivery · Pickup · Courier",
