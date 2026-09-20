@@ -80,44 +80,71 @@ KALXA_PRESENCE_PRICING = {
 # duration + number of zones reached
 # =========================================================
 
+# =========================================================
+# CAMPAIGN PRICING
+#
+# Affordable community-first pricing.
+#
+# Base duration:
+#
+# 7 days  = R20
+# 14 days = R30
+# 30 days = R50
+#
+# Additional reach:
+#
+# 1 zone = included
+# 2 zones = +R20
+# 3 zones = +R40
+#
+# Final prices:
+#
+#             1 zone   2 zones   3 zones
+#
+# 7 days       R20       R40       R60
+# 14 days      R30       R50       R70
+# 30 days      R50       R70       R90
+#
+# =========================================================
+
 KALXA_CAMPAIGN_PRICING = {
 
     7: {
 
         1:
-            Decimal("79.00"),
+            Decimal("20.00"),
 
         2:
-            Decimal("99.00"),
+            Decimal("40.00"),
 
         3:
-            Decimal("119.00"),
+            Decimal("60.00"),
 
     },
 
     14: {
 
         1:
-            Decimal("99.00"),
+            Decimal("30.00"),
 
         2:
-            Decimal("119.00"),
+            Decimal("50.00"),
 
         3:
-            Decimal("159.00"),
+            Decimal("70.00"),
 
     },
 
     30: {
 
         1:
-            Decimal("179.00"),
+            Decimal("50.00"),
 
         2:
-            Decimal("199.00"),
+            Decimal("70.00"),
 
         3:
-            Decimal("249.00"),
+            Decimal("90.00"),
 
     },
 
