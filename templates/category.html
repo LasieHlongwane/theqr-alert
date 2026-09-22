@@ -2600,22 +2600,41 @@
                             {% endif %}
 
 
-                            {% if item.ticket_url %}
+                           {% if item.ticket_url %}
 
-                            <a
-                                href="{{ item.ticket_url }}"
-                                class="
-                                    listing-action-button
-                                    ticket-button
-                                "
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                🎟 Get Tickets
-                            </a>
+    {% if canonical_category == "jobs" %}
 
-                            {% endif %}
+        <a
+            href="{{ item.ticket_url }}"
+            class="
+                listing-action-button
+                ticket-button
+            "
+            target="_blank"
+            rel="noopener noreferrer"
+            data-lac-event="job_apply_click"
+            data-content-item-id="{{ item.id }}"
+        >
+            💼 Apply Now
+        </a>
 
+    {% else %}
+
+        <a
+            href="{{ item.ticket_url }}"
+            class="
+                listing-action-button
+                ticket-button
+            "
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            🎟 Get Tickets
+        </a>
+
+    {% endif %}
+
+{% endif %}
                         </div>
 
                     </div>
