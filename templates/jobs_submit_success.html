@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111316"
+    >
+
+    <title>
+        Opportunity Submitted | Kalxa
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            min-height: 100vh;
+
+            margin: 0;
+
+            display: grid;
+            place-items: center;
+
+            padding: 20px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #111316,
+                    #25292f
+                );
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+        }
+
+
+        .success-card {
+            width:
+                min(
+                    100%,
+                    520px
+                );
+
+            padding:
+                30px;
+
+            background: #ffffff;
+
+            border-radius: 24px;
+
+            box-shadow:
+                0 24px 70px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .28
+                );
+
+            text-align: center;
+        }
+
+
+        .success-icon {
+            width: 70px;
+            height: 70px;
+
+            margin:
+                0 auto
+                18px;
+
+            display: grid;
+
+            place-items: center;
+
+            background: #edf7f0;
+
+            color: #236540;
+
+            border-radius: 999px;
+
+            font-size: 28px;
+            font-weight: 950;
+        }
+
+
+        .eyebrow {
+            margin:
+                0 0 7px;
+
+            color: #777d85;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing: .16em;
+
+            text-transform: uppercase;
+        }
+
+
+        h1 {
+            margin: 0;
+
+            color: #16191d;
+
+            font-size: 28px;
+            line-height: 1.1;
+
+            font-weight: 950;
+
+            letter-spacing: -.04em;
+        }
+
+
+        .copy {
+            margin:
+                13px auto 0;
+
+            color: #666c74;
+
+            font-size: 12px;
+            line-height: 1.65;
+        }
+
+
+        .reference {
+            margin-top: 20px;
+
+            padding:
+                13px;
+
+            background: #f4f5f6;
+
+            border:
+                1px solid #dfe1e4;
+
+            border-radius: 12px;
+        }
+
+
+        .reference span {
+            display: block;
+
+            color: #858a92;
+
+            font-size: 8px;
+            font-weight: 900;
+
+            letter-spacing: .10em;
+
+            text-transform: uppercase;
+        }
+
+
+        .reference strong {
+            display: block;
+
+            margin-top: 4px;
+
+            color: #202328;
+
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+
+        .status-note {
+            margin-top: 15px;
+
+            padding:
+                12px;
+
+            background: #fff5e5;
+
+            color: #79521f;
+
+            border:
+                1px solid #edd7b2;
+
+            border-radius: 11px;
+
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+
+        .actions {
+            display: grid;
+
+            gap: 9px;
+
+            margin-top: 22px;
+        }
+
+
+        .primary,
+        .secondary {
+            min-height: 48px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                10px 15px;
+
+            border-radius: 12px;
+
+            font-size: 11px;
+            font-weight: 950;
+
+            text-decoration: none;
+        }
+
+
+        .primary {
+            background: #202328;
+            color: #ffffff;
+        }
+
+
+        .secondary {
+            background: #f1f2f4;
+            color: #292d32;
+
+            border:
+                1px solid #d9dce0;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<section class="success-card">
+
+
+    <div class="success-icon">
+        ✓
+    </div>
+
+
+    <p class="eyebrow">
+        KALXA JOBS
+    </p>
+
+
+    <h1>
+        Opportunity submitted.
+    </h1>
+
+
+    <p class="copy">
+
+        <strong>
+            {{ submission.title }}
+        </strong>
+
+        has been sent to Kalxa for review.
+
+        There is no listing fee for this job submission.
+
+    </p>
+
+
+    <div class="reference">
+
+        <span>
+            Tracking reference
+        </span>
+
+        <strong>
+            {{ submission.tracking_code }}
+        </strong>
+
+    </div>
+
+
+    <div class="status-note">
+
+        Your opportunity is not public yet.
+
+        Kalxa will publish it after the submission
+        has passed moderation.
+
+    </div>
+
+
+    <div class="actions">
+
+
+        <a
+            href="{{ url_for(
+                'submission_status',
+                code=submission.tracking_code
+            ) }}"
+            class="primary"
+        >
+            Check Submission Status
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'submit_job',
+                zone_id=submission.zone_id
+            ) }}"
+            class="secondary"
+        >
+            + Submit Another Opportunity
+        </a>
+
+
+        <a
+            href="{{ url_for('home') }}"
+            class="secondary"
+        >
+            Return to Kalxa
+        </a>
+
+
+    </div>
+
+
+</section>
+
+
+</body>
+
+</html>
