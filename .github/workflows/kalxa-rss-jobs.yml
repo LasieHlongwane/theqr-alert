@@ -1,4 +1,4 @@
-
+```yaml
 name: Kalxa RSS Jobs Import
 
 on:
@@ -6,7 +6,6 @@ on:
 
   schedule:
     # Every 6 hours at minute 17.
-    # GitHub supports timezone-aware schedules.
     - cron: "17 */6 * * *"
       timezone: "Africa/Johannesburg"
 
@@ -18,7 +17,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Trigger Kalxa RSS importer
+      - name: Wake Kalxa and import RSS jobs
         env:
           KALXA_RSS_IMPORT_TOKEN: ${{ secrets.KALXA_RSS_IMPORT_TOKEN }}
           KALXA_BASE_URL: ${{ vars.KALXA_BASE_URL }}
@@ -36,16 +35,77 @@ jobs:
           echo ""
 
           # ==================================================
-          # IMPORT EACH CONFIGURED FEED SEPARATELY
+          # STEP 1
+          # WAKE RENDER FREE SERVICE
           #
-          # Current Render configuration:
+          # Render Free can spin down after inactivity.
+          # Cold start can take much longer than 25 seconds.
+          # ==================================================
+
+          echo "========================================"
+          echo "WAKING KALXA RENDER SERVICE"
+          echo "========================================"
+
+          WAKE_RESPONSE_FILE="$(mktemp)"
+
+          set +e
+
+          WAKE_HTTP_STATUS=$(curl \
+            --silent \
+            --show-error \
+            --location \
+            --output "$WAKE_RESPONSE_FILE" \
+            --write-out "%{http_code}" \
+            --connect-timeout 20 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            "${BASE_URL}/")
+
+          WAKE_CURL_EXIT=$?
+
+          set -e
+
+          echo ""
+          echo "Wake curl exit code: ${WAKE_CURL_EXIT}"
+          echo "Wake HTTP status: ${WAKE_HTTP_STATUS:-none}"
+          echo ""
+
+          rm -f "$WAKE_RESPONSE_FILE"
+
+          if [ "$WAKE_CURL_EXIT" -ne 0 ]; then
+            echo "Kalxa could not be awakened."
+            exit 1
+          fi
+
+          if [ -z "${WAKE_HTTP_STATUS}" ]; then
+            echo "Kalxa returned no HTTP status during wake-up."
+            exit 1
+          fi
+
+          if [ "$WAKE_HTTP_STATUS" -lt 200 ] || [ "$WAKE_HTTP_STATUS" -ge 500 ]; then
+            echo "Kalxa wake-up returned unexpected HTTP status ${WAKE_HTTP_STATUS}."
+            exit 1
+          fi
+
+          echo "Kalxa service is awake."
+          echo ""
+
+          # Small pause so Gunicorn is fully ready.
+          sleep 3
+
+
+          # ==================================================
+          # STEP 2
+          # IMPORT EACH RSS FEED SEPARATELY
           #
-          # 0 = iYouth Internships
-          # 1 = iYouth Learnerships
+          # Render:
           #
-          # Each feed gets its own HTTP request so Render Free
-          # does not spend too long processing multiple feeds
-          # inside one Flask request.
+          # feed 0 = iYouth Internships
+          # feed 1 = iYouth Learnerships
+          #
+          # Each feed gets its own Flask request.
           # ==================================================
 
           for FEED_INDEX in 0 1
@@ -63,6 +123,8 @@ jobs:
 
             RESPONSE_FILE="$(mktemp)"
 
+            set +e
+
             HTTP_STATUS=$(curl \
               --silent \
               --show-error \
@@ -73,23 +135,61 @@ jobs:
               --header "Authorization: Bearer ${KALXA_RSS_IMPORT_TOKEN}" \
               --header "Accept: application/json" \
               --header "User-Agent: Kalxa-GitHub-Actions-RSS-Importer/1.0" \
-              --max-time 25 \
+              --connect-timeout 10 \
+              --max-time 28 \
               "${TARGET_URL}")
 
-            echo "HTTP status: ${HTTP_STATUS}"
+            CURL_EXIT=$?
+
+            set -e
+
+            echo "Curl exit code: ${CURL_EXIT}"
+            echo "HTTP status: ${HTTP_STATUS:-none}"
             echo ""
 
             echo "Response:"
-            cat "$RESPONSE_FILE"
+
+            if [ -s "$RESPONSE_FILE" ]; then
+              cat "$RESPONSE_FILE"
+            else
+              echo "(no response body)"
+            fi
+
+            echo ""
             echo ""
 
             # ================================================
-            # FAIL WORKFLOW ON HTTP ERROR
+            # CURL FAILURE
             # ================================================
+
+            if [ "$CURL_EXIT" -ne 0 ]; then
+
+              echo "Kalxa RSS request failed for feed index ${FEED_INDEX}."
+
+              rm -f "$RESPONSE_FILE"
+
+              exit 1
+
+            fi
+
+
+            # ================================================
+            # HTTP FAILURE
+            # ================================================
+
+            if [ -z "${HTTP_STATUS}" ]; then
+
+              echo "No HTTP status returned for feed index ${FEED_INDEX}."
+
+              rm -f "$RESPONSE_FILE"
+
+              exit 1
+
+            fi
+
 
             if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
 
-              echo ""
               echo "Kalxa RSS import failed for feed index ${FEED_INDEX}."
 
               rm -f "$RESPONSE_FILE"
@@ -98,14 +198,14 @@ jobs:
 
             fi
 
+
             # ================================================
-            # ALSO FAIL IF API RETURNS success=false
+            # API FAILURE
             # ================================================
 
             if grep -q '"success":false' "$RESPONSE_FILE"; then
 
-              echo ""
-              echo "Kalxa RSS importer returned success=false for feed index ${FEED_INDEX}."
+              echo "Kalxa importer returned success=false for feed index ${FEED_INDEX}."
 
               rm -f "$RESPONSE_FILE"
 
@@ -113,16 +213,25 @@ jobs:
 
             fi
 
-            echo ""
+
             echo "Feed index ${FEED_INDEX} completed successfully."
 
             rm -f "$RESPONSE_FILE"
 
+
+            # Small pause between feeds.
+            sleep 2
+
           done
+
+
+          # ==================================================
+          # COMPLETE
+          # ==================================================
 
           echo ""
           echo "========================================"
           echo "KALXA RSS JOBS IMPORT COMPLETE"
           echo "========================================"
           echo "All configured feeds completed successfully."
-
+```
