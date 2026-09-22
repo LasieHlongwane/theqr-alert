@@ -14193,6 +14193,32 @@ def confirm_submission_payment(submission_id):
             )
         )
 
+        # =====================================================
+    # FREE JOB PROTECTION
+    # =====================================================
+
+    if (
+        normalize_category(
+            content.category
+        )
+        == "jobs"
+    ):
+
+        flash(
+            (
+                "Kalxa Job opportunities are free. "
+                "No payment confirmation is required."
+            ),
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
     # =====================================================
     # ORGANIZER OWNERSHIP CONSISTENCY
     # =====================================================
