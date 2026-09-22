@@ -2996,40 +2996,7 @@ def build_test_jobs_rss_xml():
 """
 
 
-@app.route(
-    "/test/jobs-feed.xml",
-    methods=["GET"],
-)
-def test_jobs_rss_feed():
 
-    rss_xml = (
-        build_test_jobs_rss_xml()
-    )
-
-
-    response = (
-        current_app.make_response(
-            rss_xml
-        )
-    )
-
-
-    response.headers[
-        "Content-Type"
-    ] = (
-        "application/rss+xml; "
-        "charset=utf-8"
-    )
-
-
-    response.headers[
-        "Cache-Control"
-    ] = (
-        "no-store, max-age=0"
-    )
-
-
-    return response
 # ============================================================
 # RSS / ATOM IMPORT ROUTE
 # ============================================================
@@ -3991,48 +3958,17 @@ def fetch_external_jobs():
 # KALXA JOBS - TEST RSS FEED
 # ============================================================
 
-@app.route(
-    "/test/jobs-feed.xml",
-    methods=["GET"],
-)
-def test_jobs_rss_feed():
-    """
-    Public development RSS feed used to test the complete
-    Kalxa Jobs ingestion pipeline.
+# ============================================================
+# KALXA JOBS - TEST RSS FEED
+# ============================================================
 
-    Flow:
-
-        /test/jobs-feed.xml
-                ↓
-        RSS importer
-                ↓
-        PendingSubmission
-                ↓
-        Admin moderation
-                ↓
-        Kalxa Jobs
-
-    IMPORTANT:
-    This route is for testing only and can be removed once
-    real employer/job-board feeds are connected.
-    """
-
-    # ========================================================
-    # BASE URL
-    # ========================================================
+def build_test_jobs_rss_xml():
 
     public_base_url = (
         get_public_base_url()
         .rstrip("/")
     )
 
-
-    # ========================================================
-    # DYNAMIC TEST DATES
-    #
-    # Keeping dates in the future prevents test vacancies from
-    # immediately being rejected as expired.
-    # ========================================================
 
     today = (
         datetime.now(
@@ -4058,14 +3994,6 @@ def test_jobs_rss_feed():
     )
 
 
-    # ========================================================
-    # UNIQUE TEST APPLICATION URLS
-    #
-    # These URLs do not need a separate application route.
-    # They exist mainly so duplicate detection has a stable
-    # source URL for each test job.
-    # ========================================================
-
     shop_assistant_url = (
         f"{public_base_url}/"
         "?kalxa_test_job=shop-assistant-001"
@@ -4084,10 +4012,6 @@ def test_jobs_rss_feed():
     )
 
 
-    # ========================================================
-    # RSS DATES
-    # ========================================================
-
     generated_at = (
         datetime.now(
             KALXA_TIMEZONE
@@ -4101,10 +4025,6 @@ def test_jobs_rss_feed():
         )
     )
 
-
-    # ========================================================
-    # TEST JOBS
-    # ========================================================
 
     test_jobs = [
 
@@ -4219,10 +4139,6 @@ def test_jobs_rss_feed():
     ]
 
 
-    # ========================================================
-    # BUILD RSS ITEMS
-    # ========================================================
-
     rss_items = []
 
 
@@ -4290,11 +4206,7 @@ def test_jobs_rss_feed():
         )
 
 
-    # ========================================================
-    # COMPLETE RSS DOCUMENT
-    # ========================================================
-
-    rss_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
 
 <rss version="2.0">
 
@@ -4328,9 +4240,16 @@ def test_jobs_rss_feed():
 """
 
 
-    # ========================================================
-    # RESPONSE
-    # ========================================================
+@app.route(
+    "/test/jobs-feed.xml",
+    methods=["GET"],
+)
+def test_jobs_rss_feed():
+
+    rss_xml = (
+        build_test_jobs_rss_xml()
+    )
+
 
     response = (
         current_app.make_response(
