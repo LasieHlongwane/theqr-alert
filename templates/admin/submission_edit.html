@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -22,6 +23,797 @@
         ) }}"
     >
 
+
+    <style>
+
+        /* =========================================================
+           SUBMISSION EDIT — LOCAL STYLES
+        ========================================================= */
+
+        .submission-review-meta {
+
+            margin:
+                18px 0
+                24px;
+
+            padding:
+                16px 18px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.035
+                );
+        }
+
+
+        .submission-review-meta span {
+
+            display:
+                block;
+
+            margin-bottom:
+                4px;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.48
+                );
+
+            font-size:
+                10px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.7px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .submission-review-meta strong {
+
+            color:
+                #fff4df;
+
+            font-size:
+                14px;
+
+            word-break:
+                break-word;
+        }
+
+
+        /* =========================================================
+           EXISTING IMAGES
+        ========================================================= */
+
+        .submission-images {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap:
+                10px;
+
+            margin:
+                0 0
+                24px;
+        }
+
+
+        .submission-images img {
+
+            width:
+                100%;
+
+            aspect-ratio:
+                1 / 1;
+
+            display:
+                block;
+
+            object-fit:
+                cover;
+
+            border-radius:
+                14px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            background:
+                #191b1f;
+        }
+
+
+        /* =========================================================
+           FORM SECTIONS
+        ========================================================= */
+
+        .submission-form-section {
+
+            margin-top:
+                28px;
+
+            padding-top:
+                24px;
+
+            border-top:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+        }
+
+
+        .submission-form-section:first-of-type {
+
+            margin-top:
+                0;
+
+            padding-top:
+                0;
+
+            border-top:
+                0;
+        }
+
+
+        .submission-form-section-header {
+
+            margin-bottom:
+                18px;
+        }
+
+
+        .submission-form-section-eyebrow {
+
+            display:
+                block;
+
+            margin-bottom:
+                5px;
+
+            color:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.56
+                );
+
+            font-size:
+                9px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                1px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .submission-form-section-header h3 {
+
+            margin:
+                0;
+
+            color:
+                #fff4df;
+
+            font-size:
+                18px;
+
+            line-height:
+                1.25;
+        }
+
+
+        .submission-form-section-header p {
+
+            margin:
+                6px 0
+                0;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.52
+                );
+
+            font-size:
+                12px;
+
+            line-height:
+                1.5;
+        }
+
+
+        /* =========================================================
+           JOB REVIEW PANEL
+        ========================================================= */
+
+        .job-review-panel {
+
+            margin:
+                24px 0;
+
+            padding:
+                20px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.13
+                );
+
+            border-radius:
+                18px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(
+                        255,
+                        244,
+                        223,
+                        0.07
+                    ),
+                    rgba(
+                        255,
+                        255,
+                        255,
+                        0.025
+                    )
+                );
+        }
+
+
+        .job-review-panel[hidden] {
+
+            display:
+                none;
+        }
+
+
+        .job-review-top {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            justify-content:
+                space-between;
+
+            gap:
+                14px;
+
+            margin-bottom:
+                20px;
+        }
+
+
+        .job-review-icon {
+
+            width:
+                44px;
+
+            height:
+                44px;
+
+            flex:
+                0 0
+                44px;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            border-radius:
+                13px;
+
+            background:
+                #fff4df;
+
+            color:
+                #111316;
+
+            font-size:
+                21px;
+        }
+
+
+        .job-review-heading {
+
+            flex:
+                1;
+
+            min-width:
+                0;
+        }
+
+
+        .job-review-heading span {
+
+            display:
+                block;
+
+            margin-bottom:
+                4px;
+
+            color:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.55
+                );
+
+            font-size:
+                9px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.9px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .job-review-heading strong {
+
+            display:
+                block;
+
+            color:
+                #fff4df;
+
+            font-size:
+                17px;
+
+            line-height:
+                1.3;
+        }
+
+
+        .job-free-badge {
+
+            flex-shrink:
+                0;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                7px 10px;
+
+            border-radius:
+                999px;
+
+            background:
+                #fff4df;
+
+            color:
+                #111316;
+
+            font-size:
+                9px;
+
+            font-weight:
+                950;
+
+            letter-spacing:
+                0.7px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .job-free-note {
+
+            margin:
+                -4px 0
+                20px;
+
+            padding:
+                12px 14px;
+
+            border-radius:
+                12px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.06
+                );
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.65
+                );
+
+            font-size:
+                11px;
+
+            line-height:
+                1.5;
+        }
+
+
+        .job-free-note strong {
+
+            color:
+                #fff4df;
+        }
+
+
+        /* =========================================================
+           TWO-COLUMN FIELD ROW
+        ========================================================= */
+
+        .submission-field-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap:
+                16px;
+        }
+
+
+        .submission-field-grid > label {
+
+            min-width:
+                0;
+        }
+
+
+        /* =========================================================
+           FIELD HELP
+        ========================================================= */
+
+        .submission-field-help {
+
+            display:
+                block;
+
+            margin-top:
+                5px;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.40
+                );
+
+            font-size:
+                10px;
+
+            font-weight:
+                500;
+
+            line-height:
+                1.45;
+        }
+
+
+        /* =========================================================
+           CATEGORY MODE LABEL
+        ========================================================= */
+
+        .submission-mode-notice {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            gap:
+                10px;
+
+            margin:
+                18px 0
+                4px;
+
+            padding:
+                12px 14px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.07
+                );
+
+            border-radius:
+                12px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.03
+                );
+        }
+
+
+        .submission-mode-notice[hidden] {
+
+            display:
+                none;
+        }
+
+
+        .submission-mode-notice-icon {
+
+            flex-shrink:
+                0;
+
+            font-size:
+                16px;
+        }
+
+
+        .submission-mode-notice strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                3px;
+
+            color:
+                #fff4df;
+
+            font-size:
+                11px;
+        }
+
+
+        .submission-mode-notice span {
+
+            display:
+                block;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.48
+                );
+
+            font-size:
+                10px;
+
+            line-height:
+                1.45;
+        }
+
+
+        /* =========================================================
+           ACTIONS
+        ========================================================= */
+
+        .submission-edit-actions {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                14px;
+
+            margin-top:
+                30px;
+
+            padding-top:
+                24px;
+
+            border-top:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+        }
+
+
+        .submission-edit-actions button {
+
+            min-height:
+                46px;
+
+            padding:
+                11px 18px;
+        }
+
+
+        /* =========================================================
+           MOBILE
+        ========================================================= */
+
+        @media (
+            max-width:
+                700px
+        ) {
+
+            .submission-field-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .job-review-top {
+
+                flex-wrap:
+                    wrap;
+            }
+
+
+            .job-free-badge {
+
+                margin-left:
+                    58px;
+            }
+
+
+            .submission-edit-actions {
+
+                flex-direction:
+                    column-reverse;
+
+                align-items:
+                    stretch;
+            }
+
+
+            .submission-edit-actions button,
+            .submission-edit-actions .back-link {
+
+                width:
+                    100%;
+
+                box-sizing:
+                    border-box;
+
+                text-align:
+                    center;
+            }
+
+        }
+
+
+        @media (
+            max-width:
+                480px
+        ) {
+
+            .submission-images {
+
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+            }
+
+
+            .job-review-panel {
+
+                padding:
+                    16px;
+
+                border-radius:
+                    15px;
+            }
+
+
+            .job-free-badge {
+
+                margin-left:
+                    0;
+            }
+
+        }
+
+    </style>
+
 </head>
 
 
@@ -30,31 +822,50 @@
 <div class="admin-shell">
 
 
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
     <nav class="admin-nav">
 
         <div>
-            <strong>LAC</strong>
-            <span>NETWORK</span>
+
+            <strong>
+                LAC
+            </strong>
+
+            <span>
+                NETWORK
+            </span>
+
         </div>
 
 
         <div class="admin-nav-links">
 
-            <a href="{{ url_for(
-                'admin.analytics'
-            ) }}">
+            <a
+                href="{{ url_for(
+                    'admin.analytics'
+                ) }}"
+            >
                 Analytics
             </a>
 
-            <a href="{{ url_for(
-                'admin.submissions'
-            ) }}">
+
+            <a
+                href="{{ url_for(
+                    'admin.submissions'
+                ) }}"
+            >
                 Submissions
             </a>
 
-            <a href="{{ url_for(
-                'admin.content_list'
-            ) }}">
+
+            <a
+                href="{{ url_for(
+                    'admin.content_list'
+                ) }}"
+            >
                 Content
             </a>
 
@@ -62,6 +873,10 @@
 
     </nav>
 
+
+    <!-- =====================================================
+         FORM CONTAINER
+    ====================================================== -->
 
     <section class="admin-form-container">
 
@@ -77,17 +892,26 @@
 
         <p>
             Correct submission details before
-            publishing this listing.
+            publishing this listing to Kalxa Discovery.
         </p>
 
 
-        <p>
-            Reference:
+        <div class="submission-review-meta">
+
+            <span>
+                Submission Reference
+            </span>
+
             <strong>
                 {{ submission.tracking_code }}
             </strong>
-        </p>
 
+        </div>
+
+
+        <!-- =================================================
+             FLASH MESSAGES
+        ================================================== -->
 
         {% with messages =
             get_flashed_messages()
@@ -104,9 +928,9 @@
         {% endwith %}
 
 
-        <!-- =====================================
+        <!-- =================================================
              EXISTING IMAGES
-        ====================================== -->
+        ================================================== -->
 
         {% if submission.images %}
 
@@ -127,194 +951,718 @@
         {% endif %}
 
 
+        <!-- =================================================
+             EDIT FORM
+        ================================================== -->
+
         <form
             method="POST"
             class="admin-form"
+            id="submission-edit-form"
         >
 
 
-            <!-- =================================
-                 ZONE
-            ================================== -->
+            <!-- =================================================
+                 CORE LISTING INFORMATION
+            ================================================== -->
 
-            <label>
+            <div class="submission-form-section">
 
-                Zone
+                <div class="submission-form-section-header">
 
-                <select
-                    name="zone_id"
-                    required
-                >
+                    <span class="submission-form-section-eyebrow">
+                        CORE LISTING
+                    </span>
 
-                    {% for zone in zones %}
+                    <h3>
+                        Listing Information
+                    </h3>
 
-                    <option
-                        value="{{ zone.id }}"
+                    <p>
+                        Confirm the area, category and main
+                        information that visitors will see.
+                    </p>
 
-                        {% if
-                            submission.zone_id
-                            == zone.id
-                        %}
-                            selected
-                        {% endif %}
+                </div>
+
+
+                <!-- =============================================
+                     ZONE
+                ============================================== -->
+
+                <label>
+
+                    Zone
+
+                    <select
+                        name="zone_id"
+                        required
                     >
 
-                        {{ zone.name }}
+                        {% for zone in zones %}
 
-                    </option>
+                        <option
+                            value="{{ zone.id }}"
 
-                    {% endfor %}
+                            {% if
+                                submission.zone_id
+                                == zone.id
+                            %}
+                                selected
+                            {% endif %}
+                        >
 
-                </select>
+                            {{ zone.name }}
 
-            </label>
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </label>
 
 
-            <!-- =================================
-                 CATEGORY
-            ================================== -->
+                <!-- =============================================
+                     CATEGORY
+                ============================================== -->
 
-            <label>
+                <label>
 
-                Category
+                    Category
 
-                <select
-                    name="category"
-                    id="category-select"
-                    required
-                >
-
-                    {% for category in categories %}
-
-                    <option
-                        value="{{ category.slug }}"
-
-                        {% if
-                            submission.category
-                            == category.slug
-                        %}
-                            selected
-                        {% endif %}
+                    <select
+                        name="category"
+                        id="category-select"
+                        data-original-category="{{ submission.category }}"
+                        required
                     >
 
-                        {% if category.icon %}
-                            {{ category.icon }}
-                        {% endif %}
+                        {% for category in categories %}
 
-                        {{ category.name }}
+                        <option
+                            value="{{ category.slug }}"
 
-                    </option>
+                            data-category-slug="{{ category.slug }}"
 
-                    {% endfor %}
+                            {% if
+                                submission.category
+                                == category.slug
+                            %}
+                                selected
+                            {% endif %}
+                        >
 
-                </select>
+                            {% if category.icon %}
+                                {{ category.icon }}
+                            {% endif %}
 
-            </label>
+                            {{ category.name }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </label>
 
 
-            <!-- =================================
-                 TITLE
-            ================================== -->
+                <!-- =============================================
+                     FREE JOB MODE NOTICE
+                ============================================== -->
 
-            <label>
-
-                Title
-
-                <input
-                    type="text"
-                    name="title"
-                    required
-                    value="{{ submission.title }}"
+                <div
+                    class="submission-mode-notice"
+                    id="job-mode-notice"
+                    hidden
                 >
 
-            </label>
+                    <div class="submission-mode-notice-icon">
+                        💼
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Free Job Opportunity
+                        </strong>
+
+                        <span>
+                            Jobs submitted through the Kalxa
+                            community Jobs form do not require
+                            payment, commercial duration or a
+                            campaign package.
+                        </span>
+
+                    </div>
+
+                </div>
 
 
-            <label>
+                <!-- =============================================
+                     TITLE
+                ============================================== -->
 
-                Business / Organisation
+                <label>
 
-                <input
-                    type="text"
-                    name="business_name"
-                    value="{{
-                        submission.business_name
-                        or ''
-                    }}"
+                    Title
+
+                    <input
+                        type="text"
+                        name="title"
+                        required
+                        value="{{ submission.title }}"
+                    >
+
+                </label>
+
+
+                <!-- =============================================
+                     BUSINESS / ORGANISATION
+                ============================================== -->
+
+                <label>
+
+                    <span id="business-label-text">
+                        Business / Organisation
+                    </span>
+
+                    <input
+                        type="text"
+                        name="business_name"
+                        id="business-name-input"
+                        value="{{
+                            submission.business_name
+                            or ''
+                        }}"
+                    >
+
+                    <span
+                        class="submission-field-help"
+                        id="business-name-help"
+                    >
+                        Business, organisation or person
+                        responsible for this listing.
+                    </span>
+
+                </label>
+
+
+                <!-- =============================================
+                     DESCRIPTION
+                ============================================== -->
+
+                <label>
+
+                    Description
+
+                    <textarea
+                        name="description"
+                        rows="6"
+                    >{{ submission.description or '' }}</textarea>
+
+                </label>
+
+
+                <!-- =============================================
+                     VENUE / LOCATION
+                ============================================== -->
+
+                <label>
+
+                    <span id="venue-label-text">
+                        Venue / Location
+                    </span>
+
+                    <input
+                        type="text"
+                        name="venue"
+                        id="venue-input"
+                        value="{{
+                            submission.venue
+                            or ''
+                        }}"
+                    >
+
+                    <span
+                        class="submission-field-help"
+                        id="venue-help"
+                    >
+                        Physical location associated with
+                        this listing.
+                    </span>
+
+                </label>
+
+
+                <!-- =============================================
+                     PRICE
+                ============================================== -->
+
+                <label
+                    id="price-field"
                 >
 
-            </label>
+                    Price
+
+                    <input
+                        type="text"
+                        name="price"
+                        value="{{
+                            submission.price
+                            or ''
+                        }}"
+                    >
+
+                </label>
 
 
-            <label>
+                <!-- =============================================
+                     PUBLIC CONTACT
+                ============================================== -->
 
-                Description
+                <label>
 
-                <textarea
-                    name="description"
-                    rows="5"
-                >{{ submission.description or '' }}</textarea>
+                    <span id="contact-label-text">
+                        Public Contact
+                    </span>
 
-            </label>
+                    <input
+                        type="text"
+                        name="contact"
+                        id="contact-input"
+                        value="{{
+                            submission.contact
+                            or ''
+                        }}"
+                    >
+
+                    <span
+                        class="submission-field-help"
+                        id="contact-help"
+                    >
+                        Contact number visible to Kalxa users.
+                    </span>
+
+                </label>
 
 
-            <label>
+                <!-- =============================================
+                     WHATSAPP
+                ============================================== -->
 
-                Venue / Location
+                <label>
 
-                <input
-                    type="text"
-                    name="venue"
-                    value="{{
-                        submission.venue
-                        or ''
-                    }}"
+                    WhatsApp Number
+
+                    <input
+                        type="text"
+                        name="whatsapp_number"
+                        id="whatsapp-number-input"
+                        value="{{
+                            submission.whatsapp_number
+                            or ''
+                        }}"
+                        placeholder="e.g. 0791234567"
+                    >
+
+                    <span class="submission-field-help">
+
+                        Optional WhatsApp contact visitors
+                        can use directly from Kalxa.
+
+                    </span>
+
+                </label>
+
+
+                <!-- =============================================
+                     DIRECTIONS
+                ============================================== -->
+
+                <label
+                    id="directions-field"
                 >
 
-            </label>
+                    Directions URL
+
+                    <input
+                        type="url"
+                        name="directions_url"
+                        value="{{
+                            submission.directions_url
+                            or ''
+                        }}"
+                        placeholder="https://..."
+                    >
+
+                    <span class="submission-field-help">
+
+                        Optional Google Maps or other
+                        location link.
+
+                    </span>
+
+                </label>
 
 
-            <label>
+                <!-- =============================================
+                     TICKET / APPLICATION URL
+                ============================================== -->
 
-                Price
+                <label>
 
-                <input
-                    type="text"
-                    name="price"
-                    value="{{
-                        submission.price
-                        or ''
-                    }}"
-                >
+                    <span id="ticket-url-label">
+                        Ticket / Action URL
+                    </span>
 
-            </label>
+                    <input
+                        type="url"
+                        name="ticket_url"
+                        id="ticket-url-input"
+                        value="{{
+                            submission.ticket_url
+                            or ''
+                        }}"
+                        placeholder="https://..."
+                    >
+
+                    <span
+                        class="submission-field-help"
+                        id="ticket-url-help"
+                    >
+                        Optional external action link.
+                    </span>
+
+                </label>
+
+            </div>
 
 
-            <label>
+            <!-- =================================================
+                 JOB OPPORTUNITY REVIEW
+            ================================================== -->
 
-                Public Contact
+            <div
+                class="job-review-panel"
+                id="job-review-panel"
+                hidden
+            >
 
-                <input
-                    type="text"
-                    name="contact"
-                    value="{{
-                        submission.contact
-                        or ''
-                    }}"
-                >
+                <div class="job-review-top">
 
-            </label>
+                    <div class="job-review-icon">
+                        💼
+                    </div>
 
 
-            <!-- =================================
+                    <div class="job-review-heading">
+
+                        <span>
+                            KALXA JOBS
+                        </span>
+
+                        <strong>
+                            Review Job Opportunity
+                        </strong>
+
+                    </div>
+
+
+                    <span class="job-free-badge">
+                        FREE LISTING
+                    </span>
+
+                </div>
+
+
+                <div class="job-free-note">
+
+                    <strong>
+                        No payment should be collected.
+                    </strong>
+
+                    This opportunity will be moderated by
+                    Kalxa and published under the Jobs
+                    category after approval.
+
+                </div>
+
+
+                <!-- =============================================
+                     CONTENT TYPE
+                ============================================== -->
+
+                <label>
+
+                    Opportunity Type
+
+                    <select
+                        id="job-content-type-select"
+                    >
+
+                        <option
+                            value="job"
+                            {% if
+                                submission.content_type
+                                == "job"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Job / Vacancy
+                        </option>
+
+
+                        <option
+                            value="learnership"
+                            {% if
+                                submission.content_type
+                                == "learnership"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Learnership
+                        </option>
+
+
+                        <option
+                            value="internship"
+                            {% if
+                                submission.content_type
+                                == "internship"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Internship
+                        </option>
+
+
+                        <option
+                            value="training"
+                            {% if
+                                submission.content_type
+                                == "training"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Training Opportunity
+                        </option>
+
+
+                        <option
+                            value="tender"
+                            {% if
+                                submission.content_type
+                                == "tender"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Tender
+                        </option>
+
+
+                        <option
+                            value="business_opportunity"
+                            {% if
+                                submission.content_type
+                                == "business_opportunity"
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            Business Opportunity
+                        </option>
+
+                    </select>
+
+
+                    <span class="submission-field-help">
+
+                        This controls how Kalxa classifies
+                        and manages the opportunity.
+
+                    </span>
+
+                </label>
+
+
+                <!-- =============================================
+                     JOB DATE FIELDS
+                ============================================== -->
+
+                <div class="submission-field-grid">
+
+
+                    <label>
+
+                        Opens / Available From
+
+                        <input
+                            type="date"
+                            name="job_start_date"
+                            id="job-start-date"
+                            value="{{
+                                submission.start_date.strftime('%Y-%m-%d')
+                                if submission.start_date
+                                else ''
+                            }}"
+                        >
+
+                        <span class="submission-field-help">
+
+                            Optional. Leave blank when the
+                            opportunity is already open.
+
+                        </span>
+
+                    </label>
+
+
+                    <label>
+
+                        Closing Date
+
+                        <input
+                            type="date"
+                            name="job_end_date"
+                            id="job-end-date"
+                            value="{{
+                                submission.end_date.strftime('%Y-%m-%d')
+                                if submission.end_date
+                                else ''
+                            }}"
+                        >
+
+                        <span class="submission-field-help">
+
+                            Leave blank for ordinary jobs
+                            that remain open until filled.
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <!-- =============================================
+                     JOB TIMES
+                ============================================== -->
+
+                <div class="submission-field-grid">
+
+
+                    <label>
+
+                        Opening Time
+
+                        <input
+                            type="time"
+                            name="job_start_time"
+                            id="job-start-time"
+                            value="{{
+                                submission.start_time.strftime('%H:%M')
+                                if submission.start_time
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Closing Time
+
+                        <input
+                            type="time"
+                            name="job_end_time"
+                            id="job-end-time"
+                            value="{{
+                                submission.end_time.strftime('%H:%M')
+                                if submission.end_time
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <div class="submission-mode-notice">
+
+                    <div class="submission-mode-notice-icon">
+                        ℹ️
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Job lifetime
+                        </strong>
+
+                        <span>
+                            If a closing date exists, Kalxa
+                            treats the opportunity as
+                            time-specific. If no closing date
+                            exists, it remains available until
+                            it is marked filled or unavailable.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 HIDDEN CONTENT TYPE
+            ================================================== -->
+
+            <input
+                type="hidden"
+                name="content_type"
+                id="content-type-input"
+                value="{{
+                    submission.content_type
+                    or ''
+                }}"
+            >
+
+
+            <!-- =================================================
                  EVENT DATES
-            ================================== -->
+            ================================================== -->
 
-            <div id="event-date-fields">
+            <div
+                id="event-date-fields"
+                class="submission-form-section"
+            >
 
-                <h3>
-                    Event Dates
-                </h3>
+                <div class="submission-form-section-header">
+
+                    <span class="submission-form-section-eyebrow">
+                        EVENT TIMING
+                    </span>
+
+                    <h3>
+                        Event Dates
+                    </h3>
+
+                    <p>
+                        Event listings use their dedicated
+                        event date fields.
+                    </p>
+
+                </div>
 
 
                 <label>
@@ -334,144 +1682,345 @@
                 </label>
 
 
-                <label>
-
-                    Event Date
-
-                    <input
-                        type="date"
-                        name="event_date"
-                        value="{{
-                            submission.event_date.strftime('%Y-%m-%d')
-                            if submission.event_date
-                            else ''
-                        }}"
-                    >
-
-                </label>
+                <div class="submission-field-grid">
 
 
-                <label>
+                    <label>
 
-                    Event End Date
+                        Event Date
 
-                    <input
-                        type="date"
-                        name="event_end_date"
-                        value="{{
-                            submission.event_end_date.strftime('%Y-%m-%d')
-                            if submission.event_end_date
-                            else ''
-                        }}"
-                    >
+                        <input
+                            type="date"
+                            name="event_date"
+                            value="{{
+                                submission.event_date.strftime('%Y-%m-%d')
+                                if submission.event_date
+                                else ''
+                            }}"
+                        >
 
-                </label>
+                    </label>
+
+
+                    <label>
+
+                        Event End Date
+
+                        <input
+                            type="date"
+                            name="event_end_date"
+                            value="{{
+                                submission.event_end_date.strftime('%Y-%m-%d')
+                                if submission.event_end_date
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <div class="submission-field-grid">
+
+
+                    <label>
+
+                        Start Time
+
+                        <input
+                            type="time"
+                            name="event_start_time"
+                            id="event-start-time"
+                            value="{{
+                                submission.start_time.strftime('%H:%M')
+                                if submission.start_time
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        End Time
+
+                        <input
+                            type="time"
+                            name="event_end_time"
+                            id="event-end-time"
+                            value="{{
+                                submission.end_time.strftime('%H:%M')
+                                if submission.end_time
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
 
             </div>
 
 
-            <!-- =================================
-                 GENERAL DATES
-            ================================== -->
+            <!-- =================================================
+                 GENERAL LISTING DATES
+            ================================================== -->
 
-            <div id="general-date-fields">
+            <div
+                id="general-date-fields"
+                class="submission-form-section"
+            >
 
-                <h3>
-                    Listing Dates
-                </h3>
+                <div class="submission-form-section-header">
+
+                    <span class="submission-form-section-eyebrow">
+                        LISTING TIMING
+                    </span>
+
+                    <h3>
+                        Listing Dates
+                    </h3>
+
+                    <p>
+                        Used for specials, promotions and
+                        other time-sensitive content.
+                    </p>
+
+                </div>
 
 
-                <label>
-
-                    Start Date
-
-                    <input
-                        type="date"
-                        name="start_date"
-                        value="{{
-                            submission.start_date.strftime('%Y-%m-%d')
-                            if submission.start_date
-                            else ''
-                        }}"
-                    >
-
-                </label>
+                <div class="submission-field-grid">
 
 
-                <label>
+                    <label>
 
-                    End Date
+                        Start Date
 
-                    <input
-                        type="date"
-                        name="end_date"
-                        value="{{
-                            submission.end_date.strftime('%Y-%m-%d')
-                            if submission.end_date
-                            else ''
-                        }}"
-                    >
+                        <input
+                            type="date"
+                            name="general_start_date"
+                            id="general-start-date"
+                            value="{{
+                                submission.start_date.strftime('%Y-%m-%d')
+                                if submission.start_date
+                                else ''
+                            }}"
+                        >
 
-                </label>
+                    </label>
+
+
+                    <label>
+
+                        End Date
+
+                        <input
+                            type="date"
+                            name="general_end_date"
+                            id="general-end-date"
+                            value="{{
+                                submission.end_date.strftime('%Y-%m-%d')
+                                if submission.end_date
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
+
+
+                <div class="submission-field-grid">
+
+
+                    <label>
+
+                        Start Time
+
+                        <input
+                            type="time"
+                            name="general_start_time"
+                            id="general-start-time"
+                            value="{{
+                                submission.start_time.strftime('%H:%M')
+                                if submission.start_time
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        End Time
+
+                        <input
+                            type="time"
+                            name="general_end_time"
+                            id="general-end-time"
+                            value="{{
+                                submission.end_time.strftime('%H:%M')
+                                if submission.end_time
+                                else ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
 
             </div>
 
 
-            <hr>
+            <!-- =================================================
+                 ACTUAL BACKEND DATE/TIME FIELDS
+            ================================================== -->
+            <!--
+                These hidden fields are the values expected by
+                admin.py:
+
+                    start_date
+                    end_date
+                    start_time
+                    end_time
+
+                JavaScript synchronises the correct visible
+                category-specific inputs before form submission.
+            -->
+
+            <input
+                type="hidden"
+                name="start_date"
+                id="backend-start-date"
+                value="{{
+                    submission.start_date.strftime('%Y-%m-%d')
+                    if submission.start_date
+                    else ''
+                }}"
+            >
 
 
-            <h3>
-                Submitter Details
-            </h3>
+            <input
+                type="hidden"
+                name="end_date"
+                id="backend-end-date"
+                value="{{
+                    submission.end_date.strftime('%Y-%m-%d')
+                    if submission.end_date
+                    else ''
+                }}"
+            >
 
 
-            <label>
-
-                Submitter Name
-
-                <input
-                    type="text"
-                    name="submitter_name"
-                    required
-                    value="{{
-                        submission.submitter_name
-                    }}"
-                >
-
-            </label>
+            <input
+                type="hidden"
+                name="start_time"
+                id="backend-start-time"
+                value="{{
+                    submission.start_time.strftime('%H:%M')
+                    if submission.start_time
+                    else ''
+                }}"
+            >
 
 
-            <label>
-
-                Submitter Phone
-
-                <input
-                    type="text"
-                    name="submitter_phone"
-                    required
-                    value="{{
-                        submission.submitter_phone
-                    }}"
-                >
-
-            </label>
+            <input
+                type="hidden"
+                name="end_time"
+                id="backend-end-time"
+                value="{{
+                    submission.end_time.strftime('%H:%M')
+                    if submission.end_time
+                    else ''
+                }}"
+            >
 
 
-            <label>
+            <!-- =================================================
+                 SUBMITTER DETAILS
+            ================================================== -->
 
-                Submitter Email
+            <div class="submission-form-section">
 
-                <input
-                    type="email"
-                    name="submitter_email"
-                    value="{{
-                        submission.submitter_email
-                        or ''
-                    }}"
-                >
+                <div class="submission-form-section-header">
 
-            </label>
+                    <span class="submission-form-section-eyebrow">
+                        SUBMITTER
+                    </span>
 
+                    <h3>
+                        Submitter Details
+                    </h3>
+
+                    <p>
+                        Internal contact information for the
+                        person who sent this submission.
+                    </p>
+
+                </div>
+
+
+                <label>
+
+                    Submitter Name
+
+                    <input
+                        type="text"
+                        name="submitter_name"
+                        required
+                        value="{{
+                            submission.submitter_name
+                        }}"
+                    >
+
+                </label>
+
+
+                <div class="submission-field-grid">
+
+
+                    <label>
+
+                        Submitter Phone
+
+                        <input
+                            type="text"
+                            name="submitter_phone"
+                            value="{{
+                                submission.submitter_phone
+                                or ''
+                            }}"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Submitter Email
+
+                        <input
+                            type="email"
+                            name="submitter_email"
+                            value="{{
+                                submission.submitter_email
+                                or ''
+                            }}"
+                        >
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACTIONS
+            ================================================== -->
 
             <div class="submission-edit-actions">
 
@@ -499,17 +2048,29 @@
 </div>
 
 
+<!-- =========================================================
+     CATEGORY-AWARE ADMIN FORM
+========================================================== -->
+
 <script>
+
+    const submissionEditForm =
+        document.getElementById(
+            "submission-edit-form"
+        );
+
 
     const categorySelect =
         document.getElementById(
             "category-select"
         );
 
+
     const eventFields =
         document.getElementById(
             "event-date-fields"
         );
+
 
     const generalFields =
         document.getElementById(
@@ -517,41 +2078,684 @@
         );
 
 
-    function updateDateFields() {
+    const jobPanel =
+        document.getElementById(
+            "job-review-panel"
+        );
+
+
+    const jobModeNotice =
+        document.getElementById(
+            "job-mode-notice"
+        );
+
+
+    const priceField =
+        document.getElementById(
+            "price-field"
+        );
+
+
+    const directionsField =
+        document.getElementById(
+            "directions-field"
+        );
+
+
+    const businessLabelText =
+        document.getElementById(
+            "business-label-text"
+        );
+
+
+    const businessNameHelp =
+        document.getElementById(
+            "business-name-help"
+        );
+
+
+    const venueLabelText =
+        document.getElementById(
+            "venue-label-text"
+        );
+
+
+    const venueHelp =
+        document.getElementById(
+            "venue-help"
+        );
+
+
+    const contactLabelText =
+        document.getElementById(
+            "contact-label-text"
+        );
+
+
+    const contactHelp =
+        document.getElementById(
+            "contact-help"
+        );
+
+
+    const ticketUrlLabel =
+        document.getElementById(
+            "ticket-url-label"
+        );
+
+
+    const ticketUrlHelp =
+        document.getElementById(
+            "ticket-url-help"
+        );
+
+
+    const jobContentTypeSelect =
+        document.getElementById(
+            "job-content-type-select"
+        );
+
+
+    const contentTypeInput =
+        document.getElementById(
+            "content-type-input"
+        );
+
+
+    const jobStartDate =
+        document.getElementById(
+            "job-start-date"
+        );
+
+
+    const jobEndDate =
+        document.getElementById(
+            "job-end-date"
+        );
+
+
+    const jobStartTime =
+        document.getElementById(
+            "job-start-time"
+        );
+
+
+    const jobEndTime =
+        document.getElementById(
+            "job-end-time"
+        );
+
+
+    const eventStartTime =
+        document.getElementById(
+            "event-start-time"
+        );
+
+
+    const eventEndTime =
+        document.getElementById(
+            "event-end-time"
+        );
+
+
+    const generalStartDate =
+        document.getElementById(
+            "general-start-date"
+        );
+
+
+    const generalEndDate =
+        document.getElementById(
+            "general-end-date"
+        );
+
+
+    const generalStartTime =
+        document.getElementById(
+            "general-start-time"
+        );
+
+
+    const generalEndTime =
+        document.getElementById(
+            "general-end-time"
+        );
+
+
+    const backendStartDate =
+        document.getElementById(
+            "backend-start-date"
+        );
+
+
+    const backendEndDate =
+        document.getElementById(
+            "backend-end-date"
+        );
+
+
+    const backendStartTime =
+        document.getElementById(
+            "backend-start-time"
+        );
+
+
+    const backendEndTime =
+        document.getElementById(
+            "backend-end-time"
+        );
+
+
+    // =====================================================
+    // CATEGORY HELPERS
+    // =====================================================
+
+    function cleanCategory(
+        value
+    ) {
+
+        return String(
+            value || ""
+        )
+        .trim()
+        .toLowerCase();
+
+    }
+
+
+    function isJobsCategory(
+        value
+    ) {
+
+        const category =
+            cleanCategory(
+                value
+            );
+
+
+        return (
+            category === "jobs"
+            ||
+            category === "opportunities"
+        );
+
+    }
+
+
+    function isEventsCategory(
+        value
+    ) {
+
+        const category =
+            cleanCategory(
+                value
+            );
+
+
+        return (
+            category === "events"
+            ||
+            category === "local-events"
+            ||
+            category.includes(
+                "upcoming-event"
+            )
+        );
+
+    }
+
+
+    // =====================================================
+    // JOB FIELD TEXT
+    // =====================================================
+
+    function setJobLabels(
+        enabled
+    ) {
+
+        if (enabled) {
+
+            businessLabelText.textContent =
+                "Employer / Organisation";
+
+
+            businessNameHelp.textContent =
+                (
+                    "Company, organisation, department "
+                    + "or person offering the opportunity."
+                );
+
+
+            venueLabelText.textContent =
+                "Job Location";
+
+
+            venueHelp.textContent =
+                (
+                    "Where the job or opportunity is based. "
+                    + "Example: KwaMhlanga, Pretoria or Remote."
+                );
+
+
+            contactLabelText.textContent =
+                "Application Contact";
+
+
+            contactHelp.textContent =
+                (
+                    "Phone number applicants can use "
+                    + "for enquiries or applications."
+                );
+
+
+            ticketUrlLabel.textContent =
+                "Application URL";
+
+
+            ticketUrlHelp.textContent =
+                (
+                    "Official careers page, application form "
+                    + "or employer application link."
+                );
+
+
+            return;
+        }
+
+
+        businessLabelText.textContent =
+            "Business / Organisation";
+
+
+        businessNameHelp.textContent =
+            (
+                "Business, organisation or person "
+                + "responsible for this listing."
+            );
+
+
+        venueLabelText.textContent =
+            "Venue / Location";
+
+
+        venueHelp.textContent =
+            (
+                "Physical location associated "
+                + "with this listing."
+            );
+
+
+        contactLabelText.textContent =
+            "Public Contact";
+
+
+        contactHelp.textContent =
+            (
+                "Contact number visible "
+                + "to Kalxa users."
+            );
+
+
+        ticketUrlLabel.textContent =
+            "Ticket / Action URL";
+
+
+        ticketUrlHelp.textContent =
+            "Optional external action link.";
+
+    }
+
+
+    // =====================================================
+    // CONTENT TYPE
+    // =====================================================
+
+    function syncContentType() {
 
         if (
-            categorySelect.value
-            === "events"
+            isJobsCategory(
+                categorySelect.value
+            )
         ) {
 
-            eventFields.style.display =
-                "block";
+            contentTypeInput.value =
+                jobContentTypeSelect.value
+                || "job";
 
-            generalFields.style.display =
-                "none";
+            return;
+        }
 
-        } else {
 
-            eventFields.style.display =
-                "none";
+        const originalCategory =
+            cleanCategory(
+                categorySelect.dataset.originalCategory
+            );
 
-            generalFields.style.display =
-                "block";
+
+        const currentCategory =
+            cleanCategory(
+                categorySelect.value
+            );
+
+
+        /*
+         * If admin has changed a Jobs submission into a
+         * different category, do not accidentally keep:
+         *
+         * content_type = job
+         */
+
+        if (
+            isJobsCategory(
+                originalCategory
+            )
+            &&
+            !isJobsCategory(
+                currentCategory
+            )
+        ) {
+
+            contentTypeInput.value =
+                "";
 
         }
 
     }
 
 
+    // =====================================================
+    // SYNCHRONISE BACKEND DATE/TIME FIELDS
+    // =====================================================
+
+    function syncBackendDateFields() {
+
+        const category =
+            categorySelect.value;
+
+
+        // =================================================
+        // JOBS
+        // =================================================
+
+        if (
+            isJobsCategory(
+                category
+            )
+        ) {
+
+            backendStartDate.value =
+                jobStartDate.value
+                || "";
+
+
+            backendEndDate.value =
+                jobEndDate.value
+                || "";
+
+
+            backendStartTime.value =
+                jobStartTime.value
+                || "";
+
+
+            backendEndTime.value =
+                jobEndTime.value
+                || "";
+
+
+            return;
+        }
+
+
+        // =================================================
+        // EVENTS
+        //
+        // Event dates themselves are submitted through:
+        //
+        // publish_from
+        // event_date
+        // event_end_date
+        //
+        // These hidden general dates remain blank.
+        // Start/end times still use the shared backend fields.
+        // =================================================
+
+        if (
+            isEventsCategory(
+                category
+            )
+        ) {
+
+            backendStartDate.value =
+                "";
+
+
+            backendEndDate.value =
+                "";
+
+
+            backendStartTime.value =
+                eventStartTime.value
+                || "";
+
+
+            backendEndTime.value =
+                eventEndTime.value
+                || "";
+
+
+            return;
+        }
+
+
+        // =================================================
+        // GENERAL CONTENT
+        // =================================================
+
+        backendStartDate.value =
+            generalStartDate.value
+            || "";
+
+
+        backendEndDate.value =
+            generalEndDate.value
+            || "";
+
+
+        backendStartTime.value =
+            generalStartTime.value
+            || "";
+
+
+        backendEndTime.value =
+            generalEndTime.value
+            || "";
+
+    }
+
+
+    // =====================================================
+    // DISPLAY CORRECT CATEGORY FIELDS
+    // =====================================================
+
+    function updateCategoryFields() {
+
+        const category =
+            categorySelect.value;
+
+
+        const jobsMode =
+            isJobsCategory(
+                category
+            );
+
+
+        const eventsMode =
+            isEventsCategory(
+                category
+            );
+
+
+        // =================================================
+        // JOBS
+        // =================================================
+
+        jobPanel.hidden =
+            !jobsMode;
+
+
+        jobModeNotice.hidden =
+            !jobsMode;
+
+
+        // Jobs do not use the generic price field as
+        // a Kalxa listing charge.
+
+        if (priceField) {
+
+            priceField.style.display =
+                jobsMode
+                ? "none"
+                : "";
+        }
+
+
+        // Directions are normally unnecessary for the
+        // free Jobs submission flow, but the stored value
+        // remains untouched.
+
+        if (directionsField) {
+
+            directionsField.style.display =
+                jobsMode
+                ? "none"
+                : "";
+        }
+
+
+        // =================================================
+        // EVENTS
+        // =================================================
+
+        eventFields.style.display =
+            eventsMode
+                ? "block"
+                : "none";
+
+
+        // =================================================
+        // GENERAL DATES
+        // =================================================
+
+        generalFields.style.display =
+            (
+                !eventsMode
+                &&
+                !jobsMode
+            )
+                ? "block"
+                : "none";
+
+
+        // =================================================
+        // CATEGORY-SPECIFIC WORDING
+        // =================================================
+
+        setJobLabels(
+            jobsMode
+        );
+
+
+        syncContentType();
+
+        syncBackendDateFields();
+
+    }
+
+
+    // =====================================================
+    // CATEGORY CHANGE
+    // =====================================================
+
     categorySelect.addEventListener(
         "change",
-        updateDateFields
+        updateCategoryFields
     );
 
 
-    updateDateFields();
+    // =====================================================
+    // JOB CONTENT TYPE
+    // =====================================================
+
+    jobContentTypeSelect.addEventListener(
+        "change",
+        syncContentType
+    );
+
+
+    // =====================================================
+    // JOB DATE/TIME CHANGES
+    // =====================================================
+
+    [
+        jobStartDate,
+        jobEndDate,
+        jobStartTime,
+        jobEndTime,
+        eventStartTime,
+        eventEndTime,
+        generalStartDate,
+        generalEndDate,
+        generalStartTime,
+        generalEndTime
+    ]
+    .forEach(
+        function(field) {
+
+            if (!field) {
+                return;
+            }
+
+
+            field.addEventListener(
+                "change",
+                syncBackendDateFields
+            );
+
+
+            field.addEventListener(
+                "input",
+                syncBackendDateFields
+            );
+
+        }
+    );
+
+
+    // =====================================================
+    // BEFORE SUBMIT
+    // =====================================================
+
+    submissionEditForm.addEventListener(
+        "submit",
+        function() {
+
+            syncContentType();
+
+            syncBackendDateFields();
+
+        }
+    );
+
+
+    // =====================================================
+    // INITIAL STATE
+    // =====================================================
+
+    updateCategoryFields();
 
 </script>
+
 
 </body>
 
