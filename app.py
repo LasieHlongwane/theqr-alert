@@ -2787,21 +2787,56 @@ def import_rss_jobs():
 
         }), 503
 
+        # =====================================================
+        if not feed_configs:
 
-    if not feed_configs:
+         current_app.logger.info(
+          (
+            "[Kalxa RSS Jobs] "
+            "Scheduled import skipped because "
+            "no RSS/Atom feeds are configured."
+          )
+         )
+         return jsonify({
 
-        return jsonify({
+          "success":
+            True,
 
-            "success":
-                False,
+          "skipped":
+            True,
 
-            "message":
-                (
-                    "No RSS/Atom Jobs feeds are configured."
-                ),
+          "feeds":
+            0,
 
-        }), 503
+          "feed_errors":
+            0,
 
+          "fetched":
+            0,
+
+          "created":
+            0,
+
+          "duplicates":
+            0,
+
+          "expired":
+            0,
+
+          "invalid":
+            0,
+
+          "results":
+            [],
+
+          "message":
+            (
+                "No RSS/Atom Jobs feeds are "
+                "currently configured."
+            ),
+
+         }), 200
+   
 
     # =====================================================
     # TOTAL COUNTERS
