@@ -2156,7 +2156,7 @@ def fetch_job_feed(feed_config):
         response = requests.get(
             feed_url,
             headers=headers,
-            timeout=10,
+            timeout=8,
         )
         response.raise_for_status()
 
