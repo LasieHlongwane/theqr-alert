@@ -3584,6 +3584,374 @@ def fetch_external_jobs():
 
 
 # ============================================================
+# KALXA JOBS - TEST RSS FEED
+# ============================================================
+
+@app.route(
+    "/test/jobs-feed.xml",
+    methods=["GET"],
+)
+def test_jobs_rss_feed():
+    """
+    Public development RSS feed used to test the complete
+    Kalxa Jobs ingestion pipeline.
+
+    Flow:
+
+        /test/jobs-feed.xml
+                ↓
+        RSS importer
+                ↓
+        PendingSubmission
+                ↓
+        Admin moderation
+                ↓
+        Kalxa Jobs
+
+    IMPORTANT:
+    This route is for testing only and can be removed once
+    real employer/job-board feeds are connected.
+    """
+
+    # ========================================================
+    # BASE URL
+    # ========================================================
+
+    public_base_url = (
+        get_public_base_url()
+        .rstrip("/")
+    )
+
+
+    # ========================================================
+    # DYNAMIC TEST DATES
+    #
+    # Keeping dates in the future prevents test vacancies from
+    # immediately being rejected as expired.
+    # ========================================================
+
+    today = (
+        datetime.now(
+            KALXA_TIMEZONE
+        )
+        .date()
+    )
+
+
+    shop_assistant_closing_date = (
+        today
+        + timedelta(
+            days=30
+        )
+    )
+
+
+    internship_closing_date = (
+        today
+        + timedelta(
+            days=45
+        )
+    )
+
+
+    # ========================================================
+    # UNIQUE TEST APPLICATION URLS
+    #
+    # These URLs do not need a separate application route.
+    # They exist mainly so duplicate detection has a stable
+    # source URL for each test job.
+    # ========================================================
+
+    shop_assistant_url = (
+        f"{public_base_url}/"
+        "?kalxa_test_job=shop-assistant-001"
+    )
+
+
+    driver_url = (
+        f"{public_base_url}/"
+        "?kalxa_test_job=delivery-driver-002"
+    )
+
+
+    internship_url = (
+        f"{public_base_url}/"
+        "?kalxa_test_job=internship-003"
+    )
+
+
+    # ========================================================
+    # RSS DATES
+    # ========================================================
+
+    generated_at = (
+        datetime.now(
+            KALXA_TIMEZONE
+        )
+    )
+
+
+    rss_pub_date = (
+        generated_at.strftime(
+            "%a, %d %b %Y %H:%M:%S %z"
+        )
+    )
+
+
+    # ========================================================
+    # TEST JOBS
+    # ========================================================
+
+    test_jobs = [
+
+        {
+            "guid":
+                "kalxa-test-job-shop-assistant-001",
+
+            "title":
+                "Shop Assistant",
+
+            "company":
+                "KwaMhlanga Supermarket",
+
+            "location":
+                "KwaMhlanga",
+
+            "salary":
+                "R6,500 per month",
+
+            "closing_date":
+                shop_assistant_closing_date,
+
+            "job_type":
+                "job",
+
+            "application_url":
+                shop_assistant_url,
+
+            "description":
+                (
+                    "KwaMhlanga Supermarket is looking for "
+                    "a reliable Shop Assistant. Duties include "
+                    "helping customers, packing shelves, keeping "
+                    "the store clean and assisting at busy times. "
+                    "Applicants should be punctual, friendly and "
+                    "comfortable working with customers."
+                ),
+        },
+
+
+        {
+            "guid":
+                "kalxa-test-job-delivery-driver-002",
+
+            "title":
+                "Local Delivery Driver",
+
+            "company":
+                "Kalxa Test Foods",
+
+            "location":
+                "KwaMhlanga",
+
+            "salary":
+                "Negotiable",
+
+            "closing_date":
+                None,
+
+            "job_type":
+                "job",
+
+            "application_url":
+                driver_url,
+
+            "description":
+                (
+                    "Kalxa Test Foods is looking for a local "
+                    "delivery driver. Applicants should know the "
+                    "KwaMhlanga area well and have reliable access "
+                    "to transport. This opportunity remains open "
+                    "until the position is filled."
+                ),
+        },
+
+
+        {
+            "guid":
+                "kalxa-test-job-internship-003",
+
+            "title":
+                "Digital Marketing Internship",
+
+            "company":
+                "Kalxa Test Media",
+
+            "location":
+                "KwaMhlanga",
+
+            "salary":
+                "Monthly stipend",
+
+            "closing_date":
+                internship_closing_date,
+
+            "job_type":
+                "internship",
+
+            "application_url":
+                internship_url,
+
+            "description":
+                (
+                    "Kalxa Test Media is offering a Digital "
+                    "Marketing Internship for a young person "
+                    "interested in social media, content creation "
+                    "and local business marketing. Basic computer "
+                    "and smartphone skills are required."
+                ),
+        },
+
+    ]
+
+
+    # ========================================================
+    # BUILD RSS ITEMS
+    # ========================================================
+
+    rss_items = []
+
+
+    for job in test_jobs:
+
+        closing_date_xml = ""
+
+
+        if job["closing_date"]:
+
+            closing_date_xml = (
+                "\n"
+                "            <closing_date>"
+                f"{escape(job['closing_date'].isoformat())}"
+                "</closing_date>"
+            )
+
+
+        item_xml = f"""
+        <item>
+
+            <guid isPermaLink="false">
+                {escape(job["guid"])}
+            </guid>
+
+            <title>
+                {escape(job["title"])}
+            </title>
+
+            <company>
+                {escape(job["company"])}
+            </company>
+
+            <location>
+                {escape(job["location"])}
+            </location>
+
+            <salary>
+                {escape(job["salary"])}
+            </salary>
+
+            <job_type>
+                {escape(job["job_type"])}
+            </job_type>
+{closing_date_xml}
+
+            <description>
+                {escape(job["description"])}
+            </description>
+
+            <link>
+                {escape(job["application_url"])}
+            </link>
+
+            <pubDate>
+                {escape(rss_pub_date)}
+            </pubDate>
+
+        </item>
+        """
+
+
+        rss_items.append(
+            item_xml
+        )
+
+
+    # ========================================================
+    # COMPLETE RSS DOCUMENT
+    # ========================================================
+
+    rss_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+
+<rss version="2.0">
+
+    <channel>
+
+        <title>
+            Kalxa Test Jobs
+        </title>
+
+        <link>
+            {escape(public_base_url)}
+        </link>
+
+        <description>
+            Kalxa development RSS feed for testing the Jobs importer.
+        </description>
+
+        <language>
+            en-ZA
+        </language>
+
+        <lastBuildDate>
+            {escape(rss_pub_date)}
+        </lastBuildDate>
+
+        {''.join(rss_items)}
+
+    </channel>
+
+</rss>
+"""
+
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
+    response = (
+        current_app.make_response(
+            rss_xml
+        )
+    )
+
+
+    response.headers[
+        "Content-Type"
+    ] = (
+        "application/rss+xml; "
+        "charset=utf-8"
+    )
+
+
+    response.headers[
+        "Cache-Control"
+    ] = (
+        "no-store, max-age=0"
+    )
+
+
+    return response
+# ============================================================
 # INTERNAL EXTERNAL JOB IMPORT ROUTE
 # ============================================================
 
