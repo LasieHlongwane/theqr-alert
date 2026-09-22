@@ -8,9 +8,14 @@ import secrets
 import time as time_module
 import uuid
 from datetime import date, datetime, time as dt_time, timedelta
-from urllib.parse import quote
 from zoneinfo import ZoneInfo
+from html import unescape
+import xml.etree.ElementTree as ET
 
+from urllib.parse import (
+    quote,
+    urljoin,
+)
 import requests
 from dotenv import load_dotenv
 from flask import (
