@@ -347,6 +347,51 @@ def parse_date(value):
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
+def parse_optional_time(
+    value,
+):
+    """
+    Parse an optional HTML time input.
+
+    Examples:
+
+        "08:30" -> datetime.time(8, 30)
+        ""      -> None
+        None    -> None
+    """
+
+    value = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+    )
+
+    if not value:
+        return None
+
+
+    for time_format in (
+        "%H:%M",
+        "%H:%M:%S",
+    ):
+
+        try:
+
+            return datetime.strptime(
+                value,
+                time_format,
+            ).time()
+
+        except ValueError:
+
+            continue
+
+
+    raise ValueError(
+        "Invalid time value."
+    )
 def clean_slug(value):
     return (value or "").strip().lower().replace(" ", "-").replace("_", "-")
 
