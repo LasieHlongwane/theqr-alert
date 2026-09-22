@@ -11,7 +11,7 @@ from datetime import date, datetime, time as dt_time, timedelta
 from zoneinfo import ZoneInfo
 from html import unescape
 import xml.etree.ElementTree as ET
-
+from xml.sax.saxutils import escape
 from urllib.parse import (
     quote,
     urljoin,
