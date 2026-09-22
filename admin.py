@@ -1,333 +1,96 @@
-import os
 import io
-
-from datetime import (
-    date,
-    datetime,
-    timedelta,
-)
+import os
+from datetime import date, datetime, timedelta
 
 import qrcode
-
 from flask import (
     Blueprint,
+    current_app,
     flash,
     redirect,
     render_template,
     request,
+    send_file,
     session,
     url_for,
-    send_file,
-    current_app,
 )
+from sqlalchemy import case, func
 
-from sqlalchemy import (
-    func,
-    case,
-)
-
-from image_utils import (
-    upload_lac_image,
-)
-
-from push_service import (
-    send_zone_push_notification,
-)
-
-from categories import (
-    normalize_category,
-    get_category_aliases,
-    get_consumer_category,
-)
-
-from cloud_storage import (
-    upload_listing_image,
-)
-
-from pricing import (
-    calculate_kalxa_price,
-    calculate_sponsored_price,
-    format_kalxa_price,
-    KalxaPricingError,
-    PRICING_MODEL_PRESENCE,
-    PRICING_MODEL_CAMPAIGN,
-    get_pricing_model,
-)
-
+from categories import get_category_aliases, normalize_category
+from cloud_storage import upload_listing_image
+from image_utils import upload_lac_image
 from models import (
-    db,
-    Zone,
-    Category,
-    ZoneCategoryAppearance,
     AccessPoint,
-    QRScan,
+    Category,
+    ContentDistributionZone,
+    ContentImage,
     ContentItem,
+    ContentReminder,
+    EngagementEvent,
     ListingClaim,
     PendingSubmission,
     PendingSubmissionImage,
-    ContentImage,
     PushNotification,
     PushSubscriber,
-    EngagementEvent,
-    ContentDistributionZone,
-    ContentReminder,
+    QRScan,
+    Zone,
+    ZoneCategoryAppearance,
+    db,
 )
-
-from qr_generator import (
-    generate_access_qr,
+from pricing import (
+    KalxaPricingError,
+    PRICING_MODEL_CAMPAIGN,
+    PRICING_MODEL_PRESENCE,
+    calculate_kalxa_price,
+    calculate_sponsored_price,
+    format_kalxa_price,
+    get_pricing_model,
 )
-ONGOING_CATEGORIES = {
-    "property",
-    "transport",
-    "services",
-}
+from push_service import send_zone_push_notification
 from qr_generator import generate_access_qr
-ARCHIVE_GRACE_DAYS = 7
-EXPIRING_SOON_DAYS = 3
-
-# =========================================================
-# KALXA PRESENCE CATEGORIES
-# =========================================================
-#
-# These are categories where the GENERAL / fallback listing
-# represents an ongoing business or service presence.
-#
-# More specific content types can override this below.
-# =========================================================
-
-# =========================================================
-# KALXA COMMERCIAL PRICING CLASSIFICATION
-# =========================================================
-
-
-# =========================================================
-# DEFAULT PRESENCE CATEGORIES
-#
-# These are categories whose GENERAL listing should normally
-# be treated as long-term business presence.
-#
-# Specific content types can override this below.
-# =========================================================
-
-KALXA_PRESENCE_CATEGORIES = {
-
-    "local-restaurants",
-
-    "beauty-salon",
-
-    "services",
-
-}
-
-
-# =========================================================
-# DEFAULT CAMPAIGN CATEGORIES
-#
-# These categories are normally short-term distribution.
-# =========================================================
-
-KALXA_CAMPAIGN_CATEGORIES = {
-
-    "events",
-
-    "discount-deals",
-
-    "jobs",
-
-    "opportunities",
-
-}
-
-
-# =========================================================
-# CONTENT-TYPE OVERRIDES
-#
-# These rules are checked BEFORE the category defaults.
-#
-# This allows:
-#
-# Restaurant       -> Presence
-# Restaurant Deal  -> Campaign
-#
-# Salon            -> Presence
-# Beauty Special   -> Campaign
-#
-# Hotel            -> Presence
-# Accommodation Special -> Campaign
-# =========================================================
-
-KALXA_PRICING_MODEL_OVERRIDES = {
-
-
-    # =====================================================
-    # PROPERTY
-    # =====================================================
-
-    ("property", "room"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("property", "rental"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("property", "property_sale"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("property", "hotel_lodge"):
-        PRICING_MODEL_PRESENCE,
-
-    ("property", "accommodation_special"):
-        PRICING_MODEL_CAMPAIGN,
-
-
-    # =====================================================
-    # EVENTS
-    # =====================================================
-
-    ("events", "entertainment"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("events", "church_event"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("events", "sports_event"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("events", "community_event"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("events", "business_event"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("events", "event"):
-        PRICING_MODEL_CAMPAIGN,
-
-
-    # =====================================================
-    # DISCOUNT DEALS
-    # =====================================================
-
-    ("discount-deals", "grocery_special"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("discount-deals", "product_discount"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("discount-deals", "weekend_special"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("discount-deals", "clearance"):
-        PRICING_MODEL_CAMPAIGN,
-
-
-    # =====================================================
-    # LOCAL RESTAURANTS
-    # =====================================================
-
-    ("local-restaurants", "restaurant"):
-        PRICING_MODEL_PRESENCE,
-
-    ("local-restaurants", "takeaway"):
-        PRICING_MODEL_PRESENCE,
-
-    ("local-restaurants", "daily_special"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("local-restaurants", "weekend_special"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("local-restaurants", "food_deal"):
-        PRICING_MODEL_CAMPAIGN,
-
-
-    # =====================================================
-    # JOBS
-    # =====================================================
-
-    ("jobs", "job"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("jobs", "learnership"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("jobs", "internship"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("jobs", "training"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("jobs", "tender"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("jobs", "business_opportunity"):
-        PRICING_MODEL_CAMPAIGN,
-
-
-    # =====================================================
-    # OPPORTUNITIES
-    # =====================================================
-
-    ("opportunities", "job"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("opportunities", "learnership"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("opportunities", "internship"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("opportunities", "training"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("opportunities", "tender"):
-        PRICING_MODEL_CAMPAIGN,
-
-    ("opportunities", "business_opportunity"):
-        PRICING_MODEL_CAMPAIGN,
-
-
-    # =====================================================
-    # SERVICES
-    # =====================================================
-
-    ("services", "service_provider"):
-        PRICING_MODEL_PRESENCE,
-
-    ("services", "plumber"):
-        PRICING_MODEL_PRESENCE,
-
-    ("services", "mechanic"):
-        PRICING_MODEL_PRESENCE,
-
-    ("services", "electrician"):
-        PRICING_MODEL_PRESENCE,
-
-    ("services", "builder"):
-        PRICING_MODEL_PRESENCE,
-
-    ("services", "cleaning_service"):
-        PRICING_MODEL_PRESENCE,
-
-
-    # =====================================================
-    # BEAUTY / SALON
-    # =====================================================
-
-    ("beauty-salon", "salon"):
-        PRICING_MODEL_PRESENCE,
-
-    ("beauty-salon", "barber"):
-        PRICING_MODEL_PRESENCE,
-
-    ("beauty-salon", "beauty_service"):
-        PRICING_MODEL_PRESENCE,
-
-    ("beauty-salon", "beauty_special"):
-        PRICING_MODEL_CAMPAIGN,
-
-}
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+ARCHIVE_GRACE_DAYS = 7
+EXPIRING_SOON_DAYS = 3
+
+BUSINESS_ANALYTICS_EVENTS = {
+    "listing_view",
+    "whatsapp_click",
+    "call_click",
+    "directions_click",
+    "share_click",
+    "job_apply_click",
+}
+
+ACTION_EVENTS = {
+    "whatsapp_click",
+    "call_click",
+    "directions_click",
+    "share_click",
+    "job_apply_click",
+}
+
+ALLOWED_PAYMENT_STATUSES = {
+    "unpaid",
+    "paid",
+    "waived",
+    "refunded",
+}
+
+ALLOWED_SPONSORSHIP_STATUSES = {
+    "inactive",
+    "scheduled",
+    "active",
+    "expired",
+}
+
+ALLOWED_LISTING_LEVELS = {
+    "discovery",
+    "business",
+    "promotion",
+}
 
 
 def admin_logged_in():
@@ -347,73 +110,32 @@ def parse_date(value):
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-def parse_optional_time(
-    value,
-):
-    """
-    Parse an optional HTML time input.
-
-    Examples:
-
-        "08:30" -> datetime.time(8, 30)
-        ""      -> None
-        None    -> None
-    """
-
-    value = (
-        str(
-            value
-            or ""
-        )
-        .strip()
-    )
-
+def parse_optional_time(value):
+    value = str(value or "").strip()
     if not value:
         return None
-
-
-    for time_format in (
-        "%H:%M",
-        "%H:%M:%S",
-    ):
-
+    for time_format in ("%H:%M", "%H:%M:%S"):
         try:
-
-            return datetime.strptime(
-                value,
-                time_format,
-            ).time()
-
+            return datetime.strptime(value, time_format).time()
         except ValueError:
-
             continue
+    raise ValueError("Invalid time value.")
 
 
-    raise ValueError(
-        "Invalid time value."
-    )
 def clean_slug(value):
-    return (value or "").strip().lower().replace(" ", "-").replace("_", "-")
+    return (
+        (value or "")
+        .strip()
+        .lower()
+        .replace(" ", "-")
+        .replace("_", "-")
+    )
 
 
 def get_categories(active_only=True):
-    """
-    Return the physical/public Category rows stored in the database.
-
-    IMPORTANT:
-    Category rows are still used by the existing public navigation,
-    QR routes and admin configuration.
-
-    We are NOT migrating those database rows yet.
-    """
-
     query = Category.query
-
     if active_only:
-        query = query.filter(
-            Category.active.is_(True)
-        )
-
+        query = query.filter(Category.active.is_(True))
     return (
         query
         .order_by(
@@ -424,1466 +146,419 @@ def get_categories(active_only=True):
     )
 
 
-def get_category_by_slug(
-    slug,
-    active_only=True,
-):
-    """
-    Find a Category database row while supporting both:
-
-    1. Existing production/public category slugs.
-    2. New canonical business taxonomy keys.
-
-    Examples:
-
-        upcoming-event-🥹🔥
-                ↓
-              events
-
-        check-out-our-specials
-                ↓
-           restaurants
-
-        beauty-salon
-                ↓
-              beauty
-
-    During the taxonomy transition, the Category table may
-    still contain legacy slugs while new ContentItem records
-    may use canonical category keys.
-
-    This helper allows both systems to coexist.
-    """
-
-    # =====================================================
-    # CLEAN INPUT
-    # =====================================================
-
-    requested_slug = (
-        str(
-            slug
-            or ""
-        )
-        .strip()
-        .lower()
-    )
-
+def get_category_by_slug(slug, active_only=True):
+    requested_slug = str(slug or "").strip().lower()
     if not requested_slug:
         return None
 
-
-    # =====================================================
-    # 1. TRY EXACT DATABASE SLUG FIRST
-    #
-    # This is important for existing public routes.
-    #
-    # Example:
-    #
-    #     /q/KWM-TAXI-001/check-out-our-specials
-    #
-    # If that exact Category row exists, use it.
-    #
-    # This also preserves the correct:
-    #
-    # - category image
-    # - icon
-    # - display order
-    # - ZoneCategoryAppearance relationship
-    #
-    # =====================================================
-
-    exact_query = (
-        Category.query
-        .filter(
-            Category.slug
-            == requested_slug
-        )
-    )
-
+    exact_query = Category.query.filter(Category.slug == requested_slug)
     if active_only:
+        exact_query = exact_query.filter(Category.active.is_(True))
 
-        exact_query = (
-            exact_query
-            .filter(
-                Category.active.is_(
-                    True
-                )
-            )
-        )
-
-
-    exact_category = (
-        exact_query.first()
-    )
-
-
+    exact_category = exact_query.first()
     if exact_category:
         return exact_category
 
-
-    # =====================================================
-    # 2. NORMALIZE TO CANONICAL TAXONOMY
-    #
-    # Example:
-    #
-    # check-out-our-specials
-    #       -> restaurants
-    #
-    # foods
-    #       -> restaurants
-    #
-    # restaurants
-    #       -> restaurants
-    #
-    # =====================================================
-
-    canonical_category = (
-        normalize_category(
-            requested_slug
-        )
-    )
-
-
+    canonical_category = normalize_category(requested_slug)
     if not canonical_category:
         return None
 
-
-    # =====================================================
-    # 3. GET ALL EQUIVALENT CATEGORY SLUGS
-    #
-    # Example for restaurants:
-    #
-    # {
-    #     "restaurants",
-    #     "check-out-our-specials",
-    #     "foods",
-    #     "local-restaurants",
-    # }
-    #
-    # get_category_aliases() is now the central source
-    # of truth for taxonomy compatibility.
-    # =====================================================
-
-    equivalent_slugs = (
-        get_category_aliases(
-            canonical_category
-        )
-    )
-
-
-    # Defensive fallback.
-    #
-    # This ensures a future canonical category can still
-    # resolve even if it has no legacy aliases.
-
-    equivalent_slugs.update(
-        {
-            requested_slug,
-            canonical_category,
-        }
-    )
-
+    equivalent_slugs = set(get_category_aliases(canonical_category) or [])
+    equivalent_slugs.update({requested_slug, canonical_category})
     equivalent_slugs.discard(None)
     equivalent_slugs.discard("")
-
 
     if not equivalent_slugs:
         return None
 
-
-    # =====================================================
-    # 4. FIND MATCHING CATEGORY DATABASE ROWS
-    # =====================================================
-
-    equivalent_query = (
-        Category.query
-        .filter(
-            Category.slug.in_(
-                equivalent_slugs
-            )
-        )
+    equivalent_query = Category.query.filter(
+        Category.slug.in_(equivalent_slugs)
     )
-
-
     if active_only:
+        equivalent_query = equivalent_query.filter(Category.active.is_(True))
 
-        equivalent_query = (
-            equivalent_query
-            .filter(
-                Category.active.is_(
-                    True
-                )
-            )
-        )
-
-
-    categories = (
-        equivalent_query.all()
-    )
-
-
+    categories = equivalent_query.all()
     if not categories:
         return None
 
-
-    # =====================================================
-    # 5. PREFER CANONICAL DATABASE ROW
-    #
-    # Eventually your Category table can contain:
-    #
-    #     restaurants
-    #     events
-    #     beauty
-    #     retail_specials
-    #     rentals
-    #     ...
-    #
-    # Once those rows exist, they automatically become
-    # preferred without breaking old URLs.
-    # =====================================================
-
     for category_record in categories:
-
-        if (
-            category_record.slug
-            == canonical_category
-        ):
-
+        if category_record.slug == canonical_category:
             return category_record
-
-
-    # =====================================================
-    # 6. LEGACY FALLBACK
-    #
-    # The database may currently contain several old rows
-    # that now belong to one canonical category.
-    #
-    # Example:
-    #
-    # check-out-our-specials
-    # foods
-    #
-    # both belong to:
-    #
-    # restaurants
-    #
-    # Until the Category table itself is migrated, choose
-    # the first active legacy Category according to its
-    # existing display order.
-    #
-    # IMPORTANT:
-    #
-    # This is only the representative Category DB object.
-    # It does NOT determine which ContentItem rows are
-    # visible.
-    #
-    # get_active_content() combines all equivalent aliases.
-    # =====================================================
 
     categories.sort(
         key=lambda category_record: (
-
-            (
-                category_record.display_order
-                if (
-                    category_record.display_order
-                    is not None
-                )
-                else 999999
-            ),
-
-            (
-                category_record.name
-                or ""
-            ),
-
+            category_record.display_order
+            if category_record.display_order is not None
+            else 999999,
+            category_record.name or "",
             category_record.id,
-
         )
     )
-
-
     return categories[0]
 
 
-def get_reminder_analytics(
-    top_limit=10,
-):
-
-    """
-    Build Kalxa reminder analytics for the admin dashboard.
-
-    Metrics:
-
-    - total reminders set
-    - pending
-    - processing
-    - sent
-    - failed
-    - cancelled
-    - retry activity
-    - delivery rate
-    - top content by reminder intent
-
-    No personally identifiable information is returned.
-    """
-
-    # =====================================================
-    # IMPORTS
-    # =====================================================
-
-    from sqlalchemy import func, case
+def get_public_base_url():
+    return os.environ.get(
+        "PUBLIC_BASE_URL",
+        "https://lac-local-access.onrender.com",
+    ).rstrip("/")
 
 
-    # =====================================================
-    # SUMMARY COUNTS
-    # =====================================================
-
-    summary = (
-        db.session.query(
-
-            func.count(
-                ContentReminder.id
-            )
-            .label(
-                "total"
-            ),
+def get_access_point_qr_url(access_point):
+    return f"{get_public_base_url()}/q/{access_point.code}"
 
 
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "pending",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "pending"
-            ),
+def create_access_point_qr(access_point):
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=12,
+        border=4,
+    )
+    qr.add_data(get_access_point_qr_url(access_point))
+    qr.make(fit=True)
+    image = qr.make_image(fill_color="black", back_color="white")
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
 
 
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "processing",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "processing"
-            ),
-
-
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "sent",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "sent"
-            ),
-
-
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "failed",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "failed"
-            ),
-
-
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "cancelled",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "cancelled"
-            ),
-
-
-            func.sum(
-                case(
-                    (
-                        ContentReminder.retry_count
-                        > 0,
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "retried"
-            ),
-
-        )
-        .one()
+def _render_content_form(zones, categories, item):
+    return render_template(
+        "admin/content_form.html",
+        zones=zones,
+        categories=categories,
+        item=item,
     )
 
 
-    total = int(
-        summary.total
-        or 0
-    )
-
-    pending = int(
-        summary.pending
-        or 0
-    )
-
-    processing = int(
-        summary.processing
-        or 0
-    )
-
-    sent = int(
-        summary.sent
-        or 0
-    )
-
-    failed = int(
-        summary.failed
-        or 0
-    )
-
-    cancelled = int(
-        summary.cancelled
-        or 0
-    )
-
-    retried = int(
-        summary.retried
-        or 0
+def _render_submission_edit(submission, zones, categories):
+    return render_template(
+        "admin/submission_edit.html",
+        submission=submission,
+        zones=zones,
+        categories=categories,
     )
 
 
-    # =====================================================
-    # DELIVERY RATE
-    #
-    # We only calculate delivery rate from completed
-    # delivery attempts.
-    #
-    # sent + failed
-    # =====================================================
-
-    completed_delivery_attempts = (
-        sent
-        + failed
-    )
-
-
-    if completed_delivery_attempts > 0:
-
-        delivery_rate = round(
-            (
-                sent
-                / completed_delivery_attempts
-            )
-            * 100,
-            1,
-        )
-
-    else:
-
-        delivery_rate = 0.0
-
-
-    # =====================================================
-    # TOP CONTENT BY REMINDER INTENT
-    #
-    # A reminder being created is considered an expression
-    # of intent from the user.
-    # =====================================================
-
-    top_content_rows = (
-        db.session.query(
-
-            ContentItem.id.label(
-                "content_item_id"
-            ),
-
-            ContentItem.title.label(
-                "title"
-            ),
-
-            ContentItem.category.label(
-                "category"
-            ),
-
-            ContentItem.event_date.label(
-                "event_date"
-            ),
-
-            func.count(
-                ContentReminder.id
-            )
-            .label(
-                "reminder_count"
-            ),
-
-
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "sent",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "sent_count"
-            ),
-
-
-            func.sum(
-                case(
-                    (
-                        ContentReminder.status
-                        == "pending",
-                        1,
-                    ),
-                    else_=0,
-                )
-            )
-            .label(
-                "pending_count"
-            ),
-
-        )
-        .join(
-            ContentReminder,
-            ContentReminder.content_item_id
-            == ContentItem.id,
-        )
-        .group_by(
-
-            ContentItem.id,
-
-            ContentItem.title,
-
-            ContentItem.category,
-
-            ContentItem.event_date,
-
-        )
-        .order_by(
-
-            func.count(
-                ContentReminder.id
-            )
-            .desc(),
-
-            ContentItem.id
-            .desc(),
-
-        )
-        .limit(
-            top_limit
-        )
-        .all()
-    )
-
-
-    # =====================================================
-    # NORMALISE TOP CONTENT
-    # =====================================================
-
-    top_content = []
-
-
-    for row in top_content_rows:
-
-        reminder_count = int(
-            row.reminder_count
-            or 0
-        )
-
-        sent_count = int(
-            row.sent_count
-            or 0
-        )
-
-        pending_count = int(
-            row.pending_count
-            or 0
-        )
-
-
-        top_content.append({
-
-            "content_item_id":
-                row.content_item_id,
-
-            "title":
-                row.title,
-
-            "category":
-                normalize_category(
-                    row.category
-                ),
-
-            "event_date":
-                row.event_date,
-
-            "reminder_count":
-                reminder_count,
-
-            "sent_count":
-                sent_count,
-
-            "pending_count":
-                pending_count,
-
-        })
-
-
-    # =====================================================
-    # RECENT REMINDER ACTIVITY
-    # =====================================================
-
-    recent_rows = (
-        db.session.query(
-            ContentReminder,
-            ContentItem,
-        )
-        .join(
-            ContentItem,
-            ContentItem.id
-            == ContentReminder.content_item_id,
-        )
-        .order_by(
-            ContentReminder.created_at
-            .desc()
-        )
-        .limit(
-            10
-        )
-        .all()
-    )
-
-
-    recent_activity = []
-
-
-    for reminder, item in recent_rows:
-
-        recent_activity.append({
-
-            "id":
-                reminder.id,
-
-            "content_item_id":
-                item.id,
-
-            "title":
-                item.title,
-
-            "category":
-                normalize_category(
-                    item.category
-                ),
-
-            "status":
-                reminder.status,
-
-            "minutes_before":
-                reminder.reminder_minutes_before,
-
-            "retry_count":
-                reminder.retry_count
-                or 0,
-
-            "created_at":
-                reminder.created_at,
-
-            "scheduled_for":
-                reminder.scheduled_for,
-
-            "sent_at":
-                reminder.sent_at,
-
-        })
-
-
-    # =====================================================
-    # FINAL RESULT
-    # =====================================================
-
-    return {
-
-        "total":
-            total,
-
-        "pending":
-            pending,
-
-        "processing":
-            processing,
-
-        "sent":
-            sent,
-
-        "failed":
-            failed,
-
-        "cancelled":
-            cancelled,
-
-        "retried":
-            retried,
-
-        "delivery_rate":
-            delivery_rate,
-
-        "top_content":
-            top_content,
-
-        "recent_activity":
-            recent_activity,
-
-    }
-
-def get_content_status(
-    item,
-    today=None,
-):
-
-    today = (
-        today
-        or date.today()
-    )
-
-    # ========================================================
-    # ARCHIVED
-    # ========================================================
-
-    if item.archived:
-
-        return {
-            "key": "archived",
-            "label": "ARCHIVED",
-            "icon": "📦",
-        }
-
-    # ========================================================
-    # MANUALLY INACTIVE
-    # ========================================================
-
-    if not item.active:
-
-        return {
-            "key": "inactive",
-            "label": "INACTIVE",
-            "icon": "⚪",
-        }
-
-    # ========================================================
-    # AVAILABILITY STATE
-    # ========================================================
-
-    availability_status = (
-        getattr(
-            item,
-            "availability_status",
-            None,
-        )
-        or "available"
-    )
-
-    if availability_status in {
-        "taken",
-        "sold",
-        "filled",
-        "closed",
-    }:
-
-        return {
-            # Keep existing admin filter compatibility
-            # for now by treating unavailable content
-            # as inactive in the content-list status key.
-            "key": "inactive",
-            "label":
-                availability_status.upper(),
-            "icon": "⚫",
-        }
-
-    if availability_status == "expired":
-
-        return {
-            "key": "expired",
-            "label": "EXPIRED",
-            "icon": "🔴",
-        }
-
-    # ========================================================
-    # LIFETIME TYPE
-    # ========================================================
-
-    lifetime_type = (
-        getattr(
-            item,
-            "lifetime_type",
-            None,
-        )
-    )
-
-    # --------------------------------------------------------
-    # LEGACY FALLBACK
-    # --------------------------------------------------------
-
-    if not lifetime_type:
-
-        if item.category == "events":
-
-            lifetime_type = (
-                "time_specific"
-            )
-
-        elif item.end_date:
-
-            lifetime_type = (
-                "time_specific"
-            )
-
+ADMIN_CONTENT_WORKFLOWS = {
+    "property": {
+        "room": {"lifetime_type": "until_unavailable", "notification_eligible": True},
+        "rental": {"lifetime_type": "until_unavailable", "notification_eligible": True},
+        "property_sale": {"lifetime_type": "until_unavailable", "notification_eligible": True},
+        "hotel_lodge": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "accommodation_special": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+    "events": {
+        "event": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "entertainment": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "church_event": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "sports_event": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "community_event": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "business_event": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+    "discount-deals": {
+        "grocery_special": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "product_discount": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "weekend_special": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "clearance": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+    "local-restaurants": {
+        "restaurant": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "takeaway": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "daily_special": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "weekend_special": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "food_deal": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+    "jobs": {
+        "job": {"lifetime_type": "until_unavailable", "notification_eligible": True},
+        "learnership": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "internship": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "training": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "tender": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "business_opportunity": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+    "opportunities": {
+        "job": {"lifetime_type": "until_unavailable", "notification_eligible": True},
+        "learnership": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "internship": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "training": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "tender": {"lifetime_type": "time_specific", "notification_eligible": True},
+        "business_opportunity": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+    "services": {
+        "service_provider": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "plumber": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "mechanic": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "electrician": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "builder": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "cleaning_service": {"lifetime_type": "ongoing", "notification_eligible": False},
+    },
+    "beauty-salon": {
+        "salon": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "barber": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "beauty_service": {"lifetime_type": "ongoing", "notification_eligible": False},
+        "beauty_special": {"lifetime_type": "time_specific", "notification_eligible": True},
+    },
+}
+
+
+def get_content_workflow(category, content_type):
+    category = str(category or "").strip().lower()
+    content_type = str(content_type or "").strip().lower()
+    canonical_category = normalize_category(category)
+    workflow = None
+
+    for workflow_key in {category, canonical_category}:
+        if not workflow_key:
+            continue
+        category_workflows = ADMIN_CONTENT_WORKFLOWS.get(workflow_key, {})
+        if content_type in category_workflows:
+            workflow = dict(category_workflows[content_type])
+            break
+
+    if workflow is None:
+        if canonical_category == "jobs":
+            workflow = {
+                "lifetime_type": "until_unavailable" if content_type == "job" else "time_specific",
+                "notification_eligible": True,
+            }
+        elif canonical_category == "events":
+            workflow = {"lifetime_type": "time_specific", "notification_eligible": True}
+        elif canonical_category in {"restaurants", "beauty", "accommodation", "delivery", "services", "building", "transport"}:
+            workflow = {"lifetime_type": "ongoing", "notification_eligible": True}
+        elif canonical_category in {"rentals", "property"}:
+            workflow = {"lifetime_type": "until_unavailable", "notification_eligible": True}
         else:
+            workflow = {"lifetime_type": "time_specific", "notification_eligible": True}
 
-            lifetime_type = (
-                "ongoing"
-            )
+    workflow["pricing_model"] = (
+        None
+        if canonical_category == "jobs"
+        else get_pricing_model(category, content_type)
+    )
+    return workflow
 
-    # ========================================================
-    # TIME-SPECIFIC
-    # ========================================================
 
-    if lifetime_type == "time_specific":
+def calculate_content_price(category, content_type, duration_days, zone_count=1):
+    workflow = get_content_workflow(category, content_type)
+    pricing_model = workflow.get("pricing_model")
+    if not pricing_model:
+        raise KalxaPricingError("This listing does not have a valid Kalxa pricing model.")
+    if pricing_model == PRICING_MODEL_PRESENCE:
+        zone_count = 1
+    return calculate_kalxa_price(
+        pricing_model=pricing_model,
+        duration_days=duration_days,
+        zone_count=zone_count,
+    )
 
-        # ----------------------------------------------------
-        # EVENT
-        # ----------------------------------------------------
-
-        if item.category == "events":
-
-            if (
-                item.publish_from
-                and
-                item.publish_from > today
-            ):
-
-                return {
-                    "key": "upcoming",
-                    "label": "UPCOMING",
-                    "icon": "🟡",
-                }
-
-            expiry_date = (
-                item.event_end_date
-                or
-                item.event_date
-            )
-
-            if (
-                expiry_date
-                and
-                expiry_date < today
-            ):
-
-                return {
-                    "key": "expired",
-                    "label": "EXPIRED",
-                    "icon": "🔴",
-                }
-
-            return {
-                "key": "live",
-                "label": "LIVE",
-                "icon": "🟢",
-            }
-
-        # ----------------------------------------------------
-        # NON-EVENT
-        # ----------------------------------------------------
-
-        if (
-            item.start_date
-            and
-            item.start_date > today
-        ):
-
-            return {
-                "key": "upcoming",
-                "label": "UPCOMING",
-                "icon": "🟡",
-            }
-
-        if (
-            item.end_date
-            and
-            item.end_date < today
-        ):
-
-            return {
-                "key": "expired",
-                "label": "EXPIRED",
-                "icon": "🔴",
-            }
-
-    # ========================================================
-    # ONGOING / UNTIL UNAVAILABLE / RECURRING
-    # ========================================================
-
-    return {
-        "key": "live",
-        "label": "LIVE",
-        "icon": "🟢",
-    }
 
 def _parse_distribution_zone_ids():
-
-    # =====================================================
-    # READ SELECTED ZONES
-    # =====================================================
-
-    raw_zone_ids = (
-        request.form.getlist(
-            "distribution_zone_ids"
-        )
-    )
-
-
     zone_ids = []
-
-
-    # =====================================================
-    # NORMALIZE / VALIDATE IDS
-    # =====================================================
-
-    for raw_zone_id in raw_zone_ids:
-
+    for raw_zone_id in request.form.getlist("distribution_zone_ids"):
         try:
-
-            zone_id = int(
-                raw_zone_id
-            )
-
-        except (
-            TypeError,
-            ValueError,
-        ):
-
+            zone_id = int(raw_zone_id)
+        except (TypeError, ValueError):
             continue
-
-
-        if (
-            zone_id not in zone_ids
-        ):
-
-            zone_ids.append(
-                zone_id
-            )
-
-
+        if zone_id not in zone_ids:
+            zone_ids.append(zone_id)
     return zone_ids
-    
-def _configure_commercial_content(
-    item,
-    category,
-    content_type,
-):
-
-    # =====================================================
-    # CANONICAL CATEGORY
-    # =====================================================
-
-    canonical_category = (
-        normalize_category(
-            category
-        )
-    )
 
 
-    # =====================================================
-    # FREE KALXA JOBS
-    # =====================================================
-    #
-    # Jobs are a free community-discovery category.
-    #
-    # They must never require:
-    #
-    # - commercial duration
-    # - payment
-    # - multi-zone package
-    # - Yoco
-    #
-    # =====================================================
+def _clear_commercial_state(item):
+    item.pricing_model = None
+    item.commercial_duration_days = None
+    item.commercial_starts_at = None
+    item.commercial_expires_at = None
+    item.payment_status = "waived"
+    item.amount_due = None
+    item.amount_paid = None
+    item.payment_reference = None
+    item.paid_at = None
 
-    if (
-        canonical_category
-        == "jobs"
-    ):
 
-        item.pricing_model = (
-            None
-        )
-
-        item.commercial_duration_days = (
-            None
-        )
-
-        item.commercial_starts_at = (
-            None
-        )
-
-        item.commercial_expires_at = (
-            None
-        )
-
-        item.payment_status = (
-            "waived"
-        )
-
-        item.amount_due = (
-            None
-        )
-
-        item.amount_paid = (
-            None
-        )
-
-        item.payment_reference = (
-            None
-        )
-
-        item.paid_at = (
-            None
-        )
-
+def _configure_commercial_content(item, category, content_type):
+    canonical_category = normalize_category(category)
+    if canonical_category == "jobs":
+        _clear_commercial_state(item)
         return []
 
-
-    # =====================================================
-    # GET NORMAL COMMERCIAL WORKFLOW
-    # =====================================================
-
-    workflow = (
-        get_content_workflow(
-            category,
-            content_type,
-        )
-    )
-
-
-    pricing_model = (
-        workflow.get(
-            "pricing_model"
-        )
-    )
-
-
-    # =====================================================
-    # NON-COMMERCIAL CONTENT
-    # =====================================================
-
+    workflow = get_content_workflow(category, content_type)
+    pricing_model = workflow.get("pricing_model")
     if not pricing_model:
-
-        item.pricing_model = (
-            None
-        )
-
-        item.commercial_duration_days = (
-            None
-        )
-
-        item.commercial_starts_at = (
-            None
-        )
-
-        item.commercial_expires_at = (
-            None
-        )
-
-        item.payment_status = (
-            "waived"
-        )
-
-        item.amount_due = (
-            None
-        )
-
-        item.amount_paid = (
-            None
-        )
-
-        item.payment_reference = (
-            None
-        )
-
-        item.paid_at = (
-            None
-        )
-
+        _clear_commercial_state(item)
         return []
 
-
-    # =====================================================
-    # DURATION
-    # =====================================================
-
-    raw_duration = (
-        request.form.get(
-            "commercial_duration_days",
-            "",
-        )
-        .strip()
-    )
-
-
+    raw_duration = request.form.get("commercial_duration_days", "").strip()
     try:
+        duration_days = int(raw_duration)
+    except (TypeError, ValueError):
+        raise ValueError("Please select a valid Kalxa package duration.")
 
-        duration_days = int(
-            raw_duration
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        raise ValueError(
-            "Please select a valid Kalxa package duration."
-        )
-
-
-    # =====================================================
-    # PAYMENT STATUS
-    # =====================================================
-
-    payment_status = (
-        request.form.get(
-            "payment_status",
-            "unpaid",
-        )
-        .strip()
-        .lower()
-    )
-
-
-    allowed_payment_statuses = {
-        "unpaid",
-        "paid",
-        "waived",
-        "refunded",
-    }
-
-
-    if (
-        payment_status
-        not in allowed_payment_statuses
-    ):
-
-        payment_status = (
-            "unpaid"
-        )
-
-
-    # =====================================================
-    # DISTRIBUTION
-    # =====================================================
+    payment_status = request.form.get("payment_status", "unpaid").strip().lower()
+    if payment_status not in ALLOWED_PAYMENT_STATUSES:
+        payment_status = "unpaid"
 
     distribution_zone_ids = []
-
-
-    if (
-        pricing_model
-        == PRICING_MODEL_CAMPAIGN
-    ):
-
-        distribution_zone_ids = (
-            _parse_distribution_zone_ids()
-        )
-
-
+    if pricing_model == PRICING_MODEL_CAMPAIGN:
+        distribution_zone_ids = _parse_distribution_zone_ids()
         if not distribution_zone_ids:
-
-            raise ValueError(
-                (
-                    "Campaign content must have at least "
-                    "one distribution zone."
-                )
-            )
-
-
-        if (
-            len(
-                distribution_zone_ids
-            )
-            > 3
-        ):
-
-            raise ValueError(
-                (
-                    "The current Kalxa campaign packages "
-                    "support a maximum of 3 zones."
-                )
-            )
-
-
-        existing_zone_ids = {
-
-            zone.id
-
-            for zone in (
-                Zone.query
-                .filter(
-                    Zone.id.in_(
-                        distribution_zone_ids
-                    )
-                )
-                .all()
-            )
-        }
-
-
-        if (
-            len(
-                existing_zone_ids
-            )
-            !=
-            len(
-                distribution_zone_ids
-            )
-        ):
-
-            raise ValueError(
-                (
-                    "One or more selected campaign "
-                    "zones are invalid."
-                )
-            )
-
-
-        zone_count = (
-            len(
-                distribution_zone_ids
-            )
-        )
-
-
+            raise ValueError("Campaign content must have at least one distribution zone.")
+        if len(distribution_zone_ids) > 3:
+            raise ValueError("The current Kalxa campaign packages support a maximum of 3 zones.")
+        existing_zone_ids = {z.id for z in Zone.query.filter(Zone.id.in_(distribution_zone_ids)).all()}
+        if len(existing_zone_ids) != len(distribution_zone_ids):
+            raise ValueError("One or more selected campaign zones are invalid.")
+        zone_count = len(distribution_zone_ids)
     else:
-
         zone_count = 1
 
-        distribution_zone_ids = []
-
-
-    # =====================================================
-    # PRICE
-    # =====================================================
-
     try:
-
-        amount_due = (
-            calculate_kalxa_price(
-
-                pricing_model=
-                    pricing_model,
-
-                duration_days=
-                    duration_days,
-
-                zone_count=
-                    zone_count,
-            )
+        amount_due = calculate_kalxa_price(
+            pricing_model=pricing_model,
+            duration_days=duration_days,
+            zone_count=zone_count,
         )
-
     except KalxaPricingError as exc:
+        raise ValueError(str(exc))
 
-        raise ValueError(
-            str(
-                exc
-            )
-        )
-
-
-    # =====================================================
-    # COMMERCIAL ACTIVATION
-    # =====================================================
-
-    now = (
-        datetime.utcnow()
-    )
-
-
+    now = datetime.utcnow()
     commercial_starts_at = None
-
     commercial_expires_at = None
+    if payment_status in {"paid", "waived"}:
+        commercial_starts_at = now
+        commercial_expires_at = now + timedelta(days=duration_days)
 
+    item.pricing_model = pricing_model
+    item.commercial_duration_days = duration_days
+    item.commercial_starts_at = commercial_starts_at
+    item.commercial_expires_at = commercial_expires_at
+    item.payment_status = payment_status
+    item.amount_due = amount_due
+    item.payment_reference = request.form.get("payment_reference", "").strip() or None
 
-    if (
-        payment_status
-        in {
-            "paid",
-            "waived",
-        }
-    ):
-
-        commercial_starts_at = (
-            now
-        )
-
-
-        commercial_expires_at = (
-            now
-            +
-            timedelta(
-                days=duration_days
-            )
-        )
-
-
-    # =====================================================
-    # STORE
-    # =====================================================
-
-    item.pricing_model = (
-        pricing_model
-    )
-
-    item.commercial_duration_days = (
-        duration_days
-    )
-
-    item.commercial_starts_at = (
-        commercial_starts_at
-    )
-
-    item.commercial_expires_at = (
-        commercial_expires_at
-    )
-
-    item.payment_status = (
-        payment_status
-    )
-
-    item.amount_due = (
-        amount_due
-    )
-
-    item.payment_reference = (
-        request.form.get(
-            "payment_reference",
-            "",
-        )
-        .strip()
-        or None
-    )
-
-
-    if (
-        payment_status
-        == "paid"
-    ):
-
-        item.amount_paid = (
-            amount_due
-        )
-
-        item.paid_at = (
-            now
-        )
-
-
+    if payment_status == "paid":
+        item.amount_paid = amount_due
+        item.paid_at = now
     else:
-
-        item.amount_paid = (
-            None
-        )
-
-        item.paid_at = (
-            None
-        )
-
+        item.amount_paid = None
+        item.paid_at = None
 
     return distribution_zone_ids
 
-def get_content_expiry_date(
-    item,
-):
 
-    lifetime_type = (
-        getattr(
-            item,
-            "lifetime_type",
-            None,
-        )
-    )
-
-    # --------------------------------------------------------
-    # Legacy records
-    # --------------------------------------------------------
+def _validate_and_normalize_content_dates(category, form, lifetime_type=None):
+    canonical_category = normalize_category(category)
+    start_date = parse_date(form.get("start_date"))
+    end_date = parse_date(form.get("end_date"))
+    publish_from = parse_date(form.get("publish_from"))
+    event_date = parse_date(form.get("event_date"))
+    event_end_date = parse_date(form.get("event_end_date"))
 
     if not lifetime_type:
-
-        if item.category == "events":
-
-            lifetime_type = (
-                "time_specific"
-            )
-
-        elif item.end_date:
-
-            lifetime_type = (
-                "time_specific"
-            )
-
+        if canonical_category == "events":
+            lifetime_type = "time_specific"
+        elif end_date:
+            lifetime_type = "time_specific"
         else:
+            lifetime_type = "ongoing"
 
-            lifetime_type = (
-                "ongoing"
-            )
+    if canonical_category == "events" and lifetime_type == "time_specific":
+        if not event_date:
+            return None, "Event Date is required for events."
+        if publish_from and publish_from > event_date:
+            return None, "Publish From cannot be after Event Date."
+        if event_end_date and event_end_date < event_date:
+            return None, "Event End Date cannot be before Event Date."
+        start_date = None
+        end_date = None
+    elif lifetime_type == "time_specific":
+        if not end_date:
+            return None, "End Date is required for this time-specific listing."
+        if start_date and end_date < start_date:
+            return None, "End date cannot be before start date."
+        publish_from = None
+        event_date = None
+        event_end_date = None
+    elif lifetime_type in {"until_unavailable", "ongoing"}:
+        start_date = None
+        end_date = None
+        publish_from = None
+        event_date = None
+        event_end_date = None
+    elif lifetime_type == "recurring":
+        publish_from = None
+        event_date = None
+        event_end_date = None
+        if start_date and end_date and end_date < start_date:
+            return None, "End date cannot be before start date."
+    else:
+        return None, "Invalid listing lifetime type."
 
-    # Ongoing and until-unavailable content must NOT
-    # enter automatic expiry/archive logic.
+    return {
+        "start_date": start_date,
+        "end_date": end_date,
+        "publish_from": publish_from,
+        "event_date": event_date,
+        "event_end_date": event_end_date,
+    }, None
 
-    if lifetime_type not in {
-        "time_specific",
-        "recurring",
-    }:
 
+def get_content_status(item, today=None):
+    today = today or date.today()
+    if item.archived:
+        return {"key": "archived", "label": "ARCHIVED", "icon": "📦"}
+    if not item.active:
+        return {"key": "inactive", "label": "INACTIVE", "icon": "⚪"}
+
+    availability_status = getattr(item, "availability_status", None) or "available"
+    if availability_status in {"taken", "sold", "filled", "closed"}:
+        return {"key": "inactive", "label": availability_status.upper(), "icon": "⚫"}
+    if availability_status == "expired":
+        return {"key": "expired", "label": "EXPIRED", "icon": "🔴"}
+
+    canonical_category = normalize_category(item.category)
+    lifetime_type = getattr(item, "lifetime_type", None)
+    if not lifetime_type:
+        if canonical_category == "events":
+            lifetime_type = "time_specific"
+        elif item.end_date:
+            lifetime_type = "time_specific"
+        else:
+            lifetime_type = "ongoing"
+
+    if lifetime_type == "time_specific":
+        if canonical_category == "events":
+            if item.publish_from and item.publish_from > today:
+                return {"key": "upcoming", "label": "UPCOMING", "icon": "🟡"}
+            expiry_date = item.event_end_date or item.event_date
+            if expiry_date and expiry_date < today:
+                return {"key": "expired", "label": "EXPIRED", "icon": "🔴"}
+            return {"key": "live", "label": "LIVE", "icon": "🟢"}
+        if item.start_date and item.start_date > today:
+            return {"key": "upcoming", "label": "UPCOMING", "icon": "🟡"}
+        if item.end_date and item.end_date < today:
+            return {"key": "expired", "label": "EXPIRED", "icon": "🔴"}
+
+    return {"key": "live", "label": "LIVE", "icon": "🟢"}
+
+
+def get_content_expiry_date(item):
+    canonical_category = normalize_category(item.category)
+    lifetime_type = getattr(item, "lifetime_type", None)
+    if not lifetime_type:
+        if canonical_category == "events":
+            lifetime_type = "time_specific"
+        elif item.end_date:
+            lifetime_type = "time_specific"
+        else:
+            lifetime_type = "ongoing"
+    if lifetime_type not in {"time_specific", "recurring"}:
         return None
-
-    if item.category == "events":
-
-        return (
-            item.event_end_date
-            or
-            item.event_date
-        )
-
+    if canonical_category == "events":
+        return item.event_end_date or item.event_date
     return item.end_date
 
 
@@ -1891,15 +566,12 @@ def get_archive_intelligence(item, today=None):
     today = today or date.today()
     if item.archived:
         return None
-
     expiry_date = get_content_expiry_date(item)
     if not expiry_date or expiry_date >= today:
         return None
-
     expired_days = (today - expiry_date).days
     archive_date = expiry_date + timedelta(days=ARCHIVE_GRACE_DAYS)
     days_until_archive = (archive_date - today).days
-
     return {
         "expired_days": expired_days,
         "archive_date": archive_date,
@@ -1908,79 +580,146 @@ def get_archive_intelligence(item, today=None):
     }
 
 
-# =========================================================
-# BUSINESS ANALYTICS CONSTANTS
-# =========================================================
-
-BUSINESS_ANALYTICS_EVENTS = {
-    "listing_view",
-    "whatsapp_click",
-    "call_click",
-    "directions_click",
-    "share_click",
-    "job_apply_click",
-}
-
-
-ACTION_EVENTS = {
-    "whatsapp_click",
-    "call_click",
-    "directions_click",
-    "share_click",
-    "job_apply_click",
-}
+def get_expiry_intelligence(item, today=None):
+    today = today or date.today()
+    if not item.active or item.archived:
+        return None
+    expiry_date = get_content_expiry_date(item)
+    if not expiry_date:
+        return None
+    days_remaining = (expiry_date - today).days
+    if 0 <= days_remaining <= EXPIRING_SOON_DAYS:
+        return {
+            "expiring_soon": True,
+            "days_remaining": days_remaining,
+            "expiry_date": expiry_date,
+        }
+    return None
 
 
-# =========================================================
-# BUSINESS ANALYTICS DATE RANGE
-# =========================================================
+def archive_expired_content():
+    today = date.today()
+    items = ContentItem.query.filter(ContentItem.archived.is_(False)).all()
+    archived_count = 0
+    for item in items:
+        info = get_archive_intelligence(item, today)
+        if info and info["ready_to_archive"]:
+            item.archived = True
+            item.active = False
+            item.archived_at = datetime.utcnow()
+            archived_count += 1
+    if archived_count:
+        db.session.commit()
+    return archived_count
+
+
+def get_reminder_analytics(top_limit=10):
+    summary = (
+        db.session.query(
+            func.count(ContentReminder.id).label("total"),
+            func.sum(case((ContentReminder.status == "pending", 1), else_=0)).label("pending"),
+            func.sum(case((ContentReminder.status == "processing", 1), else_=0)).label("processing"),
+            func.sum(case((ContentReminder.status == "sent", 1), else_=0)).label("sent"),
+            func.sum(case((ContentReminder.status == "failed", 1), else_=0)).label("failed"),
+            func.sum(case((ContentReminder.status == "cancelled", 1), else_=0)).label("cancelled"),
+            func.sum(case((ContentReminder.retry_count > 0, 1), else_=0)).label("retried"),
+        )
+        .one()
+    )
+
+    total = int(summary.total or 0)
+    pending = int(summary.pending or 0)
+    processing = int(summary.processing or 0)
+    sent = int(summary.sent or 0)
+    failed = int(summary.failed or 0)
+    cancelled = int(summary.cancelled or 0)
+    retried = int(summary.retried or 0)
+
+    completed_delivery_attempts = sent + failed
+    delivery_rate = round((sent / completed_delivery_attempts) * 100, 1) if completed_delivery_attempts else 0.0
+
+    top_content_rows = (
+        db.session.query(
+            ContentItem.id.label("content_item_id"),
+            ContentItem.title.label("title"),
+            ContentItem.category.label("category"),
+            ContentItem.event_date.label("event_date"),
+            func.count(ContentReminder.id).label("reminder_count"),
+            func.sum(case((ContentReminder.status == "sent", 1), else_=0)).label("sent_count"),
+            func.sum(case((ContentReminder.status == "pending", 1), else_=0)).label("pending_count"),
+        )
+        .join(ContentReminder, ContentReminder.content_item_id == ContentItem.id)
+        .group_by(ContentItem.id, ContentItem.title, ContentItem.category, ContentItem.event_date)
+        .order_by(func.count(ContentReminder.id).desc(), ContentItem.id.desc())
+        .limit(top_limit)
+        .all()
+    )
+
+    top_content = [
+        {
+            "content_item_id": row.content_item_id,
+            "title": row.title,
+            "category": normalize_category(row.category),
+            "event_date": row.event_date,
+            "reminder_count": int(row.reminder_count or 0),
+            "sent_count": int(row.sent_count or 0),
+            "pending_count": int(row.pending_count or 0),
+        }
+        for row in top_content_rows
+    ]
+
+    recent_rows = (
+        db.session.query(ContentReminder, ContentItem)
+        .join(ContentItem, ContentItem.id == ContentReminder.content_item_id)
+        .order_by(ContentReminder.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    recent_activity = [
+        {
+            "id": reminder.id,
+            "content_item_id": item.id,
+            "title": item.title,
+            "category": normalize_category(item.category),
+            "status": reminder.status,
+            "minutes_before": reminder.reminder_minutes_before,
+            "retry_count": reminder.retry_count or 0,
+            "created_at": reminder.created_at,
+            "scheduled_for": reminder.scheduled_for,
+            "sent_at": reminder.sent_at,
+        }
+        for reminder, item in recent_rows
+    ]
+
+    return {
+        "total": total,
+        "pending": pending,
+        "processing": processing,
+        "sent": sent,
+        "failed": failed,
+        "cancelled": cancelled,
+        "retried": retried,
+        "delivery_rate": delivery_rate,
+        "top_content": top_content,
+        "recent_activity": recent_activity,
+    }
+
 
 def _get_analytics_date_range():
-
-    range_key = (
-        request.args.get(
-            "range",
-            "30d",
-        )
-        .strip()
-        .lower()
-    )
-
-
+    range_key = request.args.get("range", "30d").strip().lower()
     today = date.today()
-
-
     if range_key == "7d":
-
         days = 7
-
         label = "Last 7 days"
-
-
     elif range_key == "90d":
-
         days = 90
-
         label = "Last 90 days"
-
-
     else:
-
         range_key = "30d"
-
         days = 30
-
         label = "Last 30 days"
-
-
-    start_date = (
-        today
-        - timedelta(
-            days=days - 1
-        )
-    )
-
-
+    start_date = today - timedelta(days=days - 1)
     return {
         "key": range_key,
         "days": days,
@@ -1990,2154 +729,113 @@ def _get_analytics_date_range():
     }
 
 
-# =========================================================
-# BUILD BUSINESS ANALYTICS
-# =========================================================
-
-def _build_business_analytics(
-    item,
-    analytics_range,
-):
-
-    start_datetime = datetime.combine(
-        analytics_range[
-            "start_date"
-        ],
-        datetime.min.time(),
-    )
-
-
-    end_datetime = datetime.combine(
-        analytics_range[
-            "end_date"
-        ]
-        + timedelta(days=1),
-        datetime.min.time(),
-    )
-
-
-    # =====================================================
-    # BASE QUERY
-    # =====================================================
-
-    base_query = (
-        EngagementEvent.query
-        .filter(
-            EngagementEvent.content_item_id
-            == item.id,
-            EngagementEvent.event_type.in_(
-                BUSINESS_ANALYTICS_EVENTS
-            ),
-            EngagementEvent.created_at
-            >= start_datetime,
-            EngagementEvent.created_at
-            < end_datetime,
-        )
-    )
-
-
-    # =====================================================
-    # EVENT COUNTS
-    # =====================================================
+def _build_business_analytics(item, analytics_range):
+    start_datetime = datetime.combine(analytics_range["start_date"], datetime.min.time())
+    end_datetime = datetime.combine(analytics_range["end_date"] + timedelta(days=1), datetime.min.time())
 
     event_rows = (
-        db.session.query(
-            EngagementEvent.event_type,
-            func.count(
-                EngagementEvent.id
-            ),
-        )
+        db.session.query(EngagementEvent.event_type, func.count(EngagementEvent.id))
         .filter(
-            EngagementEvent.content_item_id
-            == item.id,
-            EngagementEvent.event_type.in_(
-                BUSINESS_ANALYTICS_EVENTS
-            ),
-            EngagementEvent.created_at
-            >= start_datetime,
-            EngagementEvent.created_at
-            < end_datetime,
+            EngagementEvent.content_item_id == item.id,
+            EngagementEvent.event_type.in_(BUSINESS_ANALYTICS_EVENTS),
+            EngagementEvent.created_at >= start_datetime,
+            EngagementEvent.created_at < end_datetime,
         )
-        .group_by(
-            EngagementEvent.event_type
-        )
+        .group_by(EngagementEvent.event_type)
         .all()
     )
+    counts = {event_type: count for event_type, count in event_rows}
 
-
-    counts = {
-        event_type: count
-        for event_type, count
-        in event_rows
-    }
-
-
-    listing_views = (
-        counts.get(
-            "listing_view",
-            0,
-        )
-    )
-
-
-    whatsapp_clicks = (
-        counts.get(
-            "whatsapp_click",
-            0,
-        )
-    )
-
-
-    call_clicks = (
-        counts.get(
-            "call_click",
-            0,
-        )
-    )
-
-
-    directions_clicks = (
-        counts.get(
-            "directions_click",
-            0,
-        )
-    )
-
-
-    share_clicks = (
-        counts.get(
-            "share_click",
-            0,
-        )
-    )
-
-
-    total_actions = (
-        whatsapp_clicks
-        + call_clicks
-        + directions_clicks
-        + share_clicks
-    )
-
-
-    # =====================================================
-    # ACTION RATE
-    #
-    # This is NOT conversion-to-sale.
-    #
-    # It means:
-    #
-    # tracked actions / listing views
-    # =====================================================
-
-    if listing_views:
-
-        action_rate = round(
-            (
-                total_actions
-                / listing_views
-            )
-            * 100,
-            1,
-        )
-
-    else:
-
-        action_rate = 0.0
-
-
-    # =====================================================
-    # DAILY LISTING VIEWS
-    # =====================================================
+    listing_views = counts.get("listing_view", 0)
+    whatsapp_clicks = counts.get("whatsapp_click", 0)
+    call_clicks = counts.get("call_click", 0)
+    directions_clicks = counts.get("directions_click", 0)
+    share_clicks = counts.get("share_click", 0)
+    job_apply_clicks = counts.get("job_apply_click", 0)
+    total_actions = whatsapp_clicks + call_clicks + directions_clicks + share_clicks + job_apply_clicks
+    overall_action_rate = round((total_actions / listing_views) * 100, 1) if listing_views else 0.0
 
     daily_view_rows = (
         db.session.query(
-            func.date(
-                EngagementEvent.created_at
-            ).label(
-                "day"
-            ),
-            func.count(
-                EngagementEvent.id
-            ).label(
-                "views"
-            ),
+            func.date(EngagementEvent.created_at).label("day"),
+            func.count(EngagementEvent.id).label("views"),
         )
         .filter(
-            EngagementEvent.content_item_id
-            == item.id,
-            EngagementEvent.event_type
-            == "listing_view",
-            EngagementEvent.created_at
-            >= start_datetime,
-            EngagementEvent.created_at
-            < end_datetime,
+            EngagementEvent.content_item_id == item.id,
+            EngagementEvent.event_type == "listing_view",
+            EngagementEvent.created_at >= start_datetime,
+            EngagementEvent.created_at < end_datetime,
         )
-        .group_by(
-            func.date(
-                EngagementEvent.created_at
-            )
-        )
-        .order_by(
-            func.date(
-                EngagementEvent.created_at
-            )
-        )
+        .group_by(func.date(EngagementEvent.created_at))
+        .order_by(func.date(EngagementEvent.created_at))
         .all()
     )
-
-
-    daily_view_map = {
-        str(day): count
-        for day, count
-        in daily_view_rows
-    }
-
-
-    # -----------------------------------------------------
-    # Fill missing dates with zero.
-    # -----------------------------------------------------
-
+    daily_view_map = {str(day): count for day, count in daily_view_rows}
     daily_views = []
+    current_day = analytics_range["start_date"]
+    while current_day <= analytics_range["end_date"]:
+        day_key = current_day.isoformat()
+        daily_views.append({"date": day_key, "label": current_day.strftime("%d %b"), "views": daily_view_map.get(day_key, 0)})
+        current_day += timedelta(days=1)
 
-
-    current_day = (
-        analytics_range[
-            "start_date"
-        ]
-    )
-
-
-    while (
-        current_day
-        <= analytics_range[
-            "end_date"
-        ]
-    ):
-
-        day_key = (
-            current_day.isoformat()
-        )
-
-
-        daily_views.append(
-            {
-                "date":
-                    day_key,
-
-                "label":
-                    current_day.strftime(
-                        "%d %b"
-                    ),
-
-                "views":
-                    daily_view_map.get(
-                        day_key,
-                        0,
-                    ),
-            }
-        )
-
-
-        current_day += timedelta(
-            days=1
-        )
-
-
-    # =====================================================
-    # BEST DAY
-    # =====================================================
-
-    if daily_views:
-
-        best_day = max(
-            daily_views,
-            key=lambda row:
-                row["views"],
-        )
-
-    else:
-
-        best_day = {
-            "date": None,
-            "label": "—",
-            "views": 0,
-        }
-
-
-    if (
-        best_day["views"]
-        == 0
-    ):
-
-        best_day = {
-            "date": None,
-            "label": "—",
-            "views": 0,
-        }
-
-
-    # =====================================================
-    # ACTION BREAKDOWN
-    # =====================================================
+    best_day = max(daily_views, key=lambda row: row["views"]) if daily_views else {"date": None, "label": "—", "views": 0}
+    if best_day["views"] == 0:
+        best_day = {"date": None, "label": "—", "views": 0}
 
     action_breakdown = [
-        {
-            "event_type":
-                "whatsapp_click",
-
-            "label":
-                "WhatsApp",
-
-            "icon":
-                "💬",
-
-            "count":
-                whatsapp_clicks,
-        },
-        {
-            "event_type":
-                "call_click",
-
-            "label":
-                "Calls",
-
-            "icon":
-                "📞",
-
-            "count":
-                call_clicks,
-        },
-        {
-            "event_type":
-                "directions_click",
-
-            "label":
-                "Directions",
-
-            "icon":
-                "🧭",
-
-            "count":
-                directions_clicks,
-        },
-        {
-            "event_type":
-                "share_click",
-
-            "label":
-                "Shares",
-
-            "icon":
-                "↗",
-
-            "count":
-                share_clicks,
-        },
+        {"event_type": "whatsapp_click", "label": "WhatsApp", "icon": "💬", "count": whatsapp_clicks},
+        {"event_type": "call_click", "label": "Calls", "icon": "📞", "count": call_clicks},
+        {"event_type": "directions_click", "label": "Directions", "icon": "🧭", "count": directions_clicks},
+        {"event_type": "share_click", "label": "Shares", "icon": "↗", "count": share_clicks},
+        {"event_type": "job_apply_click", "label": "Job Applies", "icon": "💼", "count": job_apply_clicks},
     ]
-
-
-    # =========================================================
-# ACCESS POINT ATTRIBUTION
-#
-# Shows which physical Kalxa access points
-# generated attention/actions for this listing.
-# =========================================================
 
     access_point_rows = (
-
-     db.session.query(
-
-        EngagementEvent.access_point_id,
-
-        AccessPoint.name,
-
-        func.sum(
-            case(
-                (
-                    EngagementEvent.event_type
-                    == "listing_view",
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "views"
-        ),
-
-        func.sum(
-            case(
-                (
-                    EngagementEvent.event_type.in_(
-                        ACTION_EVENTS
-                    ),
-                    1,
-                ),
-                else_=0,
-            )
-        ).label(
-            "actions"
-        ),
-
-     )
-
-     .join(
-        AccessPoint,
-        EngagementEvent.access_point_id
-        == AccessPoint.id,
-     )
-
-     .filter(
-
-        EngagementEvent.content_item_id
-        == item.id,
-
-        EngagementEvent.created_at
-        >= start_datetime,
-
-        EngagementEvent.created_at
-        < end_datetime,
-
-        EngagementEvent.access_point_id
-        .isnot(None),
-
-     )
-
-     .group_by(
-        EngagementEvent.access_point_id,
-        AccessPoint.name,
-     )
-
-     .order_by(
-        func.sum(
-            case(
-                (
-                    EngagementEvent.event_type
-                    == "listing_view",
-                    1,
-                ),
-                else_=0,
-            )
-        ).desc()
-     )
-
-     .all()
+        db.session.query(
+            EngagementEvent.access_point_id,
+            AccessPoint.name,
+            func.sum(case((EngagementEvent.event_type == "listing_view", 1), else_=0)).label("views"),
+            func.sum(case((EngagementEvent.event_type.in_(ACTION_EVENTS), 1), else_=0)).label("actions"),
+        )
+        .join(AccessPoint, EngagementEvent.access_point_id == AccessPoint.id)
+        .filter(
+            EngagementEvent.content_item_id == item.id,
+            EngagementEvent.created_at >= start_datetime,
+            EngagementEvent.created_at < end_datetime,
+            EngagementEvent.access_point_id.isnot(None),
+        )
+        .group_by(EngagementEvent.access_point_id, AccessPoint.name)
+        .order_by(func.sum(case((EngagementEvent.event_type == "listing_view", 1), else_=0)).desc())
+        .all()
     )
-
 
     access_points = []
-
-
-    for (
-     access_point_id,
-     access_point_name,
-     views,
-     actions,
-    ) in access_point_rows:
-
-     views = int(
-        views or 0
-     )
-
-     actions = int(
-        actions or 0
-     )
-
-
-     action_rate = (
-
-        round(
-            (
-                actions
-                / views
-            )
-            * 100,
-            1,
-        )
-
-        if views
-
-        else 0.0
-
-     )
-
-
-     access_points.append(
-        {
-
-            "id":
-                access_point_id,
-
-            "name":
-                access_point_name,
-
-            "views":
-                views,
-
-            "actions":
-                actions,
-
-            "action_rate":
-                action_rate,
-
-        }
-     )
-
-
-    # =====================================================
-    # RETURN ANALYTICS
-    # =====================================================
+    for access_point_id, access_point_name, views, actions in access_point_rows:
+        views = int(views or 0)
+        actions = int(actions or 0)
+        point_action_rate = round((actions / views) * 100, 1) if views else 0.0
+        access_points.append({
+            "id": access_point_id,
+            "name": access_point_name,
+            "views": views,
+            "actions": actions,
+            "action_rate": point_action_rate,
+        })
 
     return {
-
-        "listing_views":
-            listing_views,
-
-        "whatsapp_clicks":
-            whatsapp_clicks,
-
-        "call_clicks":
-            call_clicks,
-
-        "directions_clicks":
-            directions_clicks,
-
-        "share_clicks":
-            share_clicks,
-
-        "total_actions":
-            total_actions,
-
-        "action_rate":
-            action_rate,
-
-        "daily_views":
-            daily_views,
-
-        "best_day":
-            best_day,
-        
-        "access_points":
-            access_points,
-
-        "action_breakdown":
-            action_breakdown,
-
+        "listing_views": listing_views,
+        "whatsapp_clicks": whatsapp_clicks,
+        "call_clicks": call_clicks,
+        "directions_clicks": directions_clicks,
+        "share_clicks": share_clicks,
+        "job_apply_clicks": job_apply_clicks,
+        "total_actions": total_actions,
+        "action_rate": overall_action_rate,
+        "daily_views": daily_views,
+        "best_day": best_day,
+        "access_points": access_points,
+        "action_breakdown": action_breakdown,
     }
-
-
-# =========================================================
-# BUSINESS ANALYTICS — OVERVIEW
-# =========================================================
-
-@admin_bp.route(
-    "/business-analytics"
-)
-def business_analytics():
-
-    auth = require_admin()
-
-    if auth:
-        return auth
-
-
-    # =====================================================
-    # ANALYTICS RANGE
-    # =====================================================
-
-    analytics_range = (
-        _get_analytics_date_range()
-    )
-
-
-    start_datetime = datetime.combine(
-        analytics_range[
-            "start_date"
-        ],
-        datetime.min.time(),
-    )
-
-
-    end_datetime = datetime.combine(
-        analytics_range[
-            "end_date"
-        ]
-        + timedelta(days=1),
-        datetime.min.time(),
-    )
-
-
-    # =====================================================
-    # BUSINESS / PROMOTION LISTINGS
-    # =====================================================
-
-    listings = (
-        ContentItem.query
-        .filter(
-            ContentItem.listing_level.in_(
-                {
-                    "business",
-                    "promotion",
-                }
-            )
-        )
-        .order_by(
-            ContentItem.created_at.desc()
-        )
-        .all()
-    )
-
-
-    listing_ids = [
-        item.id
-        for item in listings
-    ]
-
-
-    # =====================================================
-    # AGGREGATE EVENTS IN ONE QUERY
-    # =====================================================
-
-    analytics_by_listing = {}
-
-
-    if listing_ids:
-
-        rows = (
-            db.session.query(
-                EngagementEvent.content_item_id,
-                EngagementEvent.event_type,
-                func.count(
-                    EngagementEvent.id
-                ).label(
-                    "event_count"
-                ),
-            )
-            .filter(
-                EngagementEvent.content_item_id.in_(
-                    listing_ids
-                ),
-                EngagementEvent.event_type.in_(
-                    BUSINESS_ANALYTICS_EVENTS
-                ),
-                EngagementEvent.created_at
-                >= start_datetime,
-                EngagementEvent.created_at
-                < end_datetime,
-            )
-            .group_by(
-                EngagementEvent.content_item_id,
-                EngagementEvent.event_type,
-            )
-            .all()
-        )
-
-
-        for (
-            content_item_id,
-            event_type,
-            event_count,
-        ) in rows:
-
-            analytics_by_listing.setdefault(
-                content_item_id,
-                {}
-            )
-
-
-            analytics_by_listing[
-                content_item_id
-            ][
-                event_type
-            ] = event_count
-
-
-    # =====================================================
-    # BUILD LISTING REPORT
-    # =====================================================
-
-    listing_reports = []
-
-
-    for item in listings:
-
-        counts = (
-            analytics_by_listing.get(
-                item.id,
-                {},
-            )
-        )
-
-
-        views = counts.get(
-            "listing_view",
-            0,
-        )
-
-
-        whatsapp = counts.get(
-            "whatsapp_click",
-            0,
-        )
-
-
-        calls = counts.get(
-            "call_click",
-            0,
-        )
-
-
-        directions = counts.get(
-            "directions_click",
-            0,
-        )
-
-
-        shares = counts.get(
-            "share_click",
-            0,
-        )
-
-
-        actions = (
-            whatsapp
-            + calls
-            + directions
-            + shares
-        )
-
-
-        action_rate = (
-            round(
-                (
-                    actions
-                    / views
-                )
-                * 100,
-                1,
-            )
-            if views
-            else 0.0
-        )
-
-
-        listing_reports.append(
-            {
-                "item":
-                    item,
-
-                "views":
-                    views,
-
-                "actions":
-                    actions,
-
-                "whatsapp":
-                    whatsapp,
-
-                "calls":
-                    calls,
-
-                "directions":
-                    directions,
-
-                "shares":
-                    shares,
-
-                "action_rate":
-                    action_rate,
-            }
-        )
-
-
-    # =====================================================
-    # RANK BY ATTENTION
-    # =====================================================
-
-    listing_reports.sort(
-        key=lambda row: (
-            row["views"],
-            row["actions"],
-        ),
-        reverse=True,
-    )
-
-
-    # =====================================================
-    # PLATFORM TOTALS
-    # =====================================================
-
-    total_views = sum(
-        row["views"]
-        for row
-        in listing_reports
-    )
-
-
-    total_actions = sum(
-        row["actions"]
-        for row
-        in listing_reports
-    )
-
-
-    total_whatsapp = sum(
-        row["whatsapp"]
-        for row
-        in listing_reports
-    )
-
-
-    total_calls = sum(
-        row["calls"]
-        for row
-        in listing_reports
-    )
-
-
-    total_directions = sum(
-        row["directions"]
-        for row
-        in listing_reports
-    )
-
-
-    total_shares = sum(
-        row["shares"]
-        for row
-        in listing_reports
-    )
-
-
-    overall_action_rate = (
-        round(
-            (
-                total_actions
-                / total_views
-            )
-            * 100,
-            1,
-        )
-        if total_views
-        else 0.0
-    )
-
-
-    totals = {
-
-        "views":
-            total_views,
-
-        "actions":
-            total_actions,
-
-        "whatsapp":
-            total_whatsapp,
-
-        "calls":
-            total_calls,
-
-        "directions":
-            total_directions,
-
-        "shares":
-            total_shares,
-
-        "action_rate":
-            overall_action_rate,
-
-    }
-
-
-    return render_template(
-        "admin/business_analytics.html",
-
-        analytics_range=
-            analytics_range,
-
-        listing_reports=
-            listing_reports,
-
-        totals=
-            totals,
-    )
-
-
-# =========================================================
-# BUSINESS ANALYTICS — LISTING DETAIL
-# =========================================================
-
-@admin_bp.route(
-    "/business-analytics/<int:item_id>"
-)
-def business_analytics_detail(
-    item_id,
-):
-
-    auth = require_admin()
-
-    if auth:
-        return auth
-
-
-    # =====================================================
-    # LOAD LISTING
-    # =====================================================
-
-    item = (
-        ContentItem.query
-        .get_or_404(
-            item_id
-        )
-    )
-
-
-    # =====================================================
-    # ONLY BUSINESS / PROMOTION
-    # =====================================================
-
-    if (
-        item.listing_level
-        not in {
-            "business",
-            "promotion",
-        }
-    ):
-
-        flash(
-            (
-                "Business analytics are available "
-                "for Business and Promotion listings."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.business_analytics"
-            )
-        )
-
-
-    analytics_range = (
-        _get_analytics_date_range()
-    )
-
-
-    analytics = (
-        _build_business_analytics(
-            item,
-            analytics_range,
-        )
-    )
-
-
-    return render_template(
-        "admin/business_analytics_detail.html",
-
-        item=
-            item,
-
-        analytics=
-            analytics,
-
-        analytics_range=
-            analytics_range,
-    )
-
-@admin_bp.route(
-    "/categories/<int:category_id>/delete",
-    methods=["POST"]
-)
-def delete_category(category_id):
-
-    auth = require_admin()
-    if auth:
-        return auth
-
-    category = Category.query.get_or_404(
-        category_id
-    )
-
-    category_name = category.name
-    category_slug = category.slug
-
-    try:
-
-        # -----------------------------------------
-        # Find content using this category
-        # -----------------------------------------
-
-        items = ContentItem.query.filter_by(
-            category=category_slug
-        ).all()
-
-        for item in items:
-
-            # Disconnect approved submissions
-            submissions = PendingSubmission.query.filter_by(
-                published_content_id=item.id
-            ).all()
-
-            for submission in submissions:
-                submission.published_content_id = None
-
-            # Delete images
-            ContentImage.query.filter_by(
-                content_item_id=item.id
-            ).delete(
-                synchronize_session=False
-            )
-
-            db.session.delete(item)
-
-        # -----------------------------------------
-        # Delete pending submissions in category
-        # -----------------------------------------
-
-        pending_submissions = (
-            PendingSubmission.query.filter_by(
-                category=category_slug
-            ).all()
-        )
-
-        for submission in pending_submissions:
-
-            PendingSubmissionImage.query.filter_by(
-                submission_id=submission.id
-            ).delete(
-                synchronize_session=False
-            )
-
-            db.session.delete(
-                submission
-            )
-
-        # -----------------------------------------
-        # Handle category-specific QR access points
-        # -----------------------------------------
-
-        access_points = AccessPoint.query.filter_by(
-            default_category=category_slug
-        ).all()
-
-        for point in access_points:
-
-            # Turn them back into general QR points
-            point.qr_type = "general"
-            point.default_category = None
-
-        # -----------------------------------------
-        # Delete category itself
-        # -----------------------------------------
-
-        db.session.delete(category)
-        db.session.commit()
-
-        flash(
-            f"{category_name} permanently deleted.",
-            "success"
-        )
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-        flash(
-            f"Unable to delete category: {exc}",
-            "error"
-        )
-
-    return redirect(
-        url_for("admin.categories")
-    )
-
-def get_expiry_intelligence(item, today=None):
-    today = today or date.today()
-    if not item.active or item.archived:
-        return None
-
-    expiry_date = get_content_expiry_date(item)
-    if not expiry_date:
-        return None
-
-    days_remaining = (expiry_date - today).days
-    if 0 <= days_remaining <= EXPIRING_SOON_DAYS:
-        return {
-            "expiring_soon": True,
-            "days_remaining": days_remaining,
-            "expiry_date": expiry_date,
-        }
-
-    return None
-
-
-def archive_expired_content():
-    today = date.today()
-    items = ContentItem.query.filter(ContentItem.archived.is_(False)).all()
-    archived_count = 0
-
-    for item in items:
-        info = get_archive_intelligence(item, today)
-        if info and info["ready_to_archive"]:
-            item.archived = True
-            item.active = False
-
-            item.archived_at = (
-               datetime.utcnow()
-            )
-            archived_count += 1
-
-    if archived_count:
-        db.session.commit()
-
-    return archived_count
-
-
-def get_public_base_url():
-    return os.environ.get(
-        "PUBLIC_BASE_URL",
-        "https://lac-local-access.onrender.com",
-    ).rstrip("/")
-
-
-def get_access_point_qr_url(access_point):
-    """
-    Every QR points to the access point route.
-
-    General QR:
-        /q/KWM-TAXI-001
-
-    Category-specific QR:
-        /q/KWM-GROC-001
-
-    The /q/<code> route decides whether to show
-    categories or redirect to default_category.
-    """
-    return (
-        f"{get_public_base_url()}"
-        f"/q/{access_point.code}"
-    )
-
-def get_public_base_url():
-    return os.environ.get(
-        "PUBLIC_BASE_URL",
-        "https://lac-local-access.onrender.com",
-    ).rstrip("/")
-
-
-def get_access_point_qr_url(access_point):
-    """
-    Every QR points to the access point route.
-
-    General QR:
-        /q/KWM-TAXI-001
-
-    Category-specific QR:
-        /q/KWM-GROC-001
-
-    The /q/<code> route decides whether to show
-    categories or redirect to default_category.
-    """
-    return (
-        f"{get_public_base_url()}"
-        f"/q/{access_point.code}"
-    )
-
-
-def _get_pricing_model(
-    category,
-    content_type=None,
-):
-
-    # =====================================================
-    # NORMALIZE VALUES
-    # =====================================================
-
-    category = (
-        str(
-            category
-            or ""
-        )
-        .strip()
-        .lower()
-    )
-
-
-    content_type = (
-        str(
-            content_type
-            or ""
-        )
-        .strip()
-        .lower()
-        or None
-    )
-
-
-    # =====================================================
-    # CONTENT TYPE OVERRIDE
-    #
-    # More specific rule wins first.
-    # =====================================================
-
-    override_key = (
-        category,
-        content_type,
-    )
-
-
-    if (
-        override_key
-        in KALXA_PRICING_MODEL_OVERRIDES
-    ):
-
-        return (
-            KALXA_PRICING_MODEL_OVERRIDES[
-                override_key
-            ]
-        )
-
-
-    # =====================================================
-    # PRESENCE CATEGORY
-    # =====================================================
-
-    if (
-        category
-        in KALXA_PRESENCE_CATEGORIES
-    ):
-
-        return (
-            PRICING_MODEL_PRESENCE
-        )
-
-
-    # =====================================================
-    # CAMPAIGN CATEGORY
-    # =====================================================
-
-    if (
-        category
-        in KALXA_CAMPAIGN_CATEGORIES
-    ):
-
-        return (
-            PRICING_MODEL_CAMPAIGN
-        )
-
-
-    # =====================================================
-    # NO COMMERCIAL MODEL YET
-    #
-    # IMPORTANT:
-    #
-    # Do NOT guess.
-    #
-    # Existing/community content can continue working while
-    # we decide how a new category should be monetized.
-    # =====================================================
-
-    return None
-
-def get_content_workflow(
-    category,
-    content_type,
-):
-
-    # =====================================================
-    # NORMALIZE INPUT
-    # =====================================================
-
-    category = (
-        str(
-            category
-            or ""
-        )
-        .strip()
-        .lower()
-    )
-
-
-    content_type = (
-        str(
-            content_type
-            or ""
-        )
-        .strip()
-        .lower()
-    )
-
-
-    canonical_category = (
-        normalize_category(
-            category
-        )
-    )
-
-
-    # =====================================================
-    # CHECK EXISTING CONTENT-TYPE WORKFLOW
-    # =====================================================
-
-    category_workflows = (
-        ADMIN_CONTENT_WORKFLOWS.get(
-            category,
-            {},
-        )
-    )
-
-
-    workflow = (
-        category_workflows.get(
-            content_type
-        )
-    )
-
-
-    if workflow:
-
-        workflow = dict(
-            workflow
-        )
-
-
-    # =====================================================
-    # JOBS
-    #
-    # Kalxa Jobs is a FREE community utility.
-    #
-    # Job opportunities do not enter the commercial
-    # Presence / Campaign pricing engine.
-    # =====================================================
-
-    elif (
-        canonical_category
-        == "jobs"
-    ):
-
-        if (
-            content_type
-            == "job"
-        ):
-
-            workflow = {
-
-                "lifetime_type":
-                    "until_unavailable",
-
-                "notification_eligible":
-                    True,
-            }
-
-        else:
-
-            workflow = {
-
-                "lifetime_type":
-                    "time_specific",
-
-                "notification_eligible":
-                    True,
-            }
-
-
-    # =====================================================
-    # EVENTS
-    # =====================================================
-
-    elif (
-        canonical_category
-        == "events"
-    ):
-
-        workflow = {
-
-            "lifetime_type":
-                "time_specific",
-
-            "notification_eligible":
-                True,
-        }
-
-
-    # =====================================================
-    # ONGOING CATEGORIES
-    # =====================================================
-
-    elif (
-        canonical_category
-        in {
-            "restaurants",
-            "beauty",
-            "accommodation",
-            "delivery",
-            "services",
-            "building",
-            "transport",
-        }
-    ):
-
-        workflow = {
-
-            "lifetime_type":
-                "ongoing",
-
-            "notification_eligible":
-                True,
-        }
-
-
-    # =====================================================
-    # RENTALS
-    # =====================================================
-
-    elif (
-        canonical_category
-        in {
-            "rentals",
-            "property",
-        }
-    ):
-
-        workflow = {
-
-            "lifetime_type":
-                "until_unavailable",
-
-            "notification_eligible":
-                True,
-        }
-
-
-    # =====================================================
-    # GENERIC TIME-SPECIFIC CONTENT
-    # =====================================================
-
-    else:
-
-        workflow = {
-
-            "lifetime_type":
-                "time_specific",
-
-            "notification_eligible":
-                True,
-        }
-
-
-    # =====================================================
-    # PRICING MODEL
-    # =====================================================
-    #
-    # CRITICAL:
-    #
-    # Jobs are free regardless of their older pricing
-    # configuration.
-    #
-    # This prevents:
-    #
-    # free job
-    #   -> admin edits
-    #   -> suddenly becomes paid Campaign
-    #
-    # =====================================================
-
-    if (
-        canonical_category
-        == "jobs"
-    ):
-
-        workflow[
-            "pricing_model"
-        ] = None
-
-
-    else:
-
-        workflow[
-            "pricing_model"
-        ] = (
-            get_pricing_model(
-                category,
-                content_type,
-            )
-        )
-
-
-    return workflow
-
-
-def calculate_content_price(
-    category,
-    content_type,
-    duration_days,
-    zone_count=1,
-):
-
-    # =====================================================
-    # GET WORKFLOW
-    # =====================================================
-
-    workflow = (
-        get_content_workflow(
-            category,
-            content_type,
-        )
-    )
-
-
-    pricing_model = (
-        workflow.get(
-            "pricing_model"
-        )
-    )
-
-
-    # =====================================================
-    # VALIDATE PRICING MODEL
-    # =====================================================
-    #
-    # With the current MVP rule, every valid submission
-    # should have either:
-    #
-    # presence
-    #
-    # or
-    #
-    # campaign
-    #
-    # =====================================================
-
-    if not pricing_model:
-
-        raise KalxaPricingError(
-            (
-                "This listing does not have a valid "
-                "Kalxa pricing model."
-            )
-        )
-
-
-    # =====================================================
-    # PRESENCE
-    # =====================================================
-    #
-    # Presence always uses one home zone.
-    # =====================================================
-
-    if (
-        pricing_model
-        == PRICING_MODEL_PRESENCE
-    ):
-
-        zone_count = 1
-
-
-    # =====================================================
-    # CALCULATE PRICE
-    # =====================================================
-
-    return (
-        calculate_kalxa_price(
-
-            pricing_model=
-                pricing_model,
-
-            duration_days=
-                duration_days,
-
-            zone_count=
-                zone_count,
-        )
-    )
-
-
-def create_access_point_qr(access_point):
-
-    destination_url = (
-        get_access_point_qr_url(
-            access_point
-        )
-    )
-
-    qr = qrcode.QRCode(
-        version=None,
-        error_correction=(
-            qrcode.constants.ERROR_CORRECT_H
-        ),
-        box_size=12,
-        border=4,
-    )
-
-    qr.add_data(
-        destination_url
-    )
-
-    qr.make(
-        fit=True
-    )
-
-    image = qr.make_image(
-        fill_color="black",
-        back_color="white",
-    )
-
-    buffer = io.BytesIO()
-
-    image.save(
-        buffer,
-        format="PNG",
-    )
-
-    buffer.seek(0)
-
-    return buffer
-
-
-@admin_bp.route(
-    "/access-points/<int:access_point_id>/qr"
-)
-def access_point_qr(access_point_id):
-
-    access_point = (
-        AccessPoint.query
-        .get_or_404(access_point_id)
-    )
-
-    qr_buffer = (
-        create_access_point_qr(
-            access_point
-        )
-    )
-
-    return send_file(
-        qr_buffer,
-        mimetype="image/png",
-    )
-
-
-# ============================================================
-# LISTING CLAIMS
-# ============================================================
-
-@admin_bp.route(
-    "/claims"
-)
-def claims():
-
-    # ========================================================
-    # GET FILTER
-    # ========================================================
-
-    status_filter = (
-        request.args.get(
-            "status",
-            "pending",
-        )
-        .strip()
-        .lower()
-    )
-
-
-    allowed_statuses = {
-        "pending",
-        "approved",
-        "rejected",
-        "all",
-    }
-
-
-    if status_filter not in allowed_statuses:
-
-        status_filter = "pending"
-
-
-    # ========================================================
-    # BASE QUERY
-    # ========================================================
-
-    query = ListingClaim.query
-
-
-    # ========================================================
-    # FILTER BY STATUS
-    # ========================================================
-
-    if status_filter != "all":
-
-        query = query.filter(
-            ListingClaim.status
-            == status_filter
-        )
-
-
-    # ========================================================
-    # LOAD CLAIMS
-    # ========================================================
-
-    claim_items = (
-        query
-        .order_by(
-            ListingClaim.created_at.desc()
-        )
-        .all()
-    )
-
-
-    # ========================================================
-    # COUNTS
-    # ========================================================
-
-    pending_count = (
-        ListingClaim.query
-        .filter(
-            ListingClaim.status
-            == "pending"
-        )
-        .count()
-    )
-
-
-    approved_count = (
-        ListingClaim.query
-        .filter(
-            ListingClaim.status
-            == "approved"
-        )
-        .count()
-    )
-
-
-    rejected_count = (
-        ListingClaim.query
-        .filter(
-            ListingClaim.status
-            == "rejected"
-        )
-        .count()
-    )
-
-
-    total_count = (
-        ListingClaim.query
-        .count()
-    )
-
-
-    # ========================================================
-    # RENDER
-    # ========================================================
-
-    return render_template(
-        "admin/claims.html",
-
-        claims=claim_items,
-
-        status_filter=status_filter,
-
-        pending_count=pending_count,
-
-        approved_count=approved_count,
-
-        rejected_count=rejected_count,
-
-        total_count=total_count,
-    )
-
-
-# ============================================================
-# LISTING CLAIM DETAIL
-# ============================================================
-
-@admin_bp.route(
-    "/claims/<int:claim_id>"
-)
-def claim_detail(
-    claim_id,
-):
-
-    claim = (
-        ListingClaim.query
-        .filter_by(
-            id=claim_id
-        )
-        .first_or_404()
-    )
-
-
-    item = claim.content_item
-
-
-    return render_template(
-        "admin/claim_detail.html",
-
-        claim=claim,
-
-        item=item,
-    )
-
-
-# ============================================================
-# APPROVE LISTING CLAIM
-# ============================================================
-
-@admin_bp.route(
-    "/claims/<int:claim_id>/approve",
-    methods=["POST"],
-)
-def approve_claim(
-    claim_id,
-):
-
-    # ========================================================
-    # FIND CLAIM
-    # ========================================================
-
-    claim = (
-        ListingClaim.query
-        .filter_by(
-            id=claim_id
-        )
-        .first_or_404()
-    )
-
-
-    item = claim.content_item
-
-
-    # ========================================================
-    # CLAIM MUST STILL BE PENDING
-    # ========================================================
-
-    if claim.status != "pending":
-
-        flash(
-            "This claim has already been reviewed.",
-            "warning",
-        )
-
-        return redirect(
-            url_for(
-                "admin.claim_detail",
-                claim_id=claim.id,
-            )
-        )
-
-
-    # ========================================================
-    # LISTING MUST STILL BE CLAIMABLE
-    # ========================================================
-
-    if not item.can_be_claimed():
-
-        flash(
-            (
-                "This listing can no longer be claimed. "
-                "Its ownership or listing level has changed."
-            ),
-            "warning",
-        )
-
-        return redirect(
-            url_for(
-                "admin.claim_detail",
-                claim_id=claim.id,
-            )
-        )
-
-
-    # ========================================================
-    # ADMIN NOTES
-    # ========================================================
-
-    admin_notes = (
-        request.form.get(
-            "admin_notes",
-            ""
-        )
-        .strip()
-    )
-
-
-    # ========================================================
-    # APPROVE CLAIM
-    # ========================================================
-    #
-    # Discovery
-    #     ↓
-    # Business
-    #
-    # Unclaimed
-    #     ↓
-    # Claimed
-    #
-    # Verification is granted because an administrator
-    # has explicitly reviewed and approved the claim.
-    #
-    # ========================================================
-
-    claim.status = "approved"
-
-    claim.reviewed_at = datetime.utcnow()
-
-    claim.admin_notes = (
-        admin_notes
-        if admin_notes
-        else None
-    )
-
-
-    item.listing_level = "business"
-
-    item.ownership_status = "claimed"
-
-    item.is_verified = True
-
-
-    # ========================================================
-    # FEATURED IS NOT AUTOMATIC
-    # ========================================================
-    #
-    # Claiming a listing does NOT turn it into paid
-    # Promotion.
-    #
-    # This also protects against an old seeded listing
-    # accidentally retaining featured=True.
-    #
-    # ========================================================
-
-    item.featured = False
-
-
-    # ========================================================
-    # NOTIFICATION DISTRIBUTION IS NOT AUTOMATIC
-    # ========================================================
-
-    item.notification_eligible = False
-
-
-    # ========================================================
-    # SAVE
-    # ========================================================
-
-    try:
-
-        db.session.commit()
-
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-
-        current_app.logger.exception(
-            "Failed to approve listing claim. "
-            "claim_id=%s content_item_id=%s error=%s",
-            claim.id,
-            item.id,
-            exc,
-        )
-
-
-        flash(
-            "The claim could not be approved.",
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.claim_detail",
-                claim_id=claim.id,
-            )
-        )
-
-
-    flash(
-        (
-            "Claim approved. "
-            "The listing is now business-controlled."
-        ),
-        "success",
-    )
-
-
-    return redirect(
-        url_for(
-            "admin.claim_detail",
-            claim_id=claim.id,
-        )
-    )
-
-
-# ============================================================
-# REJECT LISTING CLAIM
-# ============================================================
-
-@admin_bp.route(
-    "/claims/<int:claim_id>/reject",
-    methods=["POST"],
-)
-def reject_claim(
-    claim_id,
-):
-
-    # ========================================================
-    # FIND CLAIM
-    # ========================================================
-
-    claim = (
-        ListingClaim.query
-        .filter_by(
-            id=claim_id
-        )
-        .first_or_404()
-    )
-
-
-    # ========================================================
-    # CLAIM MUST STILL BE PENDING
-    # ========================================================
-
-    if claim.status != "pending":
-
-        flash(
-            "This claim has already been reviewed.",
-            "warning",
-        )
-
-        return redirect(
-            url_for(
-                "admin.claim_detail",
-                claim_id=claim.id,
-            )
-        )
-
-
-    # ========================================================
-    # ADMIN NOTES
-    # ========================================================
-
-    admin_notes = (
-        request.form.get(
-            "admin_notes",
-            ""
-        )
-        .strip()
-    )
-
-
-    # ========================================================
-    # REJECT CLAIM
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # We only update the claim.
-    #
-    # The ContentItem remains:
-    #
-    # listing_level = discovery
-    # ownership_status = unclaimed
-    # is_verified = False
-    #
-    # This means another legitimate owner can claim it later.
-    #
-    # ========================================================
-
-    claim.status = "rejected"
-
-    claim.reviewed_at = datetime.utcnow()
-
-    claim.admin_notes = (
-        admin_notes
-        if admin_notes
-        else None
-    )
-
-
-    # ========================================================
-    # SAVE
-    # ========================================================
-
-    try:
-
-        db.session.commit()
-
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-
-        current_app.logger.exception(
-            "Failed to reject listing claim. "
-            "claim_id=%s error=%s",
-            claim.id,
-            exc,
-        )
-
-
-        flash(
-            "The claim could not be rejected.",
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.claim_detail",
-                claim_id=claim.id,
-            )
-        )
-
-
-    flash(
-        "Claim rejected.",
-        "success",
-    )
-
-
-    return redirect(
-        url_for(
-            "admin.claim_detail",
-            claim_id=claim.id,
-        )
-    )
-
-
-
-@admin_bp.route(
-    "/access-points/"
-    "<int:access_point_id>/qr/download"
-)
-def download_access_point_qr(
-    access_point_id,
-):
-
-    access_point = (
-        AccessPoint.query
-        .get_or_404(access_point_id)
-    )
-
-    qr_buffer = (
-        create_access_point_qr(
-            access_point
-        )
-    )
-
-    filename = (
-        f"LaC-{access_point.code}.png"
-    )
-
-    return send_file(
-        qr_buffer,
-        mimetype="image/png",
-        as_attachment=True,
-        download_name=filename,
-    )
 
 
 @admin_bp.route("/login", methods=["GET", "POST"])
@@ -4145,17 +843,13 @@ def login():
     if request.method == "POST":
         password = request.form.get("password", "")
         correct_password = os.environ.get("LAC_ADMIN_PASSWORD")
-
         if not correct_password:
             flash("Admin password is not configured.", "error")
             return render_template("admin/login.html")
-
         if password == correct_password:
             session["lac_admin"] = True
             return redirect(url_for("admin.analytics"))
-
         flash("Incorrect password.", "error")
-
     return render_template("admin/login.html")
 
 
@@ -4165,2460 +859,540 @@ def logout():
     return redirect(url_for("admin.login"))
 
 
-
 @admin_bp.route("/")
 @admin_bp.route("/analytics")
 def analytics():
-
     auth = require_admin()
-
     if auth:
         return auth
 
-
-    # =========================================================
-    # DATE WINDOWS
-    # =========================================================
-
     now = datetime.utcnow()
+    today_start = datetime(now.year, now.month, now.day)
+    tomorrow_start = today_start + timedelta(days=1)
+    seven_days_ago = today_start - timedelta(days=6)
+    fourteen_days_ago = today_start - timedelta(days=13)
+    thirty_days_ago = today_start - timedelta(days=29)
+    previous_7_start = seven_days_ago - timedelta(days=7)
 
-    today_start = datetime(
-        now.year,
-        now.month,
-        now.day,
-    )
-
-    tomorrow_start = (
-        today_start
-        + timedelta(days=1)
-    )
-
-    seven_days_ago = (
-        today_start
-        - timedelta(days=6)
-    )
-
-    fourteen_days_ago = (
-        today_start
-        - timedelta(days=13)
-    )
-
-    thirty_days_ago = (
-        today_start
-        - timedelta(days=29)
-    )
-
-    previous_7_start = (
-        seven_days_ago
-        - timedelta(days=7)
-    )
-
-
-    # =========================================================
-    # QR SCAN ANALYTICS
-    # =========================================================
-
-    total_scans = (
-        QRScan.query
-        .filter(
-            QRScan.event_type == "scan"
-        )
-        .count()
-    )
-
-
-    today_scans = (
-        QRScan.query
-        .filter(
-            QRScan.event_type == "scan",
-            QRScan.scanned_at >= today_start,
-            QRScan.scanned_at < tomorrow_start,
-        )
-        .count()
-    )
-
-
-    seven_day_scans = (
-        QRScan.query
-        .filter(
-            QRScan.event_type == "scan",
-            QRScan.scanned_at >= seven_days_ago,
-        )
-        .count()
-    )
-
-
-    thirty_day_scans = (
-        QRScan.query
-        .filter(
-            QRScan.event_type == "scan",
-            QRScan.scanned_at >= thirty_days_ago,
-        )
-        .count()
-    )
-
-
-    previous_7_scans = (
-        QRScan.query
-        .filter(
-            QRScan.event_type == "scan",
-            QRScan.scanned_at >= previous_7_start,
-            QRScan.scanned_at < seven_days_ago,
-        )
-        .count()
-    )
-
+    total_scans = QRScan.query.filter(QRScan.event_type == "scan").count()
+    today_scans = QRScan.query.filter(QRScan.event_type == "scan", QRScan.scanned_at >= today_start, QRScan.scanned_at < tomorrow_start).count()
+    seven_day_scans = QRScan.query.filter(QRScan.event_type == "scan", QRScan.scanned_at >= seven_days_ago).count()
+    thirty_day_scans = QRScan.query.filter(QRScan.event_type == "scan", QRScan.scanned_at >= thirty_days_ago).count()
+    previous_7_scans = QRScan.query.filter(QRScan.event_type == "scan", QRScan.scanned_at >= previous_7_start, QRScan.scanned_at < seven_days_ago).count()
 
     if previous_7_scans > 0:
-
-        seven_day_growth = (
-            (
-                seven_day_scans
-                - previous_7_scans
-            )
-            / previous_7_scans
-        ) * 100
-
+        seven_day_growth = ((seven_day_scans - previous_7_scans) / previous_7_scans) * 100
     elif seven_day_scans > 0:
-
         seven_day_growth = 100.0
-
     else:
-
         seven_day_growth = 0.0
 
+    total_access_points = AccessPoint.query.count()
+    active_access_points = AccessPoint.query.filter(AccessPoint.active.is_(True)).count()
+    scans_per_access_point = thirty_day_scans / active_access_points if active_access_points else 0
 
-    # =========================================================
-    # ACCESS POINT METRICS
-    # =========================================================
-
-    total_access_points = (
-        AccessPoint.query
-        .count()
-    )
-
-
-    active_access_points = (
-        AccessPoint.query
-        .filter(
-            AccessPoint.active.is_(True)
-        )
-        .count()
-    )
-
-
-    scans_per_access_point = (
-        thirty_day_scans
-        / active_access_points
-
-        if active_access_points
-
-        else 0
-    )
-
-
-    # =========================================================
-    # CATEGORY ACTIVITY
-    # =========================================================
-
-    total_category_views = (
-        QRScan.query
-        .filter(
-            QRScan.event_type
-            == "category_view"
-        )
-        .count()
-    )
-
-
+    total_category_views = QRScan.query.filter(QRScan.event_type == "category_view").count()
     category_results = (
-        db.session.query(
-            QRScan.category_selected,
-            func.count(
-                QRScan.id
-            ).label(
-                "view_count"
-            ),
-        )
-        .filter(
-            QRScan.event_type
-            == "category_view",
-
-            QRScan.category_selected
-            .isnot(None),
-        )
-        .group_by(
-            QRScan.category_selected
-        )
-        .order_by(
-            func.count(
-                QRScan.id
-            ).desc()
-        )
+        db.session.query(QRScan.category_selected, func.count(QRScan.id).label("view_count"))
+        .filter(QRScan.event_type == "category_view", QRScan.category_selected.isnot(None))
+        .group_by(QRScan.category_selected)
+        .order_by(func.count(QRScan.id).desc())
         .all()
     )
-
-
-    category_map = {
-        c.slug: c
-        for c in get_categories(
-            active_only=False
-        )
-    }
-
-
+    category_records = get_categories(active_only=False)
+    category_map = {c.slug: c for c in category_records}
     category_activity = []
-
-
     for result in category_results:
-
-        percentage = (
-            (
-                result.view_count
-                / total_category_views
-            )
-            * 100
-
-            if total_category_views
-
-            else 0
-        )
-
-
-        record = (
-            category_map.get(
-                result.category_selected
-            )
-        )
-
-
+        percentage = (result.view_count / total_category_views) * 100 if total_category_views else 0
+        record = category_map.get(result.category_selected)
         category_activity.append({
-
-            "category":
-                result.category_selected,
-
-            "name":
-                (
-                    record.name
-                    if record
-                    else result.category_selected
-                ),
-
-            "icon":
-                (
-                    record.icon
-                    if record
-                    else ""
-                ),
-
-            "views":
-                result.view_count,
-
-            "percentage":
-                round(
-                    percentage,
-                    1,
-                ),
-
+            "category": result.category_selected,
+            "name": record.name if record else result.category_selected,
+            "icon": record.icon if record else "",
+            "views": result.view_count,
+            "percentage": round(percentage, 1),
         })
-
-
-    # =========================================================
-    # TOP QR LOCATIONS
-    # =========================================================
 
     top_locations_query = (
         db.session.query(
-
             AccessPoint.id,
-
             AccessPoint.code,
-
             AccessPoint.name,
-
             AccessPoint.location_type,
-
-            Zone.name.label(
-                "zone_name"
-            ),
-
-            func.count(
-                QRScan.id
-            ).label(
-                "scan_count"
-            ),
-
+            Zone.name.label("zone_name"),
+            func.count(QRScan.id).label("scan_count"),
         )
-        .join(
-            Zone,
-            AccessPoint.zone_id
-            == Zone.id,
-        )
-        .outerjoin(
-            QRScan,
-
-            (
-                QRScan.access_point_id
-                == AccessPoint.id
-            )
-            &
-            (
-                QRScan.event_type
-                == "scan"
-            ),
-        )
-        .group_by(
-
-            AccessPoint.id,
-
-            AccessPoint.code,
-
-            AccessPoint.name,
-
-            AccessPoint.location_type,
-
-            Zone.name,
-
-        )
-        .order_by(
-            func.count(
-                QRScan.id
-            ).desc()
-        )
+        .join(Zone, AccessPoint.zone_id == Zone.id)
+        .outerjoin(QRScan, (QRScan.access_point_id == AccessPoint.id) & (QRScan.event_type == "scan"))
+        .group_by(AccessPoint.id, AccessPoint.code, AccessPoint.name, AccessPoint.location_type, Zone.name)
+        .order_by(func.count(QRScan.id).desc())
         .limit(10)
         .all()
     )
-
-
     top_locations = []
-
-
     for point in top_locations_query:
-
-        share = (
-            (
-                point.scan_count
-                / total_scans
-            )
-            * 100
-
-            if total_scans
-
-            else 0
-        )
-
-
+        share = (point.scan_count / total_scans) * 100 if total_scans else 0
         top_locations.append({
-
-            "id":
-                point.id,
-
-            "code":
-                point.code,
-
-            "name":
-                point.name,
-
-            "location_type":
-                point.location_type,
-
-            "zone_name":
-                point.zone_name,
-
-            "scan_count":
-                point.scan_count,
-
-            "share":
-                round(
-                    share,
-                    1,
-                ),
-
+            "id": point.id,
+            "code": point.code,
+            "name": point.name,
+            "location_type": point.location_type,
+            "zone_name": point.zone_name,
+            "scan_count": point.scan_count,
+            "share": round(share, 1),
         })
-
-
-    # =========================================================
-    # ZONE ACTIVITY
-    # =========================================================
 
     zone_query = (
-        db.session.query(
-
-            Zone.id,
-
-            Zone.name,
-
-            func.count(
-                QRScan.id
-            ).label(
-                "scan_count"
-            ),
-
-        )
-        .outerjoin(
-            AccessPoint,
-            AccessPoint.zone_id
-            == Zone.id,
-        )
-        .outerjoin(
-            QRScan,
-
-            (
-                QRScan.access_point_id
-                == AccessPoint.id
-            )
-            &
-            (
-                QRScan.event_type
-                == "scan"
-            ),
-        )
-        .group_by(
-            Zone.id,
-            Zone.name,
-        )
-        .order_by(
-            func.count(
-                QRScan.id
-            ).desc()
-        )
+        db.session.query(Zone.id, Zone.name, func.count(QRScan.id).label("scan_count"))
+        .outerjoin(AccessPoint, AccessPoint.zone_id == Zone.id)
+        .outerjoin(QRScan, (QRScan.access_point_id == AccessPoint.id) & (QRScan.event_type == "scan"))
+        .group_by(Zone.id, Zone.name)
+        .order_by(func.count(QRScan.id).desc())
         .all()
     )
-
-
     zone_activity = []
-
-
-    for zone in zone_query:
-
-        percentage = (
-            (
-                zone.scan_count
-                / total_scans
-            )
-            * 100
-
-            if total_scans
-
-            else 0
-        )
-
-
-        zone_activity.append({
-
-            "name":
-                zone.name,
-
-            "scan_count":
-                zone.scan_count,
-
-            "percentage":
-                round(
-                    percentage,
-                    1,
-                ),
-
-        })
-
-
-    # =========================================================
-    # LOW PERFORMING ACCESS POINTS
-    # =========================================================
+    for zone_row in zone_query:
+        percentage = (zone_row.scan_count / total_scans) * 100 if total_scans else 0
+        zone_activity.append({"name": zone_row.name, "scan_count": zone_row.scan_count, "percentage": round(percentage, 1)})
 
     recent_scan_counts = dict(
-
-        db.session.query(
-            QRScan.access_point_id,
-            func.count(
-                QRScan.id
-            ),
-        )
-        .filter(
-            QRScan.event_type
-            == "scan",
-
-            QRScan.scanned_at
-            >= thirty_days_ago,
-        )
-        .group_by(
-            QRScan.access_point_id
-        )
+        db.session.query(QRScan.access_point_id, func.count(QRScan.id))
+        .filter(QRScan.event_type == "scan", QRScan.scanned_at >= thirty_days_ago)
+        .group_by(QRScan.access_point_id)
         .all()
-
     )
-
-
     low_performing_points = []
-
-
-    for point in (
-        AccessPoint.query
-        .filter(
-            AccessPoint.active.is_(True)
-        )
-        .all()
-    ):
-
-        scan_count = (
-            recent_scan_counts.get(
-                point.id,
-                0,
-            )
-        )
-
-
+    for point in AccessPoint.query.filter(AccessPoint.active.is_(True)).all():
+        scan_count = recent_scan_counts.get(point.id, 0)
         if scan_count <= 5:
+            low_performing_points.append({"name": point.name, "code": point.code, "zone": point.zone.name, "scan_count": scan_count})
+    low_performing_points.sort(key=lambda row: row["scan_count"])
 
-            low_performing_points.append({
-
-                "name":
-                    point.name,
-
-                "code":
-                    point.code,
-
-                "zone":
-                    point.zone.name,
-
-                "scan_count":
-                    scan_count,
-
-            })
-
-
-    low_performing_points.sort(
-        key=lambda row:
-            row["scan_count"]
-    )
-
-
-    # =========================================================
-    # DAILY SCAN TREND
-    # =========================================================
-
-    scan_rows = (
-        QRScan.query
-        .filter(
-            QRScan.event_type
-            == "scan",
-
-            QRScan.scanned_at
-            >= fourteen_days_ago,
-        )
-        .all()
-    )
-
-
+    scan_rows = QRScan.query.filter(QRScan.event_type == "scan", QRScan.scanned_at >= fourteen_days_ago).all()
     daily_counts = {}
-
-
     for number in range(14):
-
-        day = (
-            fourteen_days_ago.date()
-            + timedelta(
-                days=number
-            )
-        )
-
-        daily_counts[
-            day
-        ] = 0
-
-
+        day = fourteen_days_ago.date() + timedelta(days=number)
+        daily_counts[day] = 0
     for scan in scan_rows:
-
-        scan_day = (
-            scan.scanned_at.date()
-        )
-
-
+        scan_day = scan.scanned_at.date()
         if scan_day in daily_counts:
-
-            daily_counts[
-                scan_day
-            ] += 1
-
-
-    max_daily_scans = max(
-        daily_counts.values(),
-        default=0,
-    )
-
-
+            daily_counts[scan_day] += 1
+    max_daily_scans = max(daily_counts.values(), default=0)
     daily_scan_trend = []
-
-
     for scan_date, count in daily_counts.items():
+        bar_percentage = (count / max_daily_scans) * 100 if max_daily_scans else 0
+        daily_scan_trend.append({"date": scan_date, "label": scan_date.strftime("%d %b"), "count": count, "bar_percentage": round(bar_percentage, 1)})
 
-        bar_percentage = (
-            (
-                count
-                / max_daily_scans
-            )
-            * 100
+    category_engagement_rate = (total_category_views / total_scans) * 100 if total_scans else 0
+    recent_scans = QRScan.query.filter(QRScan.event_type == "scan").order_by(QRScan.scanned_at.desc()).limit(20).all()
+    pending_submissions_count = PendingSubmission.query.filter_by(status="pending").count()
 
-            if max_daily_scans
-
-            else 0
-        )
-
-
-        daily_scan_trend.append({
-
-            "date":
-                scan_date,
-
-            "label":
-                scan_date.strftime(
-                    "%d %b"
-                ),
-
-            "count":
-                count,
-
-            "bar_percentage":
-                round(
-                    bar_percentage,
-                    1,
-                ),
-
-        })
-
-
-    # =========================================================
-    # CATEGORY ENGAGEMENT RATE
-    # =========================================================
-
-    category_engagement_rate = (
-        (
-            total_category_views
-            / total_scans
-        )
-        * 100
-
-        if total_scans
-
-        else 0
-    )
-
-
-    # =========================================================
-    # RECENT SCANS
-    # =========================================================
-
-    recent_scans = (
-        QRScan.query
-        .filter(
-            QRScan.event_type
-            == "scan"
-        )
-        .order_by(
-            QRScan.scanned_at.desc()
-        )
-        .limit(20)
-        .all()
-    )
-
-
-    # =========================================================
-    # PENDING SUBMISSIONS
-    # =========================================================
-
-    pending_submissions_count = (
-        PendingSubmission.query
-        .filter_by(
-            status="pending"
-        )
-        .count()
-    )
-
-
-    # =========================================================
-    # ENGAGEMENT ANALYTICS
-    # =========================================================
-
-    total_listing_views = (
-        EngagementEvent.query
-        .filter_by(
-            event_type="listing_view"
-        )
-        .count()
-    )
-
-
-    total_whatsapp_clicks = (
-        EngagementEvent.query
-        .filter_by(
-            event_type="whatsapp_click"
-        )
-        .count()
-    )
-
-
-    total_call_clicks = (
-        EngagementEvent.query
-        .filter_by(
-            event_type="call_click"
-        )
-        .count()
-    )
-
-
-    total_share_clicks = (
-        EngagementEvent.query
-        .filter_by(
-            event_type="share_click"
-        )
-        .count()
-    )
-
-
-    total_directions_clicks = (
-        EngagementEvent.query
-        .filter_by(
-            event_type="directions_click"
-        )
-        .count()
-    )
-
-
-    total_useful_actions = (
-
-        total_whatsapp_clicks
-        +
-        total_call_clicks
-        +
-        total_share_clicks
-        +
-        total_directions_clicks
-
-    )
-
-
-    if total_listing_views > 0:
-
-        listing_action_rate = round(
-            (
-                total_useful_actions
-                / total_listing_views
-            )
-            * 100,
-            1,
-        )
-
-    else:
-
-        listing_action_rate = 0
-
-
-    # =========================================================
-    # TOP LISTINGS / CONTENT PERFORMANCE
-    # =========================================================
+    total_listing_views = EngagementEvent.query.filter_by(event_type="listing_view").count()
+    total_whatsapp_clicks = EngagementEvent.query.filter_by(event_type="whatsapp_click").count()
+    total_call_clicks = EngagementEvent.query.filter_by(event_type="call_click").count()
+    total_share_clicks = EngagementEvent.query.filter_by(event_type="share_click").count()
+    total_directions_clicks = EngagementEvent.query.filter_by(event_type="directions_click").count()
+    total_job_apply_clicks = EngagementEvent.query.filter_by(event_type="job_apply_click").count()
+    total_useful_actions = total_whatsapp_clicks + total_call_clicks + total_share_clicks + total_directions_clicks + total_job_apply_clicks
+    listing_action_rate = round((total_useful_actions / total_listing_views) * 100, 1) if total_listing_views else 0
 
     content_performance_rows = (
-
         db.session.query(
-
             EngagementEvent.content_item_id,
-
-            db.func.sum(
-                db.case(
-                    (
-                        EngagementEvent.event_type
-                        == "listing_view",
-                        1,
-                    ),
-                    else_=0,
-                )
-            ).label(
-                "listing_views"
-            ),
-
-            db.func.sum(
-                db.case(
-                    (
-                        EngagementEvent.event_type
-                        == "whatsapp_click",
-                        1,
-                    ),
-                    else_=0,
-                )
-            ).label(
-                "whatsapp_clicks"
-            ),
-
-            db.func.sum(
-                db.case(
-                    (
-                        EngagementEvent.event_type
-                        == "call_click",
-                        1,
-                    ),
-                    else_=0,
-                )
-            ).label(
-                "call_clicks"
-            ),
-
-            db.func.sum(
-                db.case(
-                    (
-                        EngagementEvent.event_type
-                        == "directions_click",
-                        1,
-                    ),
-                    else_=0,
-                )
-            ).label(
-                "directions_clicks"
-            ),
-
-            db.func.sum(
-                db.case(
-                    (
-                        EngagementEvent.event_type
-                        == "share_click",
-                        1,
-                    ),
-                    else_=0,
-                )
-            ).label(
-                "share_clicks"
-            ),
-
+            func.sum(case((EngagementEvent.event_type == "listing_view", 1), else_=0)).label("listing_views"),
+            func.sum(case((EngagementEvent.event_type == "whatsapp_click", 1), else_=0)).label("whatsapp_clicks"),
+            func.sum(case((EngagementEvent.event_type == "call_click", 1), else_=0)).label("call_clicks"),
+            func.sum(case((EngagementEvent.event_type == "directions_click", 1), else_=0)).label("directions_clicks"),
+            func.sum(case((EngagementEvent.event_type == "share_click", 1), else_=0)).label("share_clicks"),
+            func.sum(case((EngagementEvent.event_type == "job_apply_click", 1), else_=0)).label("job_apply_clicks"),
         )
-
-        .filter(
-            EngagementEvent.content_item_id
-            .isnot(None)
-        )
-
-        .group_by(
-            EngagementEvent.content_item_id
-        )
-
+        .filter(EngagementEvent.content_item_id.isnot(None))
+        .group_by(EngagementEvent.content_item_id)
         .all()
-
     )
-
-
     content_performance = []
-
-
     for row in content_performance_rows:
-
-        item = (
-            db.session.get(
-                ContentItem,
-                row.content_item_id,
-            )
-        )
-
-
-        # Content may have been deleted after
-        # historical engagement was recorded.
-
+        item = db.session.get(ContentItem, row.content_item_id)
         if item is None:
             continue
-
-
-        views = int(
-            row.listing_views
-            or 0
-        )
-
-        whatsapp = int(
-            row.whatsapp_clicks
-            or 0
-        )
-
-        calls = int(
-            row.call_clicks
-            or 0
-        )
-
-        directions = int(
-            row.directions_clicks
-            or 0
-        )
-
-        shares = int(
-            row.share_clicks
-            or 0
-        )
-
-
-        useful_actions = (
-            whatsapp
-            + calls
-            + directions
-            + shares
-        )
-
-
-        if views > 0:
-
-            actions_per_100_views = round(
-                (
-                    useful_actions
-                    / views
-                )
-                * 100,
-                1,
-            )
-
-        else:
-
-            actions_per_100_views = 0
-
-
+        views = int(row.listing_views or 0)
+        whatsapp = int(row.whatsapp_clicks or 0)
+        calls = int(row.call_clicks or 0)
+        directions = int(row.directions_clicks or 0)
+        shares = int(row.share_clicks or 0)
+        job_applies = int(row.job_apply_clicks or 0)
+        useful_actions = whatsapp + calls + directions + shares + job_applies
+        actions_per_100_views = round((useful_actions / views) * 100, 1) if views else 0
         content_performance.append({
-
-            "id":
-                item.id,
-
-            "title":
-                item.title,
-
-            "category":
-                item.category,
-
-            "zone_id":
-                item.zone_id,
-
-            "views":
-                views,
-
-            "whatsapp":
-                whatsapp,
-
-            "calls":
-                calls,
-
-            "directions":
-                directions,
-
-            "shares":
-                shares,
-
-            "useful_actions":
-                useful_actions,
-
-            "actions_per_100_views":
-                actions_per_100_views,
-
+            "id": item.id,
+            "title": item.title,
+            "category": item.category,
+            "zone_id": item.zone_id,
+            "views": views,
+            "whatsapp": whatsapp,
+            "calls": calls,
+            "directions": directions,
+            "shares": shares,
+            "job_applies": job_applies,
+            "useful_actions": useful_actions,
+            "actions_per_100_views": actions_per_100_views,
         })
 
-
-    content_performance.sort(
-
-        key=lambda row: (
-            row["useful_actions"],
-            row["views"],
-        ),
-
-        reverse=True,
-
-    )
-
-
-    top_content_performance = (
-        content_performance[:10]
-    )
-
-
-    # =========================================================
-    # MOST VIEWED LISTINGS
-    # =========================================================
-
-    most_viewed_listings = sorted(
-
-        content_performance,
-
-        key=lambda row:
-            row["views"],
-
-        reverse=True,
-
-    )[:5]
-
-
-    # =========================================================
-    # HIGH INTEREST / LOW ACTION
-    # =========================================================
-
-    high_interest_low_action = [
-
-        row
-
-        for row in content_performance
-
-        if (
-            row["views"] > 0
-            and
-            row["useful_actions"] == 0
-        )
-
-    ]
-
-
-    high_interest_low_action.sort(
-
-        key=lambda row:
-            row["views"],
-
-        reverse=True,
-
-    )
-
-
-    high_interest_low_action = (
-        high_interest_low_action[:5]
-    )
-
-
-    # =========================================================
-    # ACCESS POINT PERFORMANCE
-    # =========================================================
+    content_performance.sort(key=lambda row: (row["useful_actions"], row["views"]), reverse=True)
+    top_content_performance = content_performance[:10]
+    most_viewed_listings = sorted(content_performance, key=lambda row: row["views"], reverse=True)[:5]
+    high_interest_low_action = [row for row in content_performance if row["views"] > 0 and row["useful_actions"] == 0]
+    high_interest_low_action.sort(key=lambda row: row["views"], reverse=True)
+    high_interest_low_action = high_interest_low_action[:5]
 
     engagement_by_access_point = {}
-
-
     engagement_access_rows = (
-
-        db.session.query(
-
-            EngagementEvent.access_point_id,
-
-            EngagementEvent.event_type,
-
-            func.count(
-                EngagementEvent.id
-            ).label(
-                "event_count"
-            ),
-
-        )
-
-        .filter(
-            EngagementEvent.access_point_id
-            .isnot(None)
-        )
-
-        .group_by(
-            EngagementEvent.access_point_id,
-            EngagementEvent.event_type,
-        )
-
+        db.session.query(EngagementEvent.access_point_id, EngagementEvent.event_type, func.count(EngagementEvent.id).label("event_count"))
+        .filter(EngagementEvent.access_point_id.isnot(None))
+        .group_by(EngagementEvent.access_point_id, EngagementEvent.event_type)
         .all()
-
     )
-
-
     for row in engagement_access_rows:
-
-        if (
-            row.access_point_id
-            not in engagement_by_access_point
-        ):
-
-            engagement_by_access_point[
-                row.access_point_id
-            ] = {}
-
-
-        engagement_by_access_point[
-            row.access_point_id
-        ][
-            row.event_type
-        ] = row.event_count
-
+        engagement_by_access_point.setdefault(row.access_point_id, {})
+        engagement_by_access_point[row.access_point_id][row.event_type] = row.event_count
 
     access_point_performance = []
-
-
     for point in top_locations:
-
-        events = (
-            engagement_by_access_point.get(
-                point["id"],
-                {},
-            )
-        )
-
-
-        listing_views = int(
-            events.get(
-                "listing_view",
-                0,
-            )
-        )
-
-
-        useful_actions = (
-
-            int(
-                events.get(
-                    "whatsapp_click",
-                    0,
-                )
-            )
-
-            +
-
-            int(
-                events.get(
-                    "call_click",
-                    0,
-                )
-            )
-
-            +
-
-            int(
-                events.get(
-                    "directions_click",
-                    0,
-                )
-            )
-
-            +
-
-            int(
-                events.get(
-                    "share_click",
-                    0,
-                )
-            )
-
-        )
-
-
-        if listing_views > 0:
-
-            actions_per_100_views = round(
-                (
-                    useful_actions
-                    / listing_views
-                )
-                * 100,
-                1,
-            )
-
-        else:
-
-            actions_per_100_views = 0
-
-
-        access_point_performance.append({
-
-            **point,
-
-            "listing_views":
-                listing_views,
-
-            "useful_actions":
-                useful_actions,
-
-            "actions_per_100_views":
-                actions_per_100_views,
-
-        })
-
-
-    # =========================================================
-    # ZONE PERFORMANCE
-    # =========================================================
+        events = engagement_by_access_point.get(point["id"], {})
+        listing_views = int(events.get("listing_view", 0))
+        useful_actions = sum(int(events.get(event_type, 0)) for event_type in ACTION_EVENTS)
+        actions_per_100_views = round((useful_actions / listing_views) * 100, 1) if listing_views else 0
+        access_point_performance.append({**point, "listing_views": listing_views, "useful_actions": useful_actions, "actions_per_100_views": actions_per_100_views})
 
     zone_engagement_rows = (
-
-        db.session.query(
-
-            EngagementEvent.zone_id,
-
-            EngagementEvent.event_type,
-
-            func.count(
-                EngagementEvent.id
-            ).label(
-                "event_count"
-            ),
-
-        )
-
-        .filter(
-            EngagementEvent.zone_id
-            .isnot(None)
-        )
-
-        .group_by(
-            EngagementEvent.zone_id,
-            EngagementEvent.event_type,
-        )
-
+        db.session.query(EngagementEvent.zone_id, EngagementEvent.event_type, func.count(EngagementEvent.id).label("event_count"))
+        .filter(EngagementEvent.zone_id.isnot(None))
+        .group_by(EngagementEvent.zone_id, EngagementEvent.event_type)
         .all()
-
     )
-
-
     zone_engagement_map = {}
-
-
     for row in zone_engagement_rows:
-
-        if (
-            row.zone_id
-            not in zone_engagement_map
-        ):
-
-            zone_engagement_map[
-                row.zone_id
-            ] = {}
-
-
-        zone_engagement_map[
-            row.zone_id
-        ][
-            row.event_type
-        ] = row.event_count
-
-
-    zone_scan_map = {
-
-        zone.name:
-            zone.scan_count
-
-        for zone in zone_query
-
-    }
-
-
+        zone_engagement_map.setdefault(row.zone_id, {})
+        zone_engagement_map[row.zone_id][row.event_type] = row.event_count
+    zone_scan_map = {zone_row.name: zone_row.scan_count for zone_row in zone_query}
     zone_performance = []
-
-
-    all_zones = (
-        Zone.query
-        .order_by(
-            Zone.name.asc()
-        )
-        .all()
-    )
-
-
-    for zone in all_zones:
-
-        events = (
-            zone_engagement_map.get(
-                zone.id,
-                {},
-            )
-        )
-
-
-        listing_views = int(
-            events.get(
-                "listing_view",
-                0,
-            )
-        )
-
-
-        useful_actions = (
-
-            int(
-                events.get(
-                    "whatsapp_click",
-                    0,
-                )
-            )
-
-            +
-
-            int(
-                events.get(
-                    "call_click",
-                    0,
-                )
-            )
-
-            +
-
-            int(
-                events.get(
-                    "directions_click",
-                    0,
-                )
-            )
-
-            +
-
-            int(
-                events.get(
-                    "share_click",
-                    0,
-                )
-            )
-
-        )
-
-
-        scan_count = int(
-            zone_scan_map.get(
-                zone.name,
-                0,
-            )
-        )
-
-
-        percentage = (
-
-            scan_count
-            / total_scans
-            * 100
-
-            if total_scans
-
-            else 0
-
-        )
-
-
-        zone_performance.append({
-
-            "id":
-                zone.id,
-
-            "name":
-                zone.name,
-
-            "scan_count":
-                scan_count,
-
-            "listing_views":
-                listing_views,
-
-            "useful_actions":
-                useful_actions,
-
-            "percentage":
-                round(
-                    percentage,
-                    1,
-                ),
-
-        })
-
-
-    zone_performance.sort(
-
-        key=lambda row:
-            row["scan_count"],
-
-        reverse=True,
-
-    )
-
-
-    # =========================================================
-    # CATEGORY PERFORMANCE
-    # =========================================================
+    for zone_record in Zone.query.order_by(Zone.name.asc()).all():
+        events = zone_engagement_map.get(zone_record.id, {})
+        listing_views = int(events.get("listing_view", 0))
+        useful_actions = sum(int(events.get(event_type, 0)) for event_type in ACTION_EVENTS)
+        scan_count = int(zone_scan_map.get(zone_record.name, 0))
+        percentage = scan_count / total_scans * 100 if total_scans else 0
+        zone_performance.append({"id": zone_record.id, "name": zone_record.name, "scan_count": scan_count, "listing_views": listing_views, "useful_actions": useful_actions, "percentage": round(percentage, 1)})
+    zone_performance.sort(key=lambda row: row["scan_count"], reverse=True)
 
     category_engagement_rows = (
-
-        db.session.query(
-
-            EngagementEvent.category,
-
-            EngagementEvent.event_type,
-
-            func.count(
-                EngagementEvent.id
-            ).label(
-                "event_count"
-            ),
-
-        )
-
-        .filter(
-            EngagementEvent.category
-            .isnot(None)
-        )
-
-        .group_by(
-            EngagementEvent.category,
-            EngagementEvent.event_type,
-        )
-
+        db.session.query(EngagementEvent.category, EngagementEvent.event_type, func.count(EngagementEvent.id).label("event_count"))
+        .filter(EngagementEvent.category.isnot(None))
+        .group_by(EngagementEvent.category, EngagementEvent.event_type)
         .all()
-
     )
-
-
     category_engagement_map = {}
-
-
     for row in category_engagement_rows:
-
-        if (
-            row.category
-            not in category_engagement_map
-        ):
-
-            category_engagement_map[
-                row.category
-            ] = {}
-
-
-        category_engagement_map[
-            row.category
-        ][
-            row.event_type
-        ] = row.event_count
-
-
-    category_view_map = {
-
-        item["category"]:
-            item["views"]
-
-        for item in category_activity
-
-    }
-
-
+        category_engagement_map.setdefault(row.category, {})
+        category_engagement_map[row.category][row.event_type] = row.event_count
+    category_view_map = {item["category"]: item["views"] for item in category_activity}
     category_performance = []
-
-
-    all_category_slugs = (
-        set(
-            category_view_map.keys()
-        )
-        |
-        set(
-            category_engagement_map.keys()
-        )
-    )
-
-
+    all_category_slugs = set(category_view_map) | set(category_engagement_map)
     for slug in all_category_slugs:
-
-        events = (
-            category_engagement_map.get(
-                slug,
-                {},
-            )
-        )
-
-
-        category_record = (
-            category_map.get(
-                slug
-            )
-        )
-
-
-        whatsapp = int(
-            events.get(
-                "whatsapp_click",
-                0,
-            )
-        )
-
-
-        calls = int(
-            events.get(
-                "call_click",
-                0,
-            )
-        )
-
-
-        directions = int(
-            events.get(
-                "directions_click",
-                0,
-            )
-        )
-
-
-        shares = int(
-            events.get(
-                "share_click",
-                0,
-            )
-        )
-
-
-        useful_actions = (
-            whatsapp
-            + calls
-            + directions
-            + shares
-        )
-
-
+        events = category_engagement_map.get(slug, {})
+        category_record = category_map.get(slug)
+        whatsapp = int(events.get("whatsapp_click", 0))
+        calls = int(events.get("call_click", 0))
+        directions = int(events.get("directions_click", 0))
+        shares = int(events.get("share_click", 0))
+        job_applies = int(events.get("job_apply_click", 0))
+        useful_actions = whatsapp + calls + directions + shares + job_applies
         category_performance.append({
-
-            "slug":
-                slug,
-
-            "name":
-                (
-                    category_record.name
-
-                    if category_record
-
-                    else slug.replace(
-                        "-",
-                        " ",
-                    ).title()
-                ),
-
-            "icon":
-                (
-                    category_record.icon
-
-                    if category_record
-
-                    else ""
-                ),
-
-            "category_views":
-                int(
-                    category_view_map.get(
-                        slug,
-                        0,
-                    )
-                ),
-
-            "listing_views":
-                int(
-                    events.get(
-                        "listing_view",
-                        0,
-                    )
-                ),
-
-            "whatsapp":
-                whatsapp,
-
-            "calls":
-                calls,
-
-            "directions":
-                directions,
-
-            "shares":
-                shares,
-
-            "useful_actions":
-                useful_actions,
-
+            "slug": slug,
+            "name": category_record.name if category_record else slug.replace("-", " ").title(),
+            "icon": category_record.icon if category_record else "",
+            "category_views": int(category_view_map.get(slug, 0)),
+            "listing_views": int(events.get("listing_view", 0)),
+            "whatsapp": whatsapp,
+            "calls": calls,
+            "directions": directions,
+            "shares": shares,
+            "job_applies": job_applies,
+            "useful_actions": useful_actions,
         })
+    category_performance.sort(key=lambda row: (row["listing_views"], row["useful_actions"]), reverse=True)
 
-
-    category_performance.sort(
-
-        key=lambda row: (
-
-            row["listing_views"],
-            row["useful_actions"],
-
-        ),
-
-        reverse=True,
-
-    )
-
-
-    # =========================================================
-    # DAILY NETWORK ACTIVITY
-    # =========================================================
-
-    engagement_14_day_rows = (
-
-        EngagementEvent.query
-
-        .filter(
-            EngagementEvent.created_at
-            >= fourteen_days_ago
-        )
-
-        .all()
-
-    )
-
-
+    engagement_14_day_rows = EngagementEvent.query.filter(EngagementEvent.created_at >= fourteen_days_ago).all()
     daily_engagement_counts = {}
-
-
     for number in range(14):
-
-        day = (
-            fourteen_days_ago.date()
-            +
-            timedelta(
-                days=number
-            )
-        )
-
-
-        daily_engagement_counts[
-            day
-        ] = {
-
-            "listing_views":
-                0,
-
-            "useful_actions":
-                0,
-
-        }
-
-
-    useful_event_types = {
-
-        "whatsapp_click",
-
-        "call_click",
-
-        "directions_click",
-
-        "share_click",
-
-        "job_apply_click",
-
-    }
-
-
+        day = fourteen_days_ago.date() + timedelta(days=number)
+        daily_engagement_counts[day] = {"listing_views": 0, "useful_actions": 0}
     for event in engagement_14_day_rows:
-
-        event_day = (
-            event.created_at.date()
-        )
-
-
-        if (
-            event_day
-            not in daily_engagement_counts
-        ):
-
+        event_day = event.created_at.date()
+        if event_day not in daily_engagement_counts:
             continue
-
-
-        if (
-            event.event_type
-            == "listing_view"
-        ):
-
-            daily_engagement_counts[
-                event_day
-            ][
-                "listing_views"
-            ] += 1
-
-
-        elif (
-            event.event_type
-            in useful_event_types
-        ):
-
-            daily_engagement_counts[
-                event_day
-            ][
-                "useful_actions"
-            ] += 1
-
+        if event.event_type == "listing_view":
+            daily_engagement_counts[event_day]["listing_views"] += 1
+        elif event.event_type in ACTION_EVENTS:
+            daily_engagement_counts[event_day]["useful_actions"] += 1
 
     daily_activity = []
-
-
     for scan_day in daily_scan_trend:
-
-        day = (
-            scan_day["date"]
-        )
-
-
-        engagement = (
-            daily_engagement_counts.get(
-                day,
-                {},
-            )
-        )
-
-
+        day = scan_day["date"]
+        engagement = daily_engagement_counts.get(day, {})
         daily_activity.append({
-
-            "date":
-                day,
-
-            "label":
-                scan_day["label"],
-
-            "scans":
-                scan_day["count"],
-
-            "listing_views":
-                engagement.get(
-                    "listing_views",
-                    0,
-                ),
-
-            "useful_actions":
-                engagement.get(
-                    "useful_actions",
-                    0,
-                ),
-
+            "date": day,
+            "label": scan_day["label"],
+            "scans": scan_day["count"],
+            "listing_views": engagement.get("listing_views", 0),
+            "useful_actions": engagement.get("useful_actions", 0),
         })
 
-
-    # =========================================================
-    # REMINDER ANALYTICS
-    # =========================================================
-
-    reminder_analytics = (
-        get_reminder_analytics(
-            top_limit=10
-        )
-    )
-
-
-    # =========================================================
-    # RENDER DASHBOARD
-    # =========================================================
+    reminder_analytics = get_reminder_analytics(top_limit=10)
 
     return render_template(
-
         "admin/analytics.html",
-
-        total_scans=
-            total_scans,
-
-        today_scans=
-            today_scans,
-
-        seven_day_scans=
-            seven_day_scans,
-
-        thirty_day_scans=
-            thirty_day_scans,
-
-        seven_day_growth=
-            round(
-                seven_day_growth,
-                1,
-            ),
-
-        total_access_points=
-            total_access_points,
-
-        active_access_points=
-            active_access_points,
-
-        scans_per_access_point=
-            round(
-                scans_per_access_point,
-                1,
-            ),
-
-        total_category_views=
-            total_category_views,
-
-        category_engagement_rate=
-            round(
-                category_engagement_rate,
-                1,
-            ),
-
-        category_activity=
-            category_activity,
-
-        top_locations=
-            top_locations,
-
-        zone_activity=
-            zone_activity,
-
-        low_performing_points=
-            low_performing_points,
-
-        daily_scan_trend=
-            daily_scan_trend,
-
-        recent_scans=
-            recent_scans,
-
-        pending_submissions_count=
-            pending_submissions_count,
-
-
-        # =====================================================
-        # REMINDER ANALYTICS
-        # =====================================================
-
-        reminder_analytics=
-            reminder_analytics,
-
-
-        # =====================================================
-        # ENGAGEMENT METRICS
-        # =====================================================
-
-        total_listing_views=
-            total_listing_views,
-
-        total_whatsapp_clicks=
-            total_whatsapp_clicks,
-
-        total_call_clicks=
-            total_call_clicks,
-
-        total_share_clicks=
-            total_share_clicks,
-
-        total_directions_clicks=
-            total_directions_clicks,
-
-        total_useful_actions=
-            total_useful_actions,
-
-        listing_action_rate=
-            listing_action_rate,
-
-
-        # =====================================================
-        # CONTENT PERFORMANCE
-        # =====================================================
-
-        top_content_performance=
-            top_content_performance,
-
-        most_viewed_listings=
-            most_viewed_listings,
-
-        high_interest_low_action=
-            high_interest_low_action,
-
-
-        # =====================================================
-        # NETWORK PERFORMANCE
-        # =====================================================
-
-        access_point_performance=
-            access_point_performance,
-
-        zone_performance=
-            zone_performance,
-
-        category_performance=
-            category_performance,
-
-        daily_activity=
-            daily_activity,
-
+        total_scans=total_scans,
+        today_scans=today_scans,
+        seven_day_scans=seven_day_scans,
+        thirty_day_scans=thirty_day_scans,
+        seven_day_growth=round(seven_day_growth, 1),
+        total_access_points=total_access_points,
+        active_access_points=active_access_points,
+        scans_per_access_point=round(scans_per_access_point, 1),
+        total_category_views=total_category_views,
+        category_engagement_rate=round(category_engagement_rate, 1),
+        category_activity=category_activity,
+        top_locations=top_locations,
+        zone_activity=zone_activity,
+        low_performing_points=low_performing_points,
+        daily_scan_trend=daily_scan_trend,
+        recent_scans=recent_scans,
+        pending_submissions_count=pending_submissions_count,
+        reminder_analytics=reminder_analytics,
+        total_listing_views=total_listing_views,
+        total_whatsapp_clicks=total_whatsapp_clicks,
+        total_call_clicks=total_call_clicks,
+        total_share_clicks=total_share_clicks,
+        total_directions_clicks=total_directions_clicks,
+        total_job_apply_clicks=total_job_apply_clicks,
+        total_useful_actions=total_useful_actions,
+        listing_action_rate=listing_action_rate,
+        top_content_performance=top_content_performance,
+        most_viewed_listings=most_viewed_listings,
+        high_interest_low_action=high_interest_low_action,
+        access_point_performance=access_point_performance,
+        zone_performance=zone_performance,
+        category_performance=category_performance,
+        daily_activity=daily_activity,
     )
 
-@admin_bp.route(
-    "/notifications"
-)
-def notifications():
 
-    require_admin()
+@admin_bp.route("/business-analytics")
+def business_analytics():
+    auth = require_admin()
+    if auth:
+        return auth
+    analytics_range = _get_analytics_date_range()
+    start_datetime = datetime.combine(analytics_range["start_date"], datetime.min.time())
+    end_datetime = datetime.combine(analytics_range["end_date"] + timedelta(days=1), datetime.min.time())
 
-    # =====================================================
-    # FILTERS
-    # =====================================================
-
-    selected_zone_id = request.args.get(
-        "zone_id",
-        type=int,
-    )
-
-    selected_status = (
-        request.args.get(
-            "status",
-            "",
+    listings = ContentItem.query.filter(ContentItem.listing_level.in_({"business", "promotion"})).order_by(ContentItem.created_at.desc()).all()
+    listing_ids = [item.id for item in listings]
+    analytics_by_listing = {}
+    if listing_ids:
+        rows = (
+            db.session.query(EngagementEvent.content_item_id, EngagementEvent.event_type, func.count(EngagementEvent.id).label("event_count"))
+            .filter(
+                EngagementEvent.content_item_id.in_(listing_ids),
+                EngagementEvent.event_type.in_(BUSINESS_ANALYTICS_EVENTS),
+                EngagementEvent.created_at >= start_datetime,
+                EngagementEvent.created_at < end_datetime,
+            )
+            .group_by(EngagementEvent.content_item_id, EngagementEvent.event_type)
+            .all()
         )
-        .strip()
-    )
+        for content_item_id, event_type, event_count in rows:
+            analytics_by_listing.setdefault(content_item_id, {})
+            analytics_by_listing[content_item_id][event_type] = event_count
 
+    listing_reports = []
+    for item in listings:
+        counts = analytics_by_listing.get(item.id, {})
+        views = counts.get("listing_view", 0)
+        whatsapp = counts.get("whatsapp_click", 0)
+        calls = counts.get("call_click", 0)
+        directions = counts.get("directions_click", 0)
+        shares = counts.get("share_click", 0)
+        job_applies = counts.get("job_apply_click", 0)
+        actions = whatsapp + calls + directions + shares + job_applies
+        action_rate = round((actions / views) * 100, 1) if views else 0.0
+        listing_reports.append({
+            "item": item,
+            "views": views,
+            "actions": actions,
+            "whatsapp": whatsapp,
+            "calls": calls,
+            "directions": directions,
+            "shares": shares,
+            "job_applies": job_applies,
+            "action_rate": action_rate,
+        })
 
-    # =====================================================
-    # NOTIFICATION QUERY
-    # =====================================================
-
-    query = (
-        PushNotification.query
-        .order_by(
-            PushNotification.created_at.desc()
-        )
-    )
-
-
-    if selected_zone_id:
-
-        query = query.filter(
-            PushNotification.zone_id ==
-            selected_zone_id
-        )
-
-
-    if selected_status:
-
-        query = query.filter(
-            PushNotification.status ==
-            selected_status
-        )
-
-
-    notifications = (
-        query
-        .limit(200)
-        .all()
-    )
-
-
-    # =====================================================
-    # ZONES
-    # =====================================================
-
-    zones = (
-        Zone.query
-        .order_by(
-            Zone.name.asc()
-        )
-        .all()
-    )
-
-
-    zone_lookup = {
-        zone.id: zone
-        for zone in zones
+    listing_reports.sort(key=lambda row: (row["views"], row["actions"]), reverse=True)
+    total_views = sum(row["views"] for row in listing_reports)
+    total_actions = sum(row["actions"] for row in listing_reports)
+    totals = {
+        "views": total_views,
+        "actions": total_actions,
+        "whatsapp": sum(row["whatsapp"] for row in listing_reports),
+        "calls": sum(row["calls"] for row in listing_reports),
+        "directions": sum(row["directions"] for row in listing_reports),
+        "shares": sum(row["shares"] for row in listing_reports),
+        "job_applies": sum(row["job_applies"] for row in listing_reports),
+        "action_rate": round((total_actions / total_views) * 100, 1) if total_views else 0.0,
     }
+    return render_template("admin/business_analytics.html", analytics_range=analytics_range, listing_reports=listing_reports, totals=totals)
 
 
-    # =====================================================
-    # DASHBOARD COUNTERS
-    # =====================================================
-
-    active_subscribers = (
-        PushSubscriber.query
-        .filter_by(
-            active=True
-        )
-        .count()
-    )
-
-
-    total_notifications = (
-        PushNotification.query
-        .count()
-    )
+@admin_bp.route("/business-analytics/<int:item_id>")
+def business_analytics_detail(item_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    item = ContentItem.query.get_or_404(item_id)
+    if item.listing_level not in {"business", "promotion"}:
+        flash("Business analytics are available for Business and Promotion listings.", "error")
+        return redirect(url_for("admin.business_analytics"))
+    analytics_range = _get_analytics_date_range()
+    analytics = _build_business_analytics(item, analytics_range)
+    return render_template("admin/business_analytics_detail.html", item=item, analytics=analytics, analytics_range=analytics_range)
 
 
-    successful_notifications = (
-        PushNotification.query
-        .filter(
-            PushNotification.status ==
-            "sent"
-        )
-        .count()
-    )
+@admin_bp.route("/notifications")
+def notifications():
+    auth = require_admin()
+    if auth:
+        return auth
 
+    selected_zone_id = request.args.get("zone_id", type=int)
+    selected_status = request.args.get("status", "").strip()
+    query = PushNotification.query.order_by(PushNotification.created_at.desc())
+    if selected_zone_id:
+        query = query.filter(PushNotification.zone_id == selected_zone_id)
+    if selected_status:
+        query = query.filter(PushNotification.status == selected_status)
 
-    problem_notifications = (
-        PushNotification.query
-        .filter(
-            PushNotification.status.in_(
-                [
-                    "failed",
-                    "partial_failure",
-                ]
-            )
-        )
-        .count()
-    )
-
-
-    pending_notifications = (
-        PushNotification.query
-        .filter(
-            PushNotification.status ==
-            "pending"
-        )
-        .count()
-    )
-
-
-    # =====================================================
-    # TOTAL DELIVERY COUNTS
-    # =====================================================
-
-    sent_deliveries = (
-        db.session.query(
-            db.func.coalesce(
-                db.func.sum(
-                    PushNotification.sent_count
-                ),
-                0,
-            )
-        )
-        .scalar()
-    )
-
-
-    failed_deliveries = (
-        db.session.query(
-            db.func.coalesce(
-                db.func.sum(
-                    PushNotification.failed_count
-                ),
-                0,
-            )
-        )
-        .scalar()
-    )
-
+    notification_items = query.limit(200).all()
+    zones = Zone.query.order_by(Zone.name.asc()).all()
+    zone_lookup = {zone.id: zone for zone in zones}
+    active_subscribers = PushSubscriber.query.filter_by(active=True).count()
+    total_notifications = PushNotification.query.count()
+    successful_notifications = PushNotification.query.filter(PushNotification.status == "sent").count()
+    problem_notifications = PushNotification.query.filter(PushNotification.status.in_(["failed", "partial_failure"])).count()
+    pending_notifications = PushNotification.query.filter(PushNotification.status == "pending").count()
+    sent_deliveries = db.session.query(func.coalesce(func.sum(PushNotification.sent_count), 0)).scalar()
+    failed_deliveries = db.session.query(func.coalesce(func.sum(PushNotification.failed_count), 0)).scalar()
 
     return render_template(
         "admin/notifications.html",
-
-        notifications=
-            notifications,
-
-        zones=
-            zones,
-
-        zone_lookup=
-            zone_lookup,
-
-        selected_zone_id=
-            selected_zone_id,
-
-        selected_status=
-            selected_status,
-
-        active_subscribers=
-            active_subscribers,
-
-        total_notifications=
-            total_notifications,
-
-        successful_notifications=
-            successful_notifications,
-
-        problem_notifications=
-            problem_notifications,
-
-        pending_notifications=
-            pending_notifications,
-
-        sent_deliveries=
-            sent_deliveries,
-
-        failed_deliveries=
-            failed_deliveries,
-    )
-
-@admin_bp.route(
-    "/notifications/<int:notification_id>/retry",
-    methods=["POST"],
-)
-def retry_notification(
-    notification_id,
-):
-
-    require_admin()
-
-
-    notification = (
-        PushNotification.query
-        .get_or_404(
-            notification_id
-        )
+        notifications=notification_items,
+        zones=zones,
+        zone_lookup=zone_lookup,
+        selected_zone_id=selected_zone_id,
+        selected_status=selected_status,
+        active_subscribers=active_subscribers,
+        total_notifications=total_notifications,
+        successful_notifications=successful_notifications,
+        problem_notifications=problem_notifications,
+        pending_notifications=pending_notifications,
+        sent_deliveries=sent_deliveries,
+        failed_deliveries=failed_deliveries,
     )
 
 
-    # =====================================================
-    # ONLY RETRY PROBLEM NOTIFICATIONS
-    # =====================================================
+@admin_bp.route("/notifications/<int:notification_id>/retry", methods=["POST"])
+def retry_notification(notification_id):
+    auth = require_admin()
+    if auth:
+        return auth
 
-    allowed_statuses = {
-        "failed",
-        "partial_failure",
-        "pending",
-        "no_subscribers",
-    }
-
-
-    if (
-        notification.status
-        not in allowed_statuses
-    ):
-
-        flash(
-            "This notification does not need to be retried.",
-            "info",
-        )
-
-        return redirect(
-            url_for(
-                "admin.notifications"
-            )
-        )
-
-
-    # =====================================================
-    # RESOLVE ORIGINAL CONTENT
-    # =====================================================
-    #
-    # Category preferences are attached to the original
-    # content category.
-    #
-    # We deliberately do NOT fall back to a zone-wide
-    # broadcast if the original content cannot be found.
-    # =====================================================
-
+    notification = PushNotification.query.get_or_404(notification_id)
+    if notification.status not in {"failed", "partial_failure", "pending", "no_subscribers"}:
+        flash("This notification does not need to be retried.", "info")
+        return redirect(url_for("admin.notifications"))
     if not notification.content_item_id:
+        flash("Unable to retry this notification because it is not linked to content.", "error")
+        return redirect(url_for("admin.notifications"))
 
-        flash(
-            (
-                "Unable to retry this notification "
-                "because it is not linked to content."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.notifications"
-            )
-        )
-
-
-    content = db.session.get(
-        ContentItem,
-        notification.content_item_id,
-    )
-
-
+    content = db.session.get(ContentItem, notification.content_item_id)
     if content is None:
-
-        flash(
-            (
-                "Unable to retry this notification "
-                "because the original content "
-                "no longer exists."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.notifications"
-            )
-        )
-
-
-    # =====================================================
-    # ORIGINAL NOTIFICATION CATEGORY
-    # =====================================================
-
-    notification_category = (
-        content.category
-    )
-
-
+        flash("Unable to retry this notification because the original content no longer exists.", "error")
+        return redirect(url_for("admin.notifications"))
+    notification_category = content.category
     if not notification_category:
-
-        flash(
-            (
-                "Unable to retry this notification "
-                "because the original content "
-                "has no category."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.notifications"
-            )
-        )
-
+        flash("Unable to retry this notification because the original content has no category.", "error")
+        return redirect(url_for("admin.notifications"))
 
     try:
-
-        # =================================================
-        # MARK RETRY ATTEMPT
-        # =================================================
-
-        notification.attempts += 1
-
-        notification.status = (
-            "pending"
-        )
-
-        notification.last_error = (
-            None
-        )
-
+        notification.attempts = (notification.attempts or 0) + 1
+        notification.status = "pending"
+        notification.last_error = None
         db.session.commit()
 
-
-        # =================================================
-        # ATTEMPT CATEGORY-TARGETED DELIVERY
-        # =================================================
-        #
-        # The push service will now target:
-        #
-        # active subscriber
-        # +
-        # same zone
-        # +
-        # matching notification preference
-        #
-        # Example:
-        #
-        # zone = KwaMhlanga
-        # category = local-events
-        #
-        # Only KwaMhlanga subscribers who selected
-        # "local-events" will receive the retry.
-        # =================================================
-
-        result = (
-            send_zone_push_notification(
-
-                zone_id=
-                    notification.zone_id,
-
-                category=
-                    notification_category,
-
-                title=
-                    notification.title,
-
-                body=
-                    notification.body,
-
-                url=
-                    notification.target_url,
-
-                tag=
-                    (
-                        f"notification-"
-                        f"{notification.id}"
-                    ),
-
-            )
+        result = send_zone_push_notification(
+            zone_id=notification.zone_id,
+            category=notification_category,
+            title=notification.title,
+            body=notification.body,
+            url=notification.target_url,
+            tag=f"notification-{notification.id}",
         )
+        if not isinstance(result, dict):
+            result = {}
+        total = int(result.get("total", 0) or 0)
+        sent = int(result.get("sent", 0) or 0)
+        failed = int(result.get("failed", 0) or 0)
+        notification.total_subscribers = total
+        notification.sent_count = sent
+        notification.failed_count = failed
 
-
-        # =================================================
-        # UPDATE DELIVERY COUNTS
-        # =================================================
-
-        notification.total_subscribers = (
-            result["total"]
-        )
-
-        notification.sent_count = (
-            result["sent"]
-        )
-
-        notification.failed_count = (
-            result["failed"]
-        )
-
-
-        # =================================================
-        # DETERMINE NEW STATUS
-        # =================================================
-
-        if (
-            result["sent"] > 0
-            and
-            result["failed"] == 0
-        ):
-
-            notification.status = (
-                "sent"
-            )
-
-            notification.sent_at = (
-                datetime.utcnow()
-            )
-
-            notification.last_error = (
-                None
-            )
-
-
-        elif (
-            result["sent"] > 0
-            and
-            result["failed"] > 0
-        ):
-
-            notification.status = (
-                "partial_failure"
-            )
-
-            notification.sent_at = (
-                datetime.utcnow()
-            )
-
-            notification.last_error = (
-                f"{result['failed']} "
-                "subscriber delivery failures."
-            )
-
-
-        elif (
-            result["total"] == 0
-        ):
-
-            notification.status = (
-                "no_subscribers"
-            )
-
-            notification.sent_at = (
-                None
-            )
-
-            notification.last_error = (
-                (
-                    "No active subscribers "
-                    "in this zone selected "
-                    f"the '{notification_category}' "
-                    "notification category."
-                )
-            )
-
-
+        if sent > 0 and failed == 0:
+            notification.status = "sent"
+            notification.sent_at = datetime.utcnow()
+            notification.last_error = None
+        elif sent > 0 and failed > 0:
+            notification.status = "partial_failure"
+            notification.sent_at = datetime.utcnow()
+            notification.last_error = f"{failed} subscriber delivery failures."
+        elif total == 0:
+            notification.status = "no_subscribers"
+            notification.sent_at = None
+            notification.last_error = f"No active subscribers in this zone selected the '{notification_category}' notification category."
         else:
-
-            notification.status = (
-                "failed"
-            )
-
-            notification.sent_at = (
-                None
-            )
-
-            notification.last_error = (
-                "Push delivery failed "
-                "for all matching subscribers."
-            )
-
-
-        # =================================================
-        # SAVE RESULT
-        # =================================================
-
+            notification.status = "failed"
+            notification.sent_at = None
+            notification.last_error = "Push delivery failed for all matching subscribers."
         db.session.commit()
 
-
-        # =================================================
-        # LOG RESULT
-        # =================================================
-
-        current_app.logger.info(
-            "[LaC Push] Notification retried "
-            "notification_id=%s "
-            "content_item_id=%s "
-            "zone_id=%s "
-            "category=%s "
-            "total=%s "
-            "sent=%s "
-            "failed=%s "
-            "status=%s",
-            notification.id,
-            notification.content_item_id,
-            notification.zone_id,
-            notification_category,
-            notification.total_subscribers,
-            notification.sent_count,
-            notification.failed_count,
-            notification.status,
-        )
-
-
-        # =================================================
-        # ADMIN MESSAGE
-        # =================================================
-
-        if result["total"] == 0:
-
-            flash(
-                (
-                    "Notification retry completed, "
-                    "but no active subscribers in "
-                    "this zone selected "
-                    f"'{notification_category}'."
-                ),
-                "info",
-            )
-
+        if total == 0:
+            flash(f"Notification retry completed, but no active subscribers in this zone selected '{notification_category}'.", "info")
         else:
-
-            flash(
-                (
-                    "Notification retry completed. "
-                    f"Category: {notification_category}. "
-                    f"Matching subscribers: "
-                    f"{notification.total_subscribers}. "
-                    f"Sent: {notification.sent_count}. "
-                    f"Failed: {notification.failed_count}."
-                ),
-                "success",
-            )
-
-
+            flash(f"Notification retry completed. Category: {notification_category}. Matching subscribers: {total}. Sent: {sent}. Failed: {failed}.", "success")
     except Exception as exc:
-
         db.session.rollback()
+        current_app.logger.exception("[LaC Push] Retry failed notification_id=%s error=%s", notification.id, exc)
+        flash("Unable to retry notification.", "error")
 
+    return redirect(url_for("admin.notifications"))
 
-        current_app.logger.exception(
-            "[LaC Push] Retry failed "
-            "notification_id=%s "
-            "content_item_id=%s "
-            "zone_id=%s "
-            "category=%s "
-            "error=%s",
-            notification.id,
-            notification.content_item_id,
-            notification.zone_id,
-            notification_category,
-            exc,
-        )
-
-
-        flash(
-            "Unable to retry notification.",
-            "error",
-        )
-
-
-    return redirect(
-        url_for(
-            "admin.notifications"
-        )
-    )
 
 @admin_bp.route("/zones")
 def zones():
     auth = require_admin()
     if auth:
         return auth
-
-    zone_list = Zone.query.order_by(Zone.name.asc()).all()
-    return render_template("admin/zones.html", zones=zone_list)
+    return render_template("admin/zones.html", zones=Zone.query.order_by(Zone.name.asc()).all())
 
 
 @admin_bp.route("/zones/new", methods=["GET", "POST"])
@@ -6626,27 +1400,22 @@ def create_zone():
     auth = require_admin()
     if auth:
         return auth
-
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         slug = clean_slug(request.form.get("slug", ""))
         active = request.form.get("active") == "on"
-
         if not name or not slug:
             flash("Zone name and slug are required.", "error")
             return render_template("admin/zone_form.html", zone=None)
-
         existing = Zone.query.filter((Zone.slug == slug) | (Zone.name == name)).first()
         if existing:
             flash("A zone with that name or slug already exists.", "error")
             return render_template("admin/zone_form.html", zone=None)
-
         zone = Zone(name=name, slug=slug, active=active)
         db.session.add(zone)
         db.session.commit()
         flash(f"{name} zone created successfully.", "success")
         return redirect(url_for("admin.zones"))
-
     return render_template("admin/zone_form.html", zone=None)
 
 
@@ -6655,35 +1424,24 @@ def edit_zone(zone_id):
     auth = require_admin()
     if auth:
         return auth
-
     zone = Zone.query.get_or_404(zone_id)
-
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         slug = clean_slug(request.form.get("slug", ""))
         active = request.form.get("active") == "on"
-
         if not name or not slug:
             flash("Zone name and slug are required.", "error")
             return render_template("admin/zone_form.html", zone=zone)
-
-        duplicate = (
-            Zone.query
-            .filter(Zone.id != zone.id)
-            .filter((Zone.slug == slug) | (Zone.name == name))
-            .first()
-        )
+        duplicate = Zone.query.filter(Zone.id != zone.id).filter((Zone.slug == slug) | (Zone.name == name)).first()
         if duplicate:
             flash("Another zone already uses that name or slug.", "error")
             return render_template("admin/zone_form.html", zone=zone)
-
         zone.name = name
         zone.slug = slug
         zone.active = active
         db.session.commit()
         flash("Zone updated successfully.", "success")
         return redirect(url_for("admin.zones"))
-
     return render_template("admin/zone_form.html", zone=zone)
 
 
@@ -6692,115 +1450,42 @@ def toggle_zone(zone_id):
     auth = require_admin()
     if auth:
         return auth
-
     zone = Zone.query.get_or_404(zone_id)
     zone.active = not zone.active
     db.session.commit()
     flash(f"{zone.name} {'activated' if zone.active else 'deactivated'}.", "success")
     return redirect(url_for("admin.zones"))
 
-@admin_bp.route(
-    "/zones/<int:zone_id>/delete",
-    methods=["POST"]
-)
-def delete_zone(zone_id):
 
+@admin_bp.route("/zones/<int:zone_id>/delete", methods=["POST"])
+def delete_zone(zone_id):
     auth = require_admin()
     if auth:
         return auth
-
     zone = Zone.query.get_or_404(zone_id)
     zone_name = zone.name
-
     try:
-        # -----------------------------------------
-        # Delete access points + their scan records
-        # -----------------------------------------
-
-        access_points = AccessPoint.query.filter_by(
-            zone_id=zone.id
-        ).all()
-
-        for point in access_points:
-
-            QRScan.query.filter_by(
-                access_point_id=point.id
-            ).delete(
-                synchronize_session=False
-            )
-
+        for point in AccessPoint.query.filter_by(zone_id=zone.id).all():
+            QRScan.query.filter_by(access_point_id=point.id).delete(synchronize_session=False)
             db.session.delete(point)
-
-        # -----------------------------------------
-        # Delete content + attached images
-        # -----------------------------------------
-
-        content_items = ContentItem.query.filter_by(
-            zone_id=zone.id
-        ).all()
-
-        for item in content_items:
-
-            # Disconnect submissions that reference
-            # published content.
-            submissions = PendingSubmission.query.filter_by(
-                published_content_id=item.id
-            ).all()
-
-            for submission in submissions:
+        for item in ContentItem.query.filter_by(zone_id=zone.id).all():
+            for submission in PendingSubmission.query.filter_by(published_content_id=item.id).all():
                 submission.published_content_id = None
-
-            ContentImage.query.filter_by(
-                content_item_id=item.id
-            ).delete(
-                synchronize_session=False
-            )
-
+            ContentImage.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
+            ContentDistributionZone.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
             db.session.delete(item)
-
-        # -----------------------------------------
-        # Delete pending submissions + images
-        # -----------------------------------------
-
-        pending_submissions = PendingSubmission.query.filter_by(
-            zone_id=zone.id
-        ).all()
-
-        for submission in pending_submissions:
-
-            PendingSubmissionImage.query.filter_by(
-                submission_id=submission.id
-            ).delete(
-                synchronize_session=False
-            )
-
+        for submission in PendingSubmission.query.filter_by(zone_id=zone.id).all():
+            PendingSubmissionImage.query.filter_by(submission_id=submission.id).delete(synchronize_session=False)
             db.session.delete(submission)
-
-        # -----------------------------------------
-        # Delete zone
-        # -----------------------------------------
-
+        ZoneCategoryAppearance.query.filter_by(zone_id=zone.id).delete(synchronize_session=False)
         db.session.delete(zone)
         db.session.commit()
-
-        flash(
-            f"{zone_name} permanently deleted.",
-            "success"
-        )
-
+        flash(f"{zone_name} permanently deleted.", "success")
     except Exception as exc:
-
         db.session.rollback()
-
-        flash(
-            f"Unable to delete zone: {exc}",
-            "error"
-        )
-
-    return redirect(
-        url_for("admin.zones")
-    )
-
+        current_app.logger.exception("Unable to delete zone zone_id=%s error=%s", zone_id, exc)
+        flash(f"Unable to delete zone: {exc}", "error")
+    return redirect(url_for("admin.zones"))
 
 
 @admin_bp.route("/categories")
@@ -6808,862 +1493,107 @@ def categories():
     auth = require_admin()
     if auth:
         return auth
-
-    return render_template(
-        "admin/categories.html",
-        categories=get_categories(
-            active_only=False
-        ),
-    )
+    return render_template("admin/categories.html", categories=get_categories(active_only=False))
 
 
-# =========================================================
-# CREATE CATEGORY
-# =========================================================
-
-@admin_bp.route(
-    "/categories/new",
-    methods=["GET", "POST"],
-)
+@admin_bp.route("/categories/new", methods=["GET", "POST"])
 def create_category():
-
     auth = require_admin()
     if auth:
         return auth
-
-
     if request.method == "POST":
-
-        name = (
-            request.form
-            .get("name", "")
-            .strip()
-        )
-
-        slug = clean_slug(
-            request.form.get(
-                "slug",
-                ""
-            )
-        )
-
-        icon = (
-            request.form
-            .get("icon", "")
-            .strip()
-            or None
-        )
-
-        display_order = (
-            request.form.get(
-                "display_order",
-                type=int,
-            )
-        )
-
-        display_order = (
-            0
-            if display_order is None
-            else display_order
-        )
-
-        active = (
-            request.form.get("active")
-            == "on"
-        )
-
-
-        # =============================================
-        # VALIDATION
-        # =============================================
-
+        name = request.form.get("name", "").strip()
+        slug = clean_slug(request.form.get("slug", ""))
+        icon = request.form.get("icon", "").strip() or None
+        display_order = request.form.get("display_order", type=int)
+        display_order = 0 if display_order is None else display_order
+        active = request.form.get("active") == "on"
         if not name or not slug:
+            flash("Name and slug are required.", "error")
+            return render_template("admin/category_form.html", category=None)
+        if Category.query.filter_by(slug=slug).first():
+            flash("That category slug already exists.", "error")
+            return render_template("admin/category_form.html", category=None)
 
-            flash(
-                "Name and slug are required.",
-                "error",
-            )
-
-            return render_template(
-                "admin/category_form.html",
-                category=None,
-            )
-
-
-        if Category.query.filter_by(
-            slug=slug
-        ).first():
-
-            flash(
-                "That category slug already exists.",
-                "error",
-            )
-
-            return render_template(
-                "admin/category_form.html",
-                category=None,
-            )
-
-
-        # =============================================
-        # CATEGORY IMAGE UPLOADS
-        #
-        # Image 1 = category_image
-        # Image 2 = category_image_2
-        # Image 3 = category_image_3
-        # =============================================
-
-        image_file = request.files.get(
-            "category_image"
-        )
-
-        image_file_2 = request.files.get(
-            "category_image_2"
-        )
-
-        image_file_3 = request.files.get(
-            "category_image_3"
-        )
-
-
-        image_url = None
-        image_url_2 = None
-        image_url_3 = None
-
-
+        image_url = image_url_2 = image_url_3 = None
         try:
-
-            # -----------------------------------------
-            # IMAGE 1
-            # -----------------------------------------
-
-            if (
-                image_file
-                and image_file.filename
-            ):
-
-                image_url = upload_lac_image(
-                    image_file,
-                    folder="lac/categories",
-                )
-
-
-            # -----------------------------------------
-            # IMAGE 2
-            # -----------------------------------------
-
-            if (
-                image_file_2
-                and image_file_2.filename
-            ):
-
-                image_url_2 = upload_lac_image(
-                    image_file_2,
-                    folder="lac/categories",
-                )
-
-
-            # -----------------------------------------
-            # IMAGE 3
-            # -----------------------------------------
-
-            if (
-                image_file_3
-                and image_file_3.filename
-            ):
-
-                image_url_3 = upload_lac_image(
-                    image_file_3,
-                    folder="lac/categories",
-                )
-
-
+            image_file = request.files.get("category_image")
+            image_file_2 = request.files.get("category_image_2")
+            image_file_3 = request.files.get("category_image_3")
+            if image_file and image_file.filename:
+                image_url = upload_lac_image(image_file, folder="lac/categories")
+            if image_file_2 and image_file_2.filename:
+                image_url_2 = upload_lac_image(image_file_2, folder="lac/categories")
+            if image_file_3 and image_file_3.filename:
+                image_url_3 = upload_lac_image(image_file_3, folder="lac/categories")
         except ValueError as error:
+            flash(str(error), "error")
+            return render_template("admin/category_form.html", category=None)
 
-            flash(
-                str(error),
-                "error",
-            )
-
-            return render_template(
-                "admin/category_form.html",
-                category=None,
-            )
-
-
-        # =============================================
-        # CREATE CATEGORY
-        # =============================================
-
-        category = Category(
-
-            name=name,
-
-            slug=slug,
-
-            icon=icon,
-
-            image_url=image_url,
-
-            image_url_2=image_url_2,
-
-            image_url_3=image_url_3,
-
-            display_order=display_order,
-
-            active=active,
-
-        )
-
-
+        category = Category(name=name, slug=slug, icon=icon, image_url=image_url, image_url_2=image_url_2, image_url_3=image_url_3, display_order=display_order, active=active)
         db.session.add(category)
-
         db.session.commit()
+        flash("Category created successfully.", "success")
+        return redirect(url_for("admin.categories"))
+    return render_template("admin/category_form.html", category=None)
 
 
-        flash(
-            "Category created successfully.",
-            "success",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.categories"
-            )
-        )
-
-
-    return render_template(
-        "admin/category_form.html",
-        category=None,
-    )
-
-
-# =========================================================
-# EDIT CATEGORY
-# =========================================================
-
-@admin_bp.route(
-    "/categories/<int:category_id>/edit",
-    methods=["GET", "POST"],
-)
+@admin_bp.route("/categories/<int:category_id>/edit", methods=["GET", "POST"])
 def edit_category(category_id):
-
     auth = require_admin()
     if auth:
         return auth
-
-
-    category = Category.query.get_or_404(
-        category_id
-    )
-
-
+    category = Category.query.get_or_404(category_id)
     if request.method == "POST":
-
-        name = (
-            request.form
-            .get("name", "")
-            .strip()
-        )
-
-        new_slug = clean_slug(
-            request.form.get(
-                "slug",
-                ""
-            )
-        )
-
-        icon = (
-            request.form
-            .get("icon", "")
-            .strip()
-            or None
-        )
-
-        display_order = (
-            request.form.get(
-                "display_order",
-                type=int,
-            )
-        )
-
-        display_order = (
-            0
-            if display_order is None
-            else display_order
-        )
-
-        active = (
-            request.form.get("active")
-            == "on"
-        )
-
-
-        # =============================================
-        # VALIDATION
-        # =============================================
-
+        name = request.form.get("name", "").strip()
+        new_slug = clean_slug(request.form.get("slug", ""))
+        icon = request.form.get("icon", "").strip() or None
+        display_order = request.form.get("display_order", type=int)
+        display_order = 0 if display_order is None else display_order
+        active = request.form.get("active") == "on"
         if not name or not new_slug:
-
-            flash(
-                "Name and slug are required.",
-                "error",
-            )
-
-            return render_template(
-                "admin/category_form.html",
-                category=category,
-            )
-
-
-        duplicate = Category.query.filter(
-
-            Category.slug == new_slug,
-
-            Category.id != category.id,
-
-        ).first()
-
-
+            flash("Name and slug are required.", "error")
+            return render_template("admin/category_form.html", category=category)
+        duplicate = Category.query.filter(Category.slug == new_slug, Category.id != category.id).first()
         if duplicate:
-
-            flash(
-                "Another category already uses that slug.",
-                "error",
-            )
-
-            return render_template(
-                "admin/category_form.html",
-                category=category,
-            )
-
-
-        # =============================================
-        # CATEGORY IMAGE UPLOADS
-        #
-        # IMPORTANT:
-        # Existing images are preserved unless the
-        # admin selects a new file for that position.
-        # =============================================
-
-        image_file = request.files.get(
-            "category_image"
-        )
-
-        image_file_2 = request.files.get(
-            "category_image_2"
-        )
-
-        image_file_3 = request.files.get(
-            "category_image_3"
-        )
-
-
+            flash("Another category already uses that slug.", "error")
+            return render_template("admin/category_form.html", category=category)
         try:
-
-            # -----------------------------------------
-            # REPLACE IMAGE 1
-            # -----------------------------------------
-
-            if (
-                image_file
-                and image_file.filename
-            ):
-
-                category.image_url = (
-                    upload_lac_image(
-                        image_file,
-                        folder="lac/categories",
-                    )
-                )
-
-
-            # -----------------------------------------
-            # REPLACE IMAGE 2
-            # -----------------------------------------
-
-            if (
-                image_file_2
-                and image_file_2.filename
-            ):
-
-                category.image_url_2 = (
-                    upload_lac_image(
-                        image_file_2,
-                        folder="lac/categories",
-                    )
-                )
-
-
-            # -----------------------------------------
-            # REPLACE IMAGE 3
-            # -----------------------------------------
-
-            if (
-                image_file_3
-                and image_file_3.filename
-            ):
-
-                category.image_url_3 = (
-                    upload_lac_image(
-                        image_file_3,
-                        folder="lac/categories",
-                    )
-                )
-
-
+            image_file = request.files.get("category_image")
+            image_file_2 = request.files.get("category_image_2")
+            image_file_3 = request.files.get("category_image_3")
+            if image_file and image_file.filename:
+                category.image_url = upload_lac_image(image_file, folder="lac/categories")
+            if image_file_2 and image_file_2.filename:
+                category.image_url_2 = upload_lac_image(image_file_2, folder="lac/categories")
+            if image_file_3 and image_file_3.filename:
+                category.image_url_3 = upload_lac_image(image_file_3, folder="lac/categories")
         except ValueError as error:
-
-            flash(
-                str(error),
-                "error",
-            )
-
-            return render_template(
-                "admin/category_form.html",
-                category=category,
-            )
-
-
-        # =============================================
-        # PRESERVE EXISTING SLUG RELATIONSHIPS
-        # =============================================
+            flash(str(error), "error")
+            return render_template("admin/category_form.html", category=category)
 
         old_slug = category.slug
-
-
-        if new_slug != old_slug:
-
-            # -----------------------------------------
-            # CONTENT ITEMS
-            # -----------------------------------------
-
-            ContentItem.query.filter(
-                ContentItem.category == old_slug
-            ).update(
-                {
-                    ContentItem.category:
-                    new_slug
-                },
-                synchronize_session=False,
-            )
-
-
-            # -----------------------------------------
-            # ACCESS POINT DEFAULT CATEGORY
-            # -----------------------------------------
-
-            AccessPoint.query.filter(
-                AccessPoint.default_category
-                == old_slug
-            ).update(
-                {
-                    AccessPoint.default_category:
-                    new_slug
-                },
-                synchronize_session=False,
-            )
-
-
-            # -----------------------------------------
-            # PENDING SUBMISSIONS
-            # -----------------------------------------
-
-            PendingSubmission.query.filter(
-                PendingSubmission.category
-                == old_slug
-            ).update(
-                {
-                    PendingSubmission.category:
-                    new_slug
-                },
-                synchronize_session=False,
-            )
-
-
-            # -----------------------------------------
-            # HISTORICAL QR SCAN CATEGORY
-            # -----------------------------------------
-
-            QRScan.query.filter(
-                QRScan.category_selected
-                == old_slug
-            ).update(
-                {
-                    QRScan.category_selected:
-                    new_slug
-                },
-                synchronize_session=False,
-            )
-
-
-        # =============================================
-        # UPDATE CATEGORY
-        # =============================================
-
-        category.name = name
-
-        category.slug = new_slug
-
-        category.icon = icon
-
-        category.display_order = display_order
-
-        category.active = active
-
-
-        db.session.commit()
-
-
-        flash(
-            "Category updated successfully.",
-            "success",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.categories"
-            )
-        )
-
-
-    return render_template(
-        "admin/category_form.html",
-        category=category,
-    )
-
-
-# =========================================================
-# ZONE CATEGORY APPEARANCE
-# =========================================================
-
-@admin_bp.route(
-    "/zone-category-appearance",
-    methods=["GET", "POST"],
-)
-def zone_category_appearance():
-
-    auth = require_admin()
-    if auth:
-        return auth
-
-
-    # =====================================================
-    # LOAD ZONES + CATEGORIES
-    # =====================================================
-
-    zones = (
-        Zone.query
-        .order_by(Zone.name.asc())
-        .all()
-    )
-
-    categories = (
-        Category.query
-        .order_by(
-            Category.display_order.asc(),
-            Category.name.asc(),
-        )
-        .all()
-    )
-
-
-    # =====================================================
-    # POST — SAVE APPEARANCE
-    # =====================================================
-
-    if request.method == "POST":
-
-        zone_id = request.form.get(
-            "zone_id",
-            type=int,
-        )
-
-        category_id = request.form.get(
-            "category_id",
-            type=int,
-        )
-
-
-        # -------------------------------------------------
-        # VALIDATION
-        # -------------------------------------------------
-
-        if not zone_id or not category_id:
-
-            flash(
-                "Please select both a zone and a category.",
-                "error",
-            )
-
-            return render_template(
-                "admin/zone_category_appearance.html",
-                zones=zones,
-                categories=categories,
-                appearance=None,
-                selected_zone_id=zone_id,
-                selected_category_id=category_id,
-            )
-
-
-        zone = db.session.get(
-            Zone,
-            zone_id,
-        )
-
-        category = db.session.get(
-            Category,
-            category_id,
-        )
-
-
-        if not zone or not category:
-
-            flash(
-                "The selected zone or category could not be found.",
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin.zone_category_appearance"
-                )
-            )
-
-
-        # =================================================
-        # FIND EXISTING ZONE + CATEGORY CONFIGURATION
-        # =================================================
-
-        appearance = (
-            ZoneCategoryAppearance.query
-            .filter_by(
-                zone_id=zone.id,
-                category_id=category.id,
-            )
-            .first()
-        )
-
-
-        # =================================================
-        # CREATE IF IT DOES NOT EXIST
-        # =================================================
-
-        if appearance is None:
-
-            appearance = ZoneCategoryAppearance(
-                zone_id=zone.id,
-                category_id=category.id,
-            )
-
-            db.session.add(
-                appearance
-            )
-
-
-        # =================================================
-        # GET UPLOADED FILES
-        # =================================================
-
-        image_file = request.files.get(
-            "zone_category_image"
-        )
-
-        image_file_2 = request.files.get(
-            "zone_category_image_2"
-        )
-
-        image_file_3 = request.files.get(
-            "zone_category_image_3"
-        )
-
-
-        # =================================================
-        # UPLOAD IMAGES
-        #
-        # Existing images remain unchanged if the admin
-        # does not select a replacement file.
-        # =================================================
-
         try:
-
-            # ---------------------------------------------
-            # IMAGE 1
-            # ---------------------------------------------
-
-            if (
-                image_file
-                and image_file.filename
-            ):
-
-                appearance.image_url = (
-                    upload_lac_image(
-                        image_file,
-                        folder=(
-                            "lac/zone-categories/"
-                            f"{zone.id}/"
-                            f"{category.slug}"
-                        ),
-                    )
-                )
-
-
-            # ---------------------------------------------
-            # IMAGE 2
-            # ---------------------------------------------
-
-            if (
-                image_file_2
-                and image_file_2.filename
-            ):
-
-                appearance.image_url_2 = (
-                    upload_lac_image(
-                        image_file_2,
-                        folder=(
-                            "lac/zone-categories/"
-                            f"{zone.id}/"
-                            f"{category.slug}"
-                        ),
-                    )
-                )
-
-
-            # ---------------------------------------------
-            # IMAGE 3
-            # ---------------------------------------------
-
-            if (
-                image_file_3
-                and image_file_3.filename
-            ):
-
-                appearance.image_url_3 = (
-                    upload_lac_image(
-                        image_file_3,
-                        folder=(
-                            "lac/zone-categories/"
-                            f"{zone.id}/"
-                            f"{category.slug}"
-                        ),
-                    )
-                )
-
-
-        except ValueError as error:
-
-            db.session.rollback()
-
-            flash(
-                str(error),
-                "error",
-            )
-
-            return render_template(
-                "admin/zone_category_appearance.html",
-                zones=zones,
-                categories=categories,
-                appearance=appearance,
-                selected_zone_id=zone.id,
-                selected_category_id=category.id,
-            )
-
-
-        # =================================================
-        # SAVE DATABASE RECORD
-        # =================================================
-
-        try:
-
+            if new_slug != old_slug:
+                ContentItem.query.filter(ContentItem.category == old_slug).update({ContentItem.category: new_slug}, synchronize_session=False)
+                AccessPoint.query.filter(AccessPoint.default_category == old_slug).update({AccessPoint.default_category: new_slug}, synchronize_session=False)
+                PendingSubmission.query.filter(PendingSubmission.category == old_slug).update({PendingSubmission.category: new_slug}, synchronize_session=False)
+                QRScan.query.filter(QRScan.category_selected == old_slug).update({QRScan.category_selected: new_slug}, synchronize_session=False)
+                EngagementEvent.query.filter(EngagementEvent.category == old_slug).update({EngagementEvent.category: new_slug}, synchronize_session=False)
+            category.name = name
+            category.slug = new_slug
+            category.icon = icon
+            category.display_order = display_order
+            category.active = active
             db.session.commit()
-
-        except Exception:
-
+        except Exception as exc:
             db.session.rollback()
-
-            current_app.logger.exception(
-                "Failed to save zone category appearance."
-            )
-
-            flash(
-                "The zone category appearance could not be saved.",
-                "error",
-            )
-
-            return render_template(
-                "admin/zone_category_appearance.html",
-                zones=zones,
-                categories=categories,
-                appearance=appearance,
-                selected_zone_id=zone.id,
-                selected_category_id=category.id,
-            )
-
-
-        flash(
-            (
-                f"{category.name} appearance for "
-                f"{zone.name} saved successfully."
-            ),
-            "success",
-        )
-
-
-        # Redirect back with the selection in the URL
-        # so the admin immediately sees the saved images.
-
-        return redirect(
-            url_for(
-                "admin.zone_category_appearance",
-                zone_id=zone.id,
-                category_id=category.id,
-            )
-        )
-
-
-    # =====================================================
-    # GET — LOAD SELECTED APPEARANCE
-    # =====================================================
-
-    selected_zone_id = request.args.get(
-        "zone_id",
-        type=int,
-    )
-
-    selected_category_id = request.args.get(
-        "category_id",
-        type=int,
-    )
-
-    appearance = None
-
-
-    if (
-        selected_zone_id
-        and selected_category_id
-    ):
-
-        appearance = (
-            ZoneCategoryAppearance.query
-            .filter_by(
-                zone_id=selected_zone_id,
-                category_id=selected_category_id,
-            )
-            .first()
-        )
-
-
-    return render_template(
-        "admin/zone_category_appearance.html",
-        zones=zones,
-        categories=categories,
-        appearance=appearance,
-        selected_zone_id=selected_zone_id,
-        selected_category_id=selected_category_id,
-    )
+            current_app.logger.exception("Unable to edit category category_id=%s error=%s", category.id, exc)
+            flash("Category could not be updated.", "error")
+            return render_template("admin/category_form.html", category=category)
+        flash("Category updated successfully.", "success")
+        return redirect(url_for("admin.categories"))
+    return render_template("admin/category_form.html", category=category)
 
 
 @admin_bp.route("/categories/<int:category_id>/toggle", methods=["POST"])
@@ -7671,7 +1601,6 @@ def toggle_category(category_id):
     auth = require_admin()
     if auth:
         return auth
-
     category = Category.query.get_or_404(category_id)
     category.active = not category.active
     db.session.commit()
@@ -7679,16 +1608,99 @@ def toggle_category(category_id):
     return redirect(url_for("admin.categories"))
 
 
+@admin_bp.route("/categories/<int:category_id>/delete", methods=["POST"])
+def delete_category(category_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    category = Category.query.get_or_404(category_id)
+    category_name = category.name
+    category_slug = category.slug
+    try:
+        for item in ContentItem.query.filter_by(category=category_slug).all():
+            for submission in PendingSubmission.query.filter_by(published_content_id=item.id).all():
+                submission.published_content_id = None
+            ContentImage.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
+            ContentDistributionZone.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
+            db.session.delete(item)
+        for submission in PendingSubmission.query.filter_by(category=category_slug).all():
+            PendingSubmissionImage.query.filter_by(submission_id=submission.id).delete(synchronize_session=False)
+            db.session.delete(submission)
+        for point in AccessPoint.query.filter_by(default_category=category_slug).all():
+            point.qr_type = "general"
+            point.default_category = None
+        ZoneCategoryAppearance.query.filter_by(category_id=category.id).delete(synchronize_session=False)
+        db.session.delete(category)
+        db.session.commit()
+        flash(f"{category_name} permanently deleted.", "success")
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception("Unable to delete category category_id=%s error=%s", category_id, exc)
+        flash(f"Unable to delete category: {exc}", "error")
+    return redirect(url_for("admin.categories"))
+
+
+@admin_bp.route("/zone-category-appearance", methods=["GET", "POST"])
+def zone_category_appearance():
+    auth = require_admin()
+    if auth:
+        return auth
+    zones = Zone.query.order_by(Zone.name.asc()).all()
+    categories = Category.query.order_by(Category.display_order.asc(), Category.name.asc()).all()
+    if request.method == "POST":
+        zone_id = request.form.get("zone_id", type=int)
+        category_id = request.form.get("category_id", type=int)
+        if not zone_id or not category_id:
+            flash("Please select both a zone and a category.", "error")
+            return render_template("admin/zone_category_appearance.html", zones=zones, categories=categories, appearance=None, selected_zone_id=zone_id, selected_category_id=category_id)
+        zone = db.session.get(Zone, zone_id)
+        category = db.session.get(Category, category_id)
+        if not zone or not category:
+            flash("The selected zone or category could not be found.", "error")
+            return redirect(url_for("admin.zone_category_appearance"))
+        appearance = ZoneCategoryAppearance.query.filter_by(zone_id=zone.id, category_id=category.id).first()
+        if appearance is None:
+            appearance = ZoneCategoryAppearance(zone_id=zone.id, category_id=category.id)
+            db.session.add(appearance)
+        folder = f"lac/zone-categories/{zone.id}/{category.slug}"
+        try:
+            image_file = request.files.get("zone_category_image")
+            image_file_2 = request.files.get("zone_category_image_2")
+            image_file_3 = request.files.get("zone_category_image_3")
+            if image_file and image_file.filename:
+                appearance.image_url = upload_lac_image(image_file, folder=folder)
+            if image_file_2 and image_file_2.filename:
+                appearance.image_url_2 = upload_lac_image(image_file_2, folder=folder)
+            if image_file_3 and image_file_3.filename:
+                appearance.image_url_3 = upload_lac_image(image_file_3, folder=folder)
+            db.session.commit()
+        except ValueError as error:
+            db.session.rollback()
+            flash(str(error), "error")
+            return render_template("admin/zone_category_appearance.html", zones=zones, categories=categories, appearance=appearance, selected_zone_id=zone.id, selected_category_id=category.id)
+        except Exception as exc:
+            db.session.rollback()
+            current_app.logger.exception("Failed to save zone category appearance error=%s", exc)
+            flash("The zone category appearance could not be saved.", "error")
+            return render_template("admin/zone_category_appearance.html", zones=zones, categories=categories, appearance=appearance, selected_zone_id=zone.id, selected_category_id=category.id)
+        flash(f"{category.name} appearance for {zone.name} saved successfully.", "success")
+        return redirect(url_for("admin.zone_category_appearance", zone_id=zone.id, category_id=category.id))
+
+    selected_zone_id = request.args.get("zone_id", type=int)
+    selected_category_id = request.args.get("category_id", type=int)
+    appearance = None
+    if selected_zone_id and selected_category_id:
+        appearance = ZoneCategoryAppearance.query.filter_by(zone_id=selected_zone_id, category_id=selected_category_id).first()
+    return render_template("admin/zone_category_appearance.html", zones=zones, categories=categories, appearance=appearance, selected_zone_id=selected_zone_id, selected_category_id=selected_category_id)
+
 
 @admin_bp.route("/access-points/new", methods=["GET", "POST"])
 def create_access_point():
     auth = require_admin()
     if auth:
         return auth
-
     zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
     categories = get_categories()
-
     if request.method == "POST":
         code = request.form.get("code", "").strip().upper()
         name = request.form.get("name", "").strip()
@@ -7697,55 +1709,32 @@ def create_access_point():
         qr_type = request.form.get("qr_type", "general").strip()
         default_category = request.form.get("default_category", "").strip() or None
         partner_name = request.form.get("partner_name", "").strip() or None
-
         if not code or not name or not zone_id:
             flash("Code, name and zone are required.", "error")
             return render_template("admin/create_access_point.html", zones=zones, categories=categories)
-
         zone = db.session.get(Zone, zone_id)
         if not zone or not zone.active:
             flash("Please select a valid active zone.", "error")
             return render_template("admin/create_access_point.html", zones=zones, categories=categories)
-
         if qr_type not in ("general", "category"):
             flash("Invalid QR behaviour.", "error")
             return render_template("admin/create_access_point.html", zones=zones, categories=categories)
-
         if qr_type == "category":
             if not get_category_by_slug(default_category):
                 flash("Please select a valid active category.", "error")
                 return render_template("admin/create_access_point.html", zones=zones, categories=categories)
         else:
             default_category = None
-
         if AccessPoint.query.filter_by(code=code).first():
             flash(f"Access point {code} already exists.", "error")
             return render_template("admin/create_access_point.html", zones=zones, categories=categories)
-
-        access_point = AccessPoint(
-            code=code,
-            name=name,
-            zone_id=zone_id,
-            location_type=location_type,
-            qr_type=qr_type,
-            default_category=default_category,
-            partner_name=partner_name,
-            active=True,
-        )
+        access_point = AccessPoint(code=code, name=name, zone_id=zone_id, location_type=location_type, qr_type=qr_type, default_category=default_category, partner_name=partner_name, active=True)
         db.session.add(access_point)
         db.session.commit()
-
         base_url = os.environ.get("LAC_BASE_URL", request.host_url.rstrip("/"))
         result = generate_access_qr(code=code, base_url=base_url)
-
         flash(f"QR access point {code} created.", "success")
-        return render_template(
-            "admin/qr_created.html",
-            access_point=access_point,
-            qr_filename=result["filename"],
-            qr_url=result["url"],
-        )
-
+        return render_template("admin/qr_created.html", access_point=access_point, qr_filename=result["filename"], qr_url=result["url"])
     return render_template("admin/create_access_point.html", zones=zones, categories=categories)
 
 
@@ -7754,28 +1743,18 @@ def access_points():
     auth = require_admin()
     if auth:
         return auth
-
     zone_id = request.args.get("zone", type=int)
     status = request.args.get("status", "").strip()
     query = AccessPoint.query
-
     if zone_id:
         query = query.filter(AccessPoint.zone_id == zone_id)
     if status == "active":
         query = query.filter(AccessPoint.active.is_(True))
     elif status == "inactive":
         query = query.filter(AccessPoint.active.is_(False))
-
     points = query.order_by(AccessPoint.created_at.desc()).all()
     zones = Zone.query.order_by(Zone.name.asc()).all()
-
-    return render_template(
-        "admin/access_points.html",
-        points=points,
-        zones=zones,
-        selected_zone=zone_id,
-        selected_status=status,
-    )
+    return render_template("admin/access_points.html", points=points, zones=zones, selected_zone=zone_id, selected_status=status)
 
 
 @admin_bp.route("/access-points/<int:point_id>/edit", methods=["GET", "POST"])
@@ -7783,11 +1762,9 @@ def edit_access_point(point_id):
     auth = require_admin()
     if auth:
         return auth
-
     point = AccessPoint.query.get_or_404(point_id)
     zones = Zone.query.order_by(Zone.name.asc()).all()
     categories = get_categories(active_only=False)
-
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         zone_id = request.form.get("zone_id", type=int)
@@ -7796,26 +1773,21 @@ def edit_access_point(point_id):
         default_category = request.form.get("default_category", "").strip() or None
         partner_name = request.form.get("partner_name", "").strip() or None
         active = request.form.get("active") == "on"
-
         if not name or not zone_id:
             flash("Location name and zone are required.", "error")
             return render_template("admin/edit_access_point.html", point=point, zones=zones, categories=categories)
-
         if not db.session.get(Zone, zone_id):
             flash("Selected zone does not exist.", "error")
             return render_template("admin/edit_access_point.html", point=point, zones=zones, categories=categories)
-
         if qr_type not in ("general", "category"):
             flash("Invalid QR behaviour.", "error")
             return render_template("admin/edit_access_point.html", point=point, zones=zones, categories=categories)
-
         if qr_type == "category":
             if not get_category_by_slug(default_category, active_only=False):
                 flash("Category-specific QR requires a valid category.", "error")
                 return render_template("admin/edit_access_point.html", point=point, zones=zones, categories=categories)
         else:
             default_category = None
-
         point.name = name
         point.zone_id = zone_id
         point.location_type = location_type
@@ -7824,10 +1796,8 @@ def edit_access_point(point_id):
         point.partner_name = partner_name
         point.active = active
         db.session.commit()
-
         flash("Access point updated successfully.", "success")
         return redirect(url_for("admin.access_points"))
-
     return render_template("admin/edit_access_point.html", point=point, zones=zones, categories=categories)
 
 
@@ -7836,65 +1806,136 @@ def toggle_access_point(point_id):
     auth = require_admin()
     if auth:
         return auth
-
     point = AccessPoint.query.get_or_404(point_id)
     point.active = not point.active
     db.session.commit()
     flash(f"{point.name} {'activated' if point.active else 'deactivated'}.", "success")
     return redirect(url_for("admin.access_points"))
 
-@admin_bp.route(
-    "/access-points/<int:point_id>/delete",
-    methods=["POST"]
-)
-def delete_access_point(point_id):
 
+@admin_bp.route("/access-points/<int:point_id>/delete", methods=["POST"])
+def delete_access_point(point_id):
     auth = require_admin()
     if auth:
         return auth
-
-    point = AccessPoint.query.get_or_404(
-        point_id
-    )
-
+    point = AccessPoint.query.get_or_404(point_id)
     point_name = point.name
-
     try:
-
-        # -----------------------------------------
-        # Delete QR analytics belonging to point
-        # -----------------------------------------
-
-        QRScan.query.filter_by(
-            access_point_id=point.id
-        ).delete(
-            synchronize_session=False
-        )
-
-        # -----------------------------------------
-        # Delete physical access point
-        # -----------------------------------------
-
+        QRScan.query.filter_by(access_point_id=point.id).delete(synchronize_session=False)
         db.session.delete(point)
         db.session.commit()
-
-        flash(
-            f"{point_name} permanently deleted.",
-            "success"
-        )
-
+        flash(f"{point_name} permanently deleted.", "success")
     except Exception as exc:
-
         db.session.rollback()
+        current_app.logger.exception("Unable to delete access point point_id=%s error=%s", point_id, exc)
+        flash(f"Unable to delete access point: {exc}", "error")
+    return redirect(url_for("admin.access_points"))
 
-        flash(
-            f"Unable to delete access point: {exc}",
-            "error"
-        )
 
-    return redirect(
-        url_for("admin.access_points")
+@admin_bp.route("/access-points/<int:access_point_id>/qr")
+def access_point_qr(access_point_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    access_point = AccessPoint.query.get_or_404(access_point_id)
+    return send_file(create_access_point_qr(access_point), mimetype="image/png")
+
+
+@admin_bp.route("/access-points/<int:access_point_id>/qr/download")
+def download_access_point_qr(access_point_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    access_point = AccessPoint.query.get_or_404(access_point_id)
+    return send_file(create_access_point_qr(access_point), mimetype="image/png", as_attachment=True, download_name=f"LaC-{access_point.code}.png")
+
+
+@admin_bp.route("/claims")
+def claims():
+    auth = require_admin()
+    if auth:
+        return auth
+    status_filter = request.args.get("status", "pending").strip().lower()
+    if status_filter not in {"pending", "approved", "rejected", "all"}:
+        status_filter = "pending"
+    query = ListingClaim.query
+    if status_filter != "all":
+        query = query.filter(ListingClaim.status == status_filter)
+    claim_items = query.order_by(ListingClaim.created_at.desc()).all()
+    return render_template(
+        "admin/claims.html",
+        claims=claim_items,
+        status_filter=status_filter,
+        pending_count=ListingClaim.query.filter(ListingClaim.status == "pending").count(),
+        approved_count=ListingClaim.query.filter(ListingClaim.status == "approved").count(),
+        rejected_count=ListingClaim.query.filter(ListingClaim.status == "rejected").count(),
+        total_count=ListingClaim.query.count(),
     )
+
+
+@admin_bp.route("/claims/<int:claim_id>")
+def claim_detail(claim_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    claim = ListingClaim.query.filter_by(id=claim_id).first_or_404()
+    return render_template("admin/claim_detail.html", claim=claim, item=claim.content_item)
+
+
+@admin_bp.route("/claims/<int:claim_id>/approve", methods=["POST"])
+def approve_claim(claim_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    claim = ListingClaim.query.filter_by(id=claim_id).first_or_404()
+    item = claim.content_item
+    if claim.status != "pending":
+        flash("This claim has already been reviewed.", "warning")
+        return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+    if not item.can_be_claimed():
+        flash("This listing can no longer be claimed. Its ownership or listing level has changed.", "warning")
+        return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+    claim.status = "approved"
+    claim.reviewed_at = datetime.utcnow()
+    claim.admin_notes = request.form.get("admin_notes", "").strip() or None
+    item.listing_level = "business"
+    item.ownership_status = "claimed"
+    item.is_verified = True
+    item.featured = False
+    item.notification_eligible = False
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception("Failed to approve listing claim claim_id=%s error=%s", claim.id, exc)
+        flash("The claim could not be approved.", "error")
+        return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+    flash("Claim approved. The listing is now business-controlled.", "success")
+    return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+
+
+@admin_bp.route("/claims/<int:claim_id>/reject", methods=["POST"])
+def reject_claim(claim_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    claim = ListingClaim.query.filter_by(id=claim_id).first_or_404()
+    if claim.status != "pending":
+        flash("This claim has already been reviewed.", "warning")
+        return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+    claim.status = "rejected"
+    claim.reviewed_at = datetime.utcnow()
+    claim.admin_notes = request.form.get("admin_notes", "").strip() or None
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception("Failed to reject listing claim claim_id=%s error=%s", claim.id, exc)
+        flash("The claim could not be rejected.", "error")
+        return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+    flash("Claim rejected.", "success")
+    return redirect(url_for("admin.claim_detail", claim_id=claim.id))
+
 
 @admin_bp.route("/content")
 def content_list():
@@ -7911,13 +1952,17 @@ def content_list():
     if zone_id:
         query = query.filter(ContentItem.zone_id == zone_id)
     if category:
-        query = query.filter(ContentItem.category == category)
+        canonical_category = normalize_category(category)
+        aliases = set(get_category_aliases(canonical_category) or [])
+        aliases.update({category, canonical_category})
+        aliases.discard(None)
+        aliases.discard("")
+        query = query.filter(ContentItem.category.in_(aliases))
 
     items = query.order_by(ContentItem.created_at.desc()).all()
     today = date.today()
     content_rows = []
     expiring_soon_count = 0
-
     for item in items:
         row = {
             "item": item,
@@ -7935,10 +1980,9 @@ def content_list():
     status_counts = {"live": 0, "upcoming": 0, "expired": 0, "inactive": 0, "archived": 0}
     for content_item in ContentItem.query.filter(ContentItem.archived.is_(False)).all():
         result = get_content_status(content_item, today)
-        status_counts[result["key"]] += 1
+        status_counts[result["key"]] = status_counts.get(result["key"], 0) + 1
 
     zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
-
     return render_template(
         "admin/content_list.html",
         content_rows=content_rows,
@@ -7958,6780 +2002,698 @@ def content_archive():
     auth = require_admin()
     if auth:
         return auth
-
-    items = (
-        ContentItem.query
-        .filter(ContentItem.archived.is_(True))
-        .order_by(ContentItem.archived_at.desc())
-        .all()
-    )
+    items = ContentItem.query.filter(ContentItem.archived.is_(True)).order_by(ContentItem.archived_at.desc()).all()
     return render_template("admin/content_archive.html", items=items)
 
-@admin_bp.route(
-    "/content/<int:item_id>/restore",
-    methods=["POST"],
-)
-def restore_content(
-    item_id,
-):
 
+@admin_bp.route("/content/<int:item_id>/restore", methods=["POST"])
+def restore_content(item_id):
     auth = require_admin()
-
     if auth:
         return auth
-
-    item = (
-        ContentItem.query
-        .get_or_404(
-            item_id
-        )
-    )
-
+    item = ContentItem.query.get_or_404(item_id)
     item.archived = False
     item.archived_at = None
-
-    # Restore public visibility.
     item.active = True
-
     db.session.commit()
-
-    flash(
-        "Content restored from archive.",
-        "success",
-    )
-
-    return redirect(
-        url_for(
-            "admin.content_archive"
-        )
-    )
-
-def _render_content_form(zones, categories, item):
-    return render_template(
-        "admin/content_form.html",
-        zones=zones,
-        categories=categories,
-        item=item,
-    )
-
-
-# ============================================================
-# CONTENT WORKFLOW RULES
-# ============================================================
-
-ADMIN_CONTENT_WORKFLOWS = {
-
-    # ========================================================
-    # PROPERTY
-    # ========================================================
-
-    "property": {
-
-        "room": {
-            "lifetime_type":
-                "until_unavailable",
-            "notification_eligible":
-                True,
-        },
-
-        "rental": {
-            "lifetime_type":
-                "until_unavailable",
-            "notification_eligible":
-                True,
-        },
-
-        "property_sale": {
-            "lifetime_type":
-                "until_unavailable",
-            "notification_eligible":
-                True,
-        },
-
-        "hotel_lodge": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "accommodation_special": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-
-
-    # ========================================================
-    # EVENTS
-    # ========================================================
-
-    "events": {
-
-        "event": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "entertainment": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "church_event": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "sports_event": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "community_event": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "business_event": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-
-
-    # ========================================================
-    # GROCERY / RETAIL SPECIALS
-    # ========================================================
-
-    "discount-deals": {
-
-        "grocery_special": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "product_discount": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "weekend_special": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "clearance": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-
-
-    # ========================================================
-    # FOOD
-    # ========================================================
-
-    "local-restaurants": {
-
-        "restaurant": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "takeaway": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "daily_special": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "weekend_special": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "food_deal": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-
-
-    # ========================================================
-    # JOBS / OPPORTUNITIES
-    # ========================================================
-
-    "jobs": {
-
-        "job": {
-            "lifetime_type":
-                "until_unavailable",
-            "notification_eligible":
-                True,
-        },
-
-        "learnership": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "internship": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "training": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "tender": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "business_opportunity": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-
-
-    "opportunities": {
-
-        "job": {
-            "lifetime_type":
-                "until_unavailable",
-            "notification_eligible":
-                True,
-        },
-
-        "learnership": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "internship": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "training": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "tender": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-
-        "business_opportunity": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-
-
-    # ========================================================
-    # SERVICES
-    # ========================================================
-
-    "services": {
-
-        "service_provider": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "plumber": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "mechanic": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "electrician": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "builder": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "cleaning_service": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-    },
-
-
-    # ========================================================
-    # BEAUTY / SALON
-    # ========================================================
-
-    "beauty-salon": {
-
-        "salon": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "barber": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "beauty_service": {
-            "lifetime_type":
-                "ongoing",
-            "notification_eligible":
-                False,
-        },
-
-        "beauty_special": {
-            "lifetime_type":
-                "time_specific",
-            "notification_eligible":
-                True,
-        },
-    },
-}
-
-
-# ============================================================
-# GET CONTENT WORKFLOW
-# ============================================================
-
-# ============================================================
-# DATE VALIDATION + NORMALIZATION
-# ============================================================
-
-def _validate_and_normalize_content_dates(
-    category,
-    form,
-    lifetime_type=None,
-):
-
-    start_date = (
-        parse_date(
-            form.get(
-                "start_date"
-            )
-        )
-    )
-
-    end_date = (
-        parse_date(
-            form.get(
-                "end_date"
-            )
-        )
-    )
-
-    publish_from = (
-        parse_date(
-            form.get(
-                "publish_from"
-            )
-        )
-    )
-
-    event_date = (
-        parse_date(
-            form.get(
-                "event_date"
-            )
-        )
-    )
-
-    event_end_date = (
-        parse_date(
-            form.get(
-                "event_end_date"
-            )
-        )
-    )
-
-    # ========================================================
-    # LEGACY FALLBACK
-    # ========================================================
-
-    if not lifetime_type:
-
-        if category == "events":
-
-            lifetime_type = (
-                "time_specific"
-            )
-
-        elif end_date:
-
-            lifetime_type = (
-                "time_specific"
-            )
-
-        else:
-
-            lifetime_type = (
-                "ongoing"
-            )
-
-    # ========================================================
-    # EVENTS
-    # ========================================================
-
-    if (
-        category == "events"
-        and
-        lifetime_type == "time_specific"
-    ):
-
-        if not event_date:
-
-            return (
-                None,
-                "Event Date is required for events.",
-            )
-
-        if (
-            publish_from
-            and
-            publish_from > event_date
-        ):
-
-            return (
-                None,
-                "Publish From cannot be after Event Date.",
-            )
-
-        if (
-            event_end_date
-            and
-            event_end_date < event_date
-        ):
-
-            return (
-                None,
-                "Event End Date cannot be before Event Date.",
-            )
-
-        # Events use event-specific date fields.
-        start_date = None
-        end_date = None
-
-    # ========================================================
-    # TIME-SPECIFIC NON-EVENT CONTENT
-    # ========================================================
-
-    elif lifetime_type == "time_specific":
-
-        # Examples:
-        #
-        # Grocery special
-        # Food promotion
-        # Learnership deadline
-        # Tender deadline
-        # Accommodation special
-
-        if not end_date:
-
-            return (
-                None,
-                "End Date is required for this "
-                "time-specific listing.",
-            )
-
-        if (
-            start_date
-            and
-            end_date < start_date
-        ):
-
-            return (
-                None,
-                "End date cannot be before start date.",
-            )
-
-        # Clear event fields.
-        publish_from = None
-        event_date = None
-        event_end_date = None
-
-    # ========================================================
-    # UNTIL UNAVAILABLE
-    # ========================================================
-
-    elif lifetime_type == "until_unavailable":
-
-        # Examples:
-        #
-        # Room → until taken
-        # Rental → until taken
-        # Property sale → until sold
-        # Job → until filled
-
-        start_date = None
-        end_date = None
-
-        publish_from = None
-        event_date = None
-        event_end_date = None
-
-    # ========================================================
-    # ONGOING
-    # ========================================================
-
-    elif lifetime_type == "ongoing":
-
-        # Examples:
-        #
-        # Restaurant
-        # Hotel
-        # Salon
-        # Mechanic
-        # Plumber
-
-        start_date = None
-        end_date = None
-
-        publish_from = None
-        event_date = None
-        event_end_date = None
-
-    # ========================================================
-    # RECURRING
-    # ========================================================
-
-    elif lifetime_type == "recurring":
-
-        publish_from = None
-        event_date = None
-        event_end_date = None
-
-        if (
-            start_date
-            and
-            end_date
-            and
-            end_date < start_date
-        ):
-
-            return (
-                None,
-                "End date cannot be before start date.",
-            )
-
-    # ========================================================
-    # UNKNOWN LIFETIME
-    # ========================================================
-
-    else:
-
-        return (
-            None,
-            "Invalid listing lifetime type.",
-        )
-
-    # ========================================================
-    # NORMALIZED RESULT
-    # ========================================================
+    flash("Content restored from archive.", "success")
+    return redirect(url_for("admin.content_archive"))
+
+
+def _get_listing_level_from_form(default="discovery"):
+    listing_level = request.form.get("listing_level", default).strip().lower()
+    return listing_level if listing_level in ALLOWED_LISTING_LEVELS else "discovery"
+
+
+def _read_uploaded_listing_images():
+    uploaded_images = [f for f in request.files.getlist("images") if f and f.filename]
+    legacy_image = request.files.get("image")
+    if legacy_image and legacy_image.filename and not uploaded_images:
+        uploaded_images.append(legacy_image)
+    return uploaded_images
+
+
+def _validate_image_count(uploaded_images, listing_level):
+    maximum_images = 1 if listing_level == "discovery" else 3
+    if len(uploaded_images) <= maximum_images:
+        return None
+    if listing_level == "discovery":
+        return "Discovery listings can have a maximum of 1 image."
+    return "Business and Promotion listings can have a maximum of 3 images."
+
+
+def _upload_listing_images(uploaded_images):
+    urls = []
+    for uploaded_file in uploaded_images:
+        image_url = upload_listing_image(uploaded_file)
+        if image_url:
+            urls.append(image_url)
+    return urls
+
+
+def _parse_sponsorship(item=None):
+    is_sponsored = request.form.get("is_sponsored") == "on"
+    if not is_sponsored:
+        return {
+            "is_sponsored": False,
+            "sponsorship_status": "inactive",
+            "sponsored_duration_days": None,
+            "sponsorship_amount_due": None,
+            "sponsored_starts_at": None,
+            "sponsored_expires_at": None,
+            "sponsored_priority": 0,
+            "sponsorship_reference": None,
+        }, None
+
+    sponsorship_status = request.form.get("sponsorship_status", getattr(item, "sponsorship_status", None) or "inactive").strip().lower()
+    if sponsorship_status not in ALLOWED_SPONSORSHIP_STATUSES:
+        sponsorship_status = "inactive"
+
+    raw_duration = request.form.get("sponsored_duration_days", "").strip()
+    if not raw_duration:
+        return None, "Please select a Sponsored Boost duration."
+    try:
+        sponsored_duration_days = int(raw_duration)
+        sponsorship_amount_due = calculate_sponsored_price(sponsored_duration_days)
+    except (TypeError, ValueError, KalxaPricingError):
+        return None, "Invalid Sponsored Boost duration selected."
+
+    try:
+        sponsored_priority = int(request.form.get("sponsored_priority", getattr(item, "sponsored_priority", None) or 10) or 10)
+    except (TypeError, ValueError):
+        sponsored_priority = 10
+    sponsored_priority = max(0, min(sponsored_priority, 100))
+
+    sponsored_starts_raw = request.form.get("sponsored_starts_at", "").strip()
+    if not sponsored_starts_raw:
+        return None, "Please select when the Sponsored Boost should start."
+    try:
+        sponsored_starts_at = datetime.fromisoformat(sponsored_starts_raw)
+    except ValueError:
+        return None, "Please enter a valid Sponsored start date."
 
     return {
-
-        "start_date":
-            start_date,
-
-        "end_date":
-            end_date,
-
-        "publish_from":
-            publish_from,
-
-        "event_date":
-            event_date,
-
-        "event_end_date":
-            event_end_date,
-
+        "is_sponsored": True,
+        "sponsorship_status": sponsorship_status,
+        "sponsored_duration_days": sponsored_duration_days,
+        "sponsorship_amount_due": sponsorship_amount_due,
+        "sponsored_starts_at": sponsored_starts_at,
+        "sponsored_expires_at": sponsored_starts_at + timedelta(days=sponsored_duration_days),
+        "sponsored_priority": sponsored_priority,
+        "sponsorship_reference": request.form.get("sponsorship_reference", "").strip() or None,
     }, None
 
 
-@admin_bp.route(
-    "/content/new",
-    methods=["GET", "POST"],
-)
+def _apply_sponsorship(item, sponsorship):
+    for field, value in sponsorship.items():
+        setattr(item, field, value)
+
+
+def _validate_effective_campaign_dates(canonical_category, lifetime_type, dates, start_time, end_time):
+    if canonical_category == "events":
+        effective_start_date = dates.get("event_date")
+        effective_end_date = dates.get("event_end_date") or effective_start_date
+    else:
+        effective_start_date = dates.get("start_date")
+        effective_end_date = dates.get("end_date")
+
+    if effective_start_date and effective_end_date and effective_end_date < effective_start_date:
+        return "End date cannot be before start date."
+    if effective_start_date and effective_end_date and effective_start_date == effective_end_date and start_time and end_time and end_time <= start_time:
+        return "End time must be after start time when the content starts and ends on the same day."
+    if canonical_category != "events" and end_time and not effective_end_date:
+        return "Please enter an end date when using an end time."
+    return None
+
+
+def _populate_content_common_fields(item, listing_level, workflow_notification_eligible):
+    item.description = request.form.get("description", "").strip() or None
+    item.business_name = request.form.get("business_name", "").strip() or None
+    item.venue = request.form.get("venue", "").strip() or None
+    item.price = request.form.get("price", "").strip() or None
+    item.contact = request.form.get("contact", "").strip() or None
+    item.whatsapp_number = request.form.get("whatsapp_number", "").strip() or None
+    item.directions_url = request.form.get("directions_url", "").strip() or None
+    item.ticket_url = request.form.get("ticket_url", "").strip() or None
+    item.listing_level = listing_level
+
+    if listing_level == "discovery":
+        item.ownership_status = "unclaimed"
+        item.is_verified = False
+    else:
+        item.ownership_status = "claimed"
+        item.is_verified = request.form.get("is_verified") == "on"
+
+    if listing_level in {"business", "promotion"}:
+        item.opening_hours = request.form.get("opening_hours", "").strip() or None
+        item.menu_highlights = request.form.get("menu_highlights", "").strip() or None
+        item.special_offer = request.form.get("special_offer", "").strip() or None
+    else:
+        item.opening_hours = None
+        item.menu_highlights = None
+        item.special_offer = None
+        item.image_url_2 = None
+        item.image_url_3 = None
+
+    item.featured = request.form.get("featured") == "on"
+    if listing_level == "promotion":
+        item.notification_eligible = workflow_notification_eligible and request.form.get("notification_eligible") == "on"
+    else:
+        item.notification_eligible = False
+    item.active = request.form.get("active") == "on"
+
+
+@admin_bp.route("/content/new", methods=["GET", "POST"])
 def create_content():
-
-    # =====================================================
-    # ADMIN AUTHENTICATION
-    # =====================================================
-
     auth = require_admin()
-
     if auth:
         return auth
-
-
-    # =====================================================
-    # LOAD ZONES
-    # =====================================================
-
-    zones = (
-        Zone.query
-        .filter_by(
-            active=True
-        )
-        .order_by(
-            Zone.name.asc()
-        )
-        .all()
-    )
-
-
-    # =====================================================
-    # LOAD CATEGORIES
-    # =====================================================
-
-    categories = (
-        get_categories(
-            active_only=False
-        )
-    )
-
-
-    # =====================================================
-    # POST — CREATE CONTENT
-    # =====================================================
+    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
+    categories = get_categories(active_only=False)
 
     if request.method == "POST":
-
-        # =================================================
-        # BASIC DATA
-        # =================================================
-
-        zone_id = request.form.get(
-            "zone_id",
-            type=int,
-        )
-
-
-        category = (
-            request.form.get(
-                "category",
-                "",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        content_type = (
-            request.form.get(
-                "content_type",
-                "",
-            )
-            .strip()
-            .lower()
-            or None
-        )
-
-
-        title = (
-            request.form.get(
-                "title",
-                "",
-            )
-            .strip()
-        )
-
-
-        # =================================================
-        # CONTACT + ACTION FIELDS
-        # =================================================
-
-        contact = (
-            request.form.get(
-                "contact",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        whatsapp_number = (
-            request.form.get(
-                "whatsapp_number",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        directions_url = (
-            request.form.get(
-                "directions_url",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        ticket_url = (
-            request.form.get(
-                "ticket_url",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # REQUIRED FIELDS
-        # =================================================
-
-        if (
-            not zone_id
-            or not category
-            or not title
-        ):
-
-            flash(
-                "Zone, category and title are required.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # VALIDATE ZONE
-        # =================================================
-
-        zone = db.session.get(
-            Zone,
-            zone_id,
-        )
-
-
+        zone_id = request.form.get("zone_id", type=int)
+        category = request.form.get("category", "").strip().lower()
+        content_type = request.form.get("content_type", "").strip().lower() or None
+        title = request.form.get("title", "").strip()
+        if not zone_id or not category or not title:
+            flash("Zone, category and title are required.", "error")
+            return _render_content_form(zones, categories, None)
+        zone = db.session.get(Zone, zone_id)
         if not zone:
+            flash("Selected zone does not exist.", "error")
+            return _render_content_form(zones, categories, None)
+        if not get_category_by_slug(category, active_only=False):
+            flash("Invalid content category.", "error")
+            return _render_content_form(zones, categories, None)
 
-            flash(
-                "Selected zone does not exist.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # VALIDATE CATEGORY
-        # =================================================
-
-        if not get_category_by_slug(
-            category,
-            active_only=False,
-        ):
-
-            flash(
-                "Invalid content category.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # DETERMINE CONTENT WORKFLOW
-        # =================================================
-
-        workflow = (
-            get_content_workflow(
-                category,
-                content_type,
-            )
-        )
-
-
-        lifetime_type = (
-            workflow[
-                "lifetime_type"
-            ]
-        )
-
-
-        workflow_notification_eligible = bool(
-            workflow.get(
-                "notification_eligible",
-                False,
-            )
-        )
-
-
-        pricing_model = (
-            workflow.get(
-                "pricing_model"
-            )
-        )
-
-
-        # =================================================
-        # VALIDATE + NORMALIZE CONTENT DATES
-        # =================================================
+        workflow = get_content_workflow(category, content_type)
+        lifetime_type = workflow["lifetime_type"]
+        workflow_notification_eligible = bool(workflow.get("notification_eligible", False))
+        pricing_model = workflow.get("pricing_model")
 
         try:
-
-            dates, error = (
-                _validate_and_normalize_content_dates(
-                    category,
-                    request.form,
-                    lifetime_type=lifetime_type,
-                )
-            )
-
+            dates, error = _validate_and_normalize_content_dates(category, request.form, lifetime_type=lifetime_type)
         except ValueError:
-
-            flash(
-                "Please enter valid dates.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
+            flash("Please enter valid dates.", "error")
+            return _render_content_form(zones, categories, None)
         if error:
-
-            flash(
-                error,
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # CAMPAIGN START / END TIMES
-        # =================================================
+            flash(error, "error")
+            return _render_content_form(zones, categories, None)
 
         try:
-
-            start_time = (
-                parse_optional_time(
-                    request.form.get(
-                        "start_time"
-                    )
-                )
-            )
-
-
-            end_time = (
-                parse_optional_time(
-                    request.form.get(
-                        "end_time"
-                    )
-                )
-            )
-
+            start_time = parse_optional_time(request.form.get("start_time"))
+            end_time = parse_optional_time(request.form.get("end_time"))
         except ValueError:
-
-            flash(
-                "Please enter valid start and end times.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # CANONICAL CATEGORY
-        # =================================================
-
-        canonical_category = (
-            normalize_category(
-                category
-            )
-        )
-
-
-        # =================================================
-        # DETERMINE EFFECTIVE CAMPAIGN DATES
-        # =================================================
-
-        if (
-            canonical_category == "events"
-            or lifetime_type == "event"
-        ):
-
-            effective_start_date = (
-                dates.get(
-                    "event_date"
-                )
-            )
-
-
-            effective_end_date = (
-                dates.get(
-                    "event_end_date"
-                )
-                or
-                effective_start_date
-            )
-
-        else:
-
-            effective_start_date = (
-                dates.get(
-                    "start_date"
-                )
-            )
-
-
-            effective_end_date = (
-                dates.get(
-                    "end_date"
-                )
-            )
-
-
-        # =================================================
-        # VALIDATE DATE ORDER
-        # =================================================
-
-        if (
-            effective_start_date
-            and effective_end_date
-            and effective_end_date
-            < effective_start_date
-        ):
-
-            flash(
-                "End date cannot be before start date.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # VALIDATE SAME-DAY TIME ORDER
-        # =================================================
-
-        if (
-            effective_start_date
-            and effective_end_date
-            and effective_start_date
-            == effective_end_date
-            and start_time
-            and end_time
-            and end_time <= start_time
-        ):
-
-            flash(
-                (
-                    "End time must be after start time "
-                    "when the content starts and ends "
-                    "on the same day."
-                ),
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # END TIME WITHOUT END DATE
-        # =================================================
-
-        if (
-            canonical_category != "events"
-            and end_time
-            and not effective_end_date
-        ):
-
-            flash(
-                (
-                    "Please enter an end date when "
-                    "using an end time."
-                ),
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # LISTING LEVEL
-        # =================================================
-
-        listing_level = (
-            request.form.get(
-                "listing_level",
-                "discovery",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        allowed_listing_levels = {
-            "discovery",
-            "business",
-            "promotion",
-        }
-
-
-        if (
-            listing_level
-            not in allowed_listing_levels
-        ):
-
-            listing_level = (
-                "discovery"
-            )
-
-
-        # =================================================
-        # OWNERSHIP + VERIFICATION
-        # =================================================
-
-        if (
-            listing_level
-            == "discovery"
-        ):
-
-            ownership_status = (
-                "unclaimed"
-            )
-
-            is_verified = (
-                False
-            )
-
-        else:
-
-            ownership_status = (
-                "claimed"
-            )
-
-            is_verified = (
-                request.form.get(
-                    "is_verified"
-                )
-                == "on"
-            )
-
-
-        # =================================================
-        # FEATURED
-        # =================================================
-
-        featured = (
-            request.form.get(
-                "featured"
-            )
-            == "on"
-        )
-
-
-        # =================================================
-        # SPONSORED VISIBILITY
-        #
-        # MANUAL PAYMENT
-        # MANUAL START
-        # AUTOMATIC EXPIRY
-        # =================================================
-
-        is_sponsored = (
-            request.form.get(
-                "is_sponsored"
-            )
-            == "on"
-        )
-
-
-        sponsorship_status = (
-            request.form.get(
-                "sponsorship_status",
-                "inactive",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        allowed_sponsorship_statuses = {
-            "inactive",
-            "scheduled",
-            "active",
-            "expired",
-        }
-
-
-        if (
-            sponsorship_status
-            not in allowed_sponsorship_statuses
-        ):
-
-            sponsorship_status = (
-                "inactive"
-            )
-
-
-        # =================================================
-        # SPONSORED DURATION + OFFICIAL PRICE
-        # =================================================
-
-        sponsored_duration_days = None
-
-        sponsorship_amount_due = None
-
-
-        if is_sponsored:
-
-            sponsored_duration_raw = (
-                request.form.get(
-                    "sponsored_duration_days",
-                    "",
-                )
-                .strip()
-            )
-
-
-            if not sponsored_duration_raw:
-
-                flash(
-                    "Please select a Sponsored Boost duration.",
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-            try:
-
-                sponsored_duration_days = int(
-                    sponsored_duration_raw
-                )
-
-
-                sponsorship_amount_due = (
-                    calculate_sponsored_price(
-                        sponsored_duration_days
-                    )
-                )
-
-            except (
-                TypeError,
-                ValueError,
-                KalxaPricingError,
-            ):
-
-                flash(
-                    "Invalid Sponsored Boost duration selected.",
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-        # =================================================
-        # SPONSORSHIP REFERENCE
-        # =================================================
-
-        sponsorship_reference = (
-            request.form.get(
-                "sponsorship_reference",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # SPONSORED PRIORITY
-        # =================================================
-
+            flash("Please enter valid start and end times.", "error")
+            return _render_content_form(zones, categories, None)
+
+        canonical_category = normalize_category(category)
+        date_error = _validate_effective_campaign_dates(canonical_category, lifetime_type, dates, start_time, end_time)
+        if date_error:
+            flash(date_error, "error")
+            return _render_content_form(zones, categories, None)
+
+        listing_level = _get_listing_level_from_form("discovery")
+        sponsorship, sponsorship_error = _parse_sponsorship()
+        if sponsorship_error:
+            flash(sponsorship_error, "error")
+            return _render_content_form(zones, categories, None)
+
+        uploaded_images = _read_uploaded_listing_images()
+        image_error = _validate_image_count(uploaded_images, listing_level)
+        if image_error:
+            flash(image_error, "error")
+            return _render_content_form(zones, categories, None)
         try:
-
-            sponsored_priority = int(
-                request.form.get(
-                    "sponsored_priority",
-                    10,
-                )
-                or 10
-            )
-
-        except (
-            TypeError,
-            ValueError,
-        ):
-
-            sponsored_priority = (
-                10
-                if is_sponsored
-                else 0
-            )
-
-
-        sponsored_priority = max(
-            0,
-            min(
-                sponsored_priority,
-                100,
-            ),
-        )
-
-
-        # =================================================
-        # MANUAL SPONSORED START
-        # =================================================
-
-        sponsored_starts_raw = (
-            request.form.get(
-                "sponsored_starts_at",
-                "",
-            )
-            .strip()
-        )
-
-
-        sponsored_starts_at = None
-
-        sponsored_expires_at = None
-
-
-        if is_sponsored:
-
-            if not sponsored_starts_raw:
-
-                flash(
-                    (
-                        "Please select when the Sponsored "
-                        "Boost should start."
-                    ),
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-            try:
-
-                sponsored_starts_at = (
-                    datetime.fromisoformat(
-                        sponsored_starts_raw
-                    )
-                )
-
-            except ValueError:
-
-                flash(
-                    "Please enter a valid Sponsored start date.",
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-            # =============================================
-            # AUTOMATIC SPONSORED EXPIRY
-            #
-            # Example:
-            #
-            # start = 12 Sep 10:00
-            # duration = 7 days
-            #
-            # expiry = 19 Sep 10:00
-            #
-            # Browser expiry input is deliberately ignored.
-            # =============================================
-
-            sponsored_expires_at = (
-                sponsored_starts_at
-                +
-                timedelta(
-                    days=sponsored_duration_days
-                )
-            )
-
-
-        # =================================================
-        # NON-SPONSORED SAFETY
-        # =================================================
-
-        if not is_sponsored:
-
-            sponsorship_status = (
-                "inactive"
-            )
-
-            sponsored_duration_days = (
-                None
-            )
-
-            sponsorship_amount_due = (
-                None
-            )
-
-            sponsored_starts_at = (
-                None
-            )
-
-            sponsored_expires_at = (
-                None
-            )
-
-            sponsored_priority = (
-                0
-            )
-
-            sponsorship_reference = (
-                None
-            )
-
-
-        # =================================================
-        # NOTIFICATION ELIGIBILITY
-        # =================================================
-
-        if (
-            listing_level
-            == "promotion"
-        ):
-
-            promotion_notification_requested = (
-                request.form.get(
-                    "notification_eligible"
-                )
-                == "on"
-            )
-
-
-            notification_eligible = (
-                workflow_notification_eligible
-                and
-                promotion_notification_requested
-            )
-
-        else:
-
-            notification_eligible = (
-                False
-            )
-
-
-        # =================================================
-        # BUSINESS / RICH LISTING FIELDS
-        # =================================================
-
-        if (
-            listing_level
-            in {
-                "business",
-                "promotion",
-            }
-        ):
-
-            opening_hours = (
-                request.form.get(
-                    "opening_hours",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            menu_highlights = (
-                request.form.get(
-                    "menu_highlights",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            special_offer = (
-                request.form.get(
-                    "special_offer",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-        else:
-
-            opening_hours = (
-                None
-            )
-
-            menu_highlights = (
-                None
-            )
-
-            special_offer = (
-                None
-            )
-
-
-        # =================================================
-        # IMAGE UPLOADS
-        # =================================================
-
-        uploaded_images = []
-
-
-        for uploaded_file in request.files.getlist(
-            "images"
-        ):
-
-            if (
-                uploaded_file
-                and uploaded_file.filename
-            ):
-
-                uploaded_images.append(
-                    uploaded_file
-                )
-
-
-        legacy_image = (
-            request.files.get(
-                "image"
-            )
-        )
-
-
-        if (
-            legacy_image
-            and legacy_image.filename
-            and not uploaded_images
-        ):
-
-            uploaded_images.append(
-                legacy_image
-            )
-
-
-        # =================================================
-        # IMAGE LIMIT
-        # =================================================
-
-        if (
-            listing_level
-            == "discovery"
-        ):
-
-            maximum_images = (
-                1
-            )
-
-        else:
-
-            maximum_images = (
-                3
-            )
-
-
-        if (
-            len(uploaded_images)
-            > maximum_images
-        ):
-
-            if (
-                listing_level
-                == "discovery"
-            ):
-
-                message = (
-                    "Discovery listings can have "
-                    "a maximum of 1 image."
-                )
-
-            else:
-
-                message = (
-                    "Business and Promotion listings "
-                    "can have a maximum of 3 images."
-                )
-
-
-            flash(
-                message,
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # UPLOAD IMAGES
-        # =================================================
-
-        uploaded_image_urls = []
-
-
-        try:
-
-            for uploaded_file in (
-                uploaded_images
-            ):
-
-                image_url = (
-                    upload_listing_image(
-                        uploaded_file
-                    )
-                )
-
-
-                if image_url:
-
-                    uploaded_image_urls.append(
-                        image_url
-                    )
-
+            uploaded_image_urls = _upload_listing_images(uploaded_images)
         except Exception as error:
-
-            current_app.logger.exception(
-                (
-                    "Content image upload failed. "
-                    "title=%s error=%s"
-                ),
-                title,
-                error,
-            )
-
-
-            flash(
-                f"Image upload failed: {error}",
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        primary_image_url = (
-
-            uploaded_image_urls[0]
-
-            if len(
-                uploaded_image_urls
-            ) >= 1
-
-            else None
-        )
-
-
-        second_image_url = (
-
-            uploaded_image_urls[1]
-
-            if len(
-                uploaded_image_urls
-            ) >= 2
-
-            else None
-        )
-
-
-        third_image_url = (
-
-            uploaded_image_urls[2]
-
-            if len(
-                uploaded_image_urls
-            ) >= 3
-
-            else None
-        )
-
-
-        # =================================================
-        # CREATE CONTENT ITEM
-        # =================================================
+            current_app.logger.exception("Content image upload failed title=%s error=%s", title, error)
+            flash(f"Image upload failed: {error}", "error")
+            return _render_content_form(zones, categories, None)
 
         item = ContentItem(
-
             zone_id=zone_id,
-
             category=category,
-
             content_type=content_type,
-
             lifetime_type=lifetime_type,
-
             availability_status="available",
-
             title=title,
-
             start_time=start_time,
-
             end_time=end_time,
-
-            description=(
-                request.form.get(
-                    "description",
-                    "",
-                )
-                .strip()
-                or None
-            ),
-
-            business_name=(
-                request.form.get(
-                    "business_name",
-                    "",
-                )
-                .strip()
-                or None
-            ),
-
-            venue=(
-                request.form.get(
-                    "venue",
-                    "",
-                )
-                .strip()
-                or None
-            ),
-
-            price=(
-                request.form.get(
-                    "price",
-                    "",
-                )
-                .strip()
-                or None
-            ),
-
-            contact=contact,
-
-            whatsapp_number=whatsapp_number,
-
-            directions_url=directions_url,
-
-            ticket_url=ticket_url,
-
-            listing_level=listing_level,
-
-            ownership_status=ownership_status,
-
-            is_verified=is_verified,
-
-            opening_hours=opening_hours,
-
-            menu_highlights=menu_highlights,
-
-            special_offer=special_offer,
-
-            image_url=primary_image_url,
-
-            image_url_2=(
-
-                second_image_url
-
-                if listing_level in {
-                    "business",
-                    "promotion",
-                }
-
-                else None
-            ),
-
-            image_url_3=(
-
-                third_image_url
-
-                if listing_level in {
-                    "business",
-                    "promotion",
-                }
-
-                else None
-            ),
-
-            featured=featured,
-
-
-            # =============================================
-            # SPONSORED
-            # =============================================
-
-            is_sponsored=is_sponsored,
-
-            sponsorship_status=(
-                sponsorship_status
-            ),
-
-            sponsored_duration_days=(
-                sponsored_duration_days
-            ),
-
-            sponsorship_amount_due=(
-                sponsorship_amount_due
-            ),
-
-            sponsored_starts_at=(
-                sponsored_starts_at
-            ),
-
-            sponsored_expires_at=(
-                sponsored_expires_at
-            ),
-
-            sponsored_priority=(
-                sponsored_priority
-            ),
-
-            sponsorship_reference=(
-                sponsorship_reference
-            ),
-
-
-            # =============================================
-            # NOTIFICATIONS
-            # =============================================
-
-            notification_eligible=(
-                notification_eligible
-            ),
-
-            active=(
-                request.form.get(
-                    "active"
-                )
-                == "on"
-            ),
+            image_url=uploaded_image_urls[0] if len(uploaded_image_urls) >= 1 else None,
+            image_url_2=uploaded_image_urls[1] if listing_level in {"business", "promotion"} and len(uploaded_image_urls) >= 2 else None,
+            image_url_3=uploaded_image_urls[2] if listing_level in {"business", "promotion"} and len(uploaded_image_urls) >= 3 else None,
         )
-
-
-        # =================================================
-        # APPLY NORMALIZED CONTENT DATES
-        # =================================================
-
-        for key, value in (
-            dates.items()
-        ):
-
-            setattr(
-                item,
-                key,
-                value,
-            )
-
-
-        # =================================================
-        # CONFIGURE EXISTING COMMERCIAL PACKAGE
-        # =================================================
+        _populate_content_common_fields(item, listing_level, workflow_notification_eligible)
+        _apply_sponsorship(item, sponsorship)
+        for key, value in dates.items():
+            setattr(item, key, value)
 
         try:
-
-            distribution_zone_ids = (
-                _configure_commercial_content(
-                    item=item,
-                    category=category,
-                    content_type=content_type,
-                )
-            )
-
+            distribution_zone_ids = _configure_commercial_content(item, category, content_type)
         except ValueError as error:
-
             db.session.rollback()
+            flash(str(error), "error")
+            return _render_content_form(zones, categories, None)
 
-
-            flash(
-                str(error),
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # CAMPAIGN HOME-ZONE RULE
-        # =================================================
-
-        if (
-            pricing_model
-            == PRICING_MODEL_CAMPAIGN
-        ):
-
-            if (
-                zone_id
-                not in distribution_zone_ids
-            ):
-
-                db.session.rollback()
-
-
-                flash(
-                    (
-                        "A campaign must include its "
-                        "home zone as part of its reach."
-                    ),
-                    "error",
-                )
-
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-            if (
-                len(
-                    distribution_zone_ids
-                )
-                > 3
-            ):
-
-                db.session.rollback()
-
-
-                flash(
-                    (
-                        "Kalxa campaign packages currently "
-                        "support a maximum of 3 zones."
-                    ),
-                    "error",
-                )
-
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    None,
-                )
-
-
-        elif (
-            pricing_model
-            == PRICING_MODEL_PRESENCE
-        ):
-
+        if pricing_model == PRICING_MODEL_CAMPAIGN and zone_id not in distribution_zone_ids:
+            db.session.rollback()
+            flash("A campaign must include its home zone as part of its reach.", "error")
+            return _render_content_form(zones, categories, None)
+        if pricing_model == PRICING_MODEL_PRESENCE:
             distribution_zone_ids = []
 
-
-        # =================================================
-        # SAVE CONTENT + DISTRIBUTION
-        # =================================================
-
         try:
-
-            db.session.add(
-                item
-            )
-
-
+            db.session.add(item)
             db.session.flush()
-
-
-            for distribution_zone_id in (
-                distribution_zone_ids
-            ):
-
-                db.session.add(
-                    ContentDistributionZone(
-                        content_item_id=item.id,
-                        zone_id=distribution_zone_id,
-                    )
-                )
-
-
+            for distribution_zone_id in distribution_zone_ids:
+                db.session.add(ContentDistributionZone(content_item_id=item.id, zone_id=distribution_zone_id))
             db.session.commit()
-
         except Exception as error:
-
             db.session.rollback()
+            current_app.logger.exception("Failed to create content item title=%s error=%s", title, error)
+            flash("Content could not be published. Please try again.", "error")
+            return _render_content_form(zones, categories, None)
 
-
-            current_app.logger.exception(
-                (
-                    "Failed to create content item. "
-                    "title=%s error=%s"
-                ),
-                title,
-                error,
-            )
-
-
-            flash(
-                (
-                    "Content could not be published. "
-                    "Please try again."
-                ),
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                None,
-            )
-
-
-        # =================================================
-        # SUCCESS
-        # =================================================
-
-        if (
-            item.pricing_model
-            == PRICING_MODEL_CAMPAIGN
-        ):
-
-            flash(
-                (
-                    "Campaign published successfully. "
-                    f"Reach: "
-                    f"{len(distribution_zone_ids)} zone(s). "
-                    f"Package price: "
-                    f"{format_kalxa_price(item.amount_due)}."
-                ),
-                "success",
-            )
-
-
-        elif (
-            item.pricing_model
-            == PRICING_MODEL_PRESENCE
-        ):
-
-            flash(
-                (
-                    "Presence listing published successfully. "
-                    f"Package price: "
-                    f"{format_kalxa_price(item.amount_due)}."
-                ),
-                "success",
-            )
-
+        if item.pricing_model == PRICING_MODEL_CAMPAIGN:
+            flash(f"Campaign published successfully. Reach: {len(distribution_zone_ids)} zone(s). Package price: {format_kalxa_price(item.amount_due)}.", "success")
+        elif item.pricing_model == PRICING_MODEL_PRESENCE:
+            flash(f"Presence listing published successfully. Package price: {format_kalxa_price(item.amount_due)}.", "success")
         else:
+            flash("Content published successfully.", "success")
+        if item.is_sponsored and item.sponsored_duration_days:
+            flash(f"Sponsored Boost configured: {item.sponsored_duration_days} days — {format_kalxa_price(item.sponsorship_amount_due)}. Expires: {item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}.", "success")
+        return redirect(url_for("admin.content_list"))
 
-            flash(
-                "Content published successfully.",
-                "success",
-            )
-
-
-        if (
-            item.is_sponsored
-            and item.sponsored_duration_days
-        ):
-
-            flash(
-                (
-                    "Sponsored Boost configured: "
-                    f"{item.sponsored_duration_days} days — "
-                    f"{format_kalxa_price(item.sponsorship_amount_due)}. "
-                    f"Expires: "
-                    f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
-                ),
-                "success",
-            )
+    return _render_content_form(zones, categories, None)
 
 
-        return redirect(
-            url_for(
-                "admin.content_list"
-            )
-        )
-
-
-    # =====================================================
-    # GET — SHOW CREATE FORM
-    # =====================================================
-
-    return _render_content_form(
-        zones,
-        categories,
-        None,
-    )
-
-@admin_bp.route(
-    "/content/<int:item_id>/edit",
-    methods=["GET", "POST"],
-)
-def edit_content(
-    item_id,
-):
-
-    # =====================================================
-    # ADMIN AUTHENTICATION
-    # =====================================================
-
+@admin_bp.route("/content/<int:item_id>/edit", methods=["GET", "POST"])
+def edit_content(item_id):
     auth = require_admin()
-
     if auth:
         return auth
-
-
-    # =====================================================
-    # LOAD CONTENT ITEM
-    # =====================================================
-
-    item = (
-        ContentItem.query
-        .get_or_404(
-            item_id
-        )
-    )
-
-
-    # =====================================================
-    # LOAD ZONES
-    # =====================================================
-
-    zones = (
-        Zone.query
-        .filter_by(
-            active=True
-        )
-        .order_by(
-            Zone.name.asc()
-        )
-        .all()
-    )
-
-
-    # =====================================================
-    # LOAD CATEGORIES
-    # =====================================================
-
-    categories = (
-        get_categories(
-            active_only=False
-        )
-    )
-
-
-    # =====================================================
-    # POST — UPDATE CONTENT
-    # =====================================================
+    item = ContentItem.query.get_or_404(item_id)
+    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
+    categories = get_categories(active_only=False)
 
     if request.method == "POST":
+        old_pricing_model = item.pricing_model
+        old_duration_days = item.commercial_duration_days
+        old_payment_status = item.payment_status
+        old_amount_paid = item.amount_paid
+        old_payment_reference = item.payment_reference
+        old_paid_at = item.paid_at
+        old_commercial_starts_at = item.commercial_starts_at
+        old_commercial_expires_at = item.commercial_expires_at
+        old_distribution_zone_ids = {link.zone_id for link in item.distribution_zone_links}
 
-        # =================================================
-        # SNAPSHOT EXISTING COMMERCIAL PACKAGE
-        # =================================================
+        zone_id = request.form.get("zone_id", type=int)
+        category = request.form.get("category", "").strip().lower()
+        content_type = request.form.get("content_type", "").strip().lower() or None
+        title = request.form.get("title", "").strip()
+        if not zone_id or not category or not title:
+            flash("Zone, category and title are required.", "error")
+            return _render_content_form(zones, categories, item)
+        if not db.session.get(Zone, zone_id):
+            flash("Selected zone does not exist.", "error")
+            return _render_content_form(zones, categories, item)
+        if not get_category_by_slug(category, active_only=False):
+            flash("Invalid content category.", "error")
+            return _render_content_form(zones, categories, item)
 
-        old_pricing_model = (
-            item.pricing_model
-        )
-
-        old_duration_days = (
-            item.commercial_duration_days
-        )
-
-        old_payment_status = (
-            item.payment_status
-        )
-
-        old_amount_due = (
-            item.amount_due
-        )
-
-        old_amount_paid = (
-            item.amount_paid
-        )
-
-        old_payment_reference = (
-            item.payment_reference
-        )
-
-        old_paid_at = (
-            item.paid_at
-        )
-
-        old_commercial_starts_at = (
-            item.commercial_starts_at
-        )
-
-        old_commercial_expires_at = (
-            item.commercial_expires_at
-        )
-
-
-        # =================================================
-        # EXISTING DISTRIBUTION ZONES
-        # =================================================
-
-        old_distribution_zone_ids = {
-
-            link.zone_id
-
-            for link in (
-                item.distribution_zone_links
-            )
-
-        }
-
-
-        # =================================================
-        # BASIC DATA
-        # =================================================
-
-        zone_id = request.form.get(
-            "zone_id",
-            type=int,
-        )
-
-
-        category = (
-            request.form.get(
-                "category",
-                "",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        content_type = (
-            request.form.get(
-                "content_type",
-                "",
-            )
-            .strip()
-            .lower()
-            or None
-        )
-
-
-        title = (
-            request.form.get(
-                "title",
-                "",
-            )
-            .strip()
-        )
-
-
-        # =================================================
-        # CONTACT + ACTION FIELDS
-        # =================================================
-
-        contact = (
-            request.form.get(
-                "contact",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        whatsapp_number = (
-            request.form.get(
-                "whatsapp_number",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        directions_url = (
-            request.form.get(
-                "directions_url",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        ticket_url = (
-            request.form.get(
-                "ticket_url",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # REQUIRED FIELDS
-        # =================================================
-
-        if (
-            not zone_id
-            or not category
-            or not title
-        ):
-
-            flash(
-                "Zone, category and title are required.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # VALIDATE ZONE
-        # =================================================
-
-        zone = db.session.get(
-            Zone,
-            zone_id,
-        )
-
-
-        if not zone:
-
-            flash(
-                "Selected zone does not exist.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # VALIDATE CATEGORY
-        # =================================================
-
-        if not get_category_by_slug(
-            category,
-            active_only=False,
-        ):
-
-            flash(
-                "Invalid content category.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # RECALCULATE WORKFLOW
-        # =================================================
-
-        workflow = (
-            get_content_workflow(
-                category,
-                content_type,
-            )
-        )
-
-
-        lifetime_type = (
-            workflow[
-                "lifetime_type"
-            ]
-        )
-
-
-        workflow_notification_eligible = bool(
-            workflow.get(
-                "notification_eligible",
-                False,
-            )
-        )
-
-
-        pricing_model = (
-            workflow.get(
-                "pricing_model"
-            )
-        )
-
-
-        # =================================================
-        # VALIDATE + NORMALIZE CONTENT DATES
-        # =================================================
+        workflow = get_content_workflow(category, content_type)
+        lifetime_type = workflow["lifetime_type"]
+        workflow_notification_eligible = bool(workflow.get("notification_eligible", False))
+        pricing_model = workflow.get("pricing_model")
 
         try:
-
-            dates, error = (
-                _validate_and_normalize_content_dates(
-                    category,
-                    request.form,
-                    lifetime_type=lifetime_type,
-                )
-            )
-
+            dates, error = _validate_and_normalize_content_dates(category, request.form, lifetime_type=lifetime_type)
         except ValueError:
-
-            flash(
-                "Please enter valid dates.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
+            flash("Please enter valid dates.", "error")
+            return _render_content_form(zones, categories, item)
         if error:
-
-            flash(
-                error,
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # CAMPAIGN START / END TIMES
-        # =================================================
+            flash(error, "error")
+            return _render_content_form(zones, categories, item)
 
         try:
-
-            start_time = (
-                parse_optional_time(
-                    request.form.get(
-                        "start_time"
-                    )
-                )
-            )
-
-
-            end_time = (
-                parse_optional_time(
-                    request.form.get(
-                        "end_time"
-                    )
-                )
-            )
-
+            start_time = parse_optional_time(request.form.get("start_time"))
+            end_time = parse_optional_time(request.form.get("end_time"))
         except ValueError:
-
-            flash(
-                "Please enter valid start and end times.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # EFFECTIVE CAMPAIGN DATES
-        # =================================================
-
-        canonical_category = (
-            normalize_category(
-                category
-            )
-        )
-
-
-        if (
-            canonical_category == "events"
-            or lifetime_type == "event"
-        ):
-
-            effective_start_date = (
-                dates.get(
-                    "event_date"
-                )
-            )
-
-
-            effective_end_date = (
-                dates.get(
-                    "event_end_date"
-                )
-                or
-                effective_start_date
-            )
-
-        else:
-
-            effective_start_date = (
-                dates.get(
-                    "start_date"
-                )
-            )
-
-
-            effective_end_date = (
-                dates.get(
-                    "end_date"
-                )
-            )
-
-
-        # =================================================
-        # DATE ORDER VALIDATION
-        # =================================================
-
-        if (
-            effective_start_date
-            and effective_end_date
-            and effective_end_date
-            < effective_start_date
-        ):
-
-            flash(
-                "End date cannot be before start date.",
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # SAME-DAY TIME VALIDATION
-        # =================================================
-
-        if (
-            effective_start_date
-            and effective_end_date
-            and effective_start_date
-            == effective_end_date
-            and start_time
-            and end_time
-            and end_time <= start_time
-        ):
-
-            flash(
-                (
-                    "End time must be after start time "
-                    "when the campaign starts and ends "
-                    "on the same day."
-                ),
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # END TIME WITHOUT END DATE
-        # =================================================
-
-        if (
-            canonical_category != "events"
-            and end_time
-            and not effective_end_date
-        ):
-
-            flash(
-                (
-                    "Please enter an end date when "
-                    "using an end time."
-                ),
-                "error",
-            )
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # LISTING LEVEL
-        # =================================================
-
-        listing_level = (
-            request.form.get(
-                "listing_level",
-                item.listing_level
-                or "discovery",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        allowed_listing_levels = {
-            "discovery",
-            "business",
-            "promotion",
-        }
-
-
-        if (
-            listing_level
-            not in allowed_listing_levels
-        ):
-
-            listing_level = (
-                "discovery"
-            )
-
-
-        # =================================================
-        # CORE FIELDS
-        # =================================================
-
-        item.zone_id = (
-            zone_id
-        )
-
-        item.category = (
-            category
-        )
-
-        item.content_type = (
-            content_type
-        )
-
-        item.lifetime_type = (
-            lifetime_type
-        )
-
-
-        if not item.availability_status:
-
-            item.availability_status = (
-                "available"
-            )
-
-
-        item.title = (
-            title
-        )
-
-
-        item.description = (
-            request.form.get(
-                "description",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        item.business_name = (
-            request.form.get(
-                "business_name",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        item.venue = (
-            request.form.get(
-                "venue",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        item.price = (
-            request.form.get(
-                "price",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        item.contact = (
-            contact
-        )
-
-        item.whatsapp_number = (
-            whatsapp_number
-        )
-
-        item.directions_url = (
-            directions_url
-        )
-
-        item.ticket_url = (
-            ticket_url
-        )
-
-        item.listing_level = (
-            listing_level
-        )
-
-
-        # =================================================
-        # OWNERSHIP + VERIFICATION
-        # =================================================
-
-        if (
-            listing_level
-            == "discovery"
-        ):
-
-            item.ownership_status = (
-                "unclaimed"
-            )
-
-            item.is_verified = (
-                False
-            )
-
-        else:
-
-            item.ownership_status = (
-                "claimed"
-            )
-
-            item.is_verified = (
-                request.form.get(
-                    "is_verified"
-                )
-                == "on"
-            )
-
-
-        # =================================================
-        # BUSINESS FIELDS
-        # =================================================
-
-        if (
-            listing_level
-            in {
-                "business",
-                "promotion",
-            }
-        ):
-
-            item.opening_hours = (
-                request.form.get(
-                    "opening_hours",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            item.menu_highlights = (
-                request.form.get(
-                    "menu_highlights",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-
-            item.special_offer = (
-                request.form.get(
-                    "special_offer",
-                    "",
-                )
-                .strip()
-                or None
-            )
-
-        else:
-
-            item.opening_hours = (
-                None
-            )
-
-            item.menu_highlights = (
-                None
-            )
-
-            item.special_offer = (
-                None
-            )
-
-            item.image_url_2 = (
-                None
-            )
-
-            item.image_url_3 = (
-                None
-            )
-
-
-        # =================================================
-        # FEATURED
-        # =================================================
-
-        item.featured = (
-            request.form.get(
-                "featured"
-            )
-            == "on"
-        )
-
-
-        # =================================================
-        # SPONSORED VISIBILITY
-        #
-        # MANUAL PAYMENT
-        # MANUAL START
-        # AUTOMATIC EXPIRY
-        # =================================================
-
-        is_sponsored = (
-            request.form.get(
-                "is_sponsored"
-            )
-            == "on"
-        )
-
-
-        sponsorship_status = (
-            request.form.get(
-                "sponsorship_status",
-                item.sponsorship_status
-                or "inactive",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        allowed_sponsorship_statuses = {
-            "inactive",
-            "scheduled",
-            "active",
-            "expired",
-        }
-
-
-        if (
-            sponsorship_status
-            not in allowed_sponsorship_statuses
-        ):
-
-            sponsorship_status = (
-                "inactive"
-            )
-
-
-        # =================================================
-        # SPONSORED DURATION + OFFICIAL PRICE
-        # =================================================
-
-        sponsored_duration_days = None
-
-        sponsorship_amount_due = None
-
-
-        if is_sponsored:
-
-            sponsored_duration_raw = (
-                request.form.get(
-                    "sponsored_duration_days",
-                    "",
-                )
-                .strip()
-            )
-
-
-            if not sponsored_duration_raw:
-
-                flash(
-                    "Please select a Sponsored Boost duration.",
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-            try:
-
-                sponsored_duration_days = int(
-                    sponsored_duration_raw
-                )
-
-
-                sponsorship_amount_due = (
-                    calculate_sponsored_price(
-                        sponsored_duration_days
-                    )
-                )
-
-            except (
-                TypeError,
-                ValueError,
-                KalxaPricingError,
-            ):
-
-                flash(
-                    "Invalid Sponsored Boost duration selected.",
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-        # =================================================
-        # SPONSORSHIP REFERENCE
-        # =================================================
-
-        sponsorship_reference = (
-            request.form.get(
-                "sponsorship_reference",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # SPONSORED PRIORITY
-        # =================================================
-
-        try:
-
-            sponsored_priority = int(
-                request.form.get(
-                    "sponsored_priority",
-                    item.sponsored_priority
-                    or 10,
-                )
-                or 10
-            )
-
-        except (
-            TypeError,
-            ValueError,
-        ):
-
-            sponsored_priority = (
-                10
-                if is_sponsored
-                else 0
-            )
-
-
-        sponsored_priority = max(
-            0,
-            min(
-                sponsored_priority,
-                100,
-            ),
-        )
-
-
-        # =================================================
-        # MANUAL START + AUTOMATIC EXPIRY
-        # =================================================
-
-        sponsored_starts_raw = (
-            request.form.get(
-                "sponsored_starts_at",
-                "",
-            )
-            .strip()
-        )
-
-
-        sponsored_starts_at = None
-
-        sponsored_expires_at = None
-
-
-        if is_sponsored:
-
-            if not sponsored_starts_raw:
-
-                flash(
-                    (
-                        "Please select when the Sponsored "
-                        "Boost should start."
-                    ),
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-            try:
-
-                sponsored_starts_at = (
-                    datetime.fromisoformat(
-                        sponsored_starts_raw
-                    )
-                )
-
-            except ValueError:
-
-                flash(
-                    "Please enter a valid Sponsored start date.",
-                    "error",
-                )
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-            sponsored_expires_at = (
-                sponsored_starts_at
-                +
-                timedelta(
-                    days=sponsored_duration_days
-                )
-            )
-
-
-        # =================================================
-        # APPLY SPONSORSHIP
-        # =================================================
-
-        if is_sponsored:
-
-            item.is_sponsored = (
-                True
-            )
-
-            item.sponsorship_status = (
-                sponsorship_status
-            )
-
-            item.sponsored_duration_days = (
-                sponsored_duration_days
-            )
-
-            item.sponsorship_amount_due = (
-                sponsorship_amount_due
-            )
-
-            item.sponsored_starts_at = (
-                sponsored_starts_at
-            )
-
-            item.sponsored_expires_at = (
-                sponsored_expires_at
-            )
-
-            item.sponsored_priority = (
-                sponsored_priority
-            )
-
-            item.sponsorship_reference = (
-                sponsorship_reference
-            )
-
-        else:
-
-            item.is_sponsored = (
-                False
-            )
-
-            item.sponsorship_status = (
-                "inactive"
-            )
-
-            item.sponsored_duration_days = (
-                None
-            )
-
-            item.sponsorship_amount_due = (
-                None
-            )
-
-            item.sponsored_starts_at = (
-                None
-            )
-
-            item.sponsored_expires_at = (
-                None
-            )
-
-            item.sponsored_priority = (
-                0
-            )
-
-            item.sponsorship_reference = (
-                None
-            )
-
-
-        # =================================================
-        # NOTIFICATION ELIGIBILITY
-        # =================================================
-
-        if (
-            listing_level
-            == "promotion"
-        ):
-
-            promotion_notification_requested = (
-                request.form.get(
-                    "notification_eligible"
-                )
-                == "on"
-            )
-
-
-            item.notification_eligible = (
-                workflow_notification_eligible
-                and
-                promotion_notification_requested
-            )
-
-        else:
-
-            item.notification_eligible = (
-                False
-            )
-
-
-        # =================================================
-        # ACTIVE STATUS
-        # =================================================
-
-        item.active = (
-            request.form.get(
-                "active"
-            )
-            == "on"
-        )
-
-
-        # =================================================
-        # APPLY NORMALIZED CONTENT DATES
-        # =================================================
-
-        for key, value in (
-            dates.items()
-        ):
-
-            setattr(
-                item,
-                key,
-                value,
-            )
-
-
-        item.start_time = (
-            start_time
-        )
-
-        item.end_time = (
-            end_time
-        )
-
-
-        # =================================================
-        # IMAGES
-        # =================================================
-
-        uploaded_images = []
-
-
-        for uploaded_file in request.files.getlist(
-            "images"
-        ):
-
-            if (
-                uploaded_file
-                and uploaded_file.filename
-            ):
-
-                uploaded_images.append(
-                    uploaded_file
-                )
-
-
-        legacy_image = (
-            request.files.get(
-                "image"
-            )
-        )
-
-
-        if (
-            legacy_image
-            and legacy_image.filename
-            and not uploaded_images
-        ):
-
-            uploaded_images.append(
-                legacy_image
-            )
-
-
-        # =================================================
-        # IMAGE LIMIT
-        # =================================================
-
-        maximum_images = (
-            1
-            if listing_level == "discovery"
-            else 3
-        )
-
-
-        if (
-            len(uploaded_images)
-            > maximum_images
-        ):
-
-            if (
-                listing_level
-                == "discovery"
-            ):
-
-                message = (
-                    "Discovery listings can have "
-                    "a maximum of 1 image."
-                )
-
-            else:
-
-                message = (
-                    "Business and Promotion listings "
-                    "can have a maximum of 3 images."
-                )
-
-
-            flash(
-                message,
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # UPLOAD NEW IMAGES
-        # =================================================
-
+            flash("Please enter valid start and end times.", "error")
+            return _render_content_form(zones, categories, item)
+
+        canonical_category = normalize_category(category)
+        date_error = _validate_effective_campaign_dates(canonical_category, lifetime_type, dates, start_time, end_time)
+        if date_error:
+            flash(date_error, "error")
+            return _render_content_form(zones, categories, item)
+
+        listing_level = _get_listing_level_from_form(item.listing_level or "discovery")
+        item.zone_id = zone_id
+        item.category = category
+        item.content_type = content_type
+        item.lifetime_type = lifetime_type
+        item.availability_status = item.availability_status or "available"
+        item.title = title
+        item.start_time = start_time
+        item.end_time = end_time
+        _populate_content_common_fields(item, listing_level, workflow_notification_eligible)
+
+        sponsorship, sponsorship_error = _parse_sponsorship(item)
+        if sponsorship_error:
+            flash(sponsorship_error, "error")
+            return _render_content_form(zones, categories, item)
+        _apply_sponsorship(item, sponsorship)
+        for key, value in dates.items():
+            setattr(item, key, value)
+
+        uploaded_images = _read_uploaded_listing_images()
+        image_error = _validate_image_count(uploaded_images, listing_level)
+        if image_error:
+            flash(image_error, "error")
+            return _render_content_form(zones, categories, item)
         if uploaded_images:
-
-            uploaded_image_urls = []
-
-
             try:
-
-                for uploaded_file in (
-                    uploaded_images
-                ):
-
-                    image_url = (
-                        upload_listing_image(
-                            uploaded_file
-                        )
-                    )
-
-
-                    if image_url:
-
-                        uploaded_image_urls.append(
-                            image_url
-                        )
-
+                urls = _upload_listing_images(uploaded_images)
             except Exception as error:
-
                 db.session.rollback()
-
-
-                current_app.logger.exception(
-                    (
-                        "Content image upload failed. "
-                        "content_item_id=%s error=%s"
-                    ),
-                    item.id,
-                    error,
-                )
-
-
-                flash(
-                    f"Image upload failed: {error}",
-                    "error",
-                )
-
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-            item.image_url = (
-
-                uploaded_image_urls[0]
-
-                if len(
-                    uploaded_image_urls
-                ) >= 1
-
-                else None
-            )
-
-
-            if (
-                listing_level
-                in {
-                    "business",
-                    "promotion",
-                }
-            ):
-
-                item.image_url_2 = (
-
-                    uploaded_image_urls[1]
-
-                    if len(
-                        uploaded_image_urls
-                    ) >= 2
-
-                    else None
-                )
-
-
-                item.image_url_3 = (
-
-                    uploaded_image_urls[2]
-
-                    if len(
-                        uploaded_image_urls
-                    ) >= 3
-
-                    else None
-                )
-
-            else:
-
-                item.image_url_2 = None
-
-                item.image_url_3 = None
-
-
-        if (
-            listing_level
-            == "discovery"
-        ):
-
+                current_app.logger.exception("Content image upload failed content_item_id=%s error=%s", item.id, error)
+                flash(f"Image upload failed: {error}", "error")
+                return _render_content_form(zones, categories, item)
+            item.image_url = urls[0] if len(urls) >= 1 else None
+            item.image_url_2 = urls[1] if listing_level in {"business", "promotion"} and len(urls) >= 2 else None
+            item.image_url_3 = urls[2] if listing_level in {"business", "promotion"} and len(urls) >= 3 else None
+        if listing_level == "discovery":
             item.image_url_2 = None
-
             item.image_url_3 = None
 
-
-        # =================================================
-        # CONFIGURE EXISTING COMMERCIAL PACKAGE
-        # =================================================
-
         try:
-
-            distribution_zone_ids = (
-                _configure_commercial_content(
-                    item=item,
-                    category=category,
-                    content_type=content_type,
-                )
-            )
-
+            distribution_zone_ids = _configure_commercial_content(item, category, content_type)
         except ValueError as error:
-
             db.session.rollback()
+            flash(str(error), "error")
+            return _render_content_form(zones, categories, item)
 
-
-            flash(
-                str(error),
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # CAMPAIGN HOME-ZONE RULE
-        # =================================================
-
-        if (
-            pricing_model
-            == PRICING_MODEL_CAMPAIGN
-        ):
-
-            if (
-                zone_id
-                not in distribution_zone_ids
-            ):
-
-                db.session.rollback()
-
-
-                flash(
-                    (
-                        "A campaign must include its "
-                        "home zone as part of its reach."
-                    ),
-                    "error",
-                )
-
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-            if (
-                len(
-                    distribution_zone_ids
-                )
-                > 3
-            ):
-
-                db.session.rollback()
-
-
-                flash(
-                    (
-                        "Kalxa campaign packages currently "
-                        "support a maximum of 3 zones."
-                    ),
-                    "error",
-                )
-
-
-                return _render_content_form(
-                    zones,
-                    categories,
-                    item,
-                )
-
-
-        elif (
-            pricing_model
-            == PRICING_MODEL_PRESENCE
-        ):
-
+        if pricing_model == PRICING_MODEL_CAMPAIGN and zone_id not in distribution_zone_ids:
+            db.session.rollback()
+            flash("A campaign must include its home zone as part of its reach.", "error")
+            return _render_content_form(zones, categories, item)
+        if pricing_model == PRICING_MODEL_PRESENCE:
             distribution_zone_ids = []
 
-
-        # =================================================
-        # DETERMINE WHETHER ORIGINAL PACKAGE CHANGED
-        # =================================================
-
-        new_distribution_zone_ids = set(
-            distribution_zone_ids
-        )
-
-
+        new_distribution_zone_ids = set(distribution_zone_ids)
         package_changed = (
-
-            old_pricing_model
-            != item.pricing_model
-
-            or
-
-            old_duration_days
-            != item.commercial_duration_days
-
-            or
-
-            (
-                item.pricing_model
-                == PRICING_MODEL_CAMPAIGN
-
-                and
-
-                old_distribution_zone_ids
-                != new_distribution_zone_ids
-            )
-
-            or
-
-            (
-                old_pricing_model
-                == PRICING_MODEL_CAMPAIGN
-
-                and
-
-                item.pricing_model
-                != PRICING_MODEL_CAMPAIGN
-            )
+            old_pricing_model != item.pricing_model
+            or old_duration_days != item.commercial_duration_days
+            or (item.pricing_model == PRICING_MODEL_CAMPAIGN and old_distribution_zone_ids != new_distribution_zone_ids)
+            or (old_pricing_model == PRICING_MODEL_CAMPAIGN and item.pricing_model != PRICING_MODEL_CAMPAIGN)
         )
-
-
-        # =================================================
-        # PRESERVE EXISTING PAID / WAIVED PERIOD
-        # =================================================
-
-        if (
-            not package_changed
-            and old_payment_status
-            == item.payment_status
-            and item.payment_status
-            in {
-                "paid",
-                "waived",
-            }
-        ):
-
-            item.commercial_starts_at = (
-                old_commercial_starts_at
-            )
-
-            item.commercial_expires_at = (
-                old_commercial_expires_at
-            )
-
-
-            if (
-                item.payment_status
-                == "paid"
-            ):
-
-                item.paid_at = (
-                    old_paid_at
-                )
-
-                item.amount_paid = (
-                    old_amount_paid
-                )
-
+        if not package_changed and old_payment_status == item.payment_status and item.payment_status in {"paid", "waived"}:
+            item.commercial_starts_at = old_commercial_starts_at
+            item.commercial_expires_at = old_commercial_expires_at
+            if item.payment_status == "paid":
+                item.paid_at = old_paid_at
+                item.amount_paid = old_amount_paid
             else:
-
                 item.paid_at = None
-
                 item.amount_paid = None
-
-
-        # =================================================
-        # PRESERVE PAYMENT REFERENCE
-        # =================================================
-
-        if (
-            not item.payment_reference
-            and old_payment_reference
-            and not package_changed
-        ):
-
-            item.payment_reference = (
-                old_payment_reference
-            )
-
-
-        # =================================================
-        # SAVE EVERYTHING
-        # =================================================
+        if not item.payment_reference and old_payment_reference and not package_changed:
+            item.payment_reference = old_payment_reference
 
         try:
-
-            (
-                ContentDistributionZone.query
-                .filter_by(
-                    content_item_id=item.id
-                )
-                .delete(
-                    synchronize_session=False
-                )
-            )
-
-
-            for distribution_zone_id in (
-                distribution_zone_ids
-            ):
-
-                db.session.add(
-                    ContentDistributionZone(
-                        content_item_id=item.id,
-                        zone_id=distribution_zone_id,
-                    )
-                )
-
-
+            ContentDistributionZone.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
+            for distribution_zone_id in distribution_zone_ids:
+                db.session.add(ContentDistributionZone(content_item_id=item.id, zone_id=distribution_zone_id))
             db.session.commit()
-
         except Exception as error:
-
             db.session.rollback()
+            current_app.logger.exception("Failed to update content item content_item_id=%s error=%s", item.id, error)
+            flash("Content could not be updated. Please try again.", "error")
+            return _render_content_form(zones, categories, item)
 
-
-            current_app.logger.exception(
-                (
-                    "Failed to update content item. "
-                    "content_item_id=%s error=%s"
-                ),
-                item.id,
-                error,
-            )
-
-
-            flash(
-                (
-                    "Content could not be updated. "
-                    "Please try again."
-                ),
-                "error",
-            )
-
-
-            return _render_content_form(
-                zones,
-                categories,
-                item,
-            )
-
-
-        # =================================================
-        # SUCCESS
-        # =================================================
-
-        if (
-            item.pricing_model
-            == PRICING_MODEL_CAMPAIGN
-        ):
-
-            flash(
-                (
-                    "Campaign updated successfully. "
-                    f"Reach: "
-                    f"{len(distribution_zone_ids)} zone(s). "
-                    f"Package price: "
-                    f"{format_kalxa_price(item.amount_due)}."
-                ),
-                "success",
-            )
-
-
-        elif (
-            item.pricing_model
-            == PRICING_MODEL_PRESENCE
-        ):
-
-            flash(
-                (
-                    "Presence listing updated successfully. "
-                    f"Package price: "
-                    f"{format_kalxa_price(item.amount_due)}."
-                ),
-                "success",
-            )
-
+        if item.pricing_model == PRICING_MODEL_CAMPAIGN:
+            flash(f"Campaign updated successfully. Reach: {len(distribution_zone_ids)} zone(s). Package price: {format_kalxa_price(item.amount_due)}.", "success")
+        elif item.pricing_model == PRICING_MODEL_PRESENCE:
+            flash(f"Presence listing updated successfully. Package price: {format_kalxa_price(item.amount_due)}.", "success")
         else:
+            flash("Content updated successfully.", "success")
+        if item.is_sponsored and item.sponsored_duration_days:
+            flash(f"Sponsored Boost: {item.sponsored_duration_days} days — {format_kalxa_price(item.sponsorship_amount_due)}. Expires: {item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}.", "success")
+        return redirect(url_for("admin.content_list"))
 
-            flash(
-                "Content updated successfully.",
-                "success",
-            )
-
-
-        if (
-            item.is_sponsored
-            and item.sponsored_duration_days
-        ):
-
-            flash(
-                (
-                    "Sponsored Boost: "
-                    f"{item.sponsored_duration_days} days — "
-                    f"{format_kalxa_price(item.sponsorship_amount_due)}. "
-                    f"Expires: "
-                    f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
-                ),
-                "success",
-            )
+    return _render_content_form(zones, categories, item)
 
 
-        return redirect(
-            url_for(
-                "admin.content_list"
-            )
-        )
-
-
-    # =====================================================
-    # GET — SHOW EDIT FORM
-    # =====================================================
-
-    return _render_content_form(
-        zones,
-        categories,
-        item,
-    )
-
-       
-@admin_bp.route(
-    "/content/<int:item_id>/toggle",
-    methods=["POST"],
-)
-def toggle_content(
-    item_id,
-):
-
+@admin_bp.route("/content/<int:item_id>/toggle", methods=["POST"])
+def toggle_content(item_id):
     auth = require_admin()
-
     if auth:
         return auth
-
-    item = (
-        ContentItem.query
-        .get_or_404(
-            item_id
-        )
-    )
-
-    item.active = (
-        not item.active
-    )
-
+    item = ContentItem.query.get_or_404(item_id)
+    item.active = not item.active
     db.session.commit()
+    flash("Content activated." if item.active else "Content deactivated.", "success")
+    return redirect(url_for("admin.content_list"))
 
-    flash(
-        (
-            "Content activated."
-            if item.active
-            else
-            "Content deactivated."
-        ),
-        "success",
-    )
 
-    return redirect(
-        url_for(
-            "admin.content_list"
-        )
-    )
-@admin_bp.route(
-    "/content/<int:item_id>/delete",
-    methods=["POST"],
-)
-def delete_content(
-    item_id,
-):
-
+@admin_bp.route("/content/<int:item_id>/delete", methods=["POST"])
+def delete_content(item_id):
     auth = require_admin()
-
     if auth:
         return auth
-
-    item = (
-        ContentItem.query
-        .get_or_404(
-            item_id
-        )
-    )
-
+    item = ContentItem.query.get_or_404(item_id)
     try:
-
-        # =================================================
-        # REMOVE SUBMISSION REFERENCES
-        # =================================================
-
-        submissions = (
-            PendingSubmission.query
-            .filter_by(
-                published_content_id=
-                    item.id
-            )
-            .all()
-        )
-
-        for submission in submissions:
-
-            submission.published_content_id = (
-                None
-            )
-
-        # =================================================
-        # DELETE ATTACHED IMAGES
-        # =================================================
-
-        ContentImage.query.filter_by(
-            content_item_id=
-                item.id
-        ).delete(
-            synchronize_session=False
-        )
-
-        # =================================================
-        # DELETE CONTENT
-        # =================================================
-
-        db.session.delete(
-            item
-        )
-
+        for submission in PendingSubmission.query.filter_by(published_content_id=item.id).all():
+            submission.published_content_id = None
+        ContentImage.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
+        ContentDistributionZone.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
+        db.session.delete(item)
         db.session.commit()
-
-        flash(
-            "Content permanently deleted.",
-            "success",
-        )
-
+        flash("Content permanently deleted.", "success")
     except Exception as exc:
-
         db.session.rollback()
+        current_app.logger.exception("Delete content error item_id=%s error=%s", item_id, exc)
+        flash("Unable to permanently delete content.", "error")
+    return redirect(url_for("admin.content_list"))
 
-        print(
-            "Delete content error:",
-            exc,
-        )
-
-        flash(
-            "Unable to permanently delete content.",
-            "error",
-        )
-
-    return redirect(
-        url_for(
-            "admin.content_list"
-        )
-    )
 
 @admin_bp.route("/content/<int:item_id>/archive", methods=["POST"])
 def archive_content_now(item_id):
     auth = require_admin()
     if auth:
         return auth
-
     item = ContentItem.query.get_or_404(item_id)
     if item.archived:
         flash("Content is already archived.", "error")
         return redirect(url_for("admin.content_list"))
-
     item.archived = True
     item.active = False
-
-    item.archived_at = (
-      datetime.utcnow()
-    )
+    item.archived_at = datetime.utcnow()
     db.session.commit()
     flash(f"{item.title} archived.", "success")
     return redirect(url_for("admin.content_list"))
 
 
-
 @admin_bp.route("/submissions")
 def submissions():
-
     auth = require_admin()
-
     if auth:
         return auth
 
-
-    # -------------------------------------------------
-    # SELECTED STATUS
-    # -------------------------------------------------
-
-    selected_status = (
-        request.args.get(
-            "status",
-            "pending",
-        )
-        .strip()
-        .lower()
-    )
-
-
-    allowed_statuses = {
-        "pending",
-        "approved",
-        "rejected",
-    }
-
-
-    if selected_status not in allowed_statuses:
+    selected_status = request.args.get("status", "pending").strip().lower()
+    if selected_status not in {"pending", "approved", "rejected"}:
         selected_status = "pending"
 
-
-    # -------------------------------------------------
-    # COUNTERS
-    # -------------------------------------------------
-
-    pending_count = (
-        PendingSubmission.query
-        .filter_by(
-            status="pending"
-        )
-        .count()
-    )
-
-
-    approved_count = (
-        PendingSubmission.query
-        .filter_by(
-            status="approved"
-        )
-        .count()
-    )
-
-
-    rejected_count = (
-        PendingSubmission.query
-        .filter_by(
-            status="rejected"
-        )
-        .count()
-    )
-
-
-    # -------------------------------------------------
-    # FILTER SUBMISSIONS
-    # -------------------------------------------------
-
-    items = (
-        PendingSubmission.query
-        .filter_by(
-            status=selected_status
-        )
-        .order_by(
-            PendingSubmission.created_at.desc()
-        )
-        .all()
-    )
-
-
-    # -------------------------------------------------
-    # TEMPLATE
-    # -------------------------------------------------
-
+    items = PendingSubmission.query.filter_by(status=selected_status).order_by(PendingSubmission.created_at.desc()).all()
     return render_template(
         "admin/submissions.html",
-
         submissions=items,
-
-        selected_status=
-            selected_status,
-
-        pending_count=
-            pending_count,
-
-        approved_count=
-            approved_count,
-
-        rejected_count=
-            rejected_count,
+        selected_status=selected_status,
+        pending_count=PendingSubmission.query.filter_by(status="pending").count(),
+        approved_count=PendingSubmission.query.filter_by(status="approved").count(),
+        rejected_count=PendingSubmission.query.filter_by(status="rejected").count(),
     )
 
 
-
-@admin_bp.route(
-    "/submissions/<int:submission_id>/edit",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-def edit_submission(
-    submission_id,
-):
-
+@admin_bp.route("/submissions/<int:submission_id>/edit", methods=["GET", "POST"])
+def edit_submission(submission_id):
     auth = require_admin()
-
     if auth:
         return auth
 
-
-    # =====================================================
-    # LOAD SUBMISSION
-    # =====================================================
-
-    submission = (
-        PendingSubmission.query
-        .get_or_404(
-            submission_id
-        )
-    )
-
-
-    if (
-        submission.status
-        != "pending"
-    ):
-
-        flash(
-            "Only pending submissions can be edited.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status=
-                    submission.status,
-            )
-        )
-
-
-    # =====================================================
-    # FORM OPTIONS
-    # =====================================================
-
-    zones = (
-        Zone.query
-        .filter_by(
-            active=True
-        )
-        .order_by(
-            Zone.name.asc()
-        )
-        .all()
-    )
-
-
-    categories = (
-        get_categories()
-    )
-
-
-    # =====================================================
-    # POST
-    # =====================================================
-
-    if (
-        request.method
-        == "POST"
-    ):
-
-        zone_id = (
-            request.form.get(
-                "zone_id",
-                type=int,
-            )
-        )
-
-
-        raw_category = (
-            request.form.get(
-                "category",
-                "",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        category = (
-            normalize_category(
-                raw_category
-            )
-        )
-
-
-        content_type = (
-            request.form.get(
-                "content_type",
-                submission.content_type
-                or "",
-            )
-            .strip()
-            .lower()
-            or None
-        )
-
-
-        title = (
-            request.form.get(
-                "title",
-                "",
-            )
-            .strip()
-        )
-
-
-        # =================================================
-        # REQUIRED
-        # =================================================
-
-        if (
-            not zone_id
-            or not category
-            or not title
-        ):
-
-            flash(
-                (
-                    "Zone, category and title "
-                    "are required."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "admin/submission_edit.html",
-
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
-        # =================================================
-        # ZONE
-        # =================================================
-
-        zone = (
-            db.session.get(
-                Zone,
-                zone_id,
-            )
-        )
-
-
-        if (
-            not zone
-            or not zone.active
-        ):
-
-            flash(
-                (
-                    "Please select a valid "
-                    "active zone."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "admin/submission_edit.html",
-
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
-        # =================================================
-        # CATEGORY
-        # =================================================
-
-        if not get_category_by_slug(
-            category
-        ):
-
-            flash(
-                (
-                    "Please select a valid "
-                    "active category."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "admin/submission_edit.html",
-
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
-        # =================================================
-        # WORKFLOW
-        # =================================================
-
-        workflow = (
-            get_content_workflow(
-                category,
-                content_type,
-            )
-        )
-
-
-        lifetime_type = (
-            submission.lifetime_type
-            or
-            workflow.get(
-                "lifetime_type"
-            )
-        )
-
-
-        # =================================================
-        # SPECIAL JOB LIFETIME
-        #
-        # Jobs from the free form use:
-        #
-        # closing date present:
-        #     time_specific
-        #
-        # no closing date:
-        #     until_unavailable
-        #
-        # =================================================
-
-        canonical_category = (
-            normalize_category(
-                category
-            )
-        )
-
-
-        if (
-            canonical_category
-            == "jobs"
-        ):
-
-            closing_date_raw = (
-                request.form.get(
-                    "end_date",
-                    "",
-                )
-                .strip()
-            )
-
-
-            if closing_date_raw:
-
-                lifetime_type = (
-                    "time_specific"
-                )
-
-            else:
-
-                lifetime_type = (
-                    "until_unavailable"
-                )
-
-
-        # =================================================
-        # DATES
-        # =================================================
+    submission = PendingSubmission.query.get_or_404(submission_id)
+    if submission.status != "pending":
+        flash("Only pending submissions can be edited.", "error")
+        return redirect(url_for("admin.submissions", status=submission.status))
+
+    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
+    categories = get_categories()
+
+    if request.method == "POST":
+        zone_id = request.form.get("zone_id", type=int)
+        raw_category = request.form.get("category", "").strip().lower()
+        category = normalize_category(raw_category)
+        content_type = request.form.get("content_type", submission.content_type or "").strip().lower() or None
+        title = request.form.get("title", "").strip()
+
+        if not zone_id or not category or not title:
+            flash("Zone, category and title are required.", "error")
+            return _render_submission_edit(submission, zones, categories)
+
+        zone = db.session.get(Zone, zone_id)
+        if not zone or not zone.active:
+            flash("Please select a valid active zone.", "error")
+            return _render_submission_edit(submission, zones, categories)
+        if not get_category_by_slug(category):
+            flash("Please select a valid active category.", "error")
+            return _render_submission_edit(submission, zones, categories)
+
+        workflow = get_content_workflow(category, content_type)
+        canonical_category = normalize_category(category)
+        lifetime_type = submission.lifetime_type or workflow.get("lifetime_type")
+
+        if canonical_category == "jobs":
+            closing_date_raw = request.form.get("end_date", "").strip()
+            lifetime_type = "time_specific" if closing_date_raw else "until_unavailable"
 
         try:
-
-            dates, error = (
-                _validate_and_normalize_content_dates(
-
-                    category,
-
-                    request.form,
-
-                    lifetime_type=
-                        lifetime_type,
-                )
-            )
-
+            dates, error = _validate_and_normalize_content_dates(category, request.form, lifetime_type=lifetime_type)
         except ValueError:
-
-            flash(
-                "Please enter valid dates.",
-                "error",
-            )
-
-            return render_template(
-                "admin/submission_edit.html",
-
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
+            flash("Please enter valid dates.", "error")
+            return _render_submission_edit(submission, zones, categories)
         if error:
-
-            flash(
-                error,
-                "error",
-            )
-
-            return render_template(
-                "admin/submission_edit.html",
-
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
-        # =================================================
-        # TIMES
-        # =================================================
+            flash(error, "error")
+            return _render_submission_edit(submission, zones, categories)
 
         try:
-
-            start_time = (
-                parse_optional_time(
-                    request.form.get(
-                        "start_time"
-                    )
-                )
-            )
-
-
-            end_time = (
-                parse_optional_time(
-                    request.form.get(
-                        "end_time"
-                    )
-                )
-            )
-
+            start_time = parse_optional_time(request.form.get("start_time"))
+            end_time = parse_optional_time(request.form.get("end_time"))
         except ValueError:
+            flash("Please enter valid start and end times.", "error")
+            return _render_submission_edit(submission, zones, categories)
 
-            flash(
-                (
-                    "Please enter valid "
-                    "start and end times."
-                ),
-                "error",
-            )
+        submission.zone_id = zone.id
+        submission.category = category
+        submission.content_type = content_type
+        submission.lifetime_type = lifetime_type
+        submission.notification_eligible = bool(workflow.get("notification_eligible", True))
+        submission.title = title
+        submission.description = request.form.get("description", "").strip() or None
+        submission.business_name = request.form.get("business_name", "").strip() or None
+        submission.venue = request.form.get("venue", "").strip() or None
+        submission.price = request.form.get("price", "").strip() or None
+        submission.contact = request.form.get("contact", "").strip() or None
+        submission.whatsapp_number = request.form.get("whatsapp_number", "").strip() or None
+        submission.directions_url = request.form.get("directions_url", "").strip() or None
+        submission.ticket_url = request.form.get("ticket_url", "").strip() or None
+        submission.submitter_name = request.form.get("submitter_name", "").strip()
+        submission.submitter_phone = request.form.get("submitter_phone", "").strip() or None
+        submission.submitter_email = request.form.get("submitter_email", "").strip() or None
 
-            return render_template(
-                "admin/submission_edit.html",
+        for key, value in dates.items():
+            setattr(submission, key, value)
+        submission.start_time = start_time
+        submission.end_time = end_time
 
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
-        # =================================================
-        # UPDATE BASIC FIELDS
-        # =================================================
-
-        submission.zone_id = (
-            zone.id
-        )
-
-        submission.category = (
-            category
-        )
-
-        submission.content_type = (
-            content_type
-        )
-
-        submission.lifetime_type = (
-            lifetime_type
-        )
-
-        submission.notification_eligible = (
-            bool(
-                workflow.get(
-                    "notification_eligible",
-                    True,
-                )
-            )
-        )
-
-        submission.title = (
-            title
-        )
-
-        submission.description = (
-            request.form.get(
-                "description",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.business_name = (
-            request.form.get(
-                "business_name",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.venue = (
-            request.form.get(
-                "venue",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.price = (
-            request.form.get(
-                "price",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # PUBLIC ACTIONS
-        # =================================================
-
-        submission.contact = (
-            request.form.get(
-                "contact",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.whatsapp_number = (
-            request.form.get(
-                "whatsapp_number",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.directions_url = (
-            request.form.get(
-                "directions_url",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.ticket_url = (
-            request.form.get(
-                "ticket_url",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # SUBMITTER SNAPSHOT
-        # =================================================
-
-        submission.submitter_name = (
-            request.form.get(
-                "submitter_name",
-                "",
-            )
-            .strip()
-        )
-
-        submission.submitter_phone = (
-            request.form.get(
-                "submitter_phone",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        submission.submitter_email = (
-            request.form.get(
-                "submitter_email",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-
-        # =================================================
-        # APPLY DATES
-        # =================================================
-
-        for (
-            key,
-            value,
-        ) in dates.items():
-
-            setattr(
-                submission,
-                key,
-                value,
-            )
-
-
-        submission.start_time = (
-            start_time
-        )
-
-        submission.end_time = (
-            end_time
-        )
-
-
-        # =================================================
-        # JOBS ARE FREE
-        # =================================================
-
-        if (
-            canonical_category
-            == "jobs"
-        ):
-
-            submission.pricing_model = (
-                None
-            )
-
-            submission.commercial_duration_days = (
-                None
-            )
-
-            submission.amount_due = (
-                None
-            )
-
-            submission.payment_status = (
-                "waived"
-            )
-
-            submission.distribution_zone_ids = (
-                []
-            )
-
-
-        # =================================================
-        # SAVE
-        # =================================================
+        if canonical_category == "jobs":
+            submission.pricing_model = None
+            submission.commercial_duration_days = None
+            submission.amount_due = None
+            submission.payment_status = "waived"
+            submission.distribution_zone_ids = []
 
         try:
-
             db.session.commit()
-
-
         except Exception as exc:
-
             db.session.rollback()
+            current_app.logger.exception("[Kalxa Admin] Unable to update submission submission_id=%s error=%s", submission.id, exc)
+            flash("Submission could not be updated.", "error")
+            return _render_submission_edit(submission, zones, categories)
+
+        flash("Submission updated successfully. You can now approve it.", "success")
+        return redirect(url_for("admin.submissions", status="pending"))
+
+    return _render_submission_edit(submission, zones, categories)
 
 
-            current_app.logger.exception(
-                (
-                    "[Kalxa Admin] Unable to "
-                    "update submission "
-                    "submission_id=%s error=%s"
-                ),
-                submission.id,
-                exc,
-            )
+def _send_content_push_notification(content, category_record=None):
+    existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
+    if existing_notification:
+        return existing_notification
 
-
-            flash(
-                (
-                    "Submission could not "
-                    "be updated."
-                ),
-                "error",
-            )
-
-            return render_template(
-                "admin/submission_edit.html",
-
-                submission=
-                    submission,
-
-                zones=
-                    zones,
-
-                categories=
-                    categories,
-            )
-
-
-        flash(
-            (
-                "Submission updated successfully. "
-                "You can now approve it."
-            ),
-            "success",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="pending",
-            )
-        )
-
-
-    # =====================================================
-    # GET
-    # =====================================================
-
-    return render_template(
-        "admin/submission_edit.html",
-
-        submission=
-            submission,
-
-        zones=
-            zones,
-
-        categories=
-            categories,
-    )
-
-
-
-@admin_bp.route(
-    "/submissions/<int:submission_id>/approve",
-    methods=["POST"],
-)
-def approve_submission(
-    submission_id,
-):
-
-    auth = require_admin()
-
-    if auth:
-        return auth
-
-
-    # =====================================================
-    # LOAD SUBMISSION
-    # =====================================================
-
-    submission = (
-        PendingSubmission.query
-        .get_or_404(
-            submission_id
-        )
-    )
-
-
-    # =====================================================
-    # MUST BE PENDING
-    # =====================================================
-
-    if (
-        submission.status
-        != "pending"
-    ):
-
-        flash(
-            (
-                "Submission has already "
-                "been reviewed."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions"
-            )
-        )
-
-
-    # =====================================================
-    # ORIGIN ZONE
-    # =====================================================
-
-    zone = (
-        db.session.get(
-            Zone,
-            submission.zone_id,
-        )
-    )
-
-
+    zone = db.session.get(Zone, content.zone_id)
     if not zone:
-
-        flash(
-            (
-                "The submission zone "
-                "no longer exists."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions"
-            )
-        )
-
-
-    # =====================================================
-    # CATEGORY
-    # =====================================================
-
-    category = (
-        get_category_by_slug(
-            submission.category
-        )
-    )
-
-
-    if not category:
-
-        flash(
-            (
-                "The submission category is "
-                "inactive or unavailable."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions"
-            )
-        )
-
-
-    canonical_category = (
-        normalize_category(
-            submission.category
-        )
-    )
-
-
-    # =====================================================
-    # OWNERSHIP INFORMATION
-    # =====================================================
-
-    if (
-        canonical_category
-        == "events"
-        and
-        submission.organizer_id
-        is None
-    ):
-
-        current_app.logger.warning(
-            (
-                "[Kalxa Ownership] "
-                "Event submission has no "
-                "organizer_id. "
-                "submission_id=%s"
-            ),
-            submission.id,
-        )
-
-
-    # =====================================================
-    # VALUES USED AFTER COMMIT
-    # =====================================================
-
-    content = None
-
-    notification_zone_ids = []
-
-
-    try:
-
-        # =================================================
-        # IMAGES
-        # =================================================
-
-        submission_images = (
-            list(
-                submission.images
-            )
-        )
-
-
-        first_image_url = (
-            None
-        )
-
-
-        if submission_images:
-
-            first_submission_image = (
-                submission_images[0]
-            )
-
-
-            if (
-                first_submission_image.image_url
-            ):
-
-                first_image_url = (
-                    first_submission_image.image_url
-                )
-
-
-        if submission.image_url:
-
-            first_image_url = (
-                submission.image_url
-            )
-
-
-        # =================================================
-        # WORKFLOW VALUES
-        # =================================================
-
-        content_type = (
-            submission.content_type
-            or None
-        )
-
-
-        lifetime_type = (
-            submission.lifetime_type
-            or None
-        )
-
-
-        availability_status = (
-            submission.availability_status
-            or "available"
-        )
-
-
-        notification_eligible = (
-            bool(
-                submission.notification_eligible
-            )
-        )
-
-
-        # =================================================
-        # LEGACY WORKFLOW FALLBACK
-        # =================================================
-
-        if not lifetime_type:
-
-            workflow = (
-                get_content_workflow(
-                    submission.category,
-                    content_type,
-                )
-            )
-
-
-            lifetime_type = (
-                workflow.get(
-                    "lifetime_type"
-                )
-                or "ongoing"
-            )
-
-
-            notification_eligible = (
-                bool(
-                    workflow.get(
-                        "notification_eligible",
-                        notification_eligible,
-                    )
-                )
-            )
-
-
-        # =================================================
-        # FREE JOB OVERRIDE
-        # =====================================================
-        #
-        # This is the authoritative protection.
-        #
-        # Even if an old form/client somehow submits:
-        #
-        # pricing_model = campaign
-        # amount_due = R...
-        #
-        # a Jobs submission approved here remains FREE.
-        # =================================================
-
-        if (
-            canonical_category
-            == "jobs"
-        ):
-
-            pricing_model = (
-                None
-            )
-
-            commercial_duration_days = (
-                None
-            )
-
-            amount_due = (
-                None
-            )
-
-            payment_status = (
-                "waived"
-            )
-
-            distribution_zone_ids = (
-                []
-            )
-
-
-            # ---------------------------------------------
-            # Job with closing date
-            # ---------------------------------------------
-
-            if submission.end_date:
-
-                lifetime_type = (
-                    "time_specific"
-                )
-
-
-            # ---------------------------------------------
-            # Open until filled
-            # ---------------------------------------------
-
-            else:
-
-                lifetime_type = (
-                    "until_unavailable"
-                )
-
-
-            notification_eligible = (
-                True
-            )
-
-
-        # =================================================
-        # NORMAL NON-JOB COMMERCIAL FLOW
-        # =================================================
-
-        else:
-
-            pricing_model = (
-                submission.pricing_model
-                or None
-            )
-
-
-            commercial_duration_days = (
-                submission.commercial_duration_days
-            )
-
-
-            amount_due = (
-                submission.amount_due
-            )
-
-
-            payment_status = (
-                submission.payment_status
-                or (
-                    "unpaid"
-                    if pricing_model
-                    else "waived"
-                )
-            )
-
-
-            allowed_payment_statuses = {
-                "unpaid",
-                "paid",
-                "waived",
-                "refunded",
-            }
-
-
-            if (
-                payment_status
-                not in allowed_payment_statuses
-            ):
-
-                payment_status = (
-                    "unpaid"
-                )
-
-
-            # =============================================
-            # VALIDATE COMMERCIAL PACKAGE
-            # =============================================
-
-            if pricing_model:
-
-                if (
-                    pricing_model
-                    not in {
-                        PRICING_MODEL_PRESENCE,
-                        PRICING_MODEL_CAMPAIGN,
-                    }
-                ):
-
-                    raise ValueError(
-                        (
-                            "Unsupported Kalxa "
-                            "pricing model."
-                        )
-                    )
-
-
-                if not commercial_duration_days:
-
-                    raise ValueError(
-                        (
-                            "Commercial submission "
-                            "has no package duration."
-                        )
-                    )
-
-
-                try:
-
-                    commercial_duration_days = int(
-                        commercial_duration_days
-                    )
-
-                except (
-                    TypeError,
-                    ValueError,
-                ):
-
-                    raise ValueError(
-                        (
-                            "Commercial submission "
-                            "has an invalid package "
-                            "duration."
-                        )
-                    )
-
-
-                if amount_due is None:
-
-                    raise ValueError(
-                        (
-                            "Commercial submission "
-                            "has no calculated "
-                            "amount due."
-                        )
-                    )
-
-
-            # =============================================
-            # DISTRIBUTION
-            # =============================================
-
-            distribution_zone_ids = []
-
-
-            if (
-                pricing_model
-                == PRICING_MODEL_CAMPAIGN
-            ):
-
-                raw_zone_ids = (
-                    submission.distribution_zone_ids
-                    or []
-                )
-
-
-                for raw_zone_id in raw_zone_ids:
-
-                    try:
-
-                        distribution_zone_id = int(
-                            raw_zone_id
-                        )
-
-                    except (
-                        TypeError,
-                        ValueError,
-                    ):
-
-                        continue
-
-
-                    if (
-                        distribution_zone_id
-                        not in distribution_zone_ids
-                    ):
-
-                        distribution_zone_ids.append(
-                            distribution_zone_id
-                        )
-
-
-                # -----------------------------------------
-                # HOME ZONE
-                # -----------------------------------------
-
-                if (
-                    submission.zone_id
-                    not in distribution_zone_ids
-                ):
-
-                    distribution_zone_ids.insert(
-                        0,
-                        submission.zone_id,
-                    )
-
-
-                if (
-                    len(
-                        distribution_zone_ids
-                    )
-                    > 3
-                ):
-
-                    raise ValueError(
-                        (
-                            "Campaign submission exceeds "
-                            "the current 3-zone limit."
-                        )
-                    )
-
-
-                if not distribution_zone_ids:
-
-                    raise ValueError(
-                        (
-                            "Campaign submission has "
-                            "no distribution zones."
-                        )
-                    )
-
-
-                valid_zone_ids = {
-
-                    current_zone.id
-
-                    for current_zone
-                    in (
-                        Zone.query
-                        .filter(
-                            Zone.id.in_(
-                                distribution_zone_ids
-                            )
-                        )
-                        .all()
-                    )
-                }
-
-
-                if (
-                    len(
-                        valid_zone_ids
-                    )
-                    !=
-                    len(
-                        distribution_zone_ids
-                    )
-                ):
-
-                    raise ValueError(
-                        (
-                            "One or more campaign "
-                            "distribution zones "
-                            "no longer exist."
-                        )
-                    )
-
-
-            elif (
-                pricing_model
-                == PRICING_MODEL_PRESENCE
-            ):
-
-                distribution_zone_ids = []
-
-
-        # =================================================
-        # COMMERCIAL ACTIVATION
-        # =================================================
-
-        commercial_starts_at = (
-            None
-        )
-
-        commercial_expires_at = (
-            None
-        )
-
-        amount_paid = (
-            None
-        )
-
-        paid_at = (
-            None
-        )
-
-
-        if (
-            pricing_model
-            and
-            payment_status
-            in {
-                "paid",
-                "waived",
-            }
-        ):
-
-            commercial_starts_at = (
-                datetime.utcnow()
-            )
-
-
-            commercial_expires_at = (
-                commercial_starts_at
-                +
-                timedelta(
-                    days=
-                        commercial_duration_days
-                )
-            )
-
-
-            if (
-                payment_status
-                == "paid"
-            ):
-
-                amount_paid = (
-                    amount_due
-                )
-
-
-                paid_at = (
-                    getattr(
-                        submission,
-                        "paid_at",
-                        None,
-                    )
-                    or
-                    commercial_starts_at
-                )
-
-
-        # =================================================
-        # CREATE CONTENT ITEM
-        # =================================================
-
-        content = ContentItem(
-
-            organizer_id=(
-                submission.organizer_id
-            ),
-
-            zone_id=(
-                submission.zone_id
-            ),
-
-            category=(
-                submission.category
-            ),
-
-            content_type=(
-                content_type
-            ),
-
-            lifetime_type=(
-                lifetime_type
-            ),
-
-            availability_status=(
-                availability_status
-            ),
-
-            notification_eligible=(
-                notification_eligible
-            ),
-
-
-            # ---------------------------------------------
-            # COMMERCIAL
-            # ---------------------------------------------
-
-            pricing_model=(
-                pricing_model
-            ),
-
-            commercial_duration_days=(
-                commercial_duration_days
-            ),
-
-            commercial_starts_at=(
-                commercial_starts_at
-            ),
-
-            commercial_expires_at=(
-                commercial_expires_at
-            ),
-
-            payment_status=(
-                payment_status
-            ),
-
-            amount_due=(
-                amount_due
-            ),
-
-            amount_paid=(
-                amount_paid
-            ),
-
-            paid_at=(
-                paid_at
-            ),
-
-
-            # ---------------------------------------------
-            # LISTING
-            # ---------------------------------------------
-
-            title=(
-                submission.title
-            ),
-
-            description=(
-                submission.description
-            ),
-
-            business_name=(
-                submission.business_name
-            ),
-
-            venue=(
-                submission.venue
-            ),
-
-            price=(
-                submission.price
-            ),
-
-            contact=(
-                submission.contact
-            ),
-
-            whatsapp_number=(
-                submission.whatsapp_number
-            ),
-
-            directions_url=(
-                submission.directions_url
-            ),
-
-            ticket_url=(
-                submission.ticket_url
-            ),
-
-
-            # ---------------------------------------------
-            # IMAGE
-            # ---------------------------------------------
-
-            image_url=(
-                first_image_url
-            ),
-
-
-            # ---------------------------------------------
-            # DATES
-            # ---------------------------------------------
-
-            publish_from=(
-                submission.publish_from
-            ),
-
-            event_date=(
-                submission.event_date
-            ),
-
-            event_end_date=(
-                submission.event_end_date
-            ),
-
-            start_date=(
-                submission.start_date
-            ),
-
-            start_time=(
-                submission.start_time
-            ),
-
-            end_date=(
-                submission.end_date
-            ),
-
-            end_time=(
-                submission.end_time
-            ),
-
-
-            # ---------------------------------------------
-            # PUBLIC LISTING STATE
-            # ---------------------------------------------
-
-            listing_level=(
-                "discovery"
-            ),
-
-            ownership_status=(
-                "unclaimed"
-            ),
-
-            is_verified=(
-                False
-            ),
-
-            featured=(
-                False
-            ),
-
-            active=(
-                True
-            ),
-
-            archived=(
-                False
-            ),
-        )
-
-
-        db.session.add(
-            content
-        )
-
-
-        db.session.flush()
-
-
-        # =================================================
-        # OWNERSHIP CONSISTENCY
-        # =================================================
-
-        if (
-            content.organizer_id
-            !=
-            submission.organizer_id
-        ):
-
-            raise ValueError(
-                (
-                    "Organizer ownership could "
-                    "not be copied to the "
-                    "published listing."
-                )
-            )
-
-
-        # =================================================
-        # DISTRIBUTION LINKS
-        # =================================================
-
-        if (
-            pricing_model
-            == PRICING_MODEL_CAMPAIGN
-        ):
-
-            for (
-                distribution_zone_id
-            ) in distribution_zone_ids:
-
-                db.session.add(
-                    ContentDistributionZone(
-
-                        content_item_id=
-                            content.id,
-
-                        zone_id=
-                            distribution_zone_id,
-                    )
-                )
-
-
-        # =================================================
-        # LINK SUBMISSION
-        # =================================================
-
-        submission.published_content_id = (
-            content.id
-        )
-
-
-        # =================================================
-        # COPY IMAGES
-        # =================================================
-
-        for image in submission_images:
-
-            if not image.image_url:
-
-                continue
-
-
-            db.session.add(
-                ContentImage(
-
-                    content_item_id=
-                        content.id,
-
-                    image_url=
-                        image.image_url,
-
-                    display_order=
-                        image.display_order,
-                )
-            )
-
-
-        # =================================================
-        # APPROVE
-        # =================================================
-
-        submission.status = (
-            "approved"
-        )
-
-        submission.reviewed_at = (
-            datetime.utcnow()
-        )
-
-
-        # =================================================
-        # FORCE FREE JOB STATE ON SOURCE RECORD TOO
-        # =================================================
-
-        if (
-            canonical_category
-            == "jobs"
-        ):
-
-            submission.pricing_model = (
-                None
-            )
-
-            submission.commercial_duration_days = (
-                None
-            )
-
-            submission.amount_due = (
-                None
-            )
-
-            submission.payment_status = (
-                "waived"
-            )
-
-            submission.distribution_zone_ids = (
-                []
-            )
-
-
-        # =================================================
-        # NOTIFICATION GEOGRAPHY
-        # =================================================
-
-        if (
-            pricing_model
-            == PRICING_MODEL_CAMPAIGN
-        ):
-
-            notification_zone_ids = (
-                list(
-                    distribution_zone_ids
-                )
-            )
-
-
-        else:
-
-            notification_zone_ids = [
-                content.zone_id
-            ]
-
-
-        # =================================================
-        # COMMIT APPROVAL
-        # =================================================
-
-        db.session.commit()
-
-
-        current_app.logger.info(
-            (
-                "[Kalxa] Submission approved "
-                "submission_id=%s "
-                "organizer_id=%s "
-                "content_id=%s "
-                "category=%s "
-                "pricing_model=%s "
-                "payment_status=%s"
-            ),
-            submission.id,
-            submission.organizer_id,
-            content.id,
-            content.category,
-            content.pricing_model,
-            content.payment_status,
-        )
-
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-
-        current_app.logger.exception(
-            (
-                "[Kalxa] Approve submission "
-                "failed submission_id=%s "
-                "error=%s"
-            ),
-            submission_id,
-            exc,
-        )
-
-
-        flash(
-            "Unable to approve submission.",
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.submissions"
-            )
-        )
-
-
-    # =====================================================
-    # VISIBILITY
-    # =====================================================
-
-    commercial_is_visible = (
-
-        content.pricing_model
-        is None
-
-        or
-
-        (
-            content.payment_status
-            in {
-                "paid",
-                "waived",
-            }
-
-            and
-            content.commercial_starts_at
-            is not None
-
-            and
-            content.commercial_expires_at
-            is not None
-        )
-    )
-
-
-    # =====================================================
-    # PUSH NOTIFICATION
-    # =====================================================
-
-    if (
-        content.active
-        and
-        content.notification_eligible
-        and
-        commercial_is_visible
-    ):
-
-        try:
-
-            # =============================================
-            # FRIENDLY CATEGORY LABEL
-            # =============================================
-
-            if (
-                canonical_category
-                == "jobs"
-            ):
-
-                category_label = (
-                    "Job Opportunity"
-                )
-
-
-            else:
-
-                category_label = (
-
-                    category.name
-
-                    if category
-
-                    else (
-                        content.category
-                        .replace(
-                            "-",
-                            " ",
-                        )
-                        .replace(
-                            "_",
-                            " ",
-                        )
-                        .title()
-                    )
-                )
-
-
-            notification_body = (
-                content.title
-            )
-
-
-            notification_url = (
-                f"/listing/{content.id}"
-            )
-
-
-            # =============================================
-            # CURRENT DB MODEL ONLY SUPPORTS ONE
-            # PushNotification PER CONTENT ITEM.
-            #
-            # Therefore create one history record and use
-            # the home/origin zone here.
-            #
-            # Multi-zone campaign delivery architecture can
-            # later move to a composite unique constraint.
-            # =============================================
-
-            primary_notification_zone_id = (
-                content.zone_id
-            )
-
-
-            notification_zone = (
-                db.session.get(
-                    Zone,
-                    primary_notification_zone_id,
-                )
-            )
-
-
-            if notification_zone:
-
-                notification_title = (
-                    f"New {category_label} "
-                    f"in {notification_zone.name}"
-                )
-
-
-                existing_notification = (
-                    PushNotification.query
-                    .filter_by(
-                        content_item_id=
-                            content.id
-                    )
-                    .first()
-                )
-
-
-                if not existing_notification:
-
-                    push_record = (
-                        PushNotification(
-
-                            content_item_id=
-                                content.id,
-
-                            zone_id=
-                                primary_notification_zone_id,
-
-                            title=
-                                notification_title,
-
-                            body=
-                                notification_body,
-
-                            target_url=
-                                notification_url,
-
-                            status=
-                                "pending",
-
-                            total_subscribers=
-                                0,
-
-                            sent_count=
-                                0,
-
-                            failed_count=
-                                0,
-
-                            attempts=
-                                0,
-                        )
-                    )
-
-
-                    db.session.add(
-                        push_record
-                    )
-
-                    db.session.commit()
-
-
-                    push_record.attempts += (
-                        1
-                    )
-
-
-                    push_result = (
-                        send_zone_push_notification(
-
-                            zone_id=
-                                primary_notification_zone_id,
-
-                            category=
-                                content.category,
-
-                            title=
-                                notification_title,
-
-                            body=
-                                notification_body,
-
-                            url=
-                                notification_url,
-
-                            tag=(
-                                f"content-"
-                                f"{content.id}"
-                            ),
-                        )
-                    )
-
-
-                    if not isinstance(
-                        push_result,
-                        dict,
-                    ):
-
-                        push_result = {}
-
-
-                    total = int(
-                        push_result.get(
-                            "total",
-                            0,
-                        )
-                        or 0
-                    )
-
-
-                    sent = int(
-                        push_result.get(
-                            "sent",
-                            0,
-                        )
-                        or 0
-                    )
-
-
-                    failed = int(
-                        push_result.get(
-                            "failed",
-                            0,
-                        )
-                        or 0
-                    )
-
-
-                    push_record.total_subscribers = (
-                        total
-                    )
-
-                    push_record.sent_count = (
-                        sent
-                    )
-
-                    push_record.failed_count = (
-                        failed
-                    )
-
-
-                    if (
-                        sent > 0
-                        and
-                        failed == 0
-                    ):
-
-                        push_record.status = (
-                            "sent"
-                        )
-
-                        push_record.sent_at = (
-                            datetime.utcnow()
-                        )
-
-                        push_record.last_error = (
-                            None
-                        )
-
-
-                    elif (
-                        sent > 0
-                        and
-                        failed > 0
-                    ):
-
-                        push_record.status = (
-                            "partial_failure"
-                        )
-
-                        push_record.sent_at = (
-                            datetime.utcnow()
-                        )
-
-                        push_record.last_error = (
-                            f"{failed} subscriber "
-                            "delivery failures."
-                        )
-
-
-                    elif (
-                        total == 0
-                    ):
-
-                        push_record.status = (
-                            "no_subscribers"
-                        )
-
-                        push_record.last_error = (
-                            (
-                                "No active subscribers "
-                                "were found for this zone "
-                                "and category."
-                            )
-                        )
-
-
-                    else:
-
-                        push_record.status = (
-                            "failed"
-                        )
-
-                        push_record.last_error = (
-                            (
-                                "Push delivery failed "
-                                "for all subscribers."
-                            )
-                        )
-
-
-                    db.session.commit()
-
-
-        except Exception as exc:
-
-            db.session.rollback()
-
-
-            current_app.logger.exception(
-                (
-                    "[Kalxa Push] Approval "
-                    "notification failed "
-                    "content_id=%s error=%s"
-                ),
-                content.id,
-                exc,
-            )
-
-
-    # =====================================================
-    # RESULT
-    # =====================================================
-
-    if (
-        canonical_category
-        == "jobs"
-    ):
-
-        flash(
-            (
-                "Free job opportunity approved "
-                "and published."
-            ),
-            "success",
-        )
-
-
-    elif (
-        content.pricing_model
-        and
-        content.payment_status
-        == "unpaid"
-    ):
-
-        flash(
-            (
-                "Submission approved, but the "
-                "listing is hidden until payment "
-                "is confirmed."
-            ),
-            "success",
-        )
-
-
-    elif (
-        content.pricing_model
-        and
-        content.payment_status
-        == "refunded"
-    ):
-
-        flash(
-            (
-                "Submission approved, but the "
-                "listing is hidden because its "
-                "payment is refunded."
-            ),
-            "success",
-        )
-
-
+        return None
+
+    canonical_category = normalize_category(content.category)
+    if canonical_category == "jobs":
+        category_label = "Job Opportunity"
+    elif category_record:
+        category_label = category_record.name
     else:
+        category_label = content.category.replace("-", " ").replace("_", " ").title()
 
-        flash(
-            (
-                "Submission approved "
-                "and published."
-            ),
-            "success",
-        )
+    notification_title = f"New {category_label} in {zone.name}"
+    notification_body = content.title
+    notification_url = f"/listing/{content.id}"
 
-
-    return redirect(
-        url_for(
-            "admin.submissions"
-        )
+    push_record = PushNotification(
+        content_item_id=content.id,
+        zone_id=content.zone_id,
+        title=notification_title,
+        body=notification_body,
+        target_url=notification_url,
+        status="pending",
+        total_subscribers=0,
+        sent_count=0,
+        failed_count=0,
+        attempts=0,
     )
+    db.session.add(push_record)
+    db.session.commit()
 
-
-@admin_bp.route(
-    "/submissions/<int:submission_id>/confirm-payment",
-    methods=["POST"],
-)
-def confirm_submission_payment(submission_id):
-
-    auth = require_admin()
-
-    if auth:
-        return auth
-
-    # =====================================================
-    # FIND SUBMISSION
-    # =====================================================
-
-    submission = (
-        PendingSubmission.query
-        .get_or_404(submission_id)
+    push_record.attempts = (push_record.attempts or 0) + 1
+    result = send_zone_push_notification(
+        zone_id=content.zone_id,
+        category=content.category,
+        title=notification_title,
+        body=notification_body,
+        url=notification_url,
+        tag=f"content-{content.id}",
     )
-
-    # =====================================================
-    # MUST ALREADY BE APPROVED
-    # =====================================================
-
-    if submission.status != "approved":
-
-        flash(
-            "Only approved submissions can have "
-            "payment confirmed.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    # =====================================================
-    # MUST HAVE PUBLISHED CONTENT
-    # =====================================================
-
-    if not submission.published_content_id:
-
-        flash(
-            "This submission does not have a "
-            "published content record.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    content = db.session.get(
-        ContentItem,
-        submission.published_content_id,
-    )
-
-    if not content:
-
-        flash(
-            "The published listing could not be found.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-        # =====================================================
-    # FREE JOB PROTECTION
-    # =====================================================
-
-    if (
-        normalize_category(
-            content.category
-        )
-        == "jobs"
-    ):
-
-        flash(
-            (
-                "Kalxa Job opportunities are free. "
-                "No payment confirmation is required."
-            ),
-            "info",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    # =====================================================
-    # ORGANIZER OWNERSHIP CONSISTENCY
-    # =====================================================
-    #
-    # New approvals already copy organizer_id.
-    #
-    # This additionally repairs older approved listings
-    # if their PendingSubmission has ownership but the
-    # ContentItem was created before organizer ownership
-    # was introduced.
-    # =====================================================
-
-    if (
-        submission.organizer_id
-        and content.organizer_id is None
-    ):
-
-        content.organizer_id = (
-            submission.organizer_id
-        )
-
-
-        current_app.logger.info(
-            (
-                "[Kalxa Ownership] Repaired organizer "
-                "ownership during payment confirmation "
-                "submission_id=%s "
-                "content_id=%s "
-                "organizer_id=%s"
-            ),
-            submission.id,
-            content.id,
-            submission.organizer_id,
-        )
-
-
-    elif (
-        submission.organizer_id
-        and content.organizer_id
-        != submission.organizer_id
-    ):
-
-        current_app.logger.error(
-            (
-                "[Kalxa Ownership] Ownership mismatch "
-                "submission_id=%s "
-                "submission_organizer_id=%s "
-                "content_id=%s "
-                "content_organizer_id=%s"
-            ),
-            submission.id,
-            submission.organizer_id,
-            content.id,
-            content.organizer_id,
-        )
-
-
-        flash(
-            (
-                "Payment cannot be confirmed because "
-                "the listing ownership does not match."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-    # =====================================================
-    # MUST BE COMMERCIAL CONTENT
-    # =====================================================
-
-    if content.pricing_model not in {
-        PRICING_MODEL_PRESENCE,
-        PRICING_MODEL_CAMPAIGN,
-    }:
-
-        flash(
-            "This listing does not use a Kalxa "
-            "commercial package.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    # =====================================================
-    # DUPLICATE PAYMENT PROTECTION
-    # =====================================================
-
-    if content.payment_status == "paid":
-
-        flash(
-            "Payment has already been confirmed "
-            "for this listing.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    if content.payment_status == "waived":
-
-        flash(
-            "Payment for this listing has been waived.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    # =====================================================
-    # PAYMENT MUST CURRENTLY BE UNPAID
-    # =====================================================
-
-    if content.payment_status != "unpaid":
-
-        flash(
-            "Payment cannot be confirmed from its "
-            "current status.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    # =====================================================
-    # VALIDATE PACKAGE
-    # =====================================================
-
-    if not content.commercial_duration_days:
-
-        flash(
-            "This listing has no commercial "
-            "package duration.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    if content.amount_due is None:
-
-        flash(
-            "This listing has no amount due.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    try:
-
-        duration_days = int(
-            content.commercial_duration_days
-        )
-
-        if duration_days <= 0:
-            raise ValueError(
-                "Invalid commercial duration."
-            )
-
-        # =================================================
-        # ACTIVATE COMMERCIAL PACKAGE
-        #
-        # The purchased time starts NOW, not when the
-        # submission was originally approved.
-        # =================================================
-
-        now = datetime.utcnow()
-
-        content.payment_status = "paid"
-
-        content.amount_paid = (
-            content.amount_due
-        )
-
-        content.paid_at = now
-
-        content.commercial_starts_at = now
-
-        content.commercial_expires_at = (
-            now
-            + timedelta(
-                days=duration_days
-            )
-        )
-
-        # Keep the PendingSubmission in sync.
-        submission.payment_status = "paid"
-
-        db.session.commit()
-
-    except Exception as exc:
-
-        db.session.rollback()
-
-        current_app.logger.exception(
-            "[Kalxa Payment] Unable to confirm payment "
-            "submission_id=%s "
-            "content_id=%s "
-            "error=%s",
-            submission.id,
-            content.id,
-            exc,
-        )
-
-        flash(
-            "Unable to confirm payment.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-    # =====================================================
-    # PUSH NOTIFICATION AFTER ACTIVATION
-    #
-    # The listing was previously hidden while unpaid.
-    # This is the moment it actually becomes commercially
-    # visible, so notification can happen now.
-    # =====================================================
-
-    if (
-        content.active
-        and content.notification_eligible
-    ):
-
-        try:
-
-            # =============================================
-            # DUPLICATE PROTECTION
-            # =============================================
-
-            existing_notification = (
-                PushNotification.query
-                .filter_by(
-                    content_item_id=content.id
-                )
-                .first()
-            )
-
-            if not existing_notification:
-
-                zone = db.session.get(
-                    Zone,
-                    content.zone_id,
-                )
-
-                zone_name = (
-                    zone.name
-                    if zone
-                    else "your area"
-                )
-
-                category_label = (
-                    content.category
-                    .replace("-", " ")
-                    .replace("_", " ")
-                    .title()
-                )
-
-                notification_title = (
-                    f"New {category_label} "
-                    f"in {zone_name}"
-                )
-
-                notification_body = (
-                    content.title
-                )
-
-                notification_url = (
-                    f"/listing/{content.id}"
-                )
-
-                # =========================================
-                # CREATE PUSH HISTORY RECORD
-                # =========================================
-
-                push_record = PushNotification(
-
-                    content_item_id=
-                        content.id,
-
-                    zone_id=
-                        content.zone_id,
-
-                    title=
-                        notification_title,
-
-                    body=
-                        notification_body,
-
-                    target_url=
-                        notification_url,
-
-                    status=
-                        "pending",
-
-                    total_subscribers=
-                        0,
-
-                    sent_count=
-                        0,
-
-                    failed_count=
-                        0,
-
-                    attempts=
-                        0,
-                )
-
-                db.session.add(
-                    push_record
-                )
-
-                db.session.commit()
-
-                # =========================================
-                # SEND PUSH
-                # =========================================
-
-                push_record.attempts += 1
-
-                push_result = (
-                    send_zone_push_notification(
-
-                        zone_id=
-                            content.zone_id,
-
-                        category=
-                            content.category,
-
-                        title=
-                            notification_title,
-
-                        body=
-                            notification_body,
-
-                        url=
-                            notification_url,
-
-                        tag=
-                            f"content-{content.id}",
-                    )
-                )
-
-                push_record.total_subscribers = (
-                    push_result["total"]
-                )
-
-                push_record.sent_count = (
-                    push_result["sent"]
-                )
-
-                push_record.failed_count = (
-                    push_result["failed"]
-                )
-
-                # =========================================
-                # SAVE PUSH RESULT
-                # =========================================
-
-                if (
-                    push_result["sent"] > 0
-                    and
-                    push_result["failed"] == 0
-                ):
-
-                    push_record.status = "sent"
-
-                    push_record.sent_at = (
-                        datetime.utcnow()
-                    )
-
-                    push_record.last_error = None
-
-                elif (
-                    push_result["sent"] > 0
-                    and
-                    push_result["failed"] > 0
-                ):
-
-                    push_record.status = (
-                        "partial_failure"
-                    )
-
-                    push_record.sent_at = (
-                        datetime.utcnow()
-                    )
-
-                    push_record.last_error = (
-                        f"{push_result['failed']} "
-                        "subscriber delivery failures."
-                    )
-
-                elif push_result["total"] == 0:
-
-                    push_record.status = (
-                        "no_subscribers"
-                    )
-
-                    push_record.last_error = (
-                        "No active subscribers "
-                        "were found for this zone."
-                    )
-
-                else:
-
-                    push_record.status = "failed"
-
-                    push_record.last_error = (
-                        "Push delivery failed for "
-                        "all subscribers."
-                    )
-
-                db.session.commit()
-
-                current_app.logger.info(
-                    "[Kalxa Payment] Payment confirmed "
-                    "and listing activated "
-                    "submission_id=%s "
-                    "content_id=%s "
-                    "amount=%s "
-                    "expires_at=%s",
-                    submission.id,
-                    content.id,
-                    content.amount_paid,
-                    content.commercial_expires_at,
-                )
-
-            else:
-
-                current_app.logger.info(
-                    "[Kalxa Push] Notification already "
-                    "exists for content_id=%s. "
-                    "Payment activation push skipped.",
-                    content.id,
-                )
-
-        except Exception as exc:
-
-            # Payment is ALREADY successfully committed.
-            #
-            # A push failure must never undo or invalidate
-            # a customer's payment.
-            db.session.rollback()
-
-            current_app.logger.exception(
-                "[Kalxa Push] Payment activation "
-                "notification failed "
-                "submission_id=%s "
-                "content_id=%s "
-                "error=%s",
-                submission.id,
-                content.id,
-                exc,
-            )
-
-    # =====================================================
-    # SUCCESS
-    # =====================================================
-
-    flash(
-        "Payment confirmed. The Kalxa listing is now live.",
-        "success",
-    )
-
-    return redirect(
-        url_for(
-            "admin.submissions",
-            status="approved",
-        )
-    )
-            
-@admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
-def reject_submission(submission_id):
+    if not isinstance(result, dict):
+        result = {}
+    total = int(result.get("total", 0) or 0)
+    sent = int(result.get("sent", 0) or 0)
+    failed = int(result.get("failed", 0) or 0)
+    push_record.total_subscribers = total
+    push_record.sent_count = sent
+    push_record.failed_count = failed
+
+    if sent > 0 and failed == 0:
+        push_record.status = "sent"
+        push_record.sent_at = datetime.utcnow()
+        push_record.last_error = None
+    elif sent > 0 and failed > 0:
+        push_record.status = "partial_failure"
+        push_record.sent_at = datetime.utcnow()
+        push_record.last_error = f"{failed} subscriber delivery failures."
+    elif total == 0:
+        push_record.status = "no_subscribers"
+        push_record.sent_at = None
+        push_record.last_error = "No active subscribers were found for this zone and category."
+    else:
+        push_record.status = "failed"
+        push_record.sent_at = None
+        push_record.last_error = "Push delivery failed for all subscribers."
+    db.session.commit()
+    return push_record
+
+
+@admin_bp.route("/submissions/<int:submission_id>/approve", methods=["POST"])
+def approve_submission(submission_id):
     auth = require_admin()
     if auth:
         return auth
@@ -14741,10 +2703,269 @@ def reject_submission(submission_id):
         flash("Submission has already been reviewed.", "error")
         return redirect(url_for("admin.submissions"))
 
+    zone = db.session.get(Zone, submission.zone_id)
+    if not zone:
+        flash("The submission zone no longer exists.", "error")
+        return redirect(url_for("admin.submissions"))
+
+    category = get_category_by_slug(submission.category)
+    if not category:
+        flash("The submission category is inactive or unavailable.", "error")
+        return redirect(url_for("admin.submissions"))
+
+    canonical_category = normalize_category(submission.category)
+    content = None
+
+    try:
+        submission_images = list(submission.images)
+        first_image_url = submission.image_url or (submission_images[0].image_url if submission_images else None)
+        content_type = submission.content_type or None
+        lifetime_type = submission.lifetime_type or None
+        availability_status = submission.availability_status or "available"
+        notification_eligible = bool(submission.notification_eligible)
+
+        if not lifetime_type:
+            workflow = get_content_workflow(submission.category, content_type)
+            lifetime_type = workflow.get("lifetime_type") or "ongoing"
+            notification_eligible = bool(workflow.get("notification_eligible", notification_eligible))
+
+        if canonical_category == "jobs":
+            pricing_model = None
+            commercial_duration_days = None
+            amount_due = None
+            payment_status = "waived"
+            distribution_zone_ids = []
+            lifetime_type = "time_specific" if submission.end_date else "until_unavailable"
+            notification_eligible = True
+        else:
+            pricing_model = submission.pricing_model or None
+            commercial_duration_days = submission.commercial_duration_days
+            amount_due = submission.amount_due
+            payment_status = submission.payment_status or ("unpaid" if pricing_model else "waived")
+            if payment_status not in ALLOWED_PAYMENT_STATUSES:
+                payment_status = "unpaid"
+
+            if pricing_model:
+                if pricing_model not in {PRICING_MODEL_PRESENCE, PRICING_MODEL_CAMPAIGN}:
+                    raise ValueError("Unsupported Kalxa pricing model.")
+                if not commercial_duration_days:
+                    raise ValueError("Commercial submission has no package duration.")
+                try:
+                    commercial_duration_days = int(commercial_duration_days)
+                except (TypeError, ValueError):
+                    raise ValueError("Commercial submission has an invalid package duration.")
+                if amount_due is None:
+                    raise ValueError("Commercial submission has no calculated amount due.")
+
+            distribution_zone_ids = []
+            if pricing_model == PRICING_MODEL_CAMPAIGN:
+                for raw_zone_id in submission.distribution_zone_ids or []:
+                    try:
+                        distribution_zone_id = int(raw_zone_id)
+                    except (TypeError, ValueError):
+                        continue
+                    if distribution_zone_id not in distribution_zone_ids:
+                        distribution_zone_ids.append(distribution_zone_id)
+                if submission.zone_id not in distribution_zone_ids:
+                    distribution_zone_ids.insert(0, submission.zone_id)
+                if len(distribution_zone_ids) > 3:
+                    raise ValueError("Campaign submission exceeds the current 3-zone limit.")
+                valid_zone_ids = {z.id for z in Zone.query.filter(Zone.id.in_(distribution_zone_ids)).all()}
+                if len(valid_zone_ids) != len(distribution_zone_ids):
+                    raise ValueError("One or more campaign distribution zones no longer exist.")
+            elif pricing_model == PRICING_MODEL_PRESENCE:
+                distribution_zone_ids = []
+
+        commercial_starts_at = commercial_expires_at = amount_paid = paid_at = None
+        if pricing_model and payment_status in {"paid", "waived"}:
+            commercial_starts_at = datetime.utcnow()
+            commercial_expires_at = commercial_starts_at + timedelta(days=commercial_duration_days)
+            if payment_status == "paid":
+                amount_paid = amount_due
+                paid_at = getattr(submission, "paid_at", None) or commercial_starts_at
+
+        content = ContentItem(
+            organizer_id=submission.organizer_id,
+            zone_id=submission.zone_id,
+            category=submission.category,
+            content_type=content_type,
+            lifetime_type=lifetime_type,
+            availability_status=availability_status,
+            notification_eligible=notification_eligible,
+            pricing_model=pricing_model,
+            commercial_duration_days=commercial_duration_days,
+            commercial_starts_at=commercial_starts_at,
+            commercial_expires_at=commercial_expires_at,
+            payment_status=payment_status,
+            amount_due=amount_due,
+            amount_paid=amount_paid,
+            paid_at=paid_at,
+            title=submission.title,
+            description=submission.description,
+            business_name=submission.business_name,
+            venue=submission.venue,
+            price=submission.price,
+            contact=submission.contact,
+            whatsapp_number=submission.whatsapp_number,
+            directions_url=submission.directions_url,
+            ticket_url=submission.ticket_url,
+            image_url=first_image_url,
+            publish_from=submission.publish_from,
+            event_date=submission.event_date,
+            event_end_date=submission.event_end_date,
+            start_date=submission.start_date,
+            start_time=submission.start_time,
+            end_date=submission.end_date,
+            end_time=submission.end_time,
+            listing_level="discovery",
+            ownership_status="unclaimed",
+            is_verified=False,
+            featured=False,
+            active=True,
+            archived=False,
+        )
+        db.session.add(content)
+        db.session.flush()
+
+        if pricing_model == PRICING_MODEL_CAMPAIGN:
+            for distribution_zone_id in distribution_zone_ids:
+                db.session.add(ContentDistributionZone(content_item_id=content.id, zone_id=distribution_zone_id))
+
+        submission.published_content_id = content.id
+        for image in submission_images:
+            if image.image_url:
+                db.session.add(ContentImage(content_item_id=content.id, image_url=image.image_url, display_order=image.display_order))
+
+        submission.status = "approved"
+        submission.reviewed_at = datetime.utcnow()
+        if canonical_category == "jobs":
+            submission.pricing_model = None
+            submission.commercial_duration_days = None
+            submission.amount_due = None
+            submission.payment_status = "waived"
+            submission.distribution_zone_ids = []
+        db.session.commit()
+
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception("[Kalxa] Approve submission failed submission_id=%s error=%s", submission_id, exc)
+        flash("Unable to approve submission.", "error")
+        return redirect(url_for("admin.submissions"))
+
+    commercial_is_visible = content.pricing_model is None or (
+        content.payment_status in {"paid", "waived"}
+        and content.commercial_starts_at is not None
+        and content.commercial_expires_at is not None
+    )
+    if content.active and content.notification_eligible and commercial_is_visible:
+        try:
+            _send_content_push_notification(content, category_record=category)
+        except Exception as exc:
+            db.session.rollback()
+            current_app.logger.exception("[Kalxa Push] Approval notification failed content_id=%s error=%s", content.id, exc)
+
+    if canonical_category == "jobs":
+        flash("Free job opportunity approved and published.", "success")
+    elif content.pricing_model and content.payment_status == "unpaid":
+        flash("Submission approved, but the listing is hidden until payment is confirmed.", "success")
+    elif content.pricing_model and content.payment_status == "refunded":
+        flash("Submission approved, but the listing is hidden because its payment is refunded.", "success")
+    else:
+        flash("Submission approved and published.", "success")
+    return redirect(url_for("admin.submissions"))
+
+
+@admin_bp.route("/submissions/<int:submission_id>/confirm-payment", methods=["POST"])
+def confirm_submission_payment(submission_id):
+    auth = require_admin()
+    if auth:
+        return auth
+
+    submission = PendingSubmission.query.get_or_404(submission_id)
+    if submission.status != "approved":
+        flash("Only approved submissions can have payment confirmed.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+    if not submission.published_content_id:
+        flash("This submission does not have a published content record.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+
+    content = db.session.get(ContentItem, submission.published_content_id)
+    if not content:
+        flash("The published listing could not be found.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+    if normalize_category(content.category) == "jobs":
+        flash("Kalxa Job opportunities are free. No payment confirmation is required.", "info")
+        return redirect(url_for("admin.submissions", status="approved"))
+
+    if submission.organizer_id and content.organizer_id is None:
+        content.organizer_id = submission.organizer_id
+    elif submission.organizer_id and content.organizer_id != submission.organizer_id:
+        flash("Payment cannot be confirmed because the listing ownership does not match.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+
+    if content.pricing_model not in {PRICING_MODEL_PRESENCE, PRICING_MODEL_CAMPAIGN}:
+        flash("This listing does not use a Kalxa commercial package.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+    if content.payment_status == "paid":
+        flash("Payment has already been confirmed for this listing.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+    if content.payment_status == "waived":
+        flash("Payment for this listing has been waived.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+    if content.payment_status != "unpaid":
+        flash("Payment cannot be confirmed from its current status.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+    if not content.commercial_duration_days or content.amount_due is None:
+        flash("This listing has an incomplete commercial package.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+
+    try:
+        duration_days = int(content.commercial_duration_days)
+        if duration_days <= 0:
+            raise ValueError("Invalid commercial duration.")
+        now = datetime.utcnow()
+        content.payment_status = "paid"
+        content.amount_paid = content.amount_due
+        content.paid_at = now
+        content.commercial_starts_at = now
+        content.commercial_expires_at = now + timedelta(days=duration_days)
+        submission.payment_status = "paid"
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception("[Kalxa Payment] Unable to confirm payment submission_id=%s content_id=%s error=%s", submission.id, content.id, exc)
+        flash("Unable to confirm payment.", "error")
+        return redirect(url_for("admin.submissions", status="approved"))
+
+    if content.active and content.notification_eligible:
+        try:
+            _send_content_push_notification(content)
+        except Exception as exc:
+            db.session.rollback()
+            current_app.logger.exception("[Kalxa Push] Payment activation notification failed submission_id=%s content_id=%s error=%s", submission.id, content.id, exc)
+
+    flash("Payment confirmed. The Kalxa listing is now live.", "success")
+    return redirect(url_for("admin.submissions", status="approved"))
+
+
+@admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
+def reject_submission(submission_id):
+    auth = require_admin()
+    if auth:
+        return auth
+    submission = PendingSubmission.query.get_or_404(submission_id)
+    if submission.status != "pending":
+        flash("Submission has already been reviewed.", "error")
+        return redirect(url_for("admin.submissions"))
     submission.status = "rejected"
     submission.reviewed_at = datetime.utcnow()
     submission.admin_notes = request.form.get("admin_notes", "").strip() or None
-    db.session.commit()
-
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception("Unable to reject submission submission_id=%s error=%s", submission.id, exc)
+        flash("Submission could not be rejected.", "error")
+        return redirect(url_for("admin.submissions"))
     flash("Submission rejected.", "success")
     return redirect(url_for("admin.submissions"))
