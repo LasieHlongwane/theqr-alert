@@ -533,7 +533,1139 @@ def is_sponsorship_active(
 
 
 
+# ============================================================
+# KALXA JOBS - PUBLIC FREE SUBMISSION
+# ============================================================
 
+KALXA_JOB_TYPES = {
+    "job": "Job",
+    "internship": "Internship",
+    "learnership": "Learnership",
+    "training": "Training Opportunity",
+    "tender": "Tender",
+    "business_opportunity": "Business Opportunity",
+}
+
+
+def build_job_application_url(
+    application_url,
+    application_email,
+    job_title,
+):
+    """
+    Build the public application action.
+
+    Existing Kalxa ContentItem.ticket_url is temporarily
+    reused as the generic external action URL.
+
+    This allows the existing approval pipeline to publish
+    Jobs without requiring a schema migration yet.
+
+    Later we can introduce application_url as a dedicated
+    column when external feeds are added.
+    """
+
+    application_url = (
+        str(
+            application_url
+            or ""
+        )
+        .strip()
+    )
+
+    application_email = (
+        str(
+            application_email
+            or ""
+        )
+        .strip()
+    )
+
+
+    if application_url:
+
+        if not application_url.lower().startswith(
+            (
+                "http://",
+                "https://",
+            )
+        ):
+
+            application_url = (
+                "https://"
+                + application_url
+            )
+
+        return application_url
+
+
+    if application_email:
+
+        subject = quote(
+            f"Application: {job_title}"
+        )
+
+        return (
+            f"mailto:{application_email}"
+            f"?subject={subject}"
+        )
+
+
+    return None
+
+
+def find_duplicate_job_submission(
+    *,
+    zone_id,
+    title,
+    business_name,
+    venue,
+    end_date,
+):
+    """
+    Basic MVP duplicate protection.
+
+    Checks both:
+
+    - pending community submissions
+    - already published jobs
+
+    More advanced fingerprinting will be introduced when
+    RSS, email and employer API imports are added.
+    """
+
+    normalized_title = (
+        str(
+            title
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+    normalized_business = (
+        str(
+            business_name
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+    normalized_venue = (
+        str(
+            venue
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    # =====================================================
+    # PENDING JOB
+    # =====================================================
+
+    pending_query = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == zone_id,
+
+            PendingSubmission.category
+            == "jobs",
+
+            PendingSubmission.status
+            == "pending",
+
+            db.func.lower(
+                PendingSubmission.title
+            )
+            == normalized_title,
+        )
+    )
+
+
+    if normalized_business:
+
+        pending_query = (
+            pending_query.filter(
+                db.func.lower(
+                    db.func.coalesce(
+                        PendingSubmission.business_name,
+                        "",
+                    )
+                )
+                ==
+                normalized_business
+            )
+        )
+
+
+    if normalized_venue:
+
+        pending_query = (
+            pending_query.filter(
+                db.func.lower(
+                    db.func.coalesce(
+                        PendingSubmission.venue,
+                        "",
+                    )
+                )
+                ==
+                normalized_venue
+            )
+        )
+
+
+    if end_date:
+
+        pending_query = (
+            pending_query.filter(
+                PendingSubmission.end_date
+                == end_date
+            )
+        )
+
+
+    pending_duplicate = (
+        pending_query.first()
+    )
+
+
+    if pending_duplicate:
+
+        return {
+            "type": "pending",
+            "record": pending_duplicate,
+        }
+
+
+    # =====================================================
+    # PUBLISHED JOB
+    # =====================================================
+
+    published_query = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == zone_id,
+
+            ContentItem.category
+            == "jobs",
+
+            ContentItem.active.is_(
+                True
+            ),
+
+            ContentItem.archived.is_(
+                False
+            ),
+
+            db.func.lower(
+                ContentItem.title
+            )
+            == normalized_title,
+        )
+    )
+
+
+    if normalized_business:
+
+        published_query = (
+            published_query.filter(
+                db.func.lower(
+                    db.func.coalesce(
+                        ContentItem.business_name,
+                        "",
+                    )
+                )
+                ==
+                normalized_business
+            )
+        )
+
+
+    if normalized_venue:
+
+        published_query = (
+            published_query.filter(
+                db.func.lower(
+                    db.func.coalesce(
+                        ContentItem.venue,
+                        "",
+                    )
+                )
+                ==
+                normalized_venue
+            )
+        )
+
+
+    if end_date:
+
+        published_query = (
+            published_query.filter(
+                ContentItem.end_date
+                == end_date
+            )
+        )
+
+
+    published_duplicate = (
+        published_query.first()
+    )
+
+
+    if published_duplicate:
+
+        return {
+            "type": "published",
+            "record": published_duplicate,
+        }
+
+
+    return None
+
+
+@app.route(
+    "/jobs/submit",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def submit_job():
+
+    # =====================================================
+    # ACTIVE AREAS
+    # =====================================================
+
+    zones = (
+        Zone.query
+        .filter_by(
+            active=True
+        )
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+
+    # =====================================================
+    # PRESELECT AREA
+    # =====================================================
+
+    selected_zone_id = (
+        request.args.get(
+            "zone_id",
+            type=int,
+        )
+    )
+
+
+    selected_zone = None
+
+
+    if selected_zone_id:
+
+        selected_zone = (
+            db.session.get(
+                Zone,
+                selected_zone_id,
+            )
+        )
+
+
+        if (
+            not selected_zone
+            or not selected_zone.active
+        ):
+
+            selected_zone_id = None
+            selected_zone = None
+
+
+    # =====================================================
+    # RENDER HELPER
+    # =====================================================
+
+    def render_job_form(
+        status_code=200,
+    ):
+
+        return render_template(
+            "jobs_submit.html",
+
+            zones=
+                zones,
+
+            job_types=
+                KALXA_JOB_TYPES,
+
+            selected_zone_id=
+                selected_zone_id,
+
+            selected_zone=
+                selected_zone,
+
+        ), status_code
+
+
+    # =====================================================
+    # GET
+    # =====================================================
+
+    if request.method == "GET":
+
+        return render_job_form()
+
+
+    # =====================================================
+    # FORM DATA
+    # =====================================================
+
+    zone_id = (
+        request.form.get(
+            "zone_id",
+            type=int,
+        )
+    )
+
+
+    content_type = (
+        request.form.get(
+            "job_type",
+            "job",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    title = (
+        request.form.get(
+            "title",
+            "",
+        )
+        .strip()
+    )
+
+
+    business_name = (
+        request.form.get(
+            "business_name",
+            "",
+        )
+        .strip()
+    )
+
+
+    venue = (
+        request.form.get(
+            "venue",
+            "",
+        )
+        .strip()
+    )
+
+
+    description = (
+        request.form.get(
+            "description",
+            "",
+        )
+        .strip()
+    )
+
+
+    salary_text = (
+        request.form.get(
+            "salary_text",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    closing_date_raw = (
+        request.form.get(
+            "closing_date",
+            "",
+        )
+        .strip()
+    )
+
+
+    application_url = (
+        request.form.get(
+            "application_url",
+            "",
+        )
+        .strip()
+    )
+
+
+    application_email = (
+        request.form.get(
+            "application_email",
+            "",
+        )
+        .strip()
+    )
+
+
+    contact = (
+        request.form.get(
+            "contact",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    whatsapp_number = (
+        request.form.get(
+            "whatsapp_number",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    submitter_name = (
+        request.form.get(
+            "submitter_name",
+            "",
+        )
+        .strip()
+    )
+
+
+    submitter_email = (
+        request.form.get(
+            "submitter_email",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    submitter_phone = (
+        request.form.get(
+            "submitter_phone",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    # =====================================================
+    # VALIDATE AREA
+    # =====================================================
+
+    zone = (
+        db.session.get(
+            Zone,
+            zone_id,
+        )
+        if zone_id
+        else None
+    )
+
+
+    if (
+        not zone
+        or not zone.active
+    ):
+
+        flash(
+            "Please select a valid area.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    selected_zone_id = (
+        zone.id
+    )
+
+
+    selected_zone = (
+        zone
+    )
+
+
+    # =====================================================
+    # REQUIRED FIELDS
+    # =====================================================
+
+    if not title:
+
+        flash(
+            "Please enter the job title.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    if not business_name:
+
+        flash(
+            "Please enter the employer or organisation name.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    if not venue:
+
+        flash(
+            "Please enter the job location.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    if not description:
+
+        flash(
+            "Please describe the opportunity.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    if not submitter_name:
+
+        flash(
+            "Please enter your name.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    # =====================================================
+    # JOB TYPE
+    # =====================================================
+
+    if (
+        content_type
+        not in KALXA_JOB_TYPES
+    ):
+
+        flash(
+            "Please select a valid opportunity type.",
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    # =====================================================
+    # CLOSING DATE
+    # =====================================================
+
+    closing_date = None
+
+
+    if closing_date_raw:
+
+        try:
+
+            closing_date = (
+                datetime.strptime(
+                    closing_date_raw,
+                    "%Y-%m-%d",
+                )
+                .date()
+            )
+
+        except ValueError:
+
+            flash(
+                "Please enter a valid closing date.",
+                "error",
+            )
+
+            return render_job_form(
+                400
+            )
+
+
+        if (
+            closing_date
+            <
+            date.today()
+        ):
+
+            flash(
+                "The closing date cannot be in the past.",
+                "error",
+            )
+
+            return render_job_form(
+                400
+            )
+
+
+    # =====================================================
+    # APPLICATION METHOD
+    # =====================================================
+
+    public_application_url = (
+        build_job_application_url(
+            application_url=
+                application_url,
+
+            application_email=
+                application_email,
+
+            job_title=
+                title,
+        )
+    )
+
+
+    if (
+        not public_application_url
+        and
+        not contact
+        and
+        not whatsapp_number
+    ):
+
+        flash(
+            (
+                "Please provide at least one way "
+                "for people to apply: application link, "
+                "email, phone or WhatsApp."
+            ),
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    # =====================================================
+    # DUPLICATE PROTECTION
+    # =====================================================
+
+    duplicate = (
+        find_duplicate_job_submission(
+
+            zone_id=
+                zone.id,
+
+            title=
+                title,
+
+            business_name=
+                business_name,
+
+            venue=
+                venue,
+
+            end_date=
+                closing_date,
+        )
+    )
+
+
+    if duplicate:
+
+        if (
+            duplicate["type"]
+            == "pending"
+        ):
+
+            flash(
+                (
+                    "A very similar job opportunity is "
+                    "already waiting for Kalxa review."
+                ),
+                "error",
+            )
+
+        else:
+
+            flash(
+                (
+                    "A very similar job opportunity is "
+                    "already published on Kalxa."
+                ),
+                "error",
+            )
+
+
+        return render_job_form(
+            409
+        )
+
+
+    # =====================================================
+    # OPTIONAL JOB POSTER
+    # =====================================================
+
+    uploaded_image = (
+        request.files.get(
+            "image"
+        )
+    )
+
+
+    if (
+        uploaded_image
+        and uploaded_image.filename
+        and not allowed_image_file(
+            uploaded_image.filename
+        )
+    ):
+
+        flash(
+            (
+                "Job poster must be JPG, JPEG, PNG "
+                "or WebP."
+            ),
+            "error",
+        )
+
+        return render_job_form(
+            400
+        )
+
+
+    # =====================================================
+    # JOB LIFETIME
+    # =====================================================
+
+    if closing_date:
+
+        lifetime_type = (
+            "time_specific"
+        )
+
+    else:
+
+        lifetime_type = (
+            "until_unavailable"
+        )
+
+
+    # =====================================================
+    # CREATE FREE SUBMISSION
+    #
+    # IMPORTANT:
+    #
+    # pricing_model = None
+    # payment_status = waived
+    # amount_due = None
+    #
+    # Jobs submitted through this route never enter Yoco.
+    # =====================================================
+
+    submission = PendingSubmission(
+
+        organizer_id=
+            None,
+
+        zone_id=
+            zone.id,
+
+        category=
+            "jobs",
+
+        content_type=
+            content_type,
+
+        lifetime_type=
+            lifetime_type,
+
+        availability_status=
+            "available",
+
+        notification_eligible=
+            True,
+
+
+        # -------------------------------------------------
+        # JOB INFORMATION
+        # -------------------------------------------------
+
+        title=
+            title,
+
+        description=
+            description,
+
+        business_name=
+            business_name,
+
+        venue=
+            venue,
+
+        # Existing price field temporarily represents
+        # salary / compensation for Jobs.
+
+        price=
+            salary_text,
+
+
+        # -------------------------------------------------
+        # APPLICATION ACTIONS
+        # -------------------------------------------------
+
+        contact=
+            contact,
+
+        whatsapp_number=
+            whatsapp_number,
+
+        # Existing ticket_url is temporarily used as
+        # the external job application URL.
+
+        ticket_url=
+            public_application_url,
+
+
+        # -------------------------------------------------
+        # JOB DATES
+        # -------------------------------------------------
+
+        start_date=
+            None,
+
+        end_date=
+            closing_date,
+
+        start_time=
+            None,
+
+        end_time=
+            None,
+
+        publish_from=
+            None,
+
+        event_date=
+            None,
+
+        event_end_date=
+            None,
+
+
+        # -------------------------------------------------
+        # FREE JOB LISTING
+        # -------------------------------------------------
+
+        pricing_model=
+            None,
+
+        commercial_duration_days=
+            None,
+
+        amount_due=
+            None,
+
+        payment_status=
+            "waived",
+
+        distribution_zone_ids=
+            [],
+
+
+        # -------------------------------------------------
+        # SUBMITTER
+        # -------------------------------------------------
+
+        submitter_name=
+            submitter_name,
+
+        submitter_email=
+            submitter_email,
+
+        submitter_phone=
+            submitter_phone,
+
+
+        # -------------------------------------------------
+        # MODERATION
+        # -------------------------------------------------
+
+        status=
+            "pending",
+
+    )
+
+
+    # =====================================================
+    # SAVE
+    # =====================================================
+
+    try:
+
+        db.session.add(
+            submission
+        )
+
+        db.session.flush()
+
+
+        # =================================================
+        # OPTIONAL POSTER
+        # =================================================
+
+        if (
+            uploaded_image
+            and uploaded_image.filename
+        ):
+
+            image_url = (
+                upload_lac_image(
+                    uploaded_image,
+                    folder="lac/jobs",
+                )
+            )
+
+
+            if image_url:
+
+                submission.image_url = (
+                    image_url
+                )
+
+
+                submission_image = (
+                    PendingSubmissionImage(
+
+                        submission_id=
+                            submission.id,
+
+                        image_url=
+                            image_url,
+
+                        display_order=
+                            1,
+                    )
+                )
+
+
+                db.session.add(
+                    submission_image
+                )
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            "[Kalxa Jobs] "
+            "Unable to create free job submission "
+            "error=%s",
+            error,
+        )
+
+
+        flash(
+            (
+                "Kalxa could not submit this "
+                "opportunity right now. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+
+        return render_job_form(
+            500
+        )
+
+
+    # =====================================================
+    # SUCCESS
+    # =====================================================
+
+    current_app.logger.info(
+        "[Kalxa Jobs] "
+        "Free job submitted "
+        "submission_id=%s "
+        "zone_id=%s "
+        "type=%s",
+        submission.id,
+        submission.zone_id,
+        submission.content_type,
+    )
+
+
+    return redirect(
+        url_for(
+            "job_submission_success",
+            code=
+                submission.tracking_code,
+        )
+    )
+
+
+# ============================================================
+# FREE JOB SUBMISSION SUCCESS
+# ============================================================
+
+@app.route(
+    "/jobs/submit/success/<code>"
+)
+def job_submission_success(
+    code,
+):
+
+    submission = (
+        PendingSubmission.query
+        .filter_by(
+            tracking_code=code,
+            category="jobs",
+        )
+        .first_or_404()
+    )
+
+
+    return render_template(
+        "jobs_submit_success.html",
+
+        submission=
+            submission,
+    )
 
 # ============================================================
 # ORGANIZER AUTH HELPER
