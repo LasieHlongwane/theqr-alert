@@ -1,4 +1,4 @@
-```yaml
+
 name: Kalxa RSS Jobs Import
 
 on:
@@ -234,4 +234,4 @@ jobs:
           echo "KALXA RSS JOBS IMPORT COMPLETE"
           echo "========================================"
           echo "All configured feeds completed successfully."
-```
+
