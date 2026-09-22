@@ -1,0 +1,64 @@
+name: Kalxa RSS Jobs Import
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # Every 6 hours at minute 17.
+    # GitHub supports timezone-aware schedules.
+    - cron: "17 */6 * * *"
+      timezone: "Africa/Johannesburg"
+
+jobs:
+  import-rss-jobs:
+    name: Import RSS Jobs
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+
+    steps:
+      - name: Trigger Kalxa RSS importer
+        env:
+          KALXA_RSS_IMPORT_TOKEN: ${{ secrets.KALXA_RSS_IMPORT_TOKEN }}
+          KALXA_BASE_URL: ${{ vars.KALXA_BASE_URL }}
+        run: |
+          set -euo pipefail
+
+          BASE_URL="${KALXA_BASE_URL:-https://lac-local-access.onrender.com}"
+          BASE_URL="${BASE_URL%/}"
+
+          echo "========================================"
+          echo "KALXA RSS JOBS IMPORT"
+          echo "========================================"
+          echo "Target: ${BASE_URL}/internal/jobs/import/rss"
+          echo ""
+
+          RESPONSE_FILE="$(mktemp)"
+
+          HTTP_STATUS=$(curl \
+            --silent \
+            --show-error \
+            --location \
+            --output "$RESPONSE_FILE" \
+            --write-out "%{http_code}" \
+            --request POST \
+            --header "Authorization: Bearer ${KALXA_RSS_IMPORT_TOKEN}" \
+            --header "Accept: application/json" \
+            --header "User-Agent: Kalxa-GitHub-Actions-RSS-Importer/1.0" \
+            --max-time 120 \
+            "${BASE_URL}/internal/jobs/import/rss")
+
+          echo "HTTP status: ${HTTP_STATUS}"
+          echo ""
+          echo "Response:"
+          cat "$RESPONSE_FILE"
+          echo ""
+
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo ""
+            echo "Kalxa RSS import failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "Kalxa RSS import completed successfully."
