@@ -894,6 +894,1120 @@ def find_duplicate_job_submission(
     return None
 
 
+# ============================================================
+# KALXA JOBS - EXTERNAL INGESTION
+# ============================================================
+
+EXTERNAL_JOB_TYPE_MAP = {
+    "job": "job",
+    "full-time": "job",
+    "full_time": "job",
+    "part-time": "job",
+    "part_time": "job",
+    "permanent": "job",
+    "contract": "job",
+
+    "internship": "internship",
+    "intern": "internship",
+
+    "learnership": "learnership",
+
+    "training": "training",
+    "training opportunity": "training",
+
+    "tender": "tender",
+
+    "business opportunity": "business_opportunity",
+    "business_opportunity": "business_opportunity",
+}
+
+
+def normalize_external_job_type(
+    value,
+):
+    """
+    Convert external source job types into Kalxa's
+    supported Jobs content types.
+    """
+
+    value = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    return (
+        EXTERNAL_JOB_TYPE_MAP.get(
+            value,
+            "job",
+        )
+    )
+
+
+def parse_external_job_date(
+    value,
+):
+    """
+    Accept common external date formats.
+
+    Examples:
+
+        2026-09-30
+        2026-09-30T23:59:59
+        2026-09-30T23:59:59Z
+
+    Returns:
+        datetime.date | None
+    """
+
+    value = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not value:
+        return None
+
+
+    # --------------------------------------------------------
+    # YYYY-MM-DD
+    # --------------------------------------------------------
+
+    try:
+
+        return datetime.strptime(
+            value[:10],
+            "%Y-%m-%d",
+        ).date()
+
+    except ValueError:
+
+        return None
+
+
+def get_external_job_value(
+    payload,
+    *keys,
+):
+    """
+    Return the first useful value found among several
+    possible external API field names.
+    """
+
+    for key in keys:
+
+        value = payload.get(
+            key
+        )
+
+
+        if value not in (
+            None,
+            "",
+            [],
+            {},
+        ):
+
+            return value
+
+
+    return None
+
+
+def normalize_external_job(
+    payload,
+):
+    """
+    Convert different external job JSON structures into
+    one Kalxa Jobs structure.
+
+    External providers often use different names:
+
+        company
+        company_name
+        employer
+
+    This helper gives Kalxa one common format.
+    """
+
+    title = (
+        get_external_job_value(
+            payload,
+            "title",
+            "job_title",
+            "position",
+            "name",
+        )
+    )
+
+
+    business_name = (
+        get_external_job_value(
+            payload,
+            "company",
+            "company_name",
+            "employer",
+            "organisation",
+            "organization",
+        )
+    )
+
+
+    venue = (
+        get_external_job_value(
+            payload,
+            "location",
+            "venue",
+            "city",
+            "area",
+        )
+    )
+
+
+    description = (
+        get_external_job_value(
+            payload,
+            "description",
+            "summary",
+            "job_description",
+            "details",
+        )
+    )
+
+
+    application_url = (
+        get_external_job_value(
+            payload,
+            "application_url",
+            "apply_url",
+            "apply_link",
+            "url",
+            "job_url",
+        )
+    )
+
+
+    application_email = (
+        get_external_job_value(
+            payload,
+            "application_email",
+            "apply_email",
+            "email",
+        )
+    )
+
+
+    salary_text = (
+        get_external_job_value(
+            payload,
+            "salary",
+            "salary_text",
+            "compensation",
+        )
+    )
+
+
+    closing_date = (
+        parse_external_job_date(
+            get_external_job_value(
+                payload,
+                "closing_date",
+                "deadline",
+                "application_deadline",
+                "end_date",
+            )
+        )
+    )
+
+
+    content_type = (
+        normalize_external_job_type(
+            get_external_job_value(
+                payload,
+                "job_type",
+                "type",
+                "employment_type",
+                "opportunity_type",
+            )
+        )
+    )
+
+
+    external_id = (
+        get_external_job_value(
+            payload,
+            "id",
+            "job_id",
+            "external_id",
+            "reference",
+        )
+    )
+
+
+    return {
+        "title":
+            str(title or "").strip(),
+
+        "business_name":
+            str(
+                business_name
+                or ""
+            ).strip(),
+
+        "venue":
+            str(
+                venue
+                or ""
+            ).strip(),
+
+        "description":
+            str(
+                description
+                or ""
+            ).strip(),
+
+        "application_url":
+            str(
+                application_url
+                or ""
+            ).strip(),
+
+        "application_email":
+            str(
+                application_email
+                or ""
+            ).strip(),
+
+        "salary_text":
+            (
+                str(
+                    salary_text
+                ).strip()
+                if salary_text
+                else None
+            ),
+
+        "closing_date":
+            closing_date,
+
+        "content_type":
+            content_type,
+
+        "external_id":
+            (
+                str(
+                    external_id
+                ).strip()
+                if external_id
+                else None
+            ),
+    }
+
+
+def extract_external_jobs(
+    payload,
+):
+    """
+    Support common JSON feed shapes.
+
+    Examples:
+
+        [
+            {...},
+            {...}
+        ]
+
+    or
+
+        {
+            "jobs": [...]
+        }
+
+    or
+
+        {
+            "results": [...]
+        }
+
+    or
+
+        {
+            "data": [...]
+        }
+    """
+
+    if isinstance(
+        payload,
+        list,
+    ):
+
+        return payload
+
+
+    if not isinstance(
+        payload,
+        dict,
+    ):
+
+        return []
+
+
+    for key in (
+        "jobs",
+        "results",
+        "data",
+        "items",
+    ):
+
+        jobs = payload.get(
+            key
+        )
+
+
+        if isinstance(
+            jobs,
+            list,
+        ):
+
+            return jobs
+
+
+    return []
+
+
+def fetch_external_jobs():
+    """
+    Fetch jobs from the configured external JSON feed.
+    """
+
+    feed_url = (
+        os.environ.get(
+            "KALXA_EXTERNAL_JOBS_URL",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not feed_url:
+
+        raise RuntimeError(
+            "KALXA_EXTERNAL_JOBS_URL is not configured."
+        )
+
+
+    headers = {
+        "Accept":
+            "application/json",
+
+        "User-Agent":
+            "Kalxa-Jobs-Importer/1.0",
+    }
+
+
+    # --------------------------------------------------------
+    # OPTIONAL EXTERNAL API KEY
+    # --------------------------------------------------------
+
+    api_key = (
+        os.environ.get(
+            "KALXA_EXTERNAL_JOBS_API_KEY",
+            "",
+        )
+        .strip()
+    )
+
+
+    if api_key:
+
+        headers[
+            "Authorization"
+        ] = (
+            f"Bearer {api_key}"
+        )
+
+
+    response = requests.get(
+        feed_url,
+        headers=headers,
+        timeout=20,
+    )
+
+
+    response.raise_for_status()
+
+
+    payload = response.json()
+
+
+    return extract_external_jobs(
+        payload
+    )
+
+
+# ============================================================
+# INTERNAL EXTERNAL JOB IMPORT ROUTE
+# ============================================================
+
+@app.route(
+    "/internal/jobs/import",
+    methods=[
+        "POST",
+    ],
+)
+def import_external_jobs():
+
+    # =====================================================
+    # AUTHENTICATION
+    # =====================================================
+
+    expected_token = (
+        os.environ.get(
+            "KALXA_EXTERNAL_JOBS_IMPORT_TOKEN",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not expected_token:
+
+        current_app.logger.error(
+            "[Kalxa Jobs Import] "
+            "Import token is not configured."
+        )
+
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "External Jobs importer is not configured.",
+        }), 503
+
+
+    authorization = (
+        request.headers.get(
+            "Authorization",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not authorization.startswith(
+        "Bearer "
+    ):
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "Unauthorized.",
+        }), 401
+
+
+    supplied_token = (
+        authorization[
+            len("Bearer "):
+        ]
+        .strip()
+    )
+
+
+    if (
+        not supplied_token
+        or not secrets.compare_digest(
+            supplied_token,
+            expected_token,
+        )
+    ):
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "Unauthorized.",
+        }), 401
+
+
+    # =====================================================
+    # DEFAULT KALXA ZONE
+    # =====================================================
+
+    raw_zone_id = (
+        os.environ.get(
+            "KALXA_EXTERNAL_JOBS_ZONE_ID",
+            "",
+        )
+        .strip()
+    )
+
+
+    try:
+
+        zone_id = int(
+            raw_zone_id
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "KALXA_EXTERNAL_JOBS_ZONE_ID is invalid.",
+        }), 503
+
+
+    zone = (
+        db.session.get(
+            Zone,
+            zone_id,
+        )
+    )
+
+
+    if (
+        not zone
+        or not zone.active
+    ):
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "Configured Kalxa Jobs zone is unavailable.",
+        }), 503
+
+
+    # =====================================================
+    # FETCH EXTERNAL JOBS
+    # =====================================================
+
+    try:
+
+        external_jobs = (
+            fetch_external_jobs()
+        )
+
+
+    except requests.RequestException as exc:
+
+        current_app.logger.exception(
+            "[Kalxa Jobs Import] "
+            "External request failed: %s",
+            exc,
+        )
+
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "Unable to fetch external jobs.",
+        }), 502
+
+
+    except ValueError as exc:
+
+        current_app.logger.exception(
+            "[Kalxa Jobs Import] "
+            "External source returned invalid JSON: %s",
+            exc,
+        )
+
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "External job source returned invalid JSON.",
+        }), 502
+
+
+    except Exception as exc:
+
+        current_app.logger.exception(
+            "[Kalxa Jobs Import] "
+            "Import failed before processing: %s",
+            exc,
+        )
+
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "External job import failed.",
+        }), 500
+
+
+    # =====================================================
+    # COUNTERS
+    # =====================================================
+
+    fetched_count = len(
+        external_jobs
+    )
+
+    created_count = 0
+
+    duplicate_count = 0
+
+    invalid_count = 0
+
+    expired_count = 0
+
+
+    today = (
+        datetime.now(
+            KALXA_TIMEZONE
+        )
+        .date()
+    )
+
+
+    # =====================================================
+    # PROCESS JOBS
+    # =====================================================
+
+    for raw_job in external_jobs:
+
+        if not isinstance(
+            raw_job,
+            dict,
+        ):
+
+            invalid_count += 1
+
+            continue
+
+
+        job = (
+            normalize_external_job(
+                raw_job
+            )
+        )
+
+
+        # =================================================
+        # REQUIRED DATA
+        # =================================================
+
+        if (
+            not job["title"]
+            or
+            not job["business_name"]
+            or
+            not job["venue"]
+            or
+            not job["description"]
+        ):
+
+            invalid_count += 1
+
+            continue
+
+
+        # =================================================
+        # APPLICATION METHOD
+        # =================================================
+
+        application_url = (
+            build_job_application_url(
+
+                application_url=
+                    job[
+                        "application_url"
+                    ],
+
+                application_email=
+                    job[
+                        "application_email"
+                    ],
+
+                job_title=
+                    job[
+                        "title"
+                    ],
+            )
+        )
+
+
+        if not application_url:
+
+            invalid_count += 1
+
+            continue
+
+
+        # =================================================
+        # EXPIRED JOB
+        # =================================================
+
+        closing_date = (
+            job[
+                "closing_date"
+            ]
+        )
+
+
+        if (
+            closing_date
+            and
+            closing_date < today
+        ):
+
+            expired_count += 1
+
+            continue
+
+
+        # =================================================
+        # DUPLICATE CHECK
+        # =================================================
+
+        duplicate = (
+            find_duplicate_job_submission(
+
+                zone_id=
+                    zone.id,
+
+                title=
+                    job[
+                        "title"
+                    ],
+
+                business_name=
+                    job[
+                        "business_name"
+                    ],
+
+                venue=
+                    job[
+                        "venue"
+                    ],
+
+                end_date=
+                    closing_date,
+            )
+        )
+
+
+        if duplicate:
+
+            duplicate_count += 1
+
+            continue
+
+
+        # =================================================
+        # LIFETIME
+        # =================================================
+
+        if closing_date:
+
+            lifetime_type = (
+                "time_specific"
+            )
+
+        else:
+
+            lifetime_type = (
+                "until_unavailable"
+            )
+
+
+        # =================================================
+        # SOURCE INFORMATION
+        # =================================================
+
+        external_reference = (
+            job[
+                "external_id"
+            ]
+        )
+
+
+        source_note = (
+            "Imported from an external jobs feed."
+        )
+
+
+        if external_reference:
+
+            source_note += (
+                " External reference: "
+                f"{external_reference}."
+            )
+
+
+        description = (
+            job[
+                "description"
+            ]
+        )
+
+
+        # =================================================
+        # CREATE PENDING SUBMISSION
+        # =================================================
+
+        submission = (
+            PendingSubmission(
+
+                organizer_id=
+                    None,
+
+                zone_id=
+                    zone.id,
+
+                category=
+                    "jobs",
+
+                content_type=
+                    job[
+                        "content_type"
+                    ],
+
+                lifetime_type=
+                    lifetime_type,
+
+                availability_status=
+                    "available",
+
+                notification_eligible=
+                    True,
+
+
+                # -----------------------------------------
+                # LISTING
+                # -----------------------------------------
+
+                title=
+                    job[
+                        "title"
+                    ],
+
+                description=
+                    description,
+
+                business_name=
+                    job[
+                        "business_name"
+                    ],
+
+                venue=
+                    job[
+                        "venue"
+                    ],
+
+                price=
+                    job[
+                        "salary_text"
+                    ],
+
+
+                # -----------------------------------------
+                # APPLICATION
+                # -----------------------------------------
+
+                ticket_url=
+                    application_url,
+
+
+                # -----------------------------------------
+                # DATE
+                # -----------------------------------------
+
+                start_date=
+                    None,
+
+                end_date=
+                    closing_date,
+
+                start_time=
+                    None,
+
+                end_time=
+                    None,
+
+                publish_from=
+                    None,
+
+                event_date=
+                    None,
+
+                event_end_date=
+                    None,
+
+
+                # -----------------------------------------
+                # FREE JOBS
+                # -----------------------------------------
+
+                pricing_model=
+                    None,
+
+                commercial_duration_days=
+                    None,
+
+                amount_due=
+                    None,
+
+                payment_status=
+                    "waived",
+
+                distribution_zone_ids=
+                    [],
+
+
+                # -----------------------------------------
+                # IMPORT IDENTITY
+                # -----------------------------------------
+
+                submitter_name=
+                    "Kalxa External Jobs Import",
+
+                submitter_email=
+                    None,
+
+                submitter_phone=
+                    None,
+
+
+                # -----------------------------------------
+                # MODERATION
+                # -----------------------------------------
+
+                status=
+                    "pending",
+
+                admin_notes=
+                    source_note,
+            )
+        )
+
+
+        if not submission.tracking_code:
+
+            submission.tracking_code = (
+                uuid.uuid4()
+                .hex[:12]
+                .upper()
+            )
+
+
+        db.session.add(
+            submission
+        )
+
+
+        created_count += 1
+
+
+    # =====================================================
+    # COMMIT BATCH
+    # =====================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            "[Kalxa Jobs Import] "
+            "Unable to save imported jobs: %s",
+            exc,
+        )
+
+
+        return jsonify({
+            "success":
+                False,
+
+            "message":
+                "Imported jobs could not be saved.",
+        }), 500
+
+
+    # =====================================================
+    # RESULT
+    # =====================================================
+
+    current_app.logger.info(
+        "[Kalxa Jobs Import] "
+        "fetched=%s created=%s duplicates=%s "
+        "invalid=%s expired=%s zone_id=%s",
+        fetched_count,
+        created_count,
+        duplicate_count,
+        invalid_count,
+        expired_count,
+        zone.id,
+    )
+
+
+    return jsonify({
+
+        "success":
+            True,
+
+        "zone_id":
+            zone.id,
+
+        "zone_name":
+            zone.name,
+
+        "fetched":
+            fetched_count,
+
+        "created":
+            created_count,
+
+        "duplicates":
+            duplicate_count,
+
+        "invalid":
+            invalid_count,
+
+        "expired":
+            expired_count,
+
+        "message":
+            (
+                f"{created_count} external job(s) "
+                "were added to Kalxa moderation."
+            ),
+
+    }), 200
+
+
 @app.route("/jobs/submit", methods=["GET", "POST"])
 def submit_job():
     zones = (
