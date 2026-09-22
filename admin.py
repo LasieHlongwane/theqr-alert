@@ -1416,7 +1416,77 @@ def _configure_commercial_content(
 ):
 
     # =====================================================
-    # GET WORKFLOW
+    # CANONICAL CATEGORY
+    # =====================================================
+
+    canonical_category = (
+        normalize_category(
+            category
+        )
+    )
+
+
+    # =====================================================
+    # FREE KALXA JOBS
+    # =====================================================
+    #
+    # Jobs are a free community-discovery category.
+    #
+    # They must never require:
+    #
+    # - commercial duration
+    # - payment
+    # - multi-zone package
+    # - Yoco
+    #
+    # =====================================================
+
+    if (
+        canonical_category
+        == "jobs"
+    ):
+
+        item.pricing_model = (
+            None
+        )
+
+        item.commercial_duration_days = (
+            None
+        )
+
+        item.commercial_starts_at = (
+            None
+        )
+
+        item.commercial_expires_at = (
+            None
+        )
+
+        item.payment_status = (
+            "waived"
+        )
+
+        item.amount_due = (
+            None
+        )
+
+        item.amount_paid = (
+            None
+        )
+
+        item.payment_reference = (
+            None
+        )
+
+        item.paid_at = (
+            None
+        )
+
+        return []
+
+
+    # =====================================================
+    # GET NORMAL COMMERCIAL WORKFLOW
     # =====================================================
 
     workflow = (
@@ -1435,20 +1505,46 @@ def _configure_commercial_content(
 
 
     # =====================================================
-    # NON-COMMERCIAL / UNMAPPED CONTENT
+    # NON-COMMERCIAL CONTENT
     # =====================================================
 
     if not pricing_model:
 
-        item.pricing_model = None
+        item.pricing_model = (
+            None
+        )
 
-        item.commercial_duration_days = None
+        item.commercial_duration_days = (
+            None
+        )
 
-        item.commercial_starts_at = None
+        item.commercial_starts_at = (
+            None
+        )
 
-        item.commercial_expires_at = None
+        item.commercial_expires_at = (
+            None
+        )
 
-        item.amount_due = None
+        item.payment_status = (
+            "waived"
+        )
+
+        item.amount_due = (
+            None
+        )
+
+        item.amount_paid = (
+            None
+        )
+
+        item.payment_reference = (
+            None
+        )
+
+        item.paid_at = (
+            None
+        )
 
         return []
 
@@ -1497,15 +1593,10 @@ def _configure_commercial_content(
 
 
     allowed_payment_statuses = {
-
         "unpaid",
-
         "paid",
-
         "waived",
-
         "refunded",
-
     }
 
 
@@ -1520,7 +1611,7 @@ def _configure_commercial_content(
 
 
     # =====================================================
-    # DISTRIBUTION REACH
+    # DISTRIBUTION
     # =====================================================
 
     distribution_zone_ids = []
@@ -1561,10 +1652,6 @@ def _configure_commercial_content(
             )
 
 
-        # ---------------------------------------------
-        # Confirm all selected zone IDs really exist.
-        # ---------------------------------------------
-
         existing_zone_ids = {
 
             zone.id
@@ -1578,7 +1665,6 @@ def _configure_commercial_content(
                 )
                 .all()
             )
-
         }
 
 
@@ -1586,45 +1672,43 @@ def _configure_commercial_content(
             len(
                 existing_zone_ids
             )
-            != len(
+            !=
+            len(
                 distribution_zone_ids
             )
         ):
 
             raise ValueError(
-                "One or more selected campaign zones are invalid."
+                (
+                    "One or more selected campaign "
+                    "zones are invalid."
+                )
             )
 
 
-        zone_count = len(
-            distribution_zone_ids
+        zone_count = (
+            len(
+                distribution_zone_ids
+            )
         )
 
 
     else:
 
-        # =================================================
-        # PRESENCE
-        #
-        # Presence pricing is based only on duration.
-        # No purchased multi-zone reach.
-        # =================================================
+        zone_count = 1
 
         distribution_zone_ids = []
 
-        zone_count = 1
-
 
     # =====================================================
-    # SERVER-SIDE PRICE CALCULATION
-    #
-    # NEVER trust displayed_amount_due from the browser.
+    # PRICE
     # =====================================================
 
     try:
 
         amount_due = (
             calculate_kalxa_price(
+
                 pricing_model=
                     pricing_model,
 
@@ -1646,29 +1730,18 @@ def _configure_commercial_content(
 
 
     # =====================================================
-    # COMMERCIAL DATES
+    # COMMERCIAL ACTIVATION
     # =====================================================
 
-    now = datetime.utcnow()
+    now = (
+        datetime.utcnow()
+    )
 
 
     commercial_starts_at = None
 
     commercial_expires_at = None
 
-
-    # =====================================================
-    # ACTIVATE COMMERCIAL PERIOD ONLY WHEN AUTHORIZED
-    #
-    # paid:
-    #     Customer paid.
-    #
-    # waived:
-    #     Kalxa intentionally grants access.
-    #
-    # unpaid/refunded:
-    #     Do not start purchased visibility.
-    # =====================================================
 
     if (
         payment_status
@@ -1685,45 +1758,40 @@ def _configure_commercial_content(
 
         commercial_expires_at = (
             now
-            + timedelta(
+            +
+            timedelta(
                 days=duration_days
             )
         )
 
 
     # =====================================================
-    # SAVE COMMERCIAL VALUES
+    # STORE
     # =====================================================
 
     item.pricing_model = (
         pricing_model
     )
 
-
     item.commercial_duration_days = (
         duration_days
     )
-
 
     item.commercial_starts_at = (
         commercial_starts_at
     )
 
-
     item.commercial_expires_at = (
         commercial_expires_at
     )
-
 
     item.payment_status = (
         payment_status
     )
 
-
     item.amount_due = (
         amount_due
     )
-
 
     item.payment_reference = (
         request.form.get(
@@ -1735,10 +1803,6 @@ def _configure_commercial_content(
     )
 
 
-    # =====================================================
-    # AMOUNT PAID / PAID AT
-    # =====================================================
-
     if (
         payment_status
         == "paid"
@@ -1748,7 +1812,6 @@ def _configure_commercial_content(
             amount_due
         )
 
-
         item.paid_at = (
             now
         )
@@ -1756,16 +1819,14 @@ def _configure_commercial_content(
 
     else:
 
-        item.amount_paid = None
+        item.amount_paid = (
+            None
+        )
 
-        item.paid_at = None
+        item.paid_at = (
+            None
+        )
 
-
-    # =====================================================
-    # RETURN DISTRIBUTION IDS
-    #
-    # The ContentItem must first be flushed so it has an ID.
-    # =====================================================
 
     return distribution_zone_ids
 
