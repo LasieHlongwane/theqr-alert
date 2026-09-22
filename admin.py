@@ -5787,6 +5787,8 @@ def analytics():
 
         "share_click",
 
+        "job_apply_click",
+
     }
 
 
