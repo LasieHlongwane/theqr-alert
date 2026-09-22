@@ -124,6 +124,7 @@ ENGAGEMENT_EVENT_TYPES = {
     "call_click",
     "share_click",
     "directions_click",
+    "job_apply_click",
 }
 
 # =========================================================
