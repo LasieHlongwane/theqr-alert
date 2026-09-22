@@ -1,15 +1,14 @@
 import os
 import io
 
-from image_utils import (
-    upload_lac_image,
+from datetime import (
+    date,
+    datetime,
+    timedelta,
 )
-from datetime import date, datetime, timedelta
-from push_service import (
-    send_zone_push_notification,
-)
+
 import qrcode
-from app import upload_lac_image
+
 from flask import (
     Blueprint,
     flash,
@@ -22,15 +21,28 @@ from flask import (
     current_app,
 )
 
+from sqlalchemy import (
+    func,
+    case,
+)
+
+from image_utils import (
+    upload_lac_image,
+)
+
+from push_service import (
+    send_zone_push_notification,
+)
+
 from categories import (
     normalize_category,
     get_category_aliases,
     get_consumer_category,
 )
 
-from sqlalchemy import func
-
-from cloud_storage import upload_listing_image
+from cloud_storage import (
+    upload_listing_image,
+)
 
 from pricing import (
     calculate_kalxa_price,
@@ -39,7 +51,9 @@ from pricing import (
     KalxaPricingError,
     PRICING_MODEL_PRESENCE,
     PRICING_MODEL_CAMPAIGN,
+    get_pricing_model,
 )
+
 from models import (
     db,
     Zone,
@@ -57,6 +71,10 @@ from models import (
     EngagementEvent,
     ContentDistributionZone,
     ContentReminder,
+)
+
+from qr_generator import (
+    generate_access_qr,
 )
 ONGOING_CATEGORIES = {
     "property",
