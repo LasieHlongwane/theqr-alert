@@ -2025,258 +2025,172 @@ def get_job_feed_configs():
 # FETCH ONE RSS / ATOM FEED
 # ============================================================
 
-def fetch_job_feed(
-    feed_config,
-):
+def fetch_job_feed(feed_config):
     """
     Download and parse one configured RSS/Atom feed.
 
-    Kalxa's own test feed is generated internally so the
-    Render web service never makes an HTTP request back to
-    itself.
+    Kalxa's own test feed is generated internally, so the Render web
+    service never makes an HTTP request back to itself.
 
     Real external feeds continue to use requests.get().
     """
 
-    feed_url = (
-        str(
-            feed_config.get(
-                "url",
-                "",
-            )
-            or ""
-        )
-        .strip()
-    )
+    # ========================================================
+    # FEED URL
+    # ========================================================
 
+    feed_url = str(
+        feed_config.get("url", "") or ""
+    ).strip()
 
     if not feed_url:
-
-        raise ValueError(
-            "RSS/Atom feed URL is missing."
-        )
-
+        raise ValueError("RSS/Atom feed URL is missing.")
 
     # ========================================================
     # ZONE
     # ========================================================
 
     try:
-
-        zone_id = int(
-            feed_config.get(
-                "zone_id"
-            )
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
+        zone_id = int(feed_config.get("zone_id"))
+    except (TypeError, ValueError) as exc:
         raise ValueError(
             "RSS/Atom feed zone_id is invalid."
+        ) from exc
+
+    zone = db.session.get(Zone, zone_id)
+
+    if not zone or not zone.active:
+        raise ValueError(
+            "Configured Kalxa zone does not exist or is inactive: "
+            f"{zone_id}"
         )
 
+    # ========================================================
+    # CLEAN FEED URL
+    #
+    # Remove query parameters and trailing slashes so Kalxa's
+    # test-feed detection remains reliable.
+    # ========================================================
 
-    zone = (
-        db.session.get(
-            Zone,
-            zone_id,
-        )
+    clean_feed_url = feed_url.split("?", 1)[0].rstrip("/")
+
+    # ========================================================
+    # DEBUG
+    #
+    # These logs help confirm exactly what Render receives from
+    # KALXA_JOB_FEEDS_JSON.
+    # ========================================================
+
+    current_app.logger.info(
+        "[Kalxa RSS DEBUG] raw feed_url=%r",
+        feed_url,
     )
 
+    current_app.logger.info(
+        "[Kalxa RSS DEBUG] clean_feed_url=%r",
+        clean_feed_url,
+    )
 
-    if (
-        not zone
-        or not zone.active
-    ):
+    test_feed_path = "/test/jobs-feed.xml"
 
-        raise ValueError(
-            (
-                "Configured Kalxa zone does not "
-                f"exist or is inactive: {zone_id}"
-            )
-        )
+    is_internal_test_feed = clean_feed_url.endswith(test_feed_path)
 
+    current_app.logger.info(
+        "[Kalxa RSS DEBUG] test_match=%s",
+        is_internal_test_feed,
+    )
 
     # ========================================================
     # KALXA INTERNAL TEST FEED
     #
-    # IMPORTANT:
-    #
-    # Do NOT call:
-    #
-    # https://lac-local-access.onrender.com/test/jobs-feed.xml
-    #
-    # through requests.get() from the same Render service.
-    #
-    # On a single-worker deployment the current POST request
-    # can occupy the only worker, causing the GET request to
-    # wait until the POST times out.
+    # Do not call the Render service through requests.get().
+    # On a single-worker deployment, the current POST request can
+    # occupy the only worker and cause the internal GET request to
+    # wait until the POST request times out.
     # ========================================================
 
-    clean_feed_url = (
-        feed_url
-        .split(
-            "?",
-            1,
-        )[0]
-        .rstrip("/")
-    )
+    if is_internal_test_feed:
+        current_app.logger.info(
+            "[Kalxa RSS Jobs] "
+            "Using internally generated test feed. "
+            "No HTTP self-request will be made."
+        )
 
+        xml_content = build_test_jobs_rss_xml().encode("utf-8")
 
-    if clean_feed_url.endswith(
-        "/test/jobs-feed.xml"
-    ):
+        entries = parse_job_feed_xml(
+            xml_content=xml_content,
+            feed_url=feed_url,
+            default_employer=feed_config.get("employer"),
+            default_location=zone.name,
+        )
 
         current_app.logger.info(
-            (
-                "[Kalxa RSS Jobs] "
-                "Using internally generated test feed. "
-                "No HTTP self-request will be made."
-            )
+            "[Kalxa RSS Jobs] Internal test feed parsed. entries=%s",
+            len(entries),
         )
 
-
-        xml_content = (
-            build_test_jobs_rss_xml()
-            .encode(
-                "utf-8"
-            )
-        )
-
-
-        entries = (
-            parse_job_feed_xml(
-
-                xml_content=
-                    xml_content,
-
-                feed_url=
-                    feed_url,
-
-                default_employer=
-                    feed_config.get(
-                        "employer"
-                    ),
-
-                default_location=
-                    zone.name,
-            )
-        )
-
-
-        current_app.logger.info(
-            (
-                "[Kalxa RSS Jobs] "
-                "Internal test feed parsed. "
-                "entries=%s"
-            ),
-            len(
-                entries
-            ),
-        )
-
-
-        return (
-            zone,
-            entries,
-        )
-
+        return zone, entries
 
     # ========================================================
     # REAL EXTERNAL RSS / ATOM FEED
     # ========================================================
 
     current_app.logger.info(
-        (
-            "[Kalxa RSS Jobs] "
-            "Fetching external feed: %s"
-        ),
+        "[Kalxa RSS Jobs] Fetching external feed: %s",
         feed_url,
     )
 
-
     headers = {
-
-        "Accept":
-            (
-                "application/rss+xml, "
-                "application/atom+xml, "
-                "application/xml, "
-                "text/xml, "
-                "*/*"
-            ),
-
-        "User-Agent":
-            "Kalxa-Jobs-RSS-Importer/1.0",
+        "Accept": (
+            "application/rss+xml, "
+            "application/atom+xml, "
+            "application/xml, "
+            "text/xml, "
+            "*/*"
+        ),
+        "User-Agent": "Kalxa-Jobs-RSS-Importer/1.0",
     }
 
-
     try:
-
         response = requests.get(
             feed_url,
             headers=headers,
             timeout=20,
         )
-
-
         response.raise_for_status()
 
-
     except requests.RequestException as exc:
+        current_app.logger.exception(
+            "[Kalxa RSS Jobs] "
+            "Unable to fetch external feed. url=%s error=%s",
+            feed_url,
+            exc,
+        )
 
         raise ValueError(
-            (
-                "Unable to fetch RSS/Atom feed "
-                f"{feed_url}: {exc}"
-            )
+            f"Unable to fetch RSS/Atom feed {feed_url}: {exc}"
         ) from exc
-
 
     # ========================================================
     # PARSE EXTERNAL FEED
     # ========================================================
 
-    entries = (
-        parse_job_feed_xml(
-
-            xml_content=
-                response.content,
-
-            feed_url=
-                feed_url,
-
-            default_employer=
-                feed_config.get(
-                    "employer"
-                ),
-
-            default_location=
-                zone.name,
-        )
+    entries = parse_job_feed_xml(
+        xml_content=response.content,
+        feed_url=feed_url,
+        default_employer=feed_config.get("employer"),
+        default_location=zone.name,
     )
-
 
     current_app.logger.info(
-        (
-            "[Kalxa RSS Jobs] "
-            "External feed parsed. "
-            "url=%s entries=%s"
-        ),
+        "[Kalxa RSS Jobs] External feed parsed. url=%s entries=%s",
         feed_url,
-        len(
-            entries
-        ),
+        len(entries),
     )
 
+    return zone, entries
 
-    return (
-        zone,
-        entries,
-    )
 # ============================================================
 # APPLICATION URL DUPLICATE CHECK
 # ============================================================
