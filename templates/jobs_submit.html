@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 
 <html lang="en">
@@ -74,6 +75,14 @@
         }
 
 
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+
         .jobs-page {
             width:
                 min(
@@ -89,6 +98,10 @@
                 70px;
         }
 
+
+        /* =====================================================
+           NAV
+        ===================================================== */
 
         .jobs-nav {
             display: flex;
@@ -118,15 +131,27 @@
                     255,
                     244,
                     223,
-                    .70
+                    .72
                 );
 
             font-size: 11px;
             font-weight: 850;
 
             text-decoration: none;
+
+            transition:
+                color .16s ease;
         }
 
+
+        .jobs-back:hover {
+            color: #fff4df;
+        }
+
+
+        /* =====================================================
+           HERO
+        ===================================================== */
 
         .jobs-hero {
             padding:
@@ -183,7 +208,7 @@
                     255,
                     255,
                     255,
-                    .66
+                    .68
                 );
 
             font-size: 12px;
@@ -195,6 +220,8 @@
             display: inline-flex;
 
             align-items: center;
+
+            gap: 5px;
 
             margin-top: 15px;
 
@@ -215,6 +242,10 @@
             text-transform: uppercase;
         }
 
+
+        /* =====================================================
+           CARD
+        ===================================================== */
 
         .jobs-card {
             overflow: hidden;
@@ -277,8 +308,13 @@
             color: #74716a;
 
             font-size: 10px;
+            line-height: 1.5;
         }
 
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
 
         .flash-stack {
             display: grid;
@@ -294,19 +330,58 @@
             padding:
                 11px 12px;
 
+            border-radius: 11px;
+
+            font-size: 10px;
+            font-weight: 800;
+
+            line-height: 1.5;
+        }
+
+
+        .flash-error {
             background: #f9eded;
 
             color: #883b3b;
 
             border:
                 1px solid #efd1d1;
-
-            border-radius: 11px;
-
-            font-size: 10px;
-            font-weight: 750;
         }
 
+
+        .flash-success {
+            background: #edf7f0;
+
+            color: #285f3f;
+
+            border:
+                1px solid #cfe7d6;
+        }
+
+
+        .flash-info {
+            background: #eef3f8;
+
+            color: #3f596f;
+
+            border:
+                1px solid #d7e2eb;
+        }
+
+
+        .flash-warning {
+            background: #fff7e8;
+
+            color: #74521d;
+
+            border:
+                1px solid #f0dfbc;
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
 
         .jobs-form {
             display: grid;
@@ -421,6 +496,11 @@
             font-size: 11px;
 
             outline: none;
+
+            transition:
+                border-color .16s ease,
+                background .16s ease,
+                box-shadow .16s ease;
         }
 
 
@@ -439,6 +519,15 @@
             background: #ffffff;
 
             border-color: #888e96;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    80,
+                    88,
+                    98,
+                    .07
+                );
         }
 
 
@@ -453,6 +542,116 @@
             line-height: 1.45;
         }
 
+
+        /* =====================================================
+           APPLICATION VALIDATION
+        ===================================================== */
+
+        .application-error {
+            display: none;
+
+            grid-column:
+                1 / -1;
+
+            padding:
+                10px 12px;
+
+            background: #f9eded;
+
+            color: #883b3b;
+
+            border:
+                1px solid #efd1d1;
+
+            border-radius: 10px;
+
+            font-size: 9px;
+            font-weight: 800;
+
+            line-height: 1.45;
+        }
+
+
+        .application-error.visible {
+            display: block;
+        }
+
+
+        /* =====================================================
+           POSTER PREVIEW
+        ===================================================== */
+
+        .poster-preview {
+            display: none;
+
+            margin-top: 12px;
+
+            padding: 10px;
+
+            background: #f6f7f8;
+
+            border:
+                1px solid #e0e2e5;
+
+            border-radius: 13px;
+        }
+
+
+        .poster-preview.visible {
+            display: block;
+        }
+
+
+        .poster-preview img {
+            width: 100%;
+            max-height: 360px;
+
+            display: block;
+
+            object-fit: contain;
+
+            background: #e9ebed;
+
+            border-radius: 10px;
+        }
+
+
+        .poster-preview-meta {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 10px;
+
+            margin-top: 8px;
+
+            color: #777c84;
+
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+
+        .poster-remove {
+            padding: 0;
+
+            background: transparent;
+
+            color: #8a3f3f;
+
+            border: 0;
+
+            font-size: 8px;
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+
+        /* =====================================================
+           FREE INFO
+        ===================================================== */
 
         .free-info {
             display: flex;
@@ -480,6 +679,15 @@
         }
 
 
+        .free-info strong {
+            font-weight: 950;
+        }
+
+
+        /* =====================================================
+           SUBMIT
+        ===================================================== */
+
         .submit-button {
             width: 100%;
 
@@ -489,6 +697,8 @@
 
             align-items: center;
             justify-content: center;
+
+            gap: 7px;
 
             padding:
                 12px 18px;
@@ -511,6 +721,31 @@
             font-weight: 950;
 
             cursor: pointer;
+
+            transition:
+                transform .15s ease,
+                opacity .15s ease;
+        }
+
+
+        .submit-button:hover {
+            transform:
+                translateY(-1px);
+        }
+
+
+        .submit-button:active {
+            transform:
+                scale(.995);
+        }
+
+
+        .submit-button:disabled {
+            cursor: wait;
+
+            opacity: .72;
+
+            transform: none;
         }
 
 
@@ -526,6 +761,10 @@
             text-align: center;
         }
 
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
         @media (
             max-width: 600px
@@ -560,7 +799,8 @@
             }
 
 
-            .field.full {
+            .field.full,
+            .application-error {
                 grid-column:
                     auto;
             }
@@ -573,6 +813,16 @@
 
             .jobs-form {
                 padding: 16px;
+            }
+
+
+            .jobs-nav {
+                align-items: flex-start;
+            }
+
+
+            .jobs-back {
+                text-align: right;
             }
 
         }
@@ -628,8 +878,8 @@
         <p class="jobs-intro">
 
             Help people around your community discover
-            jobs, internships, learnerships, tenders and
-            other opportunities.
+            jobs, internships, learnerships, training,
+            tenders and other opportunities.
 
         </p>
 
@@ -656,6 +906,7 @@
 
 
             <span>
+                No account or payment is required.
                 Kalxa reviews submissions before they appear publicly.
             </span>
 
@@ -678,7 +929,20 @@
 
                     {% for category, message in messages %}
 
-                        <div class="flash-message">
+                        <div
+                            class="
+                                flash-message
+                                {% if category == 'success' %}
+                                    flash-success
+                                {% elif category == 'warning' %}
+                                    flash-warning
+                                {% elif category == 'info' %}
+                                    flash-info
+                                {% else %}
+                                    flash-error
+                                {% endif %}
+                            "
+                        >
                             {{ message }}
                         </div>
 
@@ -695,6 +959,7 @@
             method="POST"
             enctype="multipart/form-data"
             class="jobs-form"
+            id="jobs-form"
         >
 
 
@@ -813,6 +1078,7 @@
                             maxlength="200"
                             value="{{ request.form.get('title', '') }}"
                             placeholder="Example: Shop Assistant"
+                            autocomplete="off"
                             required
                         >
 
@@ -833,6 +1099,7 @@
                             maxlength="150"
                             value="{{ request.form.get('business_name', '') }}"
                             placeholder="Example: ABC Supermarket"
+                            autocomplete="organization"
                             required
                         >
 
@@ -853,6 +1120,7 @@
                             maxlength="150"
                             value="{{ request.form.get('venue', '') }}"
                             placeholder="Example: KwaMhlanga"
+                            autocomplete="street-address"
                             required
                         >
 
@@ -869,6 +1137,7 @@
                         <textarea
                             id="description"
                             name="description"
+                            maxlength="5000"
                             placeholder="Describe the role, requirements, responsibilities and how people should apply."
                             required
                         >{{ request.form.get('description', '') }}</textarea>
@@ -940,10 +1209,21 @@
 
                 <p class="form-section-copy">
                     Provide at least one public application method.
+                    Kalxa will use these details on the published job.
                 </p>
 
 
                 <div class="field-grid">
+
+
+                    <div
+                        class="application-error"
+                        id="application-error"
+                        role="alert"
+                    >
+                        Please provide at least one application method:
+                        website, email, phone or WhatsApp.
+                    </div>
 
 
                     <div class="field full">
@@ -957,9 +1237,17 @@
                             type="text"
                             id="application_url"
                             name="application_url"
+                            maxlength="500"
                             value="{{ request.form.get('application_url', '') }}"
                             placeholder="https://company.co.za/jobs/..."
+                            inputmode="url"
+                            autocomplete="url"
                         >
+
+
+                        <span class="field-help">
+                            If you omit https://, Kalxa will add it automatically.
+                        </span>
 
                     </div>
 
@@ -975,8 +1263,10 @@
                             type="email"
                             id="application_email"
                             name="application_email"
+                            maxlength="200"
                             value="{{ request.form.get('application_email', '') }}"
                             placeholder="jobs@example.co.za"
+                            autocomplete="email"
                         >
 
                     </div>
@@ -990,12 +1280,13 @@
 
 
                         <input
-                            type="text"
+                            type="tel"
                             id="contact"
                             name="contact"
                             maxlength="100"
                             value="{{ request.form.get('contact', '') }}"
                             placeholder="012 345 6789"
+                            autocomplete="tel"
                         >
 
                     </div>
@@ -1009,12 +1300,13 @@
 
 
                         <input
-                            type="text"
+                            type="tel"
                             id="whatsapp_number"
                             name="whatsapp_number"
                             maxlength="50"
                             value="{{ request.form.get('whatsapp_number', '') }}"
                             placeholder="079 123 4567"
+                            inputmode="tel"
                         >
 
                     </div>
@@ -1055,6 +1347,41 @@
                         accept="image/jpeg,image/png,image/webp"
                     >
 
+
+                    <span class="field-help">
+                        JPG, JPEG, PNG or WebP. Maximum request size is 5 MB.
+                    </span>
+
+
+                    <div
+                        class="poster-preview"
+                        id="poster-preview"
+                    >
+
+                        <img
+                            id="poster-preview-image"
+                            alt="Selected job poster preview"
+                        >
+
+
+                        <div class="poster-preview-meta">
+
+                            <span id="poster-preview-name">
+                            </span>
+
+
+                            <button
+                                type="button"
+                                class="poster-remove"
+                                id="poster-remove"
+                            >
+                                Remove
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </section>
@@ -1072,8 +1399,9 @@
 
 
                 <p class="form-section-copy">
-                    These details help Kalxa verify the submission.
-                    They are not automatically shown publicly.
+                    These details help Kalxa review and verify
+                    the opportunity. They are not automatically
+                    shown on the public listing.
                 </p>
 
 
@@ -1093,6 +1421,7 @@
                             name="submitter_name"
                             maxlength="150"
                             value="{{ request.form.get('submitter_name', '') }}"
+                            autocomplete="name"
                             required
                         >
 
@@ -1112,6 +1441,7 @@
                             name="submitter_email"
                             maxlength="200"
                             value="{{ request.form.get('submitter_email', '') }}"
+                            autocomplete="email"
                         >
 
                     </div>
@@ -1125,11 +1455,12 @@
 
 
                         <input
-                            type="text"
+                            type="tel"
                             id="submitter_phone"
                             name="submitter_phone"
                             maxlength="100"
                             value="{{ request.form.get('submitter_phone', '') }}"
+                            autocomplete="tel"
                         >
 
                     </div>
@@ -1155,12 +1486,15 @@
 
 
                     <span>
+
                         <strong>
                             No payment required.
                         </strong>
 
-                        Community job and opportunity submissions
-                        are free on Kalxa.
+                        Jobs, internships, learnerships, training,
+                        tenders and business opportunities submitted
+                        through Kalxa Jobs are free.
+
                     </span>
 
                 </div>
@@ -1169,15 +1503,18 @@
                 <button
                     type="submit"
                     class="submit-button"
+                    id="submit-button"
                 >
-                    Submit Opportunity for Review
+                    <span id="submit-button-label">
+                        Submit Opportunity for Review
+                    </span>
                 </button>
 
 
                 <p class="moderation-note">
-                    Submissions may be rejected if they appear
-                    misleading, duplicated, unsafe or unrelated
-                    to employment and opportunities.
+                    Kalxa reviews submissions before publication.
+                    Duplicated, misleading, unsafe or unrelated
+                    listings may be rejected.
                 </p>
 
 
@@ -1191,6 +1528,426 @@
 
 
 </div>
+
+
+<script>
+
+    (() => {
+
+        const form =
+            document.getElementById(
+                "jobs-form"
+            );
+
+
+        const closingDate =
+            document.getElementById(
+                "closing_date"
+            );
+
+
+        const applicationUrl =
+            document.getElementById(
+                "application_url"
+            );
+
+
+        const applicationEmail =
+            document.getElementById(
+                "application_email"
+            );
+
+
+        const publicPhone =
+            document.getElementById(
+                "contact"
+            );
+
+
+        const whatsapp =
+            document.getElementById(
+                "whatsapp_number"
+            );
+
+
+        const applicationError =
+            document.getElementById(
+                "application-error"
+            );
+
+
+        const imageInput =
+            document.getElementById(
+                "image"
+            );
+
+
+        const posterPreview =
+            document.getElementById(
+                "poster-preview"
+            );
+
+
+        const posterPreviewImage =
+            document.getElementById(
+                "poster-preview-image"
+            );
+
+
+        const posterPreviewName =
+            document.getElementById(
+                "poster-preview-name"
+            );
+
+
+        const posterRemove =
+            document.getElementById(
+                "poster-remove"
+            );
+
+
+        const submitButton =
+            document.getElementById(
+                "submit-button"
+            );
+
+
+        const submitButtonLabel =
+            document.getElementById(
+                "submit-button-label"
+            );
+
+
+        /* =================================================
+           CLOSING DATE
+        ================================================= */
+
+        if (closingDate) {
+
+            const today =
+                new Date();
+
+
+            const year =
+                today.getFullYear();
+
+
+            const month =
+                String(
+                    today.getMonth() + 1
+                )
+                .padStart(
+                    2,
+                    "0"
+                );
+
+
+            const day =
+                String(
+                    today.getDate()
+                )
+                .padStart(
+                    2,
+                    "0"
+                );
+
+
+            closingDate.min =
+                `${year}-${month}-${day}`;
+
+        }
+
+
+        /* =================================================
+           APPLICATION METHOD VALIDATION
+        ================================================= */
+
+        function hasApplicationMethod() {
+
+            return Boolean(
+
+                applicationUrl?.value.trim()
+
+                ||
+
+                applicationEmail?.value.trim()
+
+                ||
+
+                publicPhone?.value.trim()
+
+                ||
+
+                whatsapp?.value.trim()
+
+            );
+
+        }
+
+
+        function hideApplicationError() {
+
+            if (
+                applicationError
+                &&
+                hasApplicationMethod()
+            ) {
+
+                applicationError
+                    .classList
+                    .remove(
+                        "visible"
+                    );
+
+            }
+
+        }
+
+
+        [
+            applicationUrl,
+            applicationEmail,
+            publicPhone,
+            whatsapp,
+        ]
+        .forEach(
+            (field) => {
+
+                field?.addEventListener(
+                    "input",
+                    hideApplicationError
+                );
+
+            }
+        );
+
+
+        /* =================================================
+           POSTER PREVIEW
+        ================================================= */
+
+        const allowedImageTypes =
+            new Set([
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+            ]);
+
+
+        function clearPoster() {
+
+            if (imageInput) {
+
+                imageInput.value = "";
+
+            }
+
+
+            if (posterPreviewImage) {
+
+                posterPreviewImage
+                    .removeAttribute(
+                        "src"
+                    );
+
+            }
+
+
+            if (posterPreviewName) {
+
+                posterPreviewName
+                    .textContent = "";
+
+            }
+
+
+            posterPreview
+                ?.classList
+                .remove(
+                    "visible"
+                );
+
+        }
+
+
+        imageInput?.addEventListener(
+            "change",
+            () => {
+
+                const file =
+                    imageInput.files?.[0];
+
+
+                if (!file) {
+
+                    clearPoster();
+
+                    return;
+
+                }
+
+
+                if (
+                    !allowedImageTypes.has(
+                        file.type
+                    )
+                ) {
+
+                    alert(
+                        "Please select a JPG, JPEG, PNG or WebP image."
+                    );
+
+                    clearPoster();
+
+                    return;
+
+                }
+
+
+                /*
+                 * Flask currently limits the entire request
+                 * to 5 MB, so we prevent a single image from
+                 * reaching that limit.
+                 */
+
+                const maximumBytes =
+                    4.5
+                    * 1024
+                    * 1024;
+
+
+                if (
+                    file.size
+                    > maximumBytes
+                ) {
+
+                    alert(
+                        "The image is too large. Please choose an image smaller than 4.5 MB."
+                    );
+
+                    clearPoster();
+
+                    return;
+
+                }
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.addEventListener(
+                    "load",
+                    () => {
+
+                        posterPreviewImage.src =
+                            reader.result;
+
+
+                        posterPreviewName.textContent =
+                            file.name;
+
+
+                        posterPreview
+                            .classList
+                            .add(
+                                "visible"
+                            );
+
+                    }
+                );
+
+
+                reader.readAsDataURL(
+                    file
+                );
+
+            }
+        );
+
+
+        posterRemove?.addEventListener(
+            "click",
+            clearPoster
+        );
+
+
+        /* =================================================
+           FORM SUBMISSION
+        ================================================= */
+
+        form?.addEventListener(
+            "submit",
+            (event) => {
+
+                if (
+                    !hasApplicationMethod()
+                ) {
+
+                    event.preventDefault();
+
+
+                    applicationError
+                        ?.classList
+                        .add(
+                            "visible"
+                        );
+
+
+                    applicationError
+                        ?.scrollIntoView({
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "center",
+                        });
+
+
+                    return;
+
+                }
+
+
+                /*
+                 * Let native HTML validation handle:
+                 *
+                 * - required fields
+                 * - email format
+                 * - closing date
+                 */
+
+
+                if (
+                    !form.checkValidity()
+                ) {
+
+                    return;
+
+                }
+
+
+                if (submitButton) {
+
+                    submitButton.disabled =
+                        true;
+
+                }
+
+
+                if (submitButtonLabel) {
+
+                    submitButtonLabel.textContent =
+                        "Submitting…";
+
+                }
+
+            }
+        );
+
+    })();
+
+</script>
 
 
 </body>
