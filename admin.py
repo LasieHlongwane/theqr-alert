@@ -1918,6 +1918,7 @@ BUSINESS_ANALYTICS_EVENTS = {
     "call_click",
     "directions_click",
     "share_click",
+    "job_apply_click",
 }
 
 
