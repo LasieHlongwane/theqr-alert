@@ -5441,7 +5441,7 @@ def import_rss_jobs_payload():
                     ),
 
                 default_location=
-                    zone.name,
+                    "",
             )
         )
 
