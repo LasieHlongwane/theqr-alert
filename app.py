@@ -2714,246 +2714,222 @@ def create_pending_rss_job(
 
 @app.route(
     "/internal/jobs/import/rss",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
 def import_rss_jobs():
-    """
-    Import configured RSS/Atom job feeds.
 
-    Security:
-
-        Authorization:
-        Bearer <KALXA_JOB_FEED_IMPORT_TOKEN>
-
-    Imported jobs DO NOT publish immediately.
-
-    They enter:
-
-        PendingSubmission
-            ↓
-        Admin moderation
-            ↓
-        ContentItem
-    """
-
-    # =====================================================
-    # AUTH TOKEN
-    # =====================================================
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
 
     expected_token = (
-        os.environ.get(
-            "KALXA_JOB_FEED_IMPORT_TOKEN",
-            "",
+        os.getenv(
+            "KALXA_JOB_FEED_IMPORT_TOKEN"
         )
-        .strip()
-    )
-
-
-    # --------------------------------------------------------
-    # Optional fallback so you can reuse the external Jobs
-    # importer token if preferred.
-    # --------------------------------------------------------
-
-    if not expected_token:
-
-        expected_token = (
-            os.environ.get(
-                "KALXA_EXTERNAL_JOBS_IMPORT_TOKEN",
-                "",
-            )
-            .strip()
+        or os.getenv(
+            "KALXA_EXTERNAL_JOBS_IMPORT_TOKEN"
         )
+        or ""
+    ).strip()
 
 
-    if not expected_token:
-
-        current_app.logger.error(
-            "[Kalxa RSS Jobs] "
-            "Importer token is not configured."
-        )
-
-
-        return jsonify({
-
-            "success":
-                False,
-
-            "message":
-                "RSS Jobs importer is not configured.",
-
-        }), 503
-
-
-    authorization = (
+    auth_header = (
         request.headers.get(
             "Authorization",
             "",
         )
-        .strip()
     )
 
 
-    if not authorization.startswith(
+    supplied_token = ""
+
+
+    if auth_header.startswith(
         "Bearer "
     ):
 
-        return jsonify({
-
-            "success":
-                False,
-
-            "message":
-                "Unauthorized.",
-
-        }), 401
-
-
-    supplied_token = (
-        authorization[
-            len("Bearer "):
-        ]
-        .strip()
-    )
+        supplied_token = (
+            auth_header[
+                len("Bearer "):
+            ]
+            .strip()
+        )
 
 
     if (
-        not supplied_token
+        not expected_token
+        or not supplied_token
         or not secrets.compare_digest(
             supplied_token,
             expected_token,
         )
     ):
 
-        return jsonify({
-
-            "success":
-                False,
-
-            "message":
-                "Unauthorized.",
-
-        }), 401
+        return jsonify(
+            {
+                "success": False,
+                "error": "Unauthorized.",
+            }
+        ), 401
 
 
-    # =====================================================
-    # CONFIGURED FEEDS
-    # =====================================================
+    # ========================================================
+    # LOAD FEED CONFIGURATION
+    # ========================================================
 
-    try:
-
-        feed_configs = (
-            get_job_feed_configs()
-        )
+    feed_configs = (
+        get_job_feed_configs()
+    )
 
 
-    except Exception as exc:
+    if not feed_configs:
 
-        current_app.logger.exception(
-            "[Kalxa RSS Jobs] "
-            "Unable to load feed configuration: %s",
-            exc,
-        )
-
-
-        return jsonify({
-
-            "success":
-                False,
-
-            "message":
-                str(
-                    exc
-                ),
-
-        }), 503
-
-        # =====================================================
-        if not feed_configs:
-
-         current_app.logger.info(
-          (
-            "[Kalxa RSS Jobs] "
-            "Scheduled import skipped because "
-            "no RSS/Atom feeds are configured."
-          )
-         )
-         return jsonify({
-
-          "success":
-            True,
-
-          "skipped":
-            True,
-
-          "feeds":
-            0,
-
-          "feed_errors":
-            0,
-
-          "fetched":
-            0,
-
-          "created":
-            0,
-
-          "duplicates":
-            0,
-
-          "expired":
-            0,
-
-          "invalid":
-            0,
-
-          "results":
-            [],
-
-          "message":
+        current_app.logger.info(
             (
-                "No RSS/Atom Jobs feeds are "
-                "currently configured."
-            ),
+                "[Kalxa RSS Jobs] "
+                "Import skipped because no "
+                "RSS/Atom feeds are configured."
+            )
+        )
 
-         }), 200
-   
 
-    # =====================================================
-    # TOTAL COUNTERS
-    # =====================================================
+        return jsonify(
+            {
+                "success": True,
+                "skipped": True,
+                "feeds": 0,
+                "feed_errors": 0,
+                "fetched": 0,
+                "created": 0,
+                "duplicates": 0,
+                "expired": 0,
+                "invalid": 0,
+                "results": [],
+                "message":
+                    (
+                        "No RSS/Atom Jobs feeds "
+                        "are currently configured."
+                    ),
+            }
+        ), 200
+
+
+    # ========================================================
+    # OPTIONAL SINGLE FEED SELECTION
+    #
+    # Example:
+    #
+    # /internal/jobs/import/rss?feed_index=0
+    #
+    # This is important for Render Free because processing
+    # several external feeds in a single HTTP request can
+    # exceed Gunicorn's worker timeout.
+    # ========================================================
+
+    requested_feed_index = (
+        request.args.get(
+            "feed_index"
+        )
+    )
+
+
+    if requested_feed_index is not None:
+
+        try:
+
+            feed_index = int(
+                requested_feed_index
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            return jsonify(
+                {
+                    "success": False,
+                    "error":
+                        (
+                            "feed_index must be "
+                            "a valid integer."
+                        ),
+                }
+            ), 400
+
+
+        if (
+            feed_index < 0
+            or feed_index >= len(
+                feed_configs
+            )
+        ):
+
+            return jsonify(
+                {
+                    "success": False,
+                    "error":
+                        (
+                            "feed_index is outside "
+                            "the configured feed range."
+                        ),
+                    "available_feeds":
+                        len(
+                            feed_configs
+                        ),
+                }
+            ), 400
+
+
+        selected_feed_configs = [
+            feed_configs[
+                feed_index
+            ]
+        ]
+
+
+    else:
+
+        selected_feed_configs = (
+            feed_configs
+        )
+
+
+    # ========================================================
+    # COUNTERS
+    # ========================================================
 
     total_fetched = 0
     total_created = 0
     total_duplicates = 0
-    total_invalid = 0
     total_expired = 0
-    total_feed_errors = 0
+    total_invalid = 0
+    feed_errors = 0
+
+    results = []
 
 
-    feed_results = []
-
-
-    # =====================================================
-    # PROCESS EACH FEED
-    # =====================================================
+    # ========================================================
+    # IMPORT FEEDS
+    # ========================================================
 
     for feed_config in (
-        feed_configs
+        selected_feed_configs
     ):
 
         feed_name = (
-            feed_config[
+            feed_config.get(
                 "name"
-            ]
+            )
+            or "Unnamed Feed"
         )
 
 
         feed_url = (
-            feed_config[
+            feed_config.get(
                 "url"
-            ]
+            )
+            or ""
         )
 
 
@@ -2965,6 +2941,14 @@ def import_rss_jobs():
             "url":
                 feed_url,
 
+            "zone_id":
+                feed_config.get(
+                    "zone_id"
+                ),
+
+            "zone_name":
+                None,
+
             "fetched":
                 0,
 
@@ -2974,10 +2958,10 @@ def import_rss_jobs():
             "duplicates":
                 0,
 
-            "invalid":
+            "expired":
                 0,
 
-            "expired":
+            "invalid":
                 0,
 
             "error":
@@ -2995,13 +2979,6 @@ def import_rss_jobs():
 
 
             feed_result[
-                "zone_id"
-            ] = (
-                zone.id
-            )
-
-
-            feed_result[
                 "zone_name"
             ] = (
                 zone.name
@@ -3010,72 +2987,123 @@ def import_rss_jobs():
 
             feed_result[
                 "fetched"
-            ] = (
-                len(
-                    jobs
-                )
+            ] = len(
+                jobs
             )
 
 
-            total_fetched += (
-                len(
-                    jobs
-                )
+            total_fetched += len(
+                jobs
             )
 
 
             # =================================================
-            # PROCESS ENTRIES
+            # PROCESS JOBS
             # =================================================
 
             for job in jobs:
 
-                result = (
-                    create_pending_rss_job(
+                try:
 
-                        job=
-                            job,
+                    result = (
+                        create_pending_rss_job(
+                            job=
+                                job,
 
-                        zone=
-                            zone,
+                            zone=
+                                zone,
 
-                        feed_name=
-                            feed_name,
+                            feed_name=
+                                feed_name,
 
-                        feed_url=
-                            feed_url,
+                            feed_url=
+                                feed_url,
+                        )
                     )
-                )
 
 
-                if result == "created":
+                    # -----------------------------------------
+                    # SUPPORT STRING OR DICT RETURN TYPES
+                    # -----------------------------------------
 
-                    feed_result[
-                        "created"
-                    ] += 1
+                    if isinstance(
+                        result,
+                        dict,
+                    ):
 
-                    total_created += 1
+                        status = (
+                            result.get(
+                                "status"
+                            )
+                            or result.get(
+                                "result"
+                            )
+                            or ""
+                        )
 
+                    else:
 
-                elif result == "duplicate":
-
-                    feed_result[
-                        "duplicates"
-                    ] += 1
-
-                    total_duplicates += 1
-
-
-                elif result == "expired":
-
-                    feed_result[
-                        "expired"
-                    ] += 1
-
-                    total_expired += 1
+                        status = str(
+                            result
+                            or ""
+                        )
 
 
-                else:
+                    status = (
+                        status
+                        .strip()
+                        .lower()
+                    )
+
+
+                    if status == "created":
+
+                        feed_result[
+                            "created"
+                        ] += 1
+
+                        total_created += 1
+
+
+                    elif status == "duplicate":
+
+                        feed_result[
+                            "duplicates"
+                        ] += 1
+
+                        total_duplicates += 1
+
+
+                    elif status == "expired":
+
+                        feed_result[
+                            "expired"
+                        ] += 1
+
+                        total_expired += 1
+
+
+                    else:
+
+                        feed_result[
+                            "invalid"
+                        ] += 1
+
+                        total_invalid += 1
+
+
+                except Exception as job_exc:
+
+                    current_app.logger.exception(
+                        (
+                            "[Kalxa RSS Jobs] "
+                            "Failed processing job "
+                            "from feed=%s error=%s"
+                        ),
+                        feed_name,
+                        job_exc,
+                    )
+
 
                     feed_result[
                         "invalid"
@@ -3091,43 +3119,12 @@ def import_rss_jobs():
             db.session.commit()
 
 
-            current_app.logger.info(
-                (
-                    "[Kalxa RSS Jobs] "
-                    "feed=%s "
-                    "zone_id=%s "
-                    "fetched=%s "
-                    "created=%s "
-                    "duplicates=%s "
-                    "expired=%s "
-                    "invalid=%s"
-                ),
-                feed_name,
-                zone.id,
-                feed_result[
-                    "fetched"
-                ],
-                feed_result[
-                    "created"
-                ],
-                feed_result[
-                    "duplicates"
-                ],
-                feed_result[
-                    "expired"
-                ],
-                feed_result[
-                    "invalid"
-                ],
-            )
-
-
-        except (
-            requests.RequestException,
-            ValueError,
-        ) as exc:
+        except Exception as exc:
 
             db.session.rollback()
+
+
+            feed_errors += 1
 
 
             feed_result[
@@ -3137,16 +3134,11 @@ def import_rss_jobs():
             )
 
 
-            total_feed_errors += 1
-
-
             current_app.logger.exception(
                 (
                     "[Kalxa RSS Jobs] "
-                    "Feed import failed "
-                    "feed=%s "
-                    "url=%s "
-                    "error=%s"
+                    "Feed import failed. "
+                    "feed=%s url=%s error=%s"
                 ),
                 feed_name,
                 feed_url,
@@ -3154,85 +3146,71 @@ def import_rss_jobs():
             )
 
 
-        except Exception as exc:
-
-            db.session.rollback()
-
-
-            feed_result[
-                "error"
-            ] = (
-                "Unexpected feed import error."
-            )
-
-
-            total_feed_errors += 1
-
-
-            current_app.logger.exception(
-                (
-                    "[Kalxa RSS Jobs] "
-                    "Unexpected feed error "
-                    "feed=%s "
-                    "url=%s "
-                    "error=%s"
-                ),
-                feed_name,
-                feed_url,
-                exc,
-            )
-
-
-        feed_results.append(
+        results.append(
             feed_result
         )
 
 
-    # =====================================================
+    # ========================================================
     # RESPONSE
-    # =====================================================
+    # ========================================================
 
-    return jsonify({
+    success = (
+        feed_errors == 0
+    )
 
-        "success":
-            total_feed_errors
-            < len(
-                feed_configs
-            ),
 
-        "feeds":
-            len(
-                feed_configs
-            ),
+    if requested_feed_index is not None:
 
-        "feed_errors":
-            total_feed_errors,
+        message = (
+            f"{total_created} RSS/Atom job(s) "
+            f"were added from feed index "
+            f"{requested_feed_index}."
+        )
 
-        "fetched":
-            total_fetched,
+    else:
 
-        "created":
-            total_created,
+        message = (
+            f"{total_created} RSS/Atom job(s) "
+            "were added to Kalxa moderation."
+        )
 
-        "duplicates":
-            total_duplicates,
 
-        "expired":
-            total_expired,
+    return jsonify(
+        {
+            "success":
+                success,
 
-        "invalid":
-            total_invalid,
+            "feeds":
+                len(
+                    selected_feed_configs
+                ),
 
-        "results":
-            feed_results,
+            "feed_errors":
+                feed_errors,
 
-        "message":
-            (
-                f"{total_created} RSS/Atom job(s) "
-                "were added to Kalxa moderation."
-            ),
+            "fetched":
+                total_fetched,
 
-    }), 200
+            "created":
+                total_created,
+
+            "duplicates":
+                total_duplicates,
+
+            "expired":
+                total_expired,
+
+            "invalid":
+                total_invalid,
+
+            "results":
+                results,
+
+            "message":
+                message,
+        }
+    ), 200
 
 def normalize_external_job_type(
     value,
