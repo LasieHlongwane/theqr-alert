@@ -5737,6 +5737,15 @@ def import_rss_jobs_payload():
             "created":
                 created,
 
+            "relevant_feed_items":
+                relevant_feed_items,
+
+            "filtered_out":
+                filtered_out,
+
+            "location_counts":
+                location_counts,
+
             "duplicates":
                 duplicates,
 
