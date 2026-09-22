@@ -3188,13 +3188,30 @@ def get_content_workflow(
     # =====================================================
 
     category = (
-        category or ""
-    ).strip().lower()
+        str(
+            category
+            or ""
+        )
+        .strip()
+        .lower()
+    )
 
 
     content_type = (
-        content_type or ""
-    ).strip().lower()
+        str(
+            content_type
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    canonical_category = (
+        normalize_category(
+            category
+        )
+    )
 
 
     # =====================================================
@@ -3216,18 +3233,7 @@ def get_content_workflow(
     )
 
 
-    # =====================================================
-    # USE EXISTING SPECIFIC WORKFLOW
-    # =====================================================
-
     if workflow:
-
-        # ---------------------------------------------
-        # Make a copy.
-        #
-        # This prevents us from modifying the original
-        # ADMIN_CONTENT_WORKFLOWS dictionary.
-        # ---------------------------------------------
 
         workflow = dict(
             workflow
@@ -3235,10 +3241,53 @@ def get_content_workflow(
 
 
     # =====================================================
-    # EVENTS ALWAYS EXPIRE
+    # JOBS
+    #
+    # Kalxa Jobs is a FREE community utility.
+    #
+    # Job opportunities do not enter the commercial
+    # Presence / Campaign pricing engine.
     # =====================================================
 
-    elif category == "events":
+    elif (
+        canonical_category
+        == "jobs"
+    ):
+
+        if (
+            content_type
+            == "job"
+        ):
+
+            workflow = {
+
+                "lifetime_type":
+                    "until_unavailable",
+
+                "notification_eligible":
+                    True,
+            }
+
+        else:
+
+            workflow = {
+
+                "lifetime_type":
+                    "time_specific",
+
+                "notification_eligible":
+                    True,
+            }
+
+
+    # =====================================================
+    # EVENTS
+    # =====================================================
+
+    elif (
+        canonical_category
+        == "events"
+    ):
 
         workflow = {
 
@@ -3247,23 +3296,25 @@ def get_content_workflow(
 
             "notification_eligible":
                 True,
-
         }
 
 
     # =====================================================
-    # ONLY THESE CATEGORIES ARE ONGOING
+    # ONGOING CATEGORIES
     # =====================================================
 
-    elif category in {
-
-        "property",
-
-        "transport",
-
-        "services",
-
-    }:
+    elif (
+        canonical_category
+        in {
+            "restaurants",
+            "beauty",
+            "accommodation",
+            "delivery",
+            "services",
+            "building",
+            "transport",
+        }
+    ):
 
         workflow = {
 
@@ -3271,13 +3322,34 @@ def get_content_workflow(
                 "ongoing",
 
             "notification_eligible":
-                False,
-
+                True,
         }
 
 
     # =====================================================
-    # EVERYTHING ELSE EXPIRES
+    # RENTALS
+    # =====================================================
+
+    elif (
+        canonical_category
+        in {
+            "rentals",
+            "property",
+        }
+    ):
+
+        workflow = {
+
+            "lifetime_type":
+                "until_unavailable",
+
+            "notification_eligible":
+                True,
+        }
+
+
+    # =====================================================
+    # GENERIC TIME-SPECIFIC CONTENT
     # =====================================================
 
     else:
@@ -3289,42 +3361,47 @@ def get_content_workflow(
 
             "notification_eligible":
                 True,
-
         }
 
 
     # =====================================================
-    # ADD KALXA COMMERCIAL PRICING MODEL
+    # PRICING MODEL
     # =====================================================
     #
-    # This does NOT calculate a price.
+    # CRITICAL:
     #
-    # It tells Kalxa which commercial pricing engine
-    # applies to this category / content type:
+    # Jobs are free regardless of their older pricing
+    # configuration.
     #
-    # presence
-    #     Duration-based pricing.
+    # This prevents:
     #
-    # campaign
-    #     Duration × geographic reach pricing.
+    # free job
+    #   -> admin edits
+    #   -> suddenly becomes paid Campaign
     #
-    # None
-    #     No commercial pricing rule has been assigned.
     # =====================================================
 
-    workflow[
-        "pricing_model"
-    ] = (
-        get_pricing_model(
-            category,
-            content_type,
+    if (
+        canonical_category
+        == "jobs"
+    ):
+
+        workflow[
+            "pricing_model"
+        ] = None
+
+
+    else:
+
+        workflow[
+            "pricing_model"
+        ] = (
+            get_pricing_model(
+                category,
+                content_type,
+            )
         )
-    )
 
-
-    # =====================================================
-    # RETURN COMPLETE WORKFLOW
-    # =====================================================
 
     return workflow
 
