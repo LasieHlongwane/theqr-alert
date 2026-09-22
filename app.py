@@ -2022,18 +2022,25 @@ def get_job_feed_configs():
 # ============================================================
 # FETCH ONE FEED
 # ============================================================
-
 def fetch_job_feed(
     feed_config,
 ):
     """
     Download and parse one configured RSS/Atom feed.
+
+    Special case:
+
+        Kalxa's own /test/jobs-feed.xml
+
+    is generated locally instead of making the Render
+    service call itself over HTTPS.
     """
 
     feed_url = (
         feed_config[
             "url"
         ]
+        .strip()
     )
 
 
@@ -2060,6 +2067,78 @@ def fetch_job_feed(
             )
         )
 
+
+    # ========================================================
+    # KALXA LOCAL TEST FEED
+    # ========================================================
+
+    test_feed_url = (
+        f"{get_public_base_url().rstrip('/')}"
+        "/test/jobs-feed.xml"
+    )
+
+
+    normalized_feed_url = (
+        feed_url.rstrip("/")
+    )
+
+
+    normalized_test_feed_url = (
+        test_feed_url.rstrip("/")
+    )
+
+
+    if (
+        normalized_feed_url
+        == normalized_test_feed_url
+    ):
+
+        current_app.logger.info(
+            (
+                "[Kalxa RSS Jobs] "
+                "Using internal test RSS feed "
+                "without HTTP self-request."
+            )
+        )
+
+
+        xml_content = (
+            build_test_jobs_rss_xml()
+            .encode(
+                "utf-8"
+            )
+        )
+
+
+        entries = (
+            parse_job_feed_xml(
+
+                xml_content=
+                    xml_content,
+
+                feed_url=
+                    feed_url,
+
+                default_employer=
+                    feed_config.get(
+                        "employer"
+                    ),
+
+                default_location=
+                    zone.name,
+            )
+        )
+
+
+        return (
+            zone,
+            entries,
+        )
+
+
+    # ========================================================
+    # REAL EXTERNAL RSS / ATOM FEED
+    # ========================================================
 
     headers = {
 
@@ -2111,7 +2190,6 @@ def fetch_job_feed(
         zone,
         entries,
     )
-
 
 # ============================================================
 # APPLICATION URL DUPLICATE CHECK
