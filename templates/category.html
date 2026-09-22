@@ -2926,16 +2926,31 @@
                         </span>
 
 
-                        <a
-                            href="{{ url_for(
-                                'submit_content',
-                                zone_id=zone.id
-                            ) }}"
-                            class="lac-empty-secondary"
-                        >
-                            + Add a listing
-                        </a>
+                        {% if canonical_category == "jobs" %}
 
+    <a
+        href="{{ url_for(
+            'submit_job',
+            zone_id=zone.id
+        ) }}"
+        class="lac-empty-secondary"
+    >
+        + Post a Job Free
+    </a>
+
+{% else %}
+
+    <a
+        href="{{ url_for(
+            'submit_content',
+            zone_id=zone.id
+        ) }}"
+        class="lac-empty-secondary"
+    >
+        + Add a listing
+    </a>
+
+{% endif %}
                     </div>
 
 
