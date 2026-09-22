@@ -4831,6 +4831,515 @@ def submit_job():
         )
     )
 
+@app.route(
+    "/internal/jobs/import/rss-payload",
+    methods=["POST"],
+)
+def import_rss_jobs_payload():
+    """
+    Import RSS/Atom XML that has already been downloaded
+    by GitHub Actions.
+
+    This keeps slow external network requests away from
+    Render Free.
+
+    Example:
+
+        POST /internal/jobs/import/rss-payload?feed_index=0
+
+    Request body:
+
+        Raw RSS / Atom XML
+    """
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    expected_token = (
+        os.getenv(
+            "KALXA_JOB_FEED_IMPORT_TOKEN"
+        )
+        or os.getenv(
+            "KALXA_EXTERNAL_JOBS_IMPORT_TOKEN"
+        )
+        or ""
+    ).strip()
+
+
+    auth_header = (
+        request.headers.get(
+            "Authorization",
+            "",
+        )
+    )
+
+
+    supplied_token = ""
+
+
+    if auth_header.startswith(
+        "Bearer "
+    ):
+
+        supplied_token = (
+            auth_header[
+                len("Bearer "):
+            ]
+            .strip()
+        )
+
+
+    if (
+        not expected_token
+        or not supplied_token
+        or not secrets.compare_digest(
+            supplied_token,
+            expected_token,
+        )
+    ):
+
+        return jsonify(
+            {
+                "success": False,
+                "error": "Unauthorized.",
+            }
+        ), 401
+
+
+    # ========================================================
+    # FEED INDEX
+    # ========================================================
+
+    raw_feed_index = (
+        request.args.get(
+            "feed_index"
+        )
+    )
+
+
+    try:
+
+        feed_index = int(
+            raw_feed_index
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "feed_index must be a valid integer.",
+            }
+        ), 400
+
+
+    # ========================================================
+    # CONFIGURED FEEDS
+    # ========================================================
+
+    feed_configs = (
+        get_job_feed_configs()
+    )
+
+
+    if not feed_configs:
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "No RSS/Atom feeds are configured.",
+            }
+        ), 400
+
+
+    if (
+        feed_index < 0
+        or feed_index >= len(
+            feed_configs
+        )
+    ):
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "feed_index is outside the configured range.",
+                "available_feeds":
+                    len(
+                        feed_configs
+                    ),
+            }
+        ), 400
+
+
+    feed_config = (
+        feed_configs[
+            feed_index
+        ]
+    )
+
+
+    feed_name = (
+        feed_config.get(
+            "name"
+        )
+        or f"Feed {feed_index}"
+    )
+
+
+    feed_url = (
+        feed_config.get(
+            "url"
+        )
+        or ""
+    )
+
+
+    # ========================================================
+    # ZONE
+    # ========================================================
+
+    try:
+
+        zone_id = int(
+            feed_config.get(
+                "zone_id"
+            )
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "Configured zone_id is invalid.",
+            }
+        ), 400
+
+
+    zone = (
+        db.session.get(
+            Zone,
+            zone_id,
+        )
+    )
+
+
+    if (
+        not zone
+        or not zone.active
+    ):
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    (
+                        "Configured zone does not "
+                        "exist or is inactive."
+                    ),
+            }
+        ), 400
+
+
+    # ========================================================
+    # RAW XML
+    # ========================================================
+
+    xml_content = (
+        request.get_data(
+            cache=False
+        )
+    )
+
+
+    if not xml_content:
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "RSS/Atom XML request body is empty.",
+            }
+        ), 400
+
+
+    # Protect Render from unexpectedly huge feeds.
+    max_xml_size = (
+        5
+        * 1024
+        * 1024
+    )
+
+
+    if len(
+        xml_content
+    ) > max_xml_size:
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "RSS/Atom feed is larger than 5 MB.",
+            }
+        ), 413
+
+
+    # ========================================================
+    # PARSE XML
+    # ========================================================
+
+    try:
+
+        jobs = (
+            parse_job_feed_xml(
+
+                xml_content=
+                    xml_content,
+
+                feed_url=
+                    feed_url,
+
+                default_employer=
+                    feed_config.get(
+                        "employer"
+                    ),
+
+                default_location=
+                    zone.name,
+            )
+        )
+
+    except Exception as exc:
+
+        current_app.logger.exception(
+            (
+                "[Kalxa RSS Payload] "
+                "Unable to parse feed=%s error=%s"
+            ),
+            feed_name,
+            exc,
+        )
+
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    f"Unable to parse RSS/Atom XML: {exc}",
+            }
+        ), 400
+
+
+    # ========================================================
+    # LIMIT WORK PER RENDER REQUEST
+    #
+    # This is intentional for Render Free.
+    # Only the newest 20 items are processed during each run.
+    # ========================================================
+
+    total_feed_items = len(
+        jobs
+    )
+
+
+    jobs = (
+        jobs[:20]
+    )
+
+
+    # ========================================================
+    # COUNTERS
+    # ========================================================
+
+    created = 0
+    duplicates = 0
+    expired = 0
+    invalid = 0
+
+
+    # ========================================================
+    # CREATE PENDING SUBMISSIONS
+    # ========================================================
+
+    try:
+
+        for job in jobs:
+
+            try:
+
+                result = (
+                    create_pending_rss_job(
+
+                        job=
+                            job,
+
+                        zone=
+                            zone,
+
+                        feed_name=
+                            feed_name,
+
+                        feed_url=
+                            feed_url,
+                    )
+                )
+
+
+                if isinstance(
+                    result,
+                    dict,
+                ):
+
+                    status = (
+                        result.get(
+                            "status"
+                        )
+                        or result.get(
+                            "result"
+                        )
+                        or ""
+                    )
+
+                else:
+
+                    status = str(
+                        result
+                        or ""
+                    )
+
+
+                status = (
+                    status
+                    .strip()
+                    .lower()
+                )
+
+
+                if status == "created":
+
+                    created += 1
+
+
+                elif status == "duplicate":
+
+                    duplicates += 1
+
+
+                elif status == "expired":
+
+                    expired += 1
+
+
+                else:
+
+                    invalid += 1
+
+
+            except Exception as job_exc:
+
+                invalid += 1
+
+
+                current_app.logger.exception(
+                    (
+                        "[Kalxa RSS Payload] "
+                        "Job processing failed. "
+                        "feed=%s error=%s"
+                    ),
+                    feed_name,
+                    job_exc,
+                )
+
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Kalxa RSS Payload] "
+                "Feed transaction failed. "
+                "feed=%s error=%s"
+            ),
+            feed_name,
+            exc,
+        )
+
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    str(
+                        exc
+                    ),
+            }
+        ), 500
+
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
+    return jsonify(
+        {
+            "success":
+                True,
+
+            "feed_index":
+                feed_index,
+
+            "feed_name":
+                feed_name,
+
+            "zone_id":
+                zone.id,
+
+            "zone_name":
+                zone.name,
+
+            "feed_items":
+                total_feed_items,
+
+            "processed":
+                len(
+                    jobs
+                ),
+
+            "created":
+                created,
+
+            "duplicates":
+                duplicates,
+
+            "expired":
+                expired,
+
+            "invalid":
+                invalid,
+
+            "message":
+                (
+                    f"{created} job(s) added "
+                    "to Kalxa moderation."
+                ),
+        }
+    ), 200
 
 @app.route("/jobs/submit/success/<code>")
 def job_submission_success(code):
