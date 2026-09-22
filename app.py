@@ -927,6 +927,2196 @@ EXTERNAL_JOB_TYPE_MAP = {
 }
 
 
+# ============================================================
+# KALXA JOBS - RSS / ATOM IMPORTER
+# ============================================================
+
+RSS_JOB_TYPE_KEYWORDS = {
+
+    "learnership":
+        "learnership",
+
+    "internship":
+        "internship",
+
+    "intern":
+        "internship",
+
+    "training":
+        "training",
+
+    "tender":
+        "tender",
+
+    "business opportunity":
+        "business_opportunity",
+
+    "vacancy":
+        "job",
+
+    "job":
+        "job",
+}
+
+
+# ============================================================
+# XML TAG HELPER
+# ============================================================
+
+def rss_local_name(
+    tag,
+):
+    """
+    Remove an XML namespace from a tag.
+
+    Example:
+
+        {http://www.w3.org/2005/Atom}title
+
+    becomes:
+
+        title
+    """
+
+    return (
+        str(
+            tag
+            or ""
+        )
+        .split(
+            "}"
+        )[-1]
+        .strip()
+        .lower()
+    )
+
+
+# ============================================================
+# CLEAN HTML DESCRIPTION
+# ============================================================
+
+def clean_rss_html(
+    value,
+):
+    """
+    Convert common RSS/Atom HTML descriptions into
+    readable plain text for Kalxa moderation.
+    """
+
+    value = (
+        str(
+            value
+            or ""
+        )
+    )
+
+
+    if not value:
+        return ""
+
+
+    # --------------------------------------------------------
+    # LINE BREAK TAGS
+    # --------------------------------------------------------
+
+    value = re.sub(
+        r"(?i)<br\s*/?>",
+        "\n",
+        value,
+    )
+
+
+    value = re.sub(
+        r"(?i)</p\s*>",
+        "\n",
+        value,
+    )
+
+
+    # --------------------------------------------------------
+    # REMOVE HTML TAGS
+    # --------------------------------------------------------
+
+    value = re.sub(
+        r"<[^>]+>",
+        " ",
+        value,
+    )
+
+
+    # --------------------------------------------------------
+    # HTML ENTITIES
+    # --------------------------------------------------------
+
+    value = unescape(
+        value
+    )
+
+
+    # --------------------------------------------------------
+    # NORMALIZE WHITESPACE
+    # --------------------------------------------------------
+
+    value = re.sub(
+        r"[ \t]+",
+        " ",
+        value,
+    )
+
+
+    value = re.sub(
+        r"\n\s*\n+",
+        "\n\n",
+        value,
+    )
+
+
+    return (
+        value
+        .strip()
+    )
+
+
+# ============================================================
+# GET CHILD TEXT
+# ============================================================
+
+def get_xml_child_text(
+    element,
+    *wanted_names,
+):
+    """
+    Find the first matching direct XML child regardless
+    of RSS/Atom namespaces.
+    """
+
+    wanted_names = {
+        str(
+            name
+        )
+        .strip()
+        .lower()
+
+        for name
+        in wanted_names
+    }
+
+
+    for child in list(
+        element
+    ):
+
+        child_name = (
+            rss_local_name(
+                child.tag
+            )
+        )
+
+
+        if (
+            child_name
+            not in wanted_names
+        ):
+
+            continue
+
+
+        text_value = (
+            child.text
+            or ""
+        )
+
+
+        text_value = (
+            text_value
+            .strip()
+        )
+
+
+        if text_value:
+
+            return text_value
+
+
+    return None
+
+
+# ============================================================
+# ATOM / RSS LINK
+# ============================================================
+
+def get_feed_entry_link(
+    entry,
+    feed_url,
+):
+    """
+    Resolve an application/source URL from either RSS
+    or Atom.
+    """
+
+    # --------------------------------------------------------
+    # RSS:
+    #
+    # <link>https://...</link>
+    # --------------------------------------------------------
+
+    direct_link = (
+        get_xml_child_text(
+            entry,
+            "link",
+        )
+    )
+
+
+    if direct_link:
+
+        return urljoin(
+            feed_url,
+            direct_link,
+        )
+
+
+    # --------------------------------------------------------
+    # ATOM:
+    #
+    # <link href="..." rel="alternate" />
+    # --------------------------------------------------------
+
+    fallback_link = None
+
+
+    for child in list(
+        entry
+    ):
+
+        if (
+            rss_local_name(
+                child.tag
+            )
+            != "link"
+        ):
+
+            continue
+
+
+        href = (
+            child.attrib.get(
+                "href",
+                ""
+            )
+            .strip()
+        )
+
+
+        if not href:
+
+            continue
+
+
+        rel = (
+            child.attrib.get(
+                "rel",
+                "alternate",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        resolved = (
+            urljoin(
+                feed_url,
+                href,
+            )
+        )
+
+
+        if rel == "alternate":
+
+            return resolved
+
+
+        if fallback_link is None:
+
+            fallback_link = (
+                resolved
+            )
+
+
+    return fallback_link
+
+
+# ============================================================
+# ENTRY IDENTIFIER
+# ============================================================
+
+def get_feed_entry_identifier(
+    entry,
+):
+    """
+    Return the strongest available external RSS/Atom
+    identifier.
+    """
+
+    return (
+        get_xml_child_text(
+            entry,
+            "guid",
+            "id",
+        )
+    )
+
+
+# ============================================================
+# FEED ENTRY DESCRIPTION
+# ============================================================
+
+def get_feed_entry_description(
+    entry,
+):
+    """
+    RSS commonly uses description/content.
+    Atom commonly uses summary/content.
+    """
+
+    raw_description = (
+        get_xml_child_text(
+            entry,
+            "description",
+            "summary",
+            "content",
+            "encoded",
+        )
+    )
+
+
+    return clean_rss_html(
+        raw_description
+    )
+
+
+# ============================================================
+# INFER JOB TYPE
+# ============================================================
+
+def infer_rss_job_type(
+    title,
+    description,
+):
+    """
+    Infer a Kalxa Jobs content_type from feed text.
+    """
+
+    searchable_text = (
+        f"{title or ''} "
+        f"{description or ''}"
+    ).lower()
+
+
+    # --------------------------------------------------------
+    # More specific types first.
+    # --------------------------------------------------------
+
+    ordered_keywords = (
+        "business opportunity",
+        "learnership",
+        "internship",
+        "intern",
+        "training",
+        "tender",
+        "vacancy",
+        "job",
+    )
+
+
+    for keyword in ordered_keywords:
+
+        if keyword in searchable_text:
+
+            return (
+                RSS_JOB_TYPE_KEYWORDS[
+                    keyword
+                ]
+            )
+
+
+    return "job"
+
+
+# ============================================================
+# EXTRACT CLOSING DATE
+# ============================================================
+
+def parse_job_closing_date_text(
+    value,
+):
+    """
+    Try to discover a closing date from structured feed text.
+
+    Supported examples:
+
+        2026-10-15
+        15/10/2026
+        15-10-2026
+        15 October 2026
+        October 15 2026
+    """
+
+    value = (
+        clean_rss_html(
+            value
+        )
+    )
+
+
+    if not value:
+
+        return None
+
+
+    # ========================================================
+    # ISO DATE
+    # ========================================================
+
+    iso_match = re.search(
+        r"\b"
+        r"(20\d{2})"
+        r"[-/]"
+        r"(0?[1-9]|1[0-2])"
+        r"[-/]"
+        r"(0?[1-9]|[12]\d|3[01])"
+        r"\b",
+        value,
+    )
+
+
+    if iso_match:
+
+        try:
+
+            return date(
+                int(
+                    iso_match.group(1)
+                ),
+                int(
+                    iso_match.group(2)
+                ),
+                int(
+                    iso_match.group(3)
+                ),
+            )
+
+        except ValueError:
+
+            pass
+
+
+    # ========================================================
+    # SOUTH AFRICAN / EUROPEAN STYLE
+    #
+    # 15/10/2026
+    # 15-10-2026
+    # ========================================================
+
+    numeric_match = re.search(
+        r"\b"
+        r"(0?[1-9]|[12]\d|3[01])"
+        r"[-/]"
+        r"(0?[1-9]|1[0-2])"
+        r"[-/]"
+        r"(20\d{2})"
+        r"\b",
+        value,
+    )
+
+
+    if numeric_match:
+
+        try:
+
+            return date(
+                int(
+                    numeric_match.group(3)
+                ),
+                int(
+                    numeric_match.group(2)
+                ),
+                int(
+                    numeric_match.group(1)
+                ),
+            )
+
+        except ValueError:
+
+            pass
+
+
+    # ========================================================
+    # MONTH NAME
+    # ========================================================
+
+    month_formats = (
+        "%d %B %Y",
+        "%d %b %Y",
+        "%B %d %Y",
+        "%b %d %Y",
+        "%d %B, %Y",
+        "%d %b, %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+    )
+
+
+    month_patterns = (
+
+        r"\b\d{1,2}\s+"
+        r"[A-Za-z]{3,9},?\s+"
+        r"20\d{2}\b",
+
+        r"\b[A-Za-z]{3,9}\s+"
+        r"\d{1,2},?\s+"
+        r"20\d{2}\b",
+
+    )
+
+
+    for pattern in month_patterns:
+
+        matches = re.findall(
+            pattern,
+            value,
+        )
+
+
+        for candidate in matches:
+
+            for format_value in (
+                month_formats
+            ):
+
+                try:
+
+                    return (
+                        datetime.strptime(
+                            candidate,
+                            format_value,
+                        )
+                        .date()
+                    )
+
+                except ValueError:
+
+                    continue
+
+
+    return None
+
+
+# ============================================================
+# EXPLICIT CLOSING DATE FIELDS
+# ============================================================
+
+def get_feed_entry_closing_date(
+    entry,
+    description,
+):
+    """
+    First use known XML closing-date fields.
+
+    If none exist, look for a closing/deadline date
+    inside the description.
+    """
+
+    explicit_value = (
+        get_xml_child_text(
+            entry,
+            "closingdate",
+            "closing_date",
+            "deadline",
+            "applicationdeadline",
+            "application_deadline",
+            "expirationdate",
+            "expirydate",
+            "enddate",
+        )
+    )
+
+
+    if explicit_value:
+
+        result = (
+            parse_job_closing_date_text(
+                explicit_value
+            )
+        )
+
+
+        if result:
+
+            return result
+
+
+    # --------------------------------------------------------
+    # Search only likely closing/deadline fragments first.
+    # --------------------------------------------------------
+
+    if description:
+
+        closing_match = re.search(
+            (
+                r"(?i)"
+                r"(?:closing\s*date|"
+                r"applications?\s*close|"
+                r"deadline|"
+                r"closing)"
+                r"[^.\n]{0,80}"
+            ),
+            description,
+        )
+
+
+        if closing_match:
+
+            result = (
+                parse_job_closing_date_text(
+                    closing_match.group(0)
+                )
+            )
+
+
+            if result:
+
+                return result
+
+
+    return None
+
+
+# ============================================================
+# COMPANY / EMPLOYER
+# ============================================================
+
+def get_feed_entry_employer(
+    entry,
+    default_employer=None,
+):
+    """
+    Attempt common RSS/Atom employer fields.
+    """
+
+    employer = (
+        get_xml_child_text(
+            entry,
+            "company",
+            "companyname",
+            "employer",
+            "organisation",
+            "organization",
+            "author",
+        )
+    )
+
+
+    if employer:
+
+        return clean_rss_html(
+            employer
+        )
+
+
+    return (
+        str(
+            default_employer
+            or ""
+        )
+        .strip()
+    )
+
+
+# ============================================================
+# LOCATION
+# ============================================================
+
+def get_feed_entry_location(
+    entry,
+    default_location=None,
+):
+    """
+    Attempt common location fields.
+
+    The configured Kalxa zone is used as the fallback.
+    """
+
+    location = (
+        get_xml_child_text(
+            entry,
+            "location",
+            "joblocation",
+            "job_location",
+            "city",
+            "area",
+            "region",
+        )
+    )
+
+
+    if location:
+
+        return clean_rss_html(
+            location
+        )
+
+
+    return (
+        str(
+            default_location
+            or ""
+        )
+        .strip()
+    )
+
+
+# ============================================================
+# SALARY
+# ============================================================
+
+def get_feed_entry_salary(
+    entry,
+):
+    """
+    Read salary when supplied by the feed.
+    """
+
+    salary = (
+        get_xml_child_text(
+            entry,
+            "salary",
+            "salarytext",
+            "compensation",
+            "remuneration",
+        )
+    )
+
+
+    if salary:
+
+        return clean_rss_html(
+            salary
+        )
+
+
+    return None
+
+
+# ============================================================
+# PARSE RSS / ATOM DOCUMENT
+# ============================================================
+
+def parse_job_feed_xml(
+    xml_content,
+    feed_url,
+    default_employer=None,
+    default_location=None,
+):
+    """
+    Parse RSS 2.x or Atom into normalized Kalxa job
+    dictionaries.
+    """
+
+    try:
+
+        root = (
+            ET.fromstring(
+                xml_content
+            )
+        )
+
+
+    except ET.ParseError as exc:
+
+        raise ValueError(
+            f"Invalid RSS/Atom XML: {exc}"
+        )
+
+
+    entries = []
+
+
+    # ========================================================
+    # FIND RSS <item> OR ATOM <entry>
+    # ========================================================
+
+    for element in root.iter():
+
+        local_name = (
+            rss_local_name(
+                element.tag
+            )
+        )
+
+
+        if (
+            local_name
+            not in {
+                "item",
+                "entry",
+            }
+        ):
+
+            continue
+
+
+        title = clean_rss_html(
+            get_xml_child_text(
+                element,
+                "title",
+            )
+        )
+
+
+        description = (
+            get_feed_entry_description(
+                element
+            )
+        )
+
+
+        link = (
+            get_feed_entry_link(
+                element,
+                feed_url,
+            )
+        )
+
+
+        external_id = (
+            get_feed_entry_identifier(
+                element
+            )
+        )
+
+
+        business_name = (
+            get_feed_entry_employer(
+                element,
+                default_employer=
+                    default_employer,
+            )
+        )
+
+
+        venue = (
+            get_feed_entry_location(
+                element,
+                default_location=
+                    default_location,
+            )
+        )
+
+
+        salary_text = (
+            get_feed_entry_salary(
+                element
+            )
+        )
+
+
+        closing_date = (
+            get_feed_entry_closing_date(
+                element,
+                description,
+            )
+        )
+
+
+        content_type = (
+            infer_rss_job_type(
+                title,
+                description,
+            )
+        )
+
+
+        entries.append({
+
+            "title":
+                title,
+
+            "business_name":
+                business_name,
+
+            "venue":
+                venue,
+
+            "description":
+                description,
+
+            "application_url":
+                link,
+
+            "salary_text":
+                salary_text,
+
+            "closing_date":
+                closing_date,
+
+            "content_type":
+                content_type,
+
+            "external_id":
+                external_id,
+
+        })
+
+
+    return entries
+
+
+# ============================================================
+# LOAD FEED CONFIGURATION
+# ============================================================
+
+def get_job_feed_configs():
+    """
+    Recommended Render environment variable:
+
+    KALXA_JOB_FEEDS_JSON
+
+    Example:
+
+    [
+      {
+        "name": "Company Careers",
+        "url": "https://example.com/jobs.xml",
+        "zone_id": 1,
+        "employer": "Example Company"
+      }
+    ]
+
+    Multiple feeds can be configured without changing code.
+    """
+
+    raw_config = (
+        os.environ.get(
+            "KALXA_JOB_FEEDS_JSON",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not raw_config:
+
+        return []
+
+
+    try:
+
+        configs = (
+            json.loads(
+                raw_config
+            )
+        )
+
+
+    except json.JSONDecodeError as exc:
+
+        raise RuntimeError(
+            (
+                "KALXA_JOB_FEEDS_JSON contains "
+                f"invalid JSON: {exc}"
+            )
+        )
+
+
+    if not isinstance(
+        configs,
+        list,
+    ):
+
+        raise RuntimeError(
+            "KALXA_JOB_FEEDS_JSON must be a JSON array."
+        )
+
+
+    cleaned_configs = []
+
+
+    for config in configs:
+
+        if not isinstance(
+            config,
+            dict,
+        ):
+
+            continue
+
+
+        feed_url = (
+            str(
+                config.get(
+                    "url"
+                )
+                or ""
+            )
+            .strip()
+        )
+
+
+        if not feed_url:
+
+            continue
+
+
+        try:
+
+            zone_id = int(
+                config.get(
+                    "zone_id"
+                )
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            continue
+
+
+        cleaned_configs.append({
+
+            "name":
+                str(
+                    config.get(
+                        "name"
+                    )
+                    or feed_url
+                )
+                .strip(),
+
+            "url":
+                feed_url,
+
+            "zone_id":
+                zone_id,
+
+            "employer":
+                (
+                    str(
+                        config.get(
+                            "employer"
+                        )
+                        or ""
+                    )
+                    .strip()
+                    or None
+                ),
+
+        })
+
+
+    return cleaned_configs
+
+
+# ============================================================
+# FETCH ONE FEED
+# ============================================================
+
+def fetch_job_feed(
+    feed_config,
+):
+    """
+    Download and parse one configured RSS/Atom feed.
+    """
+
+    feed_url = (
+        feed_config[
+            "url"
+        ]
+    )
+
+
+    zone = (
+        db.session.get(
+            Zone,
+            feed_config[
+                "zone_id"
+            ],
+        )
+    )
+
+
+    if (
+        not zone
+        or not zone.active
+    ):
+
+        raise ValueError(
+            (
+                "Configured Kalxa zone does not "
+                f"exist or is inactive: "
+                f"{feed_config['zone_id']}"
+            )
+        )
+
+
+    headers = {
+
+        "Accept":
+            (
+                "application/rss+xml, "
+                "application/atom+xml, "
+                "application/xml, "
+                "text/xml, "
+                "*/*"
+            ),
+
+        "User-Agent":
+            "Kalxa-Jobs-RSS-Importer/1.0",
+    }
+
+
+    response = requests.get(
+        feed_url,
+        headers=headers,
+        timeout=20,
+    )
+
+
+    response.raise_for_status()
+
+
+    entries = (
+        parse_job_feed_xml(
+
+            xml_content=
+                response.content,
+
+            feed_url=
+                feed_url,
+
+            default_employer=
+                feed_config.get(
+                    "employer"
+                ),
+
+            default_location=
+                zone.name,
+        )
+    )
+
+
+    return (
+        zone,
+        entries,
+    )
+
+
+# ============================================================
+# APPLICATION URL DUPLICATE CHECK
+# ============================================================
+
+def find_duplicate_job_url(
+    application_url,
+):
+    """
+    External feeds commonly provide stable job URLs.
+
+    Checking the URL catches duplicates even if the feed
+    later changes the title slightly.
+    """
+
+    application_url = (
+        str(
+            application_url
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not application_url:
+
+        return None
+
+
+    pending = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.category
+            == "jobs",
+
+            PendingSubmission.status
+            == "pending",
+
+            PendingSubmission.ticket_url
+            == application_url,
+        )
+        .first()
+    )
+
+
+    if pending:
+
+        return {
+            "type":
+                "pending",
+
+            "record":
+                pending,
+        }
+
+
+    published = (
+        ContentItem.query
+        .filter(
+            ContentItem.category
+            == "jobs",
+
+            ContentItem.ticket_url
+            == application_url,
+
+            ContentItem.active.is_(
+                True
+            ),
+
+            ContentItem.archived.is_(
+                False
+            ),
+        )
+        .first()
+    )
+
+
+    if published:
+
+        return {
+            "type":
+                "published",
+
+            "record":
+                published,
+        }
+
+
+    return None
+
+
+# ============================================================
+# CREATE RSS JOB PENDING SUBMISSION
+# ============================================================
+
+def create_pending_rss_job(
+    *,
+    job,
+    zone,
+    feed_name,
+    feed_url,
+):
+    """
+    Convert one normalized feed entry into a free
+    Kalxa PendingSubmission.
+
+    Returns:
+
+        "created"
+        "duplicate"
+        "expired"
+        "invalid"
+    """
+
+    title = (
+        str(
+            job.get(
+                "title"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    business_name = (
+        str(
+            job.get(
+                "business_name"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    venue = (
+        str(
+            job.get(
+                "venue"
+            )
+            or zone.name
+        )
+        .strip()
+    )
+
+
+    description = (
+        str(
+            job.get(
+                "description"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    application_url = (
+        str(
+            job.get(
+                "application_url"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    salary_text = (
+        str(
+            job.get(
+                "salary_text"
+            )
+            or ""
+        )
+        .strip()
+        or None
+    )
+
+
+    closing_date = (
+        job.get(
+            "closing_date"
+        )
+    )
+
+
+    content_type = (
+        str(
+            job.get(
+                "content_type"
+            )
+            or "job"
+        )
+        .strip()
+        .lower()
+    )
+
+
+    external_id = (
+        str(
+            job.get(
+                "external_id"
+            )
+            or ""
+        )
+        .strip()
+        or None
+    )
+
+
+    # ========================================================
+    # REQUIRED DATA
+    # ========================================================
+
+    if (
+        not title
+        or
+        not application_url
+    ):
+
+        return "invalid"
+
+
+    # --------------------------------------------------------
+    # Feeds do not always provide company separately.
+    #
+    # Use the configured feed name instead of losing the
+    # opportunity completely.
+    # --------------------------------------------------------
+
+    if not business_name:
+
+        business_name = (
+            feed_name
+            or "External Employer"
+        )
+
+
+    if not description:
+
+        description = (
+            f"{title} opportunity from "
+            f"{business_name}. "
+            "Open the application link for full details."
+        )
+
+
+    # ========================================================
+    # VALID CONTENT TYPE
+    # ========================================================
+
+    if (
+        content_type
+        not in KALXA_JOB_TYPES
+    ):
+
+        content_type = (
+            "job"
+        )
+
+
+    # ========================================================
+    # EXPIRED
+    # ========================================================
+
+    today = (
+        datetime.now(
+            KALXA_TIMEZONE
+        )
+        .date()
+    )
+
+
+    if (
+        closing_date
+        and
+        closing_date < today
+    ):
+
+        return "expired"
+
+
+    # ========================================================
+    # URL DUPLICATE
+    # ========================================================
+
+    if find_duplicate_job_url(
+        application_url
+    ):
+
+        return "duplicate"
+
+
+    # ========================================================
+    # CONTENT DUPLICATE
+    # ========================================================
+
+    existing_duplicate = (
+        find_duplicate_job_submission(
+
+            zone_id=
+                zone.id,
+
+            title=
+                title,
+
+            business_name=
+                business_name,
+
+            venue=
+                venue,
+
+            end_date=
+                closing_date,
+        )
+    )
+
+
+    if existing_duplicate:
+
+        return "duplicate"
+
+
+    # ========================================================
+    # LIFETIME
+    # ========================================================
+
+    lifetime_type = (
+        "time_specific"
+        if closing_date
+        else "until_unavailable"
+    )
+
+
+    # ========================================================
+    # IMPORT AUDIT INFORMATION
+    # ========================================================
+
+    source_notes = [
+
+        "Imported automatically from an RSS/Atom jobs feed.",
+
+        f"Source: {feed_name}",
+
+        f"Feed URL: {feed_url}",
+    ]
+
+
+    if external_id:
+
+        source_notes.append(
+            f"External reference: {external_id}"
+        )
+
+
+    admin_notes = (
+        "\n".join(
+            source_notes
+        )
+    )
+
+
+    # ========================================================
+    # CREATE PENDING SUBMISSION
+    # ========================================================
+
+    submission = (
+        PendingSubmission(
+
+            organizer_id=
+                None,
+
+            zone_id=
+                zone.id,
+
+            category=
+                "jobs",
+
+            content_type=
+                content_type,
+
+            lifetime_type=
+                lifetime_type,
+
+            availability_status=
+                "available",
+
+            notification_eligible=
+                True,
+
+
+            # ------------------------------------------------
+            # JOB
+            # ------------------------------------------------
+
+            title=
+                title,
+
+            description=
+                description,
+
+            business_name=
+                business_name,
+
+            venue=
+                venue,
+
+            price=
+                salary_text,
+
+
+            # ------------------------------------------------
+            # APPLICATION
+            # ------------------------------------------------
+
+            ticket_url=
+                application_url,
+
+
+            # ------------------------------------------------
+            # DATES
+            # ------------------------------------------------
+
+            start_date=
+                None,
+
+            end_date=
+                closing_date,
+
+            start_time=
+                None,
+
+            end_time=
+                None,
+
+            publish_from=
+                None,
+
+            event_date=
+                None,
+
+            event_end_date=
+                None,
+
+
+            # ------------------------------------------------
+            # FREE KALXA JOB
+            # ------------------------------------------------
+
+            pricing_model=
+                None,
+
+            commercial_duration_days=
+                None,
+
+            amount_due=
+                None,
+
+            payment_status=
+                "waived",
+
+            distribution_zone_ids=
+                [],
+
+
+            # ------------------------------------------------
+            # SOURCE
+            # ------------------------------------------------
+
+            submitter_name=
+                (
+                    f"Kalxa RSS Import · "
+                    f"{feed_name}"
+                ),
+
+            submitter_email=
+                None,
+
+            submitter_phone=
+                None,
+
+            admin_notes=
+                admin_notes,
+
+
+            # ------------------------------------------------
+            # MODERATION
+            # ------------------------------------------------
+
+            status=
+                "pending",
+        )
+    )
+
+
+    if not submission.tracking_code:
+
+        submission.tracking_code = (
+            uuid.uuid4()
+            .hex[:12]
+            .upper()
+        )
+
+
+    db.session.add(
+        submission
+    )
+
+
+    return "created"
+
+
+# ============================================================
+# RSS / ATOM IMPORT ROUTE
+# ============================================================
+
+@app.route(
+    "/internal/jobs/import/rss",
+    methods=[
+        "POST",
+    ],
+)
+def import_rss_jobs():
+    """
+    Import configured RSS/Atom job feeds.
+
+    Security:
+
+        Authorization:
+        Bearer <KALXA_JOB_FEED_IMPORT_TOKEN>
+
+    Imported jobs DO NOT publish immediately.
+
+    They enter:
+
+        PendingSubmission
+            ↓
+        Admin moderation
+            ↓
+        ContentItem
+    """
+
+    # =====================================================
+    # AUTH TOKEN
+    # =====================================================
+
+    expected_token = (
+        os.environ.get(
+            "KALXA_JOB_FEED_IMPORT_TOKEN",
+            "",
+        )
+        .strip()
+    )
+
+
+    # --------------------------------------------------------
+    # Optional fallback so you can reuse the external Jobs
+    # importer token if preferred.
+    # --------------------------------------------------------
+
+    if not expected_token:
+
+        expected_token = (
+            os.environ.get(
+                "KALXA_EXTERNAL_JOBS_IMPORT_TOKEN",
+                "",
+            )
+            .strip()
+        )
+
+
+    if not expected_token:
+
+        current_app.logger.error(
+            "[Kalxa RSS Jobs] "
+            "Importer token is not configured."
+        )
+
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "RSS Jobs importer is not configured.",
+
+        }), 503
+
+
+    authorization = (
+        request.headers.get(
+            "Authorization",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not authorization.startswith(
+        "Bearer "
+    ):
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Unauthorized.",
+
+        }), 401
+
+
+    supplied_token = (
+        authorization[
+            len("Bearer "):
+        ]
+        .strip()
+    )
+
+
+    if (
+        not supplied_token
+        or not secrets.compare_digest(
+            supplied_token,
+            expected_token,
+        )
+    ):
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                "Unauthorized.",
+
+        }), 401
+
+
+    # =====================================================
+    # CONFIGURED FEEDS
+    # =====================================================
+
+    try:
+
+        feed_configs = (
+            get_job_feed_configs()
+        )
+
+
+    except Exception as exc:
+
+        current_app.logger.exception(
+            "[Kalxa RSS Jobs] "
+            "Unable to load feed configuration: %s",
+            exc,
+        )
+
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                str(
+                    exc
+                ),
+
+        }), 503
+
+
+    if not feed_configs:
+
+        return jsonify({
+
+            "success":
+                False,
+
+            "message":
+                (
+                    "No RSS/Atom Jobs feeds are configured."
+                ),
+
+        }), 503
+
+
+    # =====================================================
+    # TOTAL COUNTERS
+    # =====================================================
+
+    total_fetched = 0
+    total_created = 0
+    total_duplicates = 0
+    total_invalid = 0
+    total_expired = 0
+    total_feed_errors = 0
+
+
+    feed_results = []
+
+
+    # =====================================================
+    # PROCESS EACH FEED
+    # =====================================================
+
+    for feed_config in (
+        feed_configs
+    ):
+
+        feed_name = (
+            feed_config[
+                "name"
+            ]
+        )
+
+
+        feed_url = (
+            feed_config[
+                "url"
+            ]
+        )
+
+
+        feed_result = {
+
+            "name":
+                feed_name,
+
+            "url":
+                feed_url,
+
+            "fetched":
+                0,
+
+            "created":
+                0,
+
+            "duplicates":
+                0,
+
+            "invalid":
+                0,
+
+            "expired":
+                0,
+
+            "error":
+                None,
+        }
+
+
+        try:
+
+            zone, jobs = (
+                fetch_job_feed(
+                    feed_config
+                )
+            )
+
+
+            feed_result[
+                "zone_id"
+            ] = (
+                zone.id
+            )
+
+
+            feed_result[
+                "zone_name"
+            ] = (
+                zone.name
+            )
+
+
+            feed_result[
+                "fetched"
+            ] = (
+                len(
+                    jobs
+                )
+            )
+
+
+            total_fetched += (
+                len(
+                    jobs
+                )
+            )
+
+
+            # =================================================
+            # PROCESS ENTRIES
+            # =================================================
+
+            for job in jobs:
+
+                result = (
+                    create_pending_rss_job(
+
+                        job=
+                            job,
+
+                        zone=
+                            zone,
+
+                        feed_name=
+                            feed_name,
+
+                        feed_url=
+                            feed_url,
+                    )
+                )
+
+
+                if result == "created":
+
+                    feed_result[
+                        "created"
+                    ] += 1
+
+                    total_created += 1
+
+
+                elif result == "duplicate":
+
+                    feed_result[
+                        "duplicates"
+                    ] += 1
+
+                    total_duplicates += 1
+
+
+                elif result == "expired":
+
+                    feed_result[
+                        "expired"
+                    ] += 1
+
+                    total_expired += 1
+
+
+                else:
+
+                    feed_result[
+                        "invalid"
+                    ] += 1
+
+                    total_invalid += 1
+
+
+            # =================================================
+            # COMMIT THIS FEED
+            # =================================================
+
+            db.session.commit()
+
+
+            current_app.logger.info(
+                (
+                    "[Kalxa RSS Jobs] "
+                    "feed=%s "
+                    "zone_id=%s "
+                    "fetched=%s "
+                    "created=%s "
+                    "duplicates=%s "
+                    "expired=%s "
+                    "invalid=%s"
+                ),
+                feed_name,
+                zone.id,
+                feed_result[
+                    "fetched"
+                ],
+                feed_result[
+                    "created"
+                ],
+                feed_result[
+                    "duplicates"
+                ],
+                feed_result[
+                    "expired"
+                ],
+                feed_result[
+                    "invalid"
+                ],
+            )
+
+
+        except (
+            requests.RequestException,
+            ValueError,
+        ) as exc:
+
+            db.session.rollback()
+
+
+            feed_result[
+                "error"
+            ] = str(
+                exc
+            )
+
+
+            total_feed_errors += 1
+
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa RSS Jobs] "
+                    "Feed import failed "
+                    "feed=%s "
+                    "url=%s "
+                    "error=%s"
+                ),
+                feed_name,
+                feed_url,
+                exc,
+            )
+
+
+        except Exception as exc:
+
+            db.session.rollback()
+
+
+            feed_result[
+                "error"
+            ] = (
+                "Unexpected feed import error."
+            )
+
+
+            total_feed_errors += 1
+
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa RSS Jobs] "
+                    "Unexpected feed error "
+                    "feed=%s "
+                    "url=%s "
+                    "error=%s"
+                ),
+                feed_name,
+                feed_url,
+                exc,
+            )
+
+
+        feed_results.append(
+            feed_result
+        )
+
+
+    # =====================================================
+    # RESPONSE
+    # =====================================================
+
+    return jsonify({
+
+        "success":
+            total_feed_errors
+            < len(
+                feed_configs
+            ),
+
+        "feeds":
+            len(
+                feed_configs
+            ),
+
+        "feed_errors":
+            total_feed_errors,
+
+        "fetched":
+            total_fetched,
+
+        "created":
+            total_created,
+
+        "duplicates":
+            total_duplicates,
+
+        "expired":
+            total_expired,
+
+        "invalid":
+            total_invalid,
+
+        "results":
+            feed_results,
+
+        "message":
+            (
+                f"{total_created} RSS/Atom job(s) "
+                "were added to Kalxa moderation."
+            ),
+
+    }), 200
+
 def normalize_external_job_type(
     value,
 ):
