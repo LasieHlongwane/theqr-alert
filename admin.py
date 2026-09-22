@@ -12004,17 +12004,27 @@ def submissions():
     )
 
 
+
 @admin_bp.route(
     "/submissions/<int:submission_id>/edit",
-    methods=["GET", "POST"],
+    methods=[
+        "GET",
+        "POST",
+    ],
 )
-def edit_submission(submission_id):
+def edit_submission(
+    submission_id,
+):
 
     auth = require_admin()
 
     if auth:
         return auth
 
+
+    # =====================================================
+    # LOAD SUBMISSION
+    # =====================================================
 
     submission = (
         PendingSubmission.query
@@ -12024,8 +12034,10 @@ def edit_submission(submission_id):
     )
 
 
-    # Only pending submissions should be edited.
-    if submission.status != "pending":
+    if (
+        submission.status
+        != "pending"
+    ):
 
         flash(
             "Only pending submissions can be edited.",
@@ -12035,10 +12047,15 @@ def edit_submission(submission_id):
         return redirect(
             url_for(
                 "admin.submissions",
-                status=submission.status,
+                status=
+                    submission.status,
             )
         )
 
+
+    # =====================================================
+    # FORM OPTIONS
+    # =====================================================
 
     zones = (
         Zone.query
@@ -12052,23 +12069,56 @@ def edit_submission(submission_id):
     )
 
 
-    categories = get_categories()
+    categories = (
+        get_categories()
+    )
 
 
-    if request.method == "POST":
+    # =====================================================
+    # POST
+    # =====================================================
 
-        zone_id = request.form.get(
-            "zone_id",
-            type=int,
+    if (
+        request.method
+        == "POST"
+    ):
+
+        zone_id = (
+            request.form.get(
+                "zone_id",
+                type=int,
+            )
         )
 
-        category = (
+
+        raw_category = (
             request.form.get(
                 "category",
                 "",
             )
             .strip()
+            .lower()
         )
+
+
+        category = (
+            normalize_category(
+                raw_category
+            )
+        )
+
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                submission.content_type
+                or "",
+            )
+            .strip()
+            .lower()
+            or None
+        )
+
 
         title = (
             request.form.get(
@@ -12079,9 +12129,9 @@ def edit_submission(submission_id):
         )
 
 
-        # ---------------------------------------------
-        # BASIC VALIDATION
-        # ---------------------------------------------
+        # =================================================
+        # REQUIRED
+        # =================================================
 
         if (
             not zone_id
@@ -12090,22 +12140,38 @@ def edit_submission(submission_id):
         ):
 
             flash(
-                "Zone, category and title are required.",
+                (
+                    "Zone, category and title "
+                    "are required."
+                ),
                 "error",
             )
 
             return render_template(
                 "admin/submission_edit.html",
-                submission=submission,
-                zones=zones,
-                categories=categories,
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
             )
 
 
-        zone = db.session.get(
-            Zone,
-            zone_id,
+        # =================================================
+        # ZONE
+        # =================================================
+
+        zone = (
+            db.session.get(
+                Zone,
+                zone_id,
+            )
         )
+
 
         if (
             not zone
@@ -12113,45 +12179,140 @@ def edit_submission(submission_id):
         ):
 
             flash(
-                "Please select a valid active zone.",
+                (
+                    "Please select a valid "
+                    "active zone."
+                ),
                 "error",
             )
 
             return render_template(
                 "admin/submission_edit.html",
-                submission=submission,
-                zones=zones,
-                categories=categories,
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
             )
 
+
+        # =================================================
+        # CATEGORY
+        # =================================================
 
         if not get_category_by_slug(
             category
         ):
 
             flash(
-                "Please select a valid active category.",
+                (
+                    "Please select a valid "
+                    "active category."
+                ),
                 "error",
             )
 
             return render_template(
                 "admin/submission_edit.html",
-                submission=submission,
-                zones=zones,
-                categories=categories,
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
             )
 
 
-        # ---------------------------------------------
-        # DATE VALIDATION
-        # ---------------------------------------------
+        # =================================================
+        # WORKFLOW
+        # =================================================
+
+        workflow = (
+            get_content_workflow(
+                category,
+                content_type,
+            )
+        )
+
+
+        lifetime_type = (
+            submission.lifetime_type
+            or
+            workflow.get(
+                "lifetime_type"
+            )
+        )
+
+
+        # =================================================
+        # SPECIAL JOB LIFETIME
+        #
+        # Jobs from the free form use:
+        #
+        # closing date present:
+        #     time_specific
+        #
+        # no closing date:
+        #     until_unavailable
+        #
+        # =================================================
+
+        canonical_category = (
+            normalize_category(
+                category
+            )
+        )
+
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            closing_date_raw = (
+                request.form.get(
+                    "end_date",
+                    "",
+                )
+                .strip()
+            )
+
+
+            if closing_date_raw:
+
+                lifetime_type = (
+                    "time_specific"
+                )
+
+            else:
+
+                lifetime_type = (
+                    "until_unavailable"
+                )
+
+
+        # =================================================
+        # DATES
+        # =================================================
 
         try:
 
             dates, error = (
                 _validate_and_normalize_content_dates(
+
                     category,
+
                     request.form,
+
+                    lifetime_type=
+                        lifetime_type,
                 )
             )
 
@@ -12164,9 +12325,15 @@ def edit_submission(submission_id):
 
             return render_template(
                 "admin/submission_edit.html",
-                submission=submission,
-                zones=zones,
-                categories=categories,
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
             )
 
 
@@ -12179,19 +12346,97 @@ def edit_submission(submission_id):
 
             return render_template(
                 "admin/submission_edit.html",
-                submission=submission,
-                zones=zones,
-                categories=categories,
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
             )
 
 
-        # ---------------------------------------------
-        # UPDATE SUBMISSION
-        # ---------------------------------------------
+        # =================================================
+        # TIMES
+        # =================================================
 
-        submission.zone_id = zone_id
-        submission.category = category
-        submission.title = title
+        try:
+
+            start_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "start_time"
+                    )
+                )
+            )
+
+
+            end_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "end_time"
+                    )
+                )
+            )
+
+        except ValueError:
+
+            flash(
+                (
+                    "Please enter valid "
+                    "start and end times."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/submission_edit.html",
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
+            )
+
+
+        # =================================================
+        # UPDATE BASIC FIELDS
+        # =================================================
+
+        submission.zone_id = (
+            zone.id
+        )
+
+        submission.category = (
+            category
+        )
+
+        submission.content_type = (
+            content_type
+        )
+
+        submission.lifetime_type = (
+            lifetime_type
+        )
+
+        submission.notification_eligible = (
+            bool(
+                workflow.get(
+                    "notification_eligible",
+                    True,
+                )
+            )
+        )
+
+        submission.title = (
+            title
+        )
 
         submission.description = (
             request.form.get(
@@ -12229,6 +12474,11 @@ def edit_submission(submission_id):
             or None
         )
 
+
+        # =================================================
+        # PUBLIC ACTIONS
+        # =================================================
+
         submission.contact = (
             request.form.get(
                 "contact",
@@ -12238,9 +12488,37 @@ def edit_submission(submission_id):
             or None
         )
 
+        submission.whatsapp_number = (
+            request.form.get(
+                "whatsapp_number",
+                "",
+            )
+            .strip()
+            or None
+        )
 
-        # Submitter contact information can also
-        # be corrected by admin.
+        submission.directions_url = (
+            request.form.get(
+                "directions_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        submission.ticket_url = (
+            request.form.get(
+                "ticket_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        # =================================================
+        # SUBMITTER SNAPSHOT
+        # =================================================
 
         submission.submitter_name = (
             request.form.get(
@@ -12256,6 +12534,7 @@ def edit_submission(submission_id):
                 "",
             )
             .strip()
+            or None
         )
 
         submission.submitter_email = (
@@ -12268,7 +12547,14 @@ def edit_submission(submission_id):
         )
 
 
-        for key, value in dates.items():
+        # =================================================
+        # APPLY DATES
+        # =================================================
+
+        for (
+            key,
+            value,
+        ) in dates.items():
 
             setattr(
                 submission,
@@ -12277,11 +12563,97 @@ def edit_submission(submission_id):
             )
 
 
-        db.session.commit()
+        submission.start_time = (
+            start_time
+        )
+
+        submission.end_time = (
+            end_time
+        )
+
+
+        # =================================================
+        # JOBS ARE FREE
+        # =================================================
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            submission.pricing_model = (
+                None
+            )
+
+            submission.commercial_duration_days = (
+                None
+            )
+
+            submission.amount_due = (
+                None
+            )
+
+            submission.payment_status = (
+                "waived"
+            )
+
+            submission.distribution_zone_ids = (
+                []
+            )
+
+
+        # =================================================
+        # SAVE
+        # =================================================
+
+        try:
+
+            db.session.commit()
+
+
+        except Exception as exc:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa Admin] Unable to "
+                    "update submission "
+                    "submission_id=%s error=%s"
+                ),
+                submission.id,
+                exc,
+            )
+
+
+            flash(
+                (
+                    "Submission could not "
+                    "be updated."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/submission_edit.html",
+
+                submission=
+                    submission,
+
+                zones=
+                    zones,
+
+                categories=
+                    categories,
+            )
 
 
         flash(
-            "Submission updated successfully. You can now approve it.",
+            (
+                "Submission updated successfully. "
+                "You can now approve it."
+            ),
             "success",
         )
 
@@ -12294,14 +12666,22 @@ def edit_submission(submission_id):
         )
 
 
+    # =====================================================
+    # GET
+    # =====================================================
+
     return render_template(
         "admin/submission_edit.html",
-        submission=submission,
-        zones=zones,
-        categories=categories,
+
+        submission=
+            submission,
+
+        zones=
+            zones,
+
+        categories=
+            categories,
     )
-
-
 
 @admin_bp.route(
     "/submissions/<int:submission_id>/approve",
