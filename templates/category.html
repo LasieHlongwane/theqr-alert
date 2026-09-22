@@ -2233,28 +2233,46 @@
 
                                 </div>
 
+                               {% elif canonical_category == "events" %}
 
-                            {% elif canonical_category == "events" %}
+    <span class="listing-detail-icon">
+        🎟️
+    </span>
 
-                                <span class="listing-detail-icon">
-                                    🎟️
-                                </span>
+    <div>
 
-                                <div>
+        <span class="listing-detail-label">
+            Entry
+        </span>
 
-                                    <span class="listing-detail-label">
-                                        Entry
-                                    </span>
+        <strong>
+            {{ item.price }}
+        </strong>
 
-                                    <strong>
-                                        {{ item.price }}
-                                    </strong>
-
-                                </div>
+    </div>
 
 
-                            {% else %}
+{% elif canonical_category == "jobs" %}
 
+    <span class="listing-detail-icon">
+        💰
+    </span>
+
+    <div>
+
+        <span class="listing-detail-label">
+            Salary / Compensation
+        </span>
+
+        <strong>
+            {{ item.price }}
+        </strong>
+
+    </div>
+
+
+{% else %}
+                           
                                 <span class="listing-detail-icon">
                                     💰
                                 </span>
