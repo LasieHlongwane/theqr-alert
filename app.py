@@ -2707,7 +2707,332 @@ def create_pending_rss_job(
 # KALXA JOBS - TEST RSS FEED
 # ============================================================
 
+# ============================================================
+# KALXA JOBS - LOCATION CLASSIFICATION
+# ============================================================
 
+KALXA_ALLOWED_JOB_LOCATION_CLASSES = {
+    "KwaMhlanga",
+    "Mpumalanga",
+    "Gauteng",
+    "National",
+    "Remote",
+}
+
+
+KALXA_KWAMHLANGA_LOCATION_KEYWORDS = (
+    "kwamhlanga",
+    "kwa mhlanga",
+    "thembisile hani",
+)
+
+
+KALXA_MPUMALANGA_LOCATION_KEYWORDS = (
+    "mpumalanga",
+    "mbombela",
+    "nelspruit",
+    "emalahleni",
+    "witbank",
+    "middelburg",
+    "secunda",
+    "ermelo",
+    "hazyview",
+    "white river",
+    "barberton",
+    "bushbuckridge",
+    "delmas",
+    "bethal",
+    "standerton",
+    "komatipoort",
+    "sabie",
+    "lydenburg",
+    "mashishing",
+    "piet retief",
+    "mkhondo",
+    "siyabuswa",
+)
+
+
+KALXA_GAUTENG_LOCATION_KEYWORDS = (
+    "gauteng",
+    "johannesburg",
+    "joburg",
+    "pretoria",
+    "tshwane",
+    "centurion",
+    "midrand",
+    "sandton",
+    "randburg",
+    "roodepoort",
+    "soweto",
+    "germiston",
+    "boksburg",
+    "benoni",
+    "kempton park",
+    "alberton",
+    "ekurhuleni",
+    "tembisa",
+    "springs",
+    "brakpan",
+    "krugersdorp",
+    "vereeniging",
+    "vanderbijlpark",
+)
+
+
+KALXA_REMOTE_LOCATION_KEYWORDS = (
+    "remote",
+    "work from home",
+    "work-from-home",
+    "work remotely",
+    "remote work",
+    "wfh",
+    "anywhere in south africa",
+)
+
+
+KALXA_NATIONAL_LOCATION_KEYWORDS = (
+    "south africa",
+    "nationwide",
+    "national",
+    "countrywide",
+    "across south africa",
+    "various locations",
+    "multiple locations",
+    "multiple provinces",
+)
+
+
+def normalize_job_location_text(
+    value,
+):
+    """
+    Normalize external job text for simple
+    location keyword matching.
+    """
+
+    return (
+        str(
+            value
+            or ""
+        )
+        .strip()
+        .lower()
+        .replace(
+            "\n",
+            " ",
+        )
+        .replace(
+            "\r",
+            " ",
+        )
+    )
+
+
+def text_contains_any_job_location_keyword(
+    text,
+    keywords,
+):
+
+    return any(
+        keyword in text
+        for keyword in keywords
+    )
+
+
+def classify_external_job_location(
+    job,
+):
+    """
+    Classify an imported job into a Kalxa geographic class.
+
+    Possible results:
+
+        KwaMhlanga
+        Mpumalanga
+        Gauteng
+        National
+        Remote
+        Other
+
+    'Other' is intentionally internal and will not be
+    published into the KwaMhlanga feed.
+    """
+
+    location = (
+        normalize_job_location_text(
+            job.get(
+                "location"
+            )
+        )
+    )
+
+
+    title = (
+        normalize_job_location_text(
+            job.get(
+                "title"
+            )
+        )
+    )
+
+
+    description = (
+        normalize_job_location_text(
+            job.get(
+                "description"
+            )
+        )
+    )
+
+
+    employer = (
+        normalize_job_location_text(
+            (
+                job.get(
+                    "employer"
+                )
+                or job.get(
+                    "company"
+                )
+                or job.get(
+                    "business_name"
+                )
+            )
+        )
+    )
+
+
+    # ========================================================
+    # LOCATION FIELD GETS THE STRONGEST WEIGHT
+    # ========================================================
+
+    location_text = (
+        location
+    )
+
+
+    broader_text = " ".join(
+        [
+            location,
+            title,
+            description,
+            employer,
+        ]
+    )
+
+
+    # ========================================================
+    # KWAMHLANGA
+    # ========================================================
+
+    if (
+        text_contains_any_job_location_keyword(
+            location_text,
+            KALXA_KWAMHLANGA_LOCATION_KEYWORDS,
+        )
+        or
+        text_contains_any_job_location_keyword(
+            broader_text,
+            KALXA_KWAMHLANGA_LOCATION_KEYWORDS,
+        )
+    ):
+
+        return "KwaMhlanga"
+
+
+    # ========================================================
+    # REMOTE
+    #
+    # Check remote before national because descriptions often
+    # say things such as "Remote - South Africa".
+    # ========================================================
+
+    if text_contains_any_job_location_keyword(
+        broader_text,
+        KALXA_REMOTE_LOCATION_KEYWORDS,
+    ):
+
+        return "Remote"
+
+
+    # ========================================================
+    # MPUMALANGA
+    # ========================================================
+
+    if text_contains_any_job_location_keyword(
+        location_text,
+        KALXA_MPUMALANGA_LOCATION_KEYWORDS,
+    ):
+
+        return "Mpumalanga"
+
+
+    # ========================================================
+    # GAUTENG
+    # ========================================================
+
+    if text_contains_any_job_location_keyword(
+        location_text,
+        KALXA_GAUTENG_LOCATION_KEYWORDS,
+    ):
+
+        return "Gauteng"
+
+
+    # ========================================================
+    # FALLBACK SEARCH
+    #
+    # Some RSS feeds put the city/province in the title or
+    # description instead of a dedicated location field.
+    # ========================================================
+
+    if text_contains_any_job_location_keyword(
+        broader_text,
+        KALXA_MPUMALANGA_LOCATION_KEYWORDS,
+    ):
+
+        return "Mpumalanga"
+
+
+    if text_contains_any_job_location_keyword(
+        broader_text,
+        KALXA_GAUTENG_LOCATION_KEYWORDS,
+    ):
+
+        return "Gauteng"
+
+
+    # ========================================================
+    # NATIONAL
+    #
+    # Do this after province detection because a value such as
+    # "Pretoria, Gauteng, South Africa" should remain Gauteng.
+    # ========================================================
+
+    if text_contains_any_job_location_keyword(
+        broader_text,
+        KALXA_NATIONAL_LOCATION_KEYWORDS,
+    ):
+
+        return "National"
+
+
+    # ========================================================
+    # UNKNOWN / IRRELEVANT LOCATION
+    # ========================================================
+
+    return "Other"
+
+
+def is_job_location_relevant_to_kwamhlanga(
+    classification,
+):
+
+    return (
+        classification
+        in KALXA_ALLOWED_JOB_LOCATION_CLASSES
+    )
 # ============================================================
 # RSS / ATOM IMPORT ROUTE
 # ============================================================
