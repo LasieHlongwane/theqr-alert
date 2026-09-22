@@ -5472,14 +5472,102 @@ def import_rss_jobs_payload():
     # This is intentional for Render Free.
     # Only the newest 20 items are processed during each run.
     # ========================================================
+# ========================================================
+# LOCATION CLASSIFICATION
+# ========================================================
 
     total_feed_items = len(
-        jobs
+      jobs
+    )
+
+
+    location_counts = {
+
+      "KwaMhlanga": 0,
+      "Mpumalanga": 0,
+      "Gauteng": 0,
+      "National": 0,
+      "Remote": 0,
+      "Other": 0,
+    }
+
+
+    locally_relevant_jobs = []
+
+
+    for job in jobs:
+
+      classification = (
+        classify_external_job_location(
+            job
+        )
+      )
+
+
+      location_counts[
+        classification
+      ] = (
+        location_counts.get(
+            classification,
+            0,
+        )
+        + 1
+      )
+
+
+    # Save classification inside the in-memory job record.
+      job[
+        "kalxa_location_classification"
+      ] = (
+        classification
+      )
+
+
+      if not is_job_location_relevant_to_kwamhlanga(
+        classification
+      ):
+
+        continue
+
+
+      locally_relevant_jobs.append(
+        job
+      )
+
+
+# ========================================================
+# RENDER FREE WORK LIMIT
+# ========================================================
+
+    relevant_feed_items = len(
+      locally_relevant_jobs
     )
 
 
     jobs = (
-        jobs[:20]
+      locally_relevant_jobs[
+        :20
+      ]
+    )
+
+
+    filtered_out = (
+      total_feed_items
+      - relevant_feed_items
+    )
+
+
+    current_app.logger.info(
+      (
+        "[Kalxa RSS Location] "
+        "feed=%s total=%s relevant=%s "
+        "filtered=%s counts=%s"
+      ),
+      feed_name,
+      total_feed_items,
+      relevant_feed_items,
+      filtered_out,
+      location_counts,
     )
 
 
