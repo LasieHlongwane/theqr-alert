@@ -1149,6 +1149,121 @@
                 opacity: 0.65;
             }
 
+            /* =========================================================
+   KALXA JOBS - FREE COMMUNITY SUBMISSION
+========================================================= */
+
+.jobs-community-submit {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-top: 18px;
+
+    padding: 15px 16px;
+
+    border:
+        1px solid
+        rgba(255, 244, 223, 0.16);
+
+    border-radius: 15px;
+
+    background:
+        rgba(255, 244, 223, 0.07);
+}
+
+
+.jobs-community-submit-copy {
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.jobs-community-submit-eyebrow {
+
+    margin-bottom: 3px;
+
+    color:
+        rgba(255, 244, 223, 0.58);
+
+    font-size: 8px;
+    font-weight: 950;
+
+    letter-spacing: .12em;
+
+    text-transform: uppercase;
+}
+
+
+.jobs-community-submit-copy strong {
+
+    color: #fff4df;
+
+    font-size: 12px;
+    font-weight: 950;
+}
+
+
+.jobs-community-submit-copy > span:last-child {
+
+    margin-top: 2px;
+
+    color:
+        rgba(255, 255, 255, 0.53);
+
+    font-size: 9px;
+}
+
+
+.jobs-community-submit-button {
+
+    flex:
+        0 0 auto;
+
+    min-height: 40px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        8px 12px;
+
+    background: #fff4df;
+
+    color: #17191d;
+
+    border-radius: 10px;
+
+    font-size: 10px;
+    font-weight: 950;
+
+    text-decoration: none;
+}
+
+
+@media (max-width: 520px) {
+
+    .jobs-community-submit {
+
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+
+    .jobs-community-submit-button {
+        width: 100%;
+    }
+
+}
+
 
             .kalxa-quick-action:hover {
                 opacity: 0.82;
@@ -1370,6 +1485,42 @@
                 in {{ zone.name }}.
 
             </p>
+
+            {% if canonical_category == "jobs" %}
+
+    <div class="jobs-community-submit">
+
+        <div class="jobs-community-submit-copy">
+
+            <span class="jobs-community-submit-eyebrow">
+                COMMUNITY JOBS
+            </span>
+
+            <strong>
+                Know about an opportunity?
+            </strong>
+
+            <span>
+                Help someone around {{ zone.name }}
+                discover it.
+            </span>
+
+        </div>
+
+
+        <a
+            href="{{ url_for(
+                'submit_job',
+                zone_id=zone.id
+            ) }}"
+            class="jobs-community-submit-button"
+        >
+            + Post a Job Free
+        </a>
+
+    </div>
+
+{% endif %}
 
         </section>
 
