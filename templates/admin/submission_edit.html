@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -517,6 +516,83 @@
 
 
         /* =========================================================
+           JOB REGION
+        ========================================================= */
+
+        .job-region-review {
+
+            margin:
+                18px 0;
+
+            padding:
+                16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.12
+                );
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.035
+                );
+        }
+
+
+        .job-region-review-title {
+
+            display:
+                block;
+
+            margin-bottom:
+                4px;
+
+            color:
+                #fff4df;
+
+            font-size:
+                12px;
+
+            font-weight:
+                900;
+        }
+
+
+        .job-region-review-copy {
+
+            display:
+                block;
+
+            margin-bottom:
+                12px;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.48
+                );
+
+            font-size:
+                10px;
+
+            line-height:
+                1.5;
+        }
+
+
+        /* =========================================================
            TWO-COLUMN FIELD ROW
         ========================================================= */
 
@@ -986,10 +1062,6 @@
                 </div>
 
 
-                <!-- =============================================
-                     ZONE
-                ============================================== -->
-
                 <label>
 
                     Zone
@@ -1022,10 +1094,6 @@
 
                 </label>
 
-
-                <!-- =============================================
-                     CATEGORY
-                ============================================== -->
 
                 <label>
 
@@ -1068,10 +1136,6 @@
                 </label>
 
 
-                <!-- =============================================
-                     FREE JOB MODE NOTICE
-                ============================================== -->
-
                 <div
                     class="submission-mode-notice"
                     id="job-mode-notice"
@@ -1100,10 +1164,6 @@
                 </div>
 
 
-                <!-- =============================================
-                     TITLE
-                ============================================== -->
-
                 <label>
 
                     Title
@@ -1117,10 +1177,6 @@
 
                 </label>
 
-
-                <!-- =============================================
-                     BUSINESS / ORGANISATION
-                ============================================== -->
 
                 <label>
 
@@ -1149,10 +1205,6 @@
                 </label>
 
 
-                <!-- =============================================
-                     DESCRIPTION
-                ============================================== -->
-
                 <label>
 
                     Description
@@ -1164,10 +1216,6 @@
 
                 </label>
 
-
-                <!-- =============================================
-                     VENUE / LOCATION
-                ============================================== -->
 
                 <label>
 
@@ -1196,10 +1244,6 @@
                 </label>
 
 
-                <!-- =============================================
-                     PRICE
-                ============================================== -->
-
                 <label
                     id="price-field"
                 >
@@ -1217,10 +1261,6 @@
 
                 </label>
 
-
-                <!-- =============================================
-                     PUBLIC CONTACT
-                ============================================== -->
 
                 <label>
 
@@ -1248,10 +1288,6 @@
                 </label>
 
 
-                <!-- =============================================
-                     WHATSAPP
-                ============================================== -->
-
                 <label>
 
                     WhatsApp Number
@@ -1268,18 +1304,12 @@
                     >
 
                     <span class="submission-field-help">
-
                         Optional WhatsApp contact visitors
                         can use directly from Kalxa.
-
                     </span>
 
                 </label>
 
-
-                <!-- =============================================
-                     DIRECTIONS
-                ============================================== -->
 
                 <label
                     id="directions-field"
@@ -1297,19 +1327,8 @@
                         placeholder="https://..."
                     >
 
-                    <span class="submission-field-help">
-
-                        Optional Google Maps or other
-                        location link.
-
-                    </span>
-
                 </label>
 
-
-                <!-- =============================================
-                     TICKET / APPLICATION URL
-                ============================================== -->
 
                 <label>
 
@@ -1391,6 +1410,118 @@
 
 
                 <!-- =============================================
+                     KALXA REGION
+                ============================================== -->
+
+                <div class="job-region-review">
+
+                    <span class="job-region-review-title">
+                        📍 Kalxa Region Classification
+                    </span>
+
+                    <span class="job-region-review-copy">
+                        This determines how the job will be
+                        grouped and filtered for Kalxa users.
+                        It is different from the exact Job Location.
+                    </span>
+
+
+                    <label>
+
+                        Region
+
+                        <select
+                            name="location_classification"
+                            id="location-classification-select"
+                        >
+
+                            <option value="">
+                                Not classified
+                            </option>
+
+
+                            <option
+                                value="KwaMhlanga"
+                                {% if
+                                    submission.location_classification
+                                    == "KwaMhlanga"
+                                %}
+                                    selected
+                                {% endif %}
+                            >
+                                KwaMhlanga
+                            </option>
+
+
+                            <option
+                                value="Mpumalanga"
+                                {% if
+                                    submission.location_classification
+                                    == "Mpumalanga"
+                                %}
+                                    selected
+                                {% endif %}
+                            >
+                                Mpumalanga
+                            </option>
+
+
+                            <option
+                                value="Gauteng"
+                                {% if
+                                    submission.location_classification
+                                    == "Gauteng"
+                                %}
+                                    selected
+                                {% endif %}
+                            >
+                                Gauteng
+                            </option>
+
+
+                            <option
+                                value="National"
+                                {% if
+                                    submission.location_classification
+                                    == "National"
+                                %}
+                                    selected
+                                {% endif %}
+                            >
+                                National
+                            </option>
+
+
+                            <option
+                                value="Remote"
+                                {% if
+                                    submission.location_classification
+                                    == "Remote"
+                                %}
+                                    selected
+                                {% endif %}
+                            >
+                                Remote
+                            </option>
+
+                        </select>
+
+
+                        <span class="submission-field-help">
+
+                            Example:
+                            Pretoria → Gauteng,
+                            Mbombela → Mpumalanga,
+                            countrywide vacancies → National.
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <!-- =============================================
                      CONTENT TYPE
                 ============================================== -->
 
@@ -1404,75 +1535,52 @@
 
                         <option
                             value="job"
-                            {% if
-                                submission.content_type
-                                == "job"
-                            %}
+                            {% if submission.content_type == "job" %}
                                 selected
                             {% endif %}
                         >
                             Job / Vacancy
                         </option>
 
-
                         <option
                             value="learnership"
-                            {% if
-                                submission.content_type
-                                == "learnership"
-                            %}
+                            {% if submission.content_type == "learnership" %}
                                 selected
                             {% endif %}
                         >
                             Learnership
                         </option>
 
-
                         <option
                             value="internship"
-                            {% if
-                                submission.content_type
-                                == "internship"
-                            %}
+                            {% if submission.content_type == "internship" %}
                                 selected
                             {% endif %}
                         >
                             Internship
                         </option>
 
-
                         <option
                             value="training"
-                            {% if
-                                submission.content_type
-                                == "training"
-                            %}
+                            {% if submission.content_type == "training" %}
                                 selected
                             {% endif %}
                         >
                             Training Opportunity
                         </option>
 
-
                         <option
                             value="tender"
-                            {% if
-                                submission.content_type
-                                == "tender"
-                            %}
+                            {% if submission.content_type == "tender" %}
                                 selected
                             {% endif %}
                         >
                             Tender
                         </option>
 
-
                         <option
                             value="business_opportunity"
-                            {% if
-                                submission.content_type
-                                == "business_opportunity"
-                            %}
+                            {% if submission.content_type == "business_opportunity" %}
                                 selected
                             {% endif %}
                         >
@@ -1481,20 +1589,8 @@
 
                     </select>
 
-
-                    <span class="submission-field-help">
-
-                        This controls how Kalxa classifies
-                        and manages the opportunity.
-
-                    </span>
-
                 </label>
 
-
-                <!-- =============================================
-                     JOB DATE FIELDS
-                ============================================== -->
 
                 <div class="submission-field-grid">
 
@@ -1514,13 +1610,6 @@
                             }}"
                         >
 
-                        <span class="submission-field-help">
-
-                            Optional. Leave blank when the
-                            opportunity is already open.
-
-                        </span>
-
                     </label>
 
 
@@ -1539,21 +1628,10 @@
                             }}"
                         >
 
-                        <span class="submission-field-help">
-
-                            Leave blank for ordinary jobs
-                            that remain open until filled.
-
-                        </span>
-
                     </label>
 
                 </div>
 
-
-                <!-- =============================================
-                     JOB TIMES
-                ============================================== -->
 
                 <div class="submission-field-grid">
 
@@ -1876,20 +1954,8 @@
 
 
             <!-- =================================================
-                 ACTUAL BACKEND DATE/TIME FIELDS
+                 BACKEND DATE / TIME FIELDS
             ================================================== -->
-            <!--
-                These hidden fields are the values expected by
-                admin.py:
-
-                    start_date
-                    end_date
-                    start_time
-                    end_time
-
-                JavaScript synchronises the correct visible
-                category-specific inputs before form submission.
-            -->
 
             <input
                 type="hidden"
@@ -2047,10 +2113,6 @@
 
 </div>
 
-
-<!-- =========================================================
-     CATEGORY-AWARE ADMIN FORM
-========================================================== -->
 
 <script>
 
@@ -2246,10 +2308,6 @@
         );
 
 
-    // =====================================================
-    // CATEGORY HELPERS
-    // =====================================================
-
     function cleanCategory(
         value
     ) {
@@ -2304,10 +2362,6 @@
 
     }
 
-
-    // =====================================================
-    // JOB FIELD TEXT
-    // =====================================================
 
     function setJobLabels(
         enabled
@@ -2406,10 +2460,6 @@
     }
 
 
-    // =====================================================
-    // CONTENT TYPE
-    // =====================================================
-
     function syncContentType() {
 
         if (
@@ -2438,13 +2488,6 @@
             );
 
 
-        /*
-         * If admin has changed a Jobs submission into a
-         * different category, do not accidentally keep:
-         *
-         * content_type = job
-         */
-
         if (
             isJobsCategory(
                 originalCategory
@@ -2463,19 +2506,11 @@
     }
 
 
-    // =====================================================
-    // SYNCHRONISE BACKEND DATE/TIME FIELDS
-    // =====================================================
-
     function syncBackendDateFields() {
 
         const category =
             categorySelect.value;
 
-
-        // =================================================
-        // JOBS
-        // =================================================
 
         if (
             isJobsCategory(
@@ -2507,19 +2542,6 @@
         }
 
 
-        // =================================================
-        // EVENTS
-        //
-        // Event dates themselves are submitted through:
-        //
-        // publish_from
-        // event_date
-        // event_end_date
-        //
-        // These hidden general dates remain blank.
-        // Start/end times still use the shared backend fields.
-        // =================================================
-
         if (
             isEventsCategory(
                 category
@@ -2548,10 +2570,6 @@
         }
 
 
-        // =================================================
-        // GENERAL CONTENT
-        // =================================================
-
         backendStartDate.value =
             generalStartDate.value
             || "";
@@ -2574,10 +2592,6 @@
     }
 
 
-    // =====================================================
-    // DISPLAY CORRECT CATEGORY FIELDS
-    // =====================================================
-
     function updateCategoryFields() {
 
         const category =
@@ -2596,10 +2610,6 @@
             );
 
 
-        // =================================================
-        // JOBS
-        // =================================================
-
         jobPanel.hidden =
             !jobsMode;
 
@@ -2607,9 +2617,6 @@
         jobModeNotice.hidden =
             !jobsMode;
 
-
-        // Jobs do not use the generic price field as
-        // a Kalxa listing charge.
 
         if (priceField) {
 
@@ -2620,10 +2627,6 @@
         }
 
 
-        // Directions are normally unnecessary for the
-        // free Jobs submission flow, but the stored value
-        // remains untouched.
-
         if (directionsField) {
 
             directionsField.style.display =
@@ -2633,19 +2636,11 @@
         }
 
 
-        // =================================================
-        // EVENTS
-        // =================================================
-
         eventFields.style.display =
             eventsMode
                 ? "block"
                 : "none";
 
-
-        // =================================================
-        // GENERAL DATES
-        // =================================================
 
         generalFields.style.display =
             (
@@ -2656,10 +2651,6 @@
                 ? "block"
                 : "none";
 
-
-        // =================================================
-        // CATEGORY-SPECIFIC WORDING
-        // =================================================
 
         setJobLabels(
             jobsMode
@@ -2673,29 +2664,17 @@
     }
 
 
-    // =====================================================
-    // CATEGORY CHANGE
-    // =====================================================
-
     categorySelect.addEventListener(
         "change",
         updateCategoryFields
     );
 
 
-    // =====================================================
-    // JOB CONTENT TYPE
-    // =====================================================
-
     jobContentTypeSelect.addEventListener(
         "change",
         syncContentType
     );
 
-
-    // =====================================================
-    // JOB DATE/TIME CHANGES
-    // =====================================================
 
     [
         jobStartDate,
@@ -2732,10 +2711,6 @@
     );
 
 
-    // =====================================================
-    // BEFORE SUBMIT
-    // =====================================================
-
     submissionEditForm.addEventListener(
         "submit",
         function() {
@@ -2747,10 +2722,6 @@
         }
     );
 
-
-    // =====================================================
-    // INITIAL STATE
-    // =====================================================
 
     updateCategoryFields();
 
