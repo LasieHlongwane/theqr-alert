@@ -50,7 +50,7 @@ from push_service import send_zone_push_notification
 from qr_generator import generate_access_qr
 
 
-admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+
 
 
 
@@ -66,6 +66,17 @@ KALXA_ALLOWED_JOB_LOCATION_CLASSES = {
     "National",
     "Remote",
 }
+
+# ============================================================
+# BLUEPRINT
+# ============================================================
+
+admin_bp = Blueprint(
+    "admin",
+    __name__,
+    url_prefix="/admin",
+)
+
 ARCHIVE_GRACE_DAYS = 7
 EXPIRING_SOON_DAYS = 3
 
