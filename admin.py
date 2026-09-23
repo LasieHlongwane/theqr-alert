@@ -52,6 +52,20 @@ from qr_generator import generate_access_qr
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+
+
+
+# ============================================================
+# KALXA JOB LOCATION CLASSIFICATIONS
+# ============================================================
+
+KALXA_ALLOWED_JOB_LOCATION_CLASSES = {
+    "KwaMhlanga",
+    "Mpumalanga",
+    "Gauteng",
+    "National",
+    "Remote",
+}
 ARCHIVE_GRACE_DAYS = 7
 EXPIRING_SOON_DAYS = 3
 
