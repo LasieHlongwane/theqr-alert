@@ -915,10 +915,10 @@ def create_pending_retail_campaign(
         end_date < start_date
     ):
 
-    return {
+      return {
             "created": False,
             "reason": "invalid_date_range",
-    }
+      }
 
 
     # ========================================================
