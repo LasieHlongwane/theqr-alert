@@ -243,6 +243,542 @@ def phone_link(value):
 
 
 # ============================================================
+# RETAIL DATE PARSER
+# ============================================================
+
+def parse_retail_date(
+    value,
+):
+
+    value = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not value:
+
+        return None
+
+
+    formats = [
+
+        "%Y-%m-%d",
+
+        "%d/%m/%Y",
+
+        "%d-%m-%Y",
+
+        "%d %B %Y",
+
+        "%d %b %Y",
+    ]
+
+
+    for date_format in formats:
+
+        try:
+
+            return (
+                datetime.strptime(
+                    value,
+                    date_format,
+                )
+                .date()
+            )
+
+        except ValueError:
+
+            continue
+
+
+    return None
+
+
+# ============================================================
+# RETAIL SPECIAL REGION CLASSIFIER
+# ============================================================
+
+def classify_retail_campaign_region(
+    title="",
+    description="",
+    location="",
+):
+
+    text = (
+        " ".join(
+            [
+                str(title or ""),
+                str(description or ""),
+                str(location or ""),
+            ]
+        )
+        .lower()
+    )
+
+
+    # ========================================================
+    # KWAMHLANGA
+    # ========================================================
+
+    if (
+        "kwamhlanga" in text
+        or
+        "kwa mhlanga" in text
+        or
+        "thembisile hani" in text
+    ):
+
+        return "KwaMhlanga"
+
+
+    # ========================================================
+    # MPUMALANGA
+    # ========================================================
+
+    mpumalanga_keywords = [
+
+        "mpumalanga",
+
+        "mbombela",
+
+        "nelspruit",
+
+        "emalahleni",
+
+        "witbank",
+
+        "middelburg",
+
+        "kwamhlanga",
+
+        "siyabuswa",
+    ]
+
+
+    if any(
+        keyword in text
+        for keyword
+        in mpumalanga_keywords
+    ):
+
+        return "Mpumalanga"
+
+
+    # ========================================================
+    # GAUTENG
+    # ========================================================
+
+    gauteng_keywords = [
+
+        "gauteng",
+
+        "johannesburg",
+
+        "joburg",
+
+        "pretoria",
+
+        "tshwane",
+
+        "midrand",
+
+        "centurion",
+
+        "soweto",
+
+        "sandton",
+    ]
+
+
+    if any(
+        keyword in text
+        for keyword
+        in gauteng_keywords
+    ):
+
+        return "Gauteng"
+
+
+    # ========================================================
+    # NATIONAL
+    # ========================================================
+
+    national_keywords = [
+
+        "rsa",
+
+        "nationwide",
+
+        "national",
+
+        "south africa",
+
+        "all stores",
+
+        "stores nationwide",
+    ]
+
+
+    if any(
+        keyword in text
+        for keyword
+        in national_keywords
+    ):
+
+        return "National"
+
+
+    return None
+
+
+# ============================================================
+# FIND EXISTING RETAIL CAMPAIGN
+# ============================================================
+
+def find_duplicate_retail_campaign(
+    source_url,
+):
+
+    source_url = (
+        str(
+            source_url
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not source_url:
+
+        return None
+
+
+    return (
+        PendingSubmission
+        .query
+        .filter(
+            PendingSubmission.category
+            == KALXA_RETAIL_SPECIALS_CATEGORY,
+
+            PendingSubmission.ticket_url
+            == source_url,
+        )
+        .first()
+    )
+
+
+
+# ============================================================
+# CREATE PENDING RETAIL CAMPAIGN
+# ============================================================
+
+def create_pending_retail_campaign(
+    campaign,
+    zone_id,
+):
+
+    retailer = (
+        str(
+            campaign.get(
+                "retailer"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    title = (
+        str(
+            campaign.get(
+                "title"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    source_url = (
+        str(
+            campaign.get(
+                "source_url"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    description = (
+        str(
+            campaign.get(
+                "description"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    location = (
+        str(
+            campaign.get(
+                "location"
+            )
+            or ""
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # REQUIRED FIELDS
+    # ========================================================
+
+    if not retailer:
+
+        return {
+            "created": False,
+            "reason": "missing_retailer",
+        }
+
+
+    if not title:
+
+        return {
+            "created": False,
+            "reason": "missing_title",
+        }
+
+
+    if not source_url:
+
+        return {
+            "created": False,
+            "reason": "missing_source_url",
+        }
+
+
+    # ========================================================
+    # RETAILER VALIDATION
+    # ========================================================
+
+    if (
+        retailer
+        not in
+        KALXA_ALLOWED_RETAILERS
+    ):
+
+        retailer = (
+            "Other"
+        )
+
+
+    # ========================================================
+    # DUPLICATE
+    # ========================================================
+
+    duplicate = (
+        find_duplicate_retail_campaign(
+            source_url
+        )
+    )
+
+
+    if duplicate:
+
+        return {
+            "created": False,
+            "reason": "duplicate",
+            "submission_id": duplicate.id,
+        }
+
+
+    # ========================================================
+    # DATES
+    # ========================================================
+
+    start_date = (
+        parse_retail_date(
+            campaign.get(
+                "start_date"
+            )
+        )
+    )
+
+
+    end_date = (
+        parse_retail_date(
+            campaign.get(
+                "end_date"
+            )
+        )
+    )
+
+
+    # ========================================================
+    # EXPIRED CAMPAIGN
+    # ========================================================
+
+    today = (
+        datetime.utcnow()
+        .date()
+    )
+
+
+    if (
+        end_date
+        and
+        end_date < today
+    ):
+
+        return {
+            "created": False,
+            "reason": "expired",
+        }
+
+
+    # ========================================================
+    # REGION
+    # ========================================================
+
+    region = (
+        classify_retail_campaign_region(
+
+            title=
+                title,
+
+            description=
+                description,
+
+            location=
+                location,
+        )
+    )
+
+
+    # ========================================================
+    # ONLY IMPORT RELEVANT REGIONS
+    # ========================================================
+
+    if (
+        region
+        not in {
+            "KwaMhlanga",
+            "Mpumalanga",
+            "Gauteng",
+            "National",
+        }
+    ):
+
+        return {
+            "created": False,
+            "reason": "irrelevant_region",
+        }
+
+
+    # ========================================================
+    # DESCRIPTION
+    # ========================================================
+
+    final_description = (
+        description
+        or
+        (
+            f"Current {retailer} specials. "
+            "Open the official retailer promotion "
+            "to view available deals."
+        )
+    )
+
+
+    # ========================================================
+    # CREATE
+    # ========================================================
+
+    submission = (
+        PendingSubmission(
+
+            zone_id=
+                zone_id,
+
+            category=
+                KALXA_RETAIL_SPECIALS_CATEGORY,
+
+            content_type=
+                KALXA_RETAIL_CAMPAIGN_CONTENT_TYPE,
+
+            title=
+                title,
+
+            business_name=
+                retailer,
+
+            description=
+                final_description,
+
+            venue=
+                location
+                or region,
+
+            price=
+                None,
+
+            contact=
+                None,
+
+            ticket_url=
+                source_url,
+
+            start_date=
+                start_date,
+
+            end_date=
+                end_date,
+
+            status=
+                "pending",
+
+            pricing_model=
+                None,
+
+            payment_status=
+                "waived",
+
+            notification_eligible=
+                True,
+        )
+    )
+
+
+    db.session.add(
+        submission
+    )
+
+
+    db.session.flush()
+
+
+    return {
+
+        "created": True,
+
+        "submission_id":
+            submission.id,
+
+        "retailer":
+            retailer,
+
+        "region":
+            region,
+    }
+
+# ============================================================
 # GENERIC HELPERS
 # ============================================================
 
@@ -1021,6 +1557,264 @@ def rss_local_name(
     )
 
 
+
+# ============================================================
+# INTERNAL RETAIL SPECIALS IMPORT
+# ============================================================
+
+@app.route(
+    "/internal/retail-specials/import",
+    methods=["POST"],
+)
+def import_retail_specials():
+
+    # ========================================================
+    # AUTH
+    # ========================================================
+
+    expected_token = (
+        os.getenv(
+            "KALXA_RETAIL_IMPORT_TOKEN"
+        )
+        or
+        os.getenv(
+            "KALXA_EXTERNAL_JOBS_IMPORT_TOKEN"
+        )
+    )
+
+
+    authorization = (
+        request.headers.get(
+            "Authorization",
+            ""
+        )
+    )
+
+
+    supplied_token = (
+        authorization
+        .removeprefix(
+            "Bearer "
+        )
+        .strip()
+    )
+
+
+    if (
+        not expected_token
+        or
+        supplied_token
+        != expected_token
+    ):
+
+        return jsonify(
+            {
+                "ok": False,
+                "error": "unauthorized",
+            }
+        ), 401
+
+
+    # ========================================================
+    # PAYLOAD
+    # ========================================================
+
+    payload = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    campaigns = (
+        payload.get(
+            "campaigns"
+        )
+        or []
+    )
+
+
+    zone_id = (
+        payload.get(
+            "zone_id"
+        )
+        or 1
+    )
+
+
+    if not isinstance(
+        campaigns,
+        list,
+    ):
+
+        return jsonify(
+            {
+                "ok": False,
+                "error": (
+                    "campaigns must be a list"
+                ),
+            }
+        ), 400
+
+
+    # ========================================================
+    # COUNTERS
+    # ========================================================
+
+    created_count = 0
+    duplicate_count = 0
+    expired_count = 0
+    irrelevant_count = 0
+    failed_count = 0
+
+
+    results = []
+
+
+    # ========================================================
+    # IMPORT
+    # ========================================================
+
+    try:
+
+        for campaign in campaigns:
+
+            try:
+
+                result = (
+                    create_pending_retail_campaign(
+                        campaign=
+                            campaign,
+
+                        zone_id=
+                            int(
+                                zone_id
+                            ),
+                    )
+                )
+
+
+                results.append(
+                    result
+                )
+
+
+                if result.get(
+                    "created"
+                ):
+
+                    created_count += 1
+
+
+                elif (
+                    result.get(
+                        "reason"
+                    )
+                    == "duplicate"
+                ):
+
+                    duplicate_count += 1
+
+
+                elif (
+                    result.get(
+                        "reason"
+                    )
+                    == "expired"
+                ):
+
+                    expired_count += 1
+
+
+                elif (
+                    result.get(
+                        "reason"
+                    )
+                    == "irrelevant_region"
+                ):
+
+                    irrelevant_count += 1
+
+
+                else:
+
+                    failed_count += 1
+
+
+            except Exception as exc:
+
+                failed_count += 1
+
+
+                current_app.logger.exception(
+                    (
+                        "[KALXA RETAIL IMPORT] "
+                        "Campaign failed: %s"
+                    ),
+                    exc,
+                )
+
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[KALXA RETAIL IMPORT] "
+                "Batch failed: %s"
+            ),
+            exc,
+        )
+
+
+        return jsonify(
+            {
+                "ok": False,
+                "error": str(exc),
+            }
+        ), 500
+
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
+    return jsonify(
+        {
+
+            "ok":
+                True,
+
+            "received":
+                len(
+                    campaigns
+                ),
+
+            "created":
+                created_count,
+
+            "duplicates":
+                duplicate_count,
+
+            "expired":
+                expired_count,
+
+            "irrelevant":
+                irrelevant_count,
+
+            "failed":
+                failed_count,
+
+            "results":
+                results,
+        }
+    )
 # ============================================================
 # CLEAN HTML DESCRIPTION
 # ============================================================
