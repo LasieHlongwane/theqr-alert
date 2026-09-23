@@ -2938,10 +2938,12 @@
 
 
         <!-- =========================================================
-             NEW NEAR YOU
-             
-             IMPORTANT:
-             Jobs, opportunities and retail specials are excluded.
+             NEW
+
+             EVERY CATEGORY IS ALLOWED EXCEPT:
+             - jobs
+             - opportunities
+             - retail_specials
         ========================================================== -->
 
         {% if new_items %}
@@ -2975,11 +2977,6 @@
             >
 
                 {% for item in new_items %}
-
-
-                    <!-- =================================
-                         EXCLUDE JOBS + RETAIL SPECIALS
-                    ================================== -->
 
                     {% if item.category not in [
                         "jobs",
@@ -3805,14 +3802,13 @@
 
 <!-- =========================================================
      HIDE EMPTY NEW SECTION
-     
-     If new_items only contained:
+
+     This only hides the section if every new item was:
      - jobs
      - opportunities
      - retail_specials
-     
-     Jinja will render zero cards.
-     This removes the empty NEW heading too.
+
+     All other categories remain eligible.
 ========================================================= -->
 
 <script>
