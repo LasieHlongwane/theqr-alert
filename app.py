@@ -791,26 +791,116 @@ def create_pending_retail_campaign(
         }
 
 
-    # ========================================================
-    # DATES
-    # ========================================================
 
     start_date = (
-        parse_retail_date(
-            campaign.get(
-                "start_date"
-            )
-        )
+      parse_retail_date(
+          campaign.get(
+            "start_date"
+          )
+      )
     )
 
 
     end_date = (
-        parse_retail_date(
-            campaign.get(
-                "end_date"
-            )
-        )
+      parse_retail_date(
+          campaign.get(
+            "end_date"
+          )
+      )
     )
+
+
+# ========================================================
+# INVALID DATE RANGE
+# ========================================================
+
+    if (
+      start_date
+      and
+      end_date
+      and
+      end_date < start_date
+    ):
+
+      return {
+        "created": False,
+        "reason": "invalid_date_range",
+      }
+
+
+# ========================================================
+# EXPIRED CAMPAIGN
+# ========================================================
+
+    today = (
+      datetime.utcnow()
+      .date()
+    )
+
+
+    if (
+      end_date
+      and
+      end_date < today
+    ):
+
+      return {
+
+        "created":
+            False,
+
+        "reason":
+            "expired",
+
+        "retailer":
+            retailer,
+
+        "title":
+            title,
+      }
+
+
+# ========================================================
+# DUPLICATE CHECK
+# ========================================================
+
+    duplicate = (
+      find_duplicate_retail_campaign(
+
+        source_url=
+            source_url,
+
+        title=
+            title,
+
+        start_date=
+            start_date,
+
+        end_date=
+            end_date,
+      )
+    )
+
+
+    if duplicate:
+
+      return {
+
+        "created":
+            False,
+
+        "reason":
+            "duplicate",
+
+        "submission_id":
+            duplicate.id,
+
+        "title":
+            duplicate.title,
+
+        "retailer":
+            duplicate.business_name,
+      }
 
 
     # ========================================================
@@ -825,10 +915,10 @@ def create_pending_retail_campaign(
         end_date < start_date
     ):
 
-        return {
+    return {
             "created": False,
             "reason": "invalid_date_range",
-        }
+    }
 
 
     # ========================================================
