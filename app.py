@@ -1875,6 +1875,10 @@ def rss_local_name(
 # INTERNAL RETAIL SPECIALS IMPORT
 # ============================================================
 
+
+    # ========================================================
+    # AUTH
+    # ========================================================
 @app.route(
     "/internal/retail-specials/import",
     methods=["POST"],
@@ -1922,8 +1926,11 @@ def import_retail_specials():
 
         return jsonify(
             {
-                "ok": False,
-                "error": "unauthorized",
+                "ok":
+                    False,
+
+                "error":
+                    "unauthorized",
             }
         ), 401
 
@@ -1963,12 +1970,74 @@ def import_retail_specials():
 
         return jsonify(
             {
-                "ok": False,
-                "error": (
-                    "campaigns must be a list"
-                ),
+                "ok":
+                    False,
+
+                "error":
+                    "campaigns must be a list",
             }
         ), 400
+
+
+    # ========================================================
+    # VALIDATE ZONE ID
+    # ========================================================
+
+    try:
+
+        zone_id = int(
+            zone_id
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return jsonify(
+            {
+                "ok":
+                    False,
+
+                "error":
+                    "zone_id must be a valid integer",
+            }
+        ), 400
+
+
+    # ========================================================
+    # EMPTY PAYLOAD
+    # ========================================================
+
+    if not campaigns:
+
+        return jsonify(
+            {
+                "ok":
+                    True,
+
+                "received":
+                    0,
+
+                "created":
+                    0,
+
+                "duplicates":
+                    0,
+
+                "expired":
+                    0,
+
+                "irrelevant":
+                    0,
+
+                "failed":
+                    0,
+
+                "results":
+                    [],
+            }
+        )
 
 
     # ========================================================
@@ -1976,9 +2045,13 @@ def import_retail_specials():
     # ========================================================
 
     created_count = 0
+
     duplicate_count = 0
+
     expired_count = 0
+
     irrelevant_count = 0
+
     failed_count = 0
 
 
@@ -1995,23 +2068,33 @@ def import_retail_specials():
 
             try:
 
+                # =================================================
+                # CREATE PENDING RETAIL CAMPAIGN
+                # =================================================
+
                 result = (
                     create_pending_retail_campaign(
                         campaign=
                             campaign,
 
                         zone_id=
-                            int(
-                                zone_id
-                            ),
+                            zone_id,
                     )
                 )
 
+
+                # =================================================
+                # STORE RESULT
+                # =================================================
 
                 results.append(
                     result
                 )
 
+
+                # =================================================
+                # CREATED
+                # =================================================
 
                 if result.get(
                     "created"
@@ -2019,6 +2102,10 @@ def import_retail_specials():
 
                     created_count += 1
 
+
+                # =================================================
+                # DUPLICATE
+                # =================================================
 
                 elif (
                     result.get(
@@ -2030,6 +2117,10 @@ def import_retail_specials():
                     duplicate_count += 1
 
 
+                # =================================================
+                # EXPIRED
+                # =================================================
+
                 elif (
                     result.get(
                         "reason"
@@ -2039,6 +2130,10 @@ def import_retail_specials():
 
                     expired_count += 1
 
+
+                # =================================================
+                # IRRELEVANT REGION
+                # =================================================
 
                 elif (
                     result.get(
@@ -2050,6 +2145,10 @@ def import_retail_specials():
                     irrelevant_count += 1
 
 
+                # =================================================
+                # OTHER CONTROLLED FAILURE
+                # =================================================
+
                 else:
 
                     failed_count += 1
@@ -2057,22 +2156,172 @@ def import_retail_specials():
 
             except Exception as exc:
 
+                # =================================================
+                # RESET FAILED TRANSACTION
+                # =================================================
+
+                db.session.rollback()
+
+
                 failed_count += 1
 
 
+                # =================================================
+                # CAMPAIGN DETAILS FOR DEBUGGING
+                # =================================================
+
+                campaign_title = (
+                    str(
+                        campaign.get(
+                            "title"
+                        )
+                        or "Unknown campaign"
+                    )
+                    .strip()
+                )
+
+
+                retailer = (
+                    str(
+                        campaign.get(
+                            "retailer"
+                        )
+                        or "Unknown retailer"
+                    )
+                    .strip()
+                )
+
+
+                source_url = (
+                    str(
+                        campaign.get(
+                            "source_url"
+                        )
+                        or ""
+                    )
+                    .strip()
+                )
+
+
+                location = (
+                    str(
+                        campaign.get(
+                            "location"
+                        )
+                        or ""
+                    )
+                    .strip()
+                )
+
+
+                start_date_value = (
+                    str(
+                        campaign.get(
+                            "start_date"
+                        )
+                        or ""
+                    )
+                    .strip()
+                )
+
+
+                end_date_value = (
+                    str(
+                        campaign.get(
+                            "end_date"
+                        )
+                        or ""
+                    )
+                    .strip()
+                )
+
+
+                # =================================================
+                # LOG EXACT ERROR TO RENDER
+                # =================================================
+
                 current_app.logger.exception(
                     (
-                        "[KALXA RETAIL IMPORT] "
-                        "Campaign failed: %s"
+                        "[KALXA RETAIL IMPORT ERROR] "
+                        "Retailer='%s' "
+                        "Campaign='%s' "
+                        "Location='%s' "
+                        "Start='%s' "
+                        "End='%s' "
+                        "Source='%s' "
+                        "ErrorType='%s' "
+                        "Error='%s'"
                     ),
+                    retailer,
+                    campaign_title,
+                    location,
+                    start_date_value,
+                    end_date_value,
+                    source_url,
+                    type(exc).__name__,
                     exc,
                 )
 
+
+                # =================================================
+                # RETURN EXACT ERROR TO GITHUB ACTION
+                # =================================================
+
+                results.append(
+                    {
+                        "created":
+                            False,
+
+                        "reason":
+                            "exception",
+
+                        "retailer":
+                            retailer,
+
+                        "title":
+                            campaign_title,
+
+                        "location":
+                            location,
+
+                        "start_date":
+                            (
+                                start_date_value
+                                or None
+                            ),
+
+                        "end_date":
+                            (
+                                end_date_value
+                                or None
+                            ),
+
+                        "source_url":
+                            source_url,
+
+                        "error_type":
+                            type(exc).__name__,
+
+                        "error":
+                            str(
+                                exc
+                            ),
+                    }
+                )
+
+
+        # ========================================================
+        # COMMIT SUCCESSFUL CAMPAIGNS
+        # ========================================================
 
         db.session.commit()
 
 
     except Exception as exc:
+
+        # ========================================================
+        # BATCH LEVEL FAILURE
+        # ========================================================
 
         db.session.rollback()
 
@@ -2088,19 +2337,49 @@ def import_retail_specials():
 
         return jsonify(
             {
-                "ok": False,
-                "error": str(exc),
+                "ok":
+                    False,
+
+                "error_type":
+                    type(exc).__name__,
+
+                "error":
+                    str(
+                        exc
+                    ),
+
+                "received":
+                    len(
+                        campaigns
+                    ),
+
+                "created":
+                    created_count,
+
+                "duplicates":
+                    duplicate_count,
+
+                "expired":
+                    expired_count,
+
+                "irrelevant":
+                    irrelevant_count,
+
+                "failed":
+                    failed_count,
+
+                "results":
+                    results,
             }
         ), 500
 
 
     # ========================================================
-    # RESPONSE
+    # SUCCESS RESPONSE
     # ========================================================
 
     return jsonify(
         {
-
             "ok":
                 True,
 
@@ -2128,9 +2407,16 @@ def import_retail_specials():
                 results,
         }
     )
-# ============================================================
-# CLEAN HTML DESCRIPTION
-# ============================================================
+
+
+    
+        
+        
+        
+        
+
+
+
 
 def clean_rss_html(
     value,
