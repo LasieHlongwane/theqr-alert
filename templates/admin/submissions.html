@@ -179,6 +179,47 @@
 
 
         /* =========================================================
+           RETAIL REVIEW
+        ========================================================= */
+
+        .retail-review-box {
+
+            margin:
+                14px 0;
+
+            padding:
+                14px 16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.12
+                );
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.035
+                );
+        }
+
+
+        .retail-review-box p {
+
+            margin:
+                5px 0;
+        }
+
+
+        /* =========================================================
            EXTERNAL / COMMUNITY SOURCE
         ========================================================= */
 
@@ -242,7 +283,7 @@
 
 
         /* =========================================================
-           BULK JOB APPROVAL
+           BULK APPROVAL
         ========================================================= */
 
         .bulk-job-approval {
@@ -643,7 +684,10 @@
          BULK JOB APPROVAL
     ========================================== -->
 
-    {% if selected_status == "pending" %}
+    {% if
+        selected_status == "pending"
+        and pending_jobs_count > 0
+    %}
 
     <section class="bulk-job-approval">
 
@@ -655,13 +699,17 @@
 
 
             <strong>
-                 Approve next {{ next_job_batch_count }} jobs
+                Approve next {{ next_job_batch_count }} jobs
             </strong>
 
 
             <p>
-                Approves every pending Jobs / Opportunities
-                submission currently waiting for review.
+                {{ pending_jobs_count }}
+                pending jobs / opportunities are waiting
+                for review.
+
+                A maximum of 10 will be processed
+                at a time.
             </p>
 
         </div>
@@ -675,7 +723,7 @@
             class="bulk-job-approval-form"
             onsubmit="
                 return confirm(
-                    'Approve all pending jobs and opportunities? Please confirm that you have reviewed the imported jobs first.'
+                    'Approve the next {{ next_job_batch_count }} jobs and opportunities? Please confirm that you reviewed them first.'
                 );
             "
         >
@@ -684,7 +732,84 @@
                 type="submit"
                 class="bulk-job-approval-button"
             >
-                ✓ Approve Next {{ next_job_batch_count }} Jobs
+                ✓ Approve Next
+                {{ next_job_batch_count }}
+                Jobs
+            </button>
+
+        </form>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- =========================================
+         BULK RETAIL SPECIALS APPROVAL
+    ========================================== -->
+
+    {% if
+        selected_status == "pending"
+        and pending_retail_specials_count > 0
+    %}
+
+    <section class="bulk-job-approval">
+
+        <div class="bulk-job-approval-copy">
+
+            <span class="bulk-job-approval-eyebrow">
+                BULK RETAIL MODERATION
+            </span>
+
+
+            <strong>
+                🛒 Approve next
+                {{ next_retail_batch_count }}
+                deals
+            </strong>
+
+
+            <p>
+
+                {{ pending_retail_specials_count }}
+
+                retailer
+                {% if pending_retail_specials_count == 1 %}
+                    campaign is
+                {% else %}
+                    campaigns are
+                {% endif %}
+
+                waiting for review.
+
+                A maximum of 10 will be processed
+                at a time.
+
+            </p>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'admin.approve_all_retail_specials'
+            ) }}"
+            class="bulk-job-approval-form"
+            onsubmit="
+                return confirm(
+                    'Approve the next {{ next_retail_batch_count }} retailer campaigns? Please confirm that you reviewed the retailer and campaign dates.'
+                );
+            "
+        >
+
+            <button
+                type="submit"
+                class="bulk-job-approval-button"
+            >
+                ✓ Approve Next
+                {{ next_retail_batch_count }}
+                Deals
             </button>
 
         </form>
@@ -720,7 +845,7 @@
                     <span class="content-category">
 
                         {% if item.category %}
-                            {{ item.category|replace('-', ' ')|title }}
+                            {{ item.category|replace('-', ' ')|replace('_', ' ')|title }}
                         {% endif %}
 
                     </span>
@@ -879,6 +1004,100 @@
                 {% endif %}
 
 
+                <!-- =================================
+                     RETAIL CAMPAIGN REVIEW
+                ================================== -->
+
+                {% if
+                    item.category == "retail_specials"
+                    and item.content_type == "retailer_campaign"
+                %}
+
+                <div class="retail-review-box">
+
+                    <span class="job-review-label">
+                        Retail Campaign Review
+                    </span>
+
+
+                    {% if item.business_name %}
+
+                    <p>
+
+                        <strong>
+                            Retailer:
+                        </strong>
+
+                        {{ item.business_name }}
+
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.start_date %}
+
+                    <p>
+
+                        <strong>
+                            Starts:
+                        </strong>
+
+                        {{
+                            item.start_date.strftime(
+                                "%d %b %Y"
+                            )
+                        }}
+
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.end_date %}
+
+                    <p>
+
+                        <strong>
+                            Ends:
+                        </strong>
+
+                        {{
+                            item.end_date.strftime(
+                                "%d %b %Y"
+                            )
+                        }}
+
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.ticket_url %}
+
+                    <p>
+
+                        <strong>
+                            Official Promotion:
+                        </strong>
+
+                        <a
+                            href="{{ item.ticket_url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            View Specials
+                        </a>
+
+                    </p>
+
+                    {% endif %}
+
+                </div>
+
+                {% endif %}
+
+
                 {% if item.business_name %}
 
                 <p>
@@ -956,10 +1175,13 @@
 
 
                     <p>
+
                         Type:
+
                         <strong>
                             {{ item.pricing_model|title }}
                         </strong>
+
                     </p>
 
 
@@ -1125,7 +1347,11 @@
 
                 {% if
                     item.venue
-                    and item.category not in ["jobs", "opportunities"]
+                    and item.category not in [
+                        "jobs",
+                        "opportunities",
+                        "retail_specials"
+                    ]
                 %}
 
                 <p>
@@ -1170,7 +1396,10 @@
                 {% endif %}
 
 
-                {% if item.ticket_url %}
+                {% if
+                    item.ticket_url
+                    and item.category != "retail_specials"
+                %}
 
                 <p>
 
@@ -1239,7 +1468,10 @@
                      GENERAL DATES
                 ================================== -->
 
-                {% if item.start_date %}
+                {% if
+                    item.start_date
+                    and item.category != "retail_specials"
+                %}
 
                 <p>
 
@@ -1260,7 +1492,10 @@
                 {% endif %}
 
 
-                {% if item.end_date %}
+                {% if
+                    item.end_date
+                    and item.category != "retail_specials"
+                %}
 
                 <p>
 
