@@ -1596,6 +1596,444 @@ def edit_category(category_id):
     return render_template("admin/category_form.html", category=category)
 
 
+
+@admin_bp.route(
+    "/submissions/jobs/approve-all",
+    methods=["POST"],
+)
+def approve_all_jobs():
+
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+
+    pending_jobs = (
+        PendingSubmission
+        .query
+        .filter(
+            PendingSubmission.status == "pending",
+            PendingSubmission.category == "jobs",
+        )
+        .order_by(
+            PendingSubmission.created_at.asc()
+        )
+        .all()
+    )
+
+
+    if not pending_jobs:
+
+        flash(
+            "There are no pending jobs to approve.",
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
+
+    approved_count = 0
+    failed_count = 0
+
+
+    for submission in pending_jobs:
+
+        try:
+
+            zone = (
+                db.session.get(
+                    Zone,
+                    submission.zone_id,
+                )
+            )
+
+
+            if not zone:
+
+                failed_count += 1
+
+                current_app.logger.warning(
+                    (
+                        "[Kalxa Bulk Jobs] Skipping submission "
+                        "%s because its zone does not exist."
+                    ),
+                    submission.id,
+                )
+
+                continue
+
+
+            category = (
+                get_category_by_slug(
+                    submission.category
+                )
+            )
+
+
+            if not category:
+
+                failed_count += 1
+
+                current_app.logger.warning(
+                    (
+                        "[Kalxa Bulk Jobs] Skipping submission "
+                        "%s because category is unavailable."
+                    ),
+                    submission.id,
+                )
+
+                continue
+
+
+            content_type = (
+                submission.content_type
+                or "job"
+            )
+
+
+            lifetime_type = (
+                "time_specific"
+                if submission.end_date
+                else "until_unavailable"
+            )
+
+
+            # ====================================================
+            # LOCATION CLASSIFICATION
+            # ====================================================
+
+            location_classification = (
+                str(
+                    submission.location_classification
+                    or ""
+                )
+                .strip()
+            )
+
+
+            if (
+                location_classification
+                not in
+                KALXA_ALLOWED_JOB_LOCATION_CLASSES
+            ):
+
+                location_classification = None
+
+
+            # ====================================================
+            # IMAGES
+            # ====================================================
+
+            submission_images = (
+                list(
+                    submission.images
+                )
+            )
+
+
+            first_image_url = (
+                submission.image_url
+                or
+                (
+                    submission_images[0].image_url
+                    if submission_images
+                    else None
+                )
+            )
+
+
+            # ====================================================
+            # CREATE CONTENT ITEM
+            # ====================================================
+
+            content = (
+                ContentItem(
+
+                    organizer_id=
+                        submission.organizer_id,
+
+                    zone_id=
+                        submission.zone_id,
+
+                    category=
+                        "jobs",
+
+                    content_type=
+                        content_type,
+
+                    lifetime_type=
+                        lifetime_type,
+
+                    availability_status=
+                        submission.availability_status
+                        or "available",
+
+                    notification_eligible=
+                        True,
+
+                    pricing_model=
+                        None,
+
+                    commercial_duration_days=
+                        None,
+
+                    commercial_starts_at=
+                        None,
+
+                    commercial_expires_at=
+                        None,
+
+                    payment_status=
+                        "waived",
+
+                    amount_due=
+                        None,
+
+                    amount_paid=
+                        None,
+
+                    paid_at=
+                        None,
+
+                    title=
+                        submission.title,
+
+                    description=
+                        submission.description,
+
+                    business_name=
+                        submission.business_name,
+
+                    venue=
+                        submission.venue,
+
+                    location_classification=
+                        location_classification,
+
+                    price=
+                        submission.price,
+
+                    contact=
+                        submission.contact,
+
+                    whatsapp_number=
+                        submission.whatsapp_number,
+
+                    directions_url=
+                        submission.directions_url,
+
+                    ticket_url=
+                        submission.ticket_url,
+
+                    image_url=
+                        first_image_url,
+
+                    publish_from=
+                        submission.publish_from,
+
+                    event_date=
+                        None,
+
+                    event_end_date=
+                        None,
+
+                    start_date=
+                        submission.start_date,
+
+                    start_time=
+                        submission.start_time,
+
+                    end_date=
+                        submission.end_date,
+
+                    end_time=
+                        submission.end_time,
+
+                    listing_level=
+                        "discovery",
+
+                    ownership_status=
+                        "unclaimed",
+
+                    is_verified=
+                        False,
+
+                    featured=
+                        False,
+
+                    active=
+                        True,
+
+                    archived=
+                        False,
+                )
+            )
+
+
+            db.session.add(
+                content
+            )
+
+
+            db.session.flush()
+
+
+            # ====================================================
+            # COPY IMAGES
+            # ====================================================
+
+            for image in submission_images:
+
+                if not image.image_url:
+                    continue
+
+
+                db.session.add(
+                    ContentImage(
+
+                        content_item_id=
+                            content.id,
+
+                        image_url=
+                            image.image_url,
+
+                        display_order=
+                            image.display_order,
+                    )
+                )
+
+
+            # ====================================================
+            # COMPLETE SUBMISSION
+            # ====================================================
+
+            submission.published_content_id = (
+                content.id
+            )
+
+
+            submission.status = (
+                "approved"
+            )
+
+
+            submission.reviewed_at = (
+                datetime.utcnow()
+            )
+
+
+            submission.pricing_model = (
+                None
+            )
+
+
+            submission.commercial_duration_days = (
+                None
+            )
+
+
+            submission.amount_due = (
+                None
+            )
+
+
+            submission.payment_status = (
+                "waived"
+            )
+
+
+            submission.distribution_zone_ids = (
+                []
+            )
+
+
+            approved_count += 1
+
+
+        except Exception as exc:
+
+            failed_count += 1
+
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa Bulk Jobs] Failed to approve "
+                    "submission_id=%s error=%s"
+                ),
+                submission.id,
+                exc,
+            )
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Kalxa Bulk Jobs] Bulk approval "
+                "transaction failed error=%s"
+            ),
+            exc,
+        )
+
+
+        flash(
+            (
+                "Bulk job approval failed. "
+                "No changes were saved."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
+
+    if failed_count:
+
+        flash(
+            (
+                f"{approved_count} jobs approved. "
+                f"{failed_count} jobs could not be approved."
+            ),
+            "success",
+        )
+
+    else:
+
+        flash(
+            (
+                f"{approved_count} pending jobs "
+                "approved and published."
+            ),
+            "success",
+        )
+
+
+    return redirect(
+        url_for(
+            "admin.submissions",
+            status="pending",
+        )
+    )
+
 @admin_bp.route("/categories/<int:category_id>/toggle", methods=["POST"])
 def toggle_category(category_id):
     auth = require_admin()
