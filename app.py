@@ -2326,49 +2326,63 @@ def create_pending_rss_job(
     )
 
 
-    
-
+    # ========================================================
+    # JOB LOCATION
+    #
+    # IMPORTANT:
+    #
+    # Do NOT default missing external job locations to
+    # zone.name.
+    #
+    # The Kalxa zone tells us where the job is being
+    # distributed/discovered, not necessarily where the
+    # actual employer/job is located.
+    # ========================================================
 
     venue = (
         str(
             job.get(
                 "venue"
             )
-            or zone.name
+            or job.get(
+                "location"
+            )
+            or ""
+        )
+        .strip()
+    ) or None
+
+
+    # ========================================================
+    # KALXA LOCATION CLASSIFICATION
+    # ========================================================
+
+    location_classification = (
+        str(
+            job.get(
+                "kalxa_location_classification"
+            )
+            or ""
         )
         .strip()
     )
 
 
-    location_classification = (
-      str(
-        job.get(
-            "kalxa_location_classification"
-        )
-        or ""
-      )
-      .strip()
-    )
+    if (
+        location_classification
+        not in KALXA_ALLOWED_JOB_LOCATION_CLASSES
+    ):
 
-
-    if location_classification not in {
-      "KwaMhlanga",
-      "Mpumalanga",
-      "Gauteng",
-      "National",
-      "Remote",
-    }:
-
-      location_classification = None
+        location_classification = None
 
 
     description = (
-      str(
+        str(
             job.get(
                 "description"
             )
             or ""
-      )
+        )
         .strip()
     )
 
@@ -2572,6 +2586,16 @@ def create_pending_rss_job(
         )
 
 
+    if location_classification:
+
+        source_notes.append(
+            (
+                "Kalxa location classification: "
+                f"{location_classification}"
+            )
+        )
+
+
     admin_notes = (
         "\n".join(
             source_notes
@@ -2623,6 +2647,9 @@ def create_pending_rss_job(
 
             venue=
                 venue,
+
+            location_classification=
+                location_classification,
 
             price=
                 salary_text,
@@ -2729,12 +2756,9 @@ def create_pending_rss_job(
     return "created"
 
 # ============================================================
-# KALXA JOBS - TEST RSS FEED
-# ============================================================
-
-# ============================================================
 # KALXA JOBS - LOCATION CLASSIFICATION
 # ============================================================
+
 
 KALXA_ALLOWED_JOB_LOCATION_CLASSES = {
     "KwaMhlanga",
@@ -2750,7 +2774,6 @@ KALXA_KWAMHLANGA_LOCATION_KEYWORDS = (
     "kwa mhlanga",
     "thembisile hani",
 )
-
 
 KALXA_MPUMALANGA_LOCATION_KEYWORDS = (
     "mpumalanga",
@@ -2776,7 +2799,6 @@ KALXA_MPUMALANGA_LOCATION_KEYWORDS = (
     "mkhondo",
     "siyabuswa",
 )
-
 
 KALXA_GAUTENG_LOCATION_KEYWORDS = (
     "gauteng",
@@ -2804,7 +2826,6 @@ KALXA_GAUTENG_LOCATION_KEYWORDS = (
     "vanderbijlpark",
 )
 
-
 KALXA_REMOTE_LOCATION_KEYWORDS = (
     "remote",
     "work from home",
@@ -2814,7 +2835,6 @@ KALXA_REMOTE_LOCATION_KEYWORDS = (
     "wfh",
     "anywhere in south africa",
 )
-
 
 KALXA_NATIONAL_LOCATION_KEYWORDS = (
     "south africa",
@@ -2826,6 +2846,140 @@ KALXA_NATIONAL_LOCATION_KEYWORDS = (
     "multiple locations",
     "multiple provinces",
 )
+
+
+def _normalize_location_text(value: object) -> str:
+    """
+    Normalize location text for consistent keyword matching.
+    """
+    if value is None:
+        return ""
+
+    text = str(value).casefold().strip()
+
+    # Treat hyphens, underscores, slashes, and punctuation as spaces.
+    text = re.sub(r"[-_/.,;:()]+", " ", text)
+
+    # Collapse repeated whitespace.
+    return re.sub(r"\s+", " ", text)
+
+
+def _contains_location_keyword(
+    location_text: str,
+    keywords: tuple[str, ...],
+) -> bool:
+    """
+    Return True when any keyword appears as a complete phrase or word.
+    """
+    for keyword in keywords:
+        normalized_keyword = _normalize_location_text(keyword)
+
+        if not normalized_keyword:
+            continue
+
+        pattern = rf"(?<!\w){re.escape(normalized_keyword)}(?!\w)"
+
+        if re.search(pattern, location_text):
+            return True
+
+    return False
+
+
+def classify_kalxa_job_location(
+    location: object,
+    *,
+    default: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Classify a job location into one of the allowed KALXA classes.
+
+    Classification priority:
+        1. KwaMhlanga
+        2. Remote
+        3. Gauteng
+        4. Mpumalanga
+        5. National
+        6. Default value
+
+    Args:
+        location:
+            Raw job location text.
+        default:
+            Value returned when no keyword matches. If supplied, it must
+            be one of KALXA_ALLOWED_JOB_LOCATION_CLASSES or None.
+
+    Returns:
+        One of the allowed location classes, or None if no match exists.
+
+    Raises:
+        ValueError:
+            If default is not an allowed location class.
+    """
+    if default is not None and default not in KALXA_ALLOWED_JOB_LOCATION_CLASSES:
+        raise ValueError(
+            f"Invalid default location class: {default!r}. "
+            f"Expected one of: {sorted(KALXA_ALLOWED_JOB_LOCATION_CLASSES)}"
+        )
+
+    normalized_location = _normalize_location_text(location)
+
+    if not normalized_location:
+        return default
+
+    # KwaMhlanga is checked first because it is geographically associated
+    # with Mpumalanga but should receive its own classification.
+    if _contains_location_keyword(
+        normalized_location,
+        KALXA_KWAMHLANGA_LOCATION_KEYWORDS,
+    ):
+        return "KwaMhlanga"
+
+    if _contains_location_keyword(
+        normalized_location,
+        KALXA_REMOTE_LOCATION_KEYWORDS,
+    ):
+        return "Remote"
+
+    if _contains_location_keyword(
+        normalized_location,
+        KALXA_GAUTENG_LOCATION_KEYWORDS,
+    ):
+        return "Gauteng"
+
+    if _contains_location_keyword(
+        normalized_location,
+        KALXA_MPUMALANGA_LOCATION_KEYWORDS,
+    ):
+        return "Mpumalanga"
+
+    if _contains_location_keyword(
+        normalized_location,
+        KALXA_NATIONAL_LOCATION_KEYWORDS,
+    ):
+        return "National"
+
+    return default
+
+
+# Optional aliases for shorter usage.
+classify_job_location = classify_kalxa_job_location
+
+
+if __name__ == "__main__":
+    test_locations = (
+        "Kwa Mhlanga, Mpumalanga",
+        "Thembisile Hani Local Municipality",
+        "Nelspruit, Mpumalanga",
+        "Johannesburg, Gauteng",
+        "Work-from-home - Anywhere in South Africa",
+        "Nationwide",
+        "Cape Town",
+        None,
+    )
+
+    for job_location in test_locations:
+        classification = classify_kalxa_job_location(job_location)
+        print(f"{job_location!r} -> {classification!r}")
 
 
 def normalize_job_location_text(
