@@ -66,6 +66,16 @@
         }
 
 
+        .job-region-heading {
+
+            margin-top:
+                10px !important;
+
+            margin-bottom:
+                4px !important;
+        }
+
+
         .job-region-badge {
 
             display:
@@ -77,11 +87,14 @@
             justify-content:
                 center;
 
+            gap:
+                5px;
+
             margin-top:
-                7px;
+                4px;
 
             padding:
-                5px 10px;
+                6px 10px;
 
             border:
                 1px solid
@@ -114,6 +127,114 @@
 
             letter-spacing:
                 0.7px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .job-region-missing {
+
+            margin-top:
+                8px !important;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.48
+                );
+        }
+
+
+        .job-review-label {
+
+            display:
+                inline-block;
+
+            margin-bottom:
+                3px;
+
+            color:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.55
+                );
+
+            font-size:
+                9px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.7px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        /* =========================================================
+           EXTERNAL / COMMUNITY SOURCE
+        ========================================================= */
+
+        .submission-source-badge {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            margin-top:
+                8px;
+
+            padding:
+                5px 9px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.09
+                );
+
+            border-radius:
+                999px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.045
+                );
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.63
+                );
+
+            font-size:
+                9px;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                0.55px;
 
             text-transform:
                 uppercase;
@@ -385,21 +506,41 @@
 
 
                 <!-- =================================
-                     JOB LOCATION CLASSIFICATION
+                     JOB / OPPORTUNITY REVIEW
                 ================================== -->
 
-                {% if item.category == "jobs" %}
+                {% if item.category in ["jobs", "opportunities"] %}
 
                 <div class="job-location-review">
+
+
+                    <span class="job-review-label">
+                        Opportunity Location Review
+                    </span>
+
 
                     {% if item.venue %}
 
                     <p>
+
                         <strong>
                             Job Location:
                         </strong>
 
                         {{ item.venue }}
+
+                    </p>
+
+                    {% else %}
+
+                    <p class="muted">
+
+                        <strong>
+                            Job Location:
+                        </strong>
+
+                        Not provided
+
                     </p>
 
                     {% endif %}
@@ -407,22 +548,52 @@
 
                     {% if item.location_classification %}
 
-                    <p>
+                    <p class="job-region-heading">
+
                         <strong>
                             Kalxa Region:
                         </strong>
+
                     </p>
 
 
                     <span class="job-region-badge">
+
+                        📍
                         {{ item.location_classification }}
+
                     </span>
 
                     {% else %}
 
-                    <p class="muted">
-                        Kalxa Region:
+                    <p class="job-region-missing">
+
+                        <strong>
+                            Kalxa Region:
+                        </strong>
+
                         Not classified
+
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.content_type %}
+
+                    <p>
+
+                        <strong>
+                            Opportunity Type:
+                        </strong>
+
+                        {{
+                            item.content_type
+                            |replace('_', ' ')
+                            |replace('-', ' ')
+                            |title
+                        }}
+
                     </p>
 
                     {% endif %}
@@ -435,9 +606,11 @@
                 {% if item.business_name %}
 
                 <p>
+
                     <strong>
                         {{ item.business_name }}
                     </strong>
+
                 </p>
 
                 {% endif %}
@@ -517,11 +690,14 @@
                     {% if item.commercial_duration_days %}
 
                     <p>
+
                         Duration:
+
                         <strong>
                             {{ item.commercial_duration_days }}
                             days
                         </strong>
+
                     </p>
 
                     {% endif %}
@@ -530,7 +706,9 @@
                     {% if item.pricing_model == "campaign" %}
 
                     <p>
+
                         Reach:
+
                         <strong>
 
                             {% if item.distribution_zone_ids %}
@@ -545,6 +723,7 @@
                             {% endif %}
 
                         </strong>
+
                     </p>
 
                     {% endif %}
@@ -553,30 +732,40 @@
                     {% if item.amount_due is not none %}
 
                     <p>
+
                         Amount Due:
+
                         <strong>
                             R{{ "%.2f"|format(item.amount_due) }}
                         </strong>
+
                     </p>
 
                     {% endif %}
 
 
                     <p>
+
                         Payment:
+
                         <strong>
                             {{ item.payment_status|upper }}
                         </strong>
+
                     </p>
 
 
-                    {% if item.status == "pending"
-                          and item.payment_status == "unpaid" %}
+                    {% if
+                        item.status == "pending"
+                        and item.payment_status == "unpaid"
+                    %}
 
                     <p class="muted">
+
                         Payment has not yet been confirmed.
                         The listing will remain hidden if
                         approved before payment.
+
                     </p>
 
                     {% endif %}
@@ -658,11 +847,16 @@
                      LISTING DETAILS
                 ================================== -->
 
-                {% if item.venue and item.category != "jobs" %}
+                {% if
+                    item.venue
+                    and item.category not in ["jobs", "opportunities"]
+                %}
 
                 <p>
+
                     📍 Venue:
                     {{ item.venue }}
+
                 </p>
 
                 {% endif %}
@@ -671,7 +865,18 @@
                 {% if item.price %}
 
                 <p>
-                    💰 {{ item.price }}
+
+                    {% if item.category in ["jobs", "opportunities"] %}
+
+                        💰 Salary / Compensation:
+                        {{ item.price }}
+
+                    {% else %}
+
+                        💰 {{ item.price }}
+
+                    {% endif %}
+
                 </p>
 
                 {% endif %}
@@ -680,8 +885,37 @@
                 {% if item.contact %}
 
                 <p>
+
                     📞 Listing contact:
                     {{ item.contact }}
+
+                </p>
+
+                {% endif %}
+
+
+                {% if item.ticket_url %}
+
+                <p>
+
+                    {% if item.category in ["jobs", "opportunities"] %}
+
+                        🔗 Application Link:
+
+                    {% else %}
+
+                        🔗 External Link:
+
+                    {% endif %}
+
+                    <a
+                        href="{{ item.ticket_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Open link
+                    </a>
+
                 </p>
 
                 {% endif %}
@@ -733,7 +967,11 @@
 
                 <p>
 
-                    📅 Starts:
+                    {% if item.category in ["jobs", "opportunities"] %}
+                        📅 Opens:
+                    {% else %}
+                        📅 Starts:
+                    {% endif %}
 
                     {{
                         item.start_date.strftime(
@@ -750,7 +988,7 @@
 
                 <p>
 
-                    {% if item.category == "jobs" %}
+                    {% if item.category in ["jobs", "opportunities"] %}
                         📅 Closes:
                     {% else %}
                         📅 Ends:
@@ -862,27 +1100,34 @@
                         </strong>
 
                         <p>
+
                             This listing is approved but
                             remains hidden until payment
                             is confirmed.
+
                         </p>
 
 
                         {% if item.amount_due is not none %}
 
                         <p>
+
                             Amount expected:
+
                             <strong>
                                 R{{ "%.2f"|format(item.amount_due) }}
                             </strong>
+
                         </p>
 
                         {% endif %}
 
 
                         <p>
+
                             Confirm only after verifying
                             the payment in Yoco.
+
                         </p>
 
 
@@ -1034,8 +1279,10 @@
             </h2>
 
             <p>
+
                 There is currently nothing
                 waiting for review.
+
             </p>
 
 
