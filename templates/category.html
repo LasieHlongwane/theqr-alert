@@ -892,6 +892,492 @@
 
 
         /* =========================================================
+           KALXA JOBS - FREE COMMUNITY SUBMISSION
+        ========================================================= */
+
+        .jobs-community-submit {
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+
+            margin-top: 18px;
+
+            padding: 15px 16px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.16);
+
+            border-radius: 15px;
+
+            background:
+                rgba(255, 244, 223, 0.07);
+        }
+
+
+        .jobs-community-submit-copy {
+
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        .jobs-community-submit-eyebrow {
+
+            margin-bottom: 3px;
+
+            color:
+                rgba(255, 244, 223, 0.58);
+
+            font-size: 8px;
+            font-weight: 950;
+
+            letter-spacing: .12em;
+
+            text-transform: uppercase;
+        }
+
+
+        .jobs-community-submit-copy strong {
+
+            color: #fff4df;
+
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+
+        .jobs-community-submit-copy > span:last-child {
+
+            margin-top: 2px;
+
+            color:
+                rgba(255, 255, 255, 0.53);
+
+            font-size: 9px;
+        }
+
+
+        .jobs-community-submit-button {
+
+            flex:
+                0 0 auto;
+
+            min-height: 40px;
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                8px 12px;
+
+            background: #fff4df;
+
+            color: #17191d;
+
+            border-radius: 10px;
+
+            font-size: 10px;
+            font-weight: 950;
+
+            text-decoration: none;
+        }
+
+
+        /* =========================================================
+           KALXA JOBS - LOCATION FILTERS
+        ========================================================= */
+
+        .job-region-filter-section {
+
+            margin:
+                16px 0
+                20px;
+
+            padding:
+                15px 16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.10
+                );
+
+            border-radius:
+                16px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.025
+                );
+        }
+
+
+        .job-region-filter-heading {
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            gap:
+                3px;
+
+            margin-bottom:
+                12px;
+        }
+
+
+        .job-region-filter-heading strong {
+
+            color:
+                #fff4df;
+
+            font-size:
+                12px;
+
+            font-weight:
+                900;
+        }
+
+
+        .job-region-filter-heading span {
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.48
+                );
+
+            font-size:
+                9px;
+
+            font-weight:
+                600;
+
+            line-height:
+                1.4;
+        }
+
+
+        .job-region-filters {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+            overflow-x:
+                auto;
+
+            padding-bottom:
+                3px;
+
+            scrollbar-width:
+                none;
+
+            -webkit-overflow-scrolling:
+                touch;
+        }
+
+
+        .job-region-filters::-webkit-scrollbar {
+            display: none;
+        }
+
+
+        .job-region-filter {
+
+            flex:
+                0 0 auto;
+
+            min-height:
+                36px;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                8px 12px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.13
+                );
+
+            border-radius:
+                999px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.04
+                );
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.68
+                );
+
+            font-size:
+                10px;
+
+            font-weight:
+                850;
+
+            white-space:
+                nowrap;
+
+            cursor:
+                pointer;
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+            transition:
+                background 0.15s ease,
+                color 0.15s ease,
+                border-color 0.15s ease,
+                transform 0.15s ease;
+        }
+
+
+        .job-region-filter:active {
+
+            transform:
+                scale(0.97);
+        }
+
+
+        .job-region-filter.active {
+
+            border-color:
+                #fff4df;
+
+            background:
+                #fff4df;
+
+            color:
+                #17191d;
+        }
+
+
+        /* =========================================================
+           KALXA JOBS - REGION BADGE
+        ========================================================= */
+
+        .job-region-card-row {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            flex-wrap:
+                wrap;
+
+            gap:
+                7px;
+
+            margin:
+                10px 0
+                4px;
+        }
+
+
+        .job-region-card-label {
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.45
+                );
+
+            font-size:
+                9px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.5px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .job-region-card-badge {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                6px 10px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.17
+                );
+
+            border-radius:
+                999px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.075
+                );
+
+            color:
+                #fff4df;
+
+            font-size:
+                9px;
+
+            font-weight:
+                900;
+
+            line-height:
+                1;
+
+            letter-spacing:
+                0.65px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        /* =========================================================
+           JOB FILTER EMPTY STATE
+        ========================================================= */
+
+        .job-filter-empty {
+
+            display:
+                none;
+
+            margin:
+                22px 0;
+
+            padding:
+                28px 20px;
+
+            text-align:
+                center;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.10
+                );
+
+            border-radius:
+                18px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.025
+                );
+        }
+
+
+        .job-filter-empty.show {
+            display: block;
+        }
+
+
+        .job-filter-empty strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                6px;
+
+            color:
+                #fff4df;
+
+            font-size:
+                14px;
+        }
+
+
+        .job-filter-empty span {
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.50
+                );
+
+            font-size:
+                11px;
+
+            line-height:
+                1.5;
+        }
+
+
+        /* =========================================================
            EMPTY STATE
         ========================================================= */
 
@@ -1149,124 +1635,42 @@
                 opacity: 0.65;
             }
 
-            /* =========================================================
-   KALXA JOBS - FREE COMMUNITY SUBMISSION
-========================================================= */
-
-.jobs-community-submit {
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-
-    margin-top: 18px;
-
-    padding: 15px 16px;
-
-    border:
-        1px solid
-        rgba(255, 244, 223, 0.16);
-
-    border-radius: 15px;
-
-    background:
-        rgba(255, 244, 223, 0.07);
-}
-
-
-.jobs-community-submit-copy {
-
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-}
-
-
-.jobs-community-submit-eyebrow {
-
-    margin-bottom: 3px;
-
-    color:
-        rgba(255, 244, 223, 0.58);
-
-    font-size: 8px;
-    font-weight: 950;
-
-    letter-spacing: .12em;
-
-    text-transform: uppercase;
-}
-
-
-.jobs-community-submit-copy strong {
-
-    color: #fff4df;
-
-    font-size: 12px;
-    font-weight: 950;
-}
-
-
-.jobs-community-submit-copy > span:last-child {
-
-    margin-top: 2px;
-
-    color:
-        rgba(255, 255, 255, 0.53);
-
-    font-size: 9px;
-}
-
-
-.jobs-community-submit-button {
-
-    flex:
-        0 0 auto;
-
-    min-height: 40px;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding:
-        8px 12px;
-
-    background: #fff4df;
-
-    color: #17191d;
-
-    border-radius: 10px;
-
-    font-size: 10px;
-    font-weight: 950;
-
-    text-decoration: none;
-}
-
-
-@media (max-width: 520px) {
-
-    .jobs-community-submit {
-
-        align-items: stretch;
-
-        flex-direction: column;
-    }
-
-
-    .jobs-community-submit-button {
-        width: 100%;
-    }
-
-}
-
 
             .kalxa-quick-action:hover {
                 opacity: 0.82;
+            }
+
+
+            .job-region-filter:hover {
+
+                border-color:
+                    rgba(
+                        255,
+                        244,
+                        223,
+                        0.28
+                    );
+
+                background:
+                    rgba(
+                        255,
+                        244,
+                        223,
+                        0.08
+                    );
+
+                color:
+                    #fff4df;
+            }
+
+
+            .job-region-filter.active:hover {
+
+                background:
+                    #fff4df;
+
+                color:
+                    #17191d;
             }
         }
 
@@ -1274,6 +1678,30 @@
         /* =========================================================
            MOBILE
         ========================================================= */
+
+        @media (max-width: 520px) {
+
+            .jobs-community-submit {
+
+                align-items: stretch;
+
+                flex-direction: column;
+            }
+
+
+            .jobs-community-submit-button {
+                width: 100%;
+            }
+
+
+            .job-region-filter-section {
+
+                padding:
+                    14px 13px;
+            }
+
+        }
+
 
         @media (max-width: 480px) {
 
@@ -1371,7 +1799,8 @@
 
             .lac-empty-primary,
             .kalxa-remind-btn,
-            .kalxa-reminder-option {
+            .kalxa-reminder-option,
+            .job-region-filter {
 
                 transition: none;
             }
@@ -1379,7 +1808,8 @@
 
             .lac-empty-primary:active,
             .kalxa-remind-btn:active,
-            .kalxa-reminder-option:active {
+            .kalxa-reminder-option:active,
+            .job-region-filter:active {
 
                 transform: none;
             }
@@ -1486,41 +1916,42 @@
 
             </p>
 
+
             {% if canonical_category == "jobs" %}
 
-    <div class="jobs-community-submit">
+            <div class="jobs-community-submit">
 
-        <div class="jobs-community-submit-copy">
+                <div class="jobs-community-submit-copy">
 
-            <span class="jobs-community-submit-eyebrow">
-                COMMUNITY JOBS
-            </span>
+                    <span class="jobs-community-submit-eyebrow">
+                        COMMUNITY JOBS
+                    </span>
 
-            <strong>
-                Know about an opportunity?
-            </strong>
+                    <strong>
+                        Know about an opportunity?
+                    </strong>
 
-            <span>
-                Help someone around {{ zone.name }}
-                discover it.
-            </span>
+                    <span>
+                        Help someone around {{ zone.name }}
+                        discover it.
+                    </span>
 
-        </div>
+                </div>
 
 
-        <a
-            href="{{ url_for(
-                'submit_job',
-                zone_id=zone.id
-            ) }}"
-            class="jobs-community-submit-button"
-        >
-            + Post a Job Free
-        </a>
+                <a
+                    href="{{ url_for(
+                        'submit_job',
+                        zone_id=zone.id
+                    ) }}"
+                    class="jobs-community-submit-button"
+                >
+                    + Post a Job Free
+                </a>
 
-    </div>
+            </div>
 
-{% endif %}
+            {% endif %}
 
         </section>
 
@@ -1561,6 +1992,118 @@
             class="category-search-result-count"
         ></div>
 
+
+        <!-- =====================================
+             JOB LOCATION FILTERS
+        ====================================== -->
+
+        {% if canonical_category == "jobs" %}
+
+        <section class="job-region-filter-section">
+
+            <div class="job-region-filter-heading">
+
+                <strong>
+                    📍 Filter opportunities by region
+                </strong>
+
+                <span>
+                    Explore opportunities relevant to
+                    KwaMhlanga, Mpumalanga, Gauteng,
+                    national applicants and remote workers.
+                </span>
+
+            </div>
+
+
+            <div
+                class="job-region-filters"
+                role="group"
+                aria-label="Filter jobs by region"
+            >
+
+                <button
+                    type="button"
+                    class="job-region-filter active"
+                    data-job-region-filter="all"
+                    aria-pressed="true"
+                >
+                    All
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-job-region-filter="KwaMhlanga"
+                    aria-pressed="false"
+                >
+                    KwaMhlanga
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-job-region-filter="Mpumalanga"
+                    aria-pressed="false"
+                >
+                    Mpumalanga
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-job-region-filter="Gauteng"
+                    aria-pressed="false"
+                >
+                    Gauteng
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-job-region-filter="National"
+                    aria-pressed="false"
+                >
+                    National
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-job-region-filter="Remote"
+                    aria-pressed="false"
+                >
+                    Remote
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <div
+            id="job-filter-empty"
+            class="job-filter-empty"
+        >
+
+            <strong>
+                No matching opportunities
+            </strong>
+
+            <span>
+                Try another region or clear your search.
+            </span>
+
+        </div>
+
+        {% endif %}
+
+
         {% endif %}
 
 
@@ -1593,6 +2136,9 @@
                     data-venue="{{ (item.venue or '')|lower }}"
                     data-listing-level="{{ item.listing_level }}"
                     data-content-item-id="{{ item.id }}"
+                    {% if canonical_category == "jobs" %}
+                    data-job-region="{{ item.location_classification or '' }}"
+                    {% endif %}
                     data-sponsored="{{
                         'true'
                         if (
@@ -1817,15 +2363,6 @@
                     <div class="listing-badge-row">
 
 
-                        <!-- =============================
-                             SPONSORED
-
-                             Only the runtime-calculated
-                             sponsorship_active flag is used.
-
-                             Raw is_sponsored alone is NOT enough.
-                        ============================== -->
-
                         {% if
                             item.sponsorship_active is defined
                             and item.sponsorship_active
@@ -1841,10 +2378,6 @@
                         {% endif %}
 
 
-                        <!-- =============================
-                             FEATURED
-                        ============================== -->
-
                         {% if item.featured %}
 
                         <span class="featured">
@@ -1853,10 +2386,6 @@
 
                         {% endif %}
 
-
-                        <!-- =============================
-                             VERIFIED
-                        ============================== -->
 
                         {% if
                             item.can_use_business_features()
@@ -1870,10 +2399,6 @@
                         {% endif %}
 
 
-                        <!-- =============================
-                             BUSINESS
-                        ============================== -->
-
                         {% if
                             item.listing_level == "business"
                             and not item.is_verified
@@ -1885,10 +2410,6 @@
 
                         {% endif %}
 
-
-                        <!-- =============================
-                             UPCOMING NON-EVENT
-                        ============================== -->
 
                         {% if
                             canonical_category != "events"
@@ -1902,10 +2423,6 @@
 
                         {% endif %}
 
-
-                        <!-- =============================
-                             UPCOMING EVENT
-                        ============================== -->
 
                         {% if
                             canonical_category == "events"
@@ -1932,10 +2449,6 @@
                             {{ item.title }}
                         </h2>
 
-
-                        <!-- =================================
-                             CAMPAIGN STATE
-                        ================================== -->
 
                         {% if
                             item.campaign_state is defined
@@ -1978,6 +2491,30 @@
                             </span>
 
                             {% endif %}
+
+                        </div>
+
+                        {% endif %}
+
+
+                        <!-- =================================
+                             JOB REGION
+                        ================================== -->
+
+                        {% if
+                            canonical_category == "jobs"
+                            and item.location_classification
+                        %}
+
+                        <div class="job-region-card-row">
+
+                            <span class="job-region-card-label">
+                                Kalxa Region
+                            </span>
+
+                            <span class="job-region-card-badge">
+                                📍 {{ item.location_classification }}
+                            </span>
 
                         </div>
 
@@ -2074,20 +2611,43 @@
 
                                 <span class="listing-date-strip-label">
 
-                                    {% if
-                                        item.start_date
-                                        and item.end_date
-                                    %}
+                                    {% if canonical_category == "jobs" %}
 
-                                        Available
+                                        {% if
+                                            item.start_date
+                                            and item.end_date
+                                        %}
 
-                                    {% elif item.start_date %}
+                                            Opportunity Dates
 
-                                        Starts
+                                        {% elif item.start_date %}
+
+                                            Opens
+
+                                        {% else %}
+
+                                            Closing Date
+
+                                        {% endif %}
 
                                     {% else %}
 
-                                        Available Until
+                                        {% if
+                                            item.start_date
+                                            and item.end_date
+                                        %}
+
+                                            Available
+
+                                        {% elif item.start_date %}
+
+                                            Starts
+
+                                        {% else %}
+
+                                            Available Until
+
+                                        {% endif %}
 
                                     {% endif %}
 
@@ -2121,7 +2681,12 @@
 
                                     {% elif item.end_date %}
 
-                                        Until
+                                        {% if canonical_category == "jobs" %}
+                                            Closes
+                                        {% else %}
+                                            Until
+                                        {% endif %}
+
                                         {{ item.end_date.strftime("%d %b %Y") }}
 
                                     {% endif %}
@@ -2188,7 +2753,13 @@
                             <div>
 
                                 <span class="listing-detail-label">
-                                    Location
+
+                                    {% if canonical_category == "jobs" %}
+                                        Job Location
+                                    {% else %}
+                                        Location
+                                    {% endif %}
+
                                 </span>
 
                                 <strong>
@@ -2233,46 +2804,47 @@
 
                                 </div>
 
-                               {% elif canonical_category == "events" %}
 
-    <span class="listing-detail-icon">
-        🎟️
-    </span>
+                            {% elif canonical_category == "events" %}
 
-    <div>
+                                <span class="listing-detail-icon">
+                                    🎟️
+                                </span>
 
-        <span class="listing-detail-label">
-            Entry
-        </span>
+                                <div>
 
-        <strong>
-            {{ item.price }}
-        </strong>
+                                    <span class="listing-detail-label">
+                                        Entry
+                                    </span>
 
-    </div>
+                                    <strong>
+                                        {{ item.price }}
+                                    </strong>
 
-
-{% elif canonical_category == "jobs" %}
-
-    <span class="listing-detail-icon">
-        💰
-    </span>
-
-    <div>
-
-        <span class="listing-detail-label">
-            Salary / Compensation
-        </span>
-
-        <strong>
-            {{ item.price }}
-        </strong>
-
-    </div>
+                                </div>
 
 
-{% else %}
-                           
+                            {% elif canonical_category == "jobs" %}
+
+                                <span class="listing-detail-icon">
+                                    💰
+                                </span>
+
+                                <div>
+
+                                    <span class="listing-detail-label">
+                                        Salary / Compensation
+                                    </span>
+
+                                    <strong>
+                                        {{ item.price }}
+                                    </strong>
+
+                                </div>
+
+
+                            {% else %}
+
                                 <span class="listing-detail-icon">
                                     💰
                                 </span>
@@ -2374,7 +2946,13 @@
                             </span>
 
                             <span class="kalxa-reminder-subtitle">
-                                Get an alert before it starts
+
+                                {% if canonical_category == "jobs" %}
+                                    Get an alert before it closes
+                                {% else %}
+                                    Get an alert before it starts
+                                {% endif %}
+
                             </span>
 
                         </div>
@@ -2485,7 +3063,13 @@
                                 </span>
 
                                 <strong>
-                                    Contact, visit or book
+
+                                    {% if canonical_category == "jobs" %}
+                                        Apply or contact
+                                    {% else %}
+                                        Contact, visit or book
+                                    {% endif %}
+
                                 </strong>
 
                             </div>
@@ -2600,41 +3184,42 @@
                             {% endif %}
 
 
-                           {% if item.ticket_url %}
+                            {% if item.ticket_url %}
 
-    {% if canonical_category == "jobs" %}
+                                {% if canonical_category == "jobs" %}
 
-        <a
-            href="{{ item.ticket_url }}"
-            class="
-                listing-action-button
-                ticket-button
-            "
-            target="_blank"
-            rel="noopener noreferrer"
-            data-lac-event="job_apply_click"
-            data-content-item-id="{{ item.id }}"
-        >
-            💼 Apply Now
-        </a>
+                                    <a
+                                        href="{{ item.ticket_url }}"
+                                        class="
+                                            listing-action-button
+                                            ticket-button
+                                        "
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        data-lac-event="job_apply_click"
+                                        data-content-item-id="{{ item.id }}"
+                                    >
+                                        💼 Apply Now
+                                    </a>
 
-    {% else %}
+                                {% else %}
 
-        <a
-            href="{{ item.ticket_url }}"
-            class="
-                listing-action-button
-                ticket-button
-            "
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            🎟 Get Tickets
-        </a>
+                                    <a
+                                        href="{{ item.ticket_url }}"
+                                        class="
+                                            listing-action-button
+                                            ticket-button
+                                        "
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        🎟 Get Tickets
+                                    </a>
 
-    {% endif %}
+                                {% endif %}
 
-{% endif %}
+                            {% endif %}
+
                         </div>
 
                     </div>
@@ -2774,8 +3359,10 @@
 
                         {% elif canonical_category == "jobs" %}
 
-                            Jobs, learnerships and local opportunities around
-                            {{ zone.name }} will appear here.
+                            Jobs, internships, learnerships and
+                            opportunities relevant to KwaMhlanga,
+                            Mpumalanga, Gauteng and South Africa
+                            will appear here.
 
                         {% elif canonical_category == "emergency" %}
 
@@ -2928,29 +3515,30 @@
 
                         {% if canonical_category == "jobs" %}
 
-    <a
-        href="{{ url_for(
-            'submit_job',
-            zone_id=zone.id
-        ) }}"
-        class="lac-empty-secondary"
-    >
-        + Post a Job Free
-    </a>
+                        <a
+                            href="{{ url_for(
+                                'submit_job',
+                                zone_id=zone.id
+                            ) }}"
+                            class="lac-empty-secondary"
+                        >
+                            + Post a Job Free
+                        </a>
 
-{% else %}
+                        {% else %}
 
-    <a
-        href="{{ url_for(
-            'submit_content',
-            zone_id=zone.id
-        ) }}"
-        class="lac-empty-secondary"
-    >
-        + Add a listing
-    </a>
+                        <a
+                            href="{{ url_for(
+                                'submit_content',
+                                zone_id=zone.id
+                            ) }}"
+                            class="lac-empty-secondary"
+                        >
+                            + Add a listing
+                        </a>
 
-{% endif %}
+                        {% endif %}
+
                     </div>
 
 
@@ -3092,7 +3680,7 @@
 
 
 <!-- =====================================================
-     IMAGE MODAL + CATEGORY SEARCH
+     IMAGE MODAL + SEARCH + JOB REGION FILTERS
 ===================================================== -->
 
 <script>
@@ -3218,7 +3806,7 @@
 
 
     // =========================================
-    // CATEGORY SEARCH
+    // SEARCH + JOB REGION FILTERING
     // =========================================
 
     const categorySearchInput =
@@ -3226,15 +3814,24 @@
             "category-search-input"
         );
 
+
     const categorySearchClear =
         document.getElementById(
             "category-search-clear"
         );
 
+
     const categorySearchResultCount =
         document.getElementById(
             "category-search-result-count"
         );
+
+
+    const jobFilterEmpty =
+        document.getElementById(
+            "job-filter-empty"
+        );
+
 
     const listingCards =
         Array.from(
@@ -3244,21 +3841,48 @@
         );
 
 
+    const jobRegionButtons =
+        Array.from(
+            document.querySelectorAll(
+                "[data-job-region-filter]"
+            )
+        );
+
+
+    let selectedJobRegion =
+        "all";
+
+
+    function normalizeJobRegion(
+        value
+    ) {
+
+        return String(
+            value || ""
+        )
+        .trim()
+        .toLowerCase();
+    }
+
+
     function filterCategoryListings() {
 
-        if (!categorySearchInput) {
-
-            return;
-        }
-
-
         const query =
-            categorySearchInput.value
-            .trim()
-            .toLowerCase();
+            categorySearchInput
+                ? categorySearchInput.value
+                    .trim()
+                    .toLowerCase()
+                : "";
 
 
-        let visibleCount = 0;
+        const selectedRegion =
+            normalizeJobRegion(
+                selectedJobRegion
+            );
+
+
+        let visibleCount =
+            0;
 
 
         listingCards.forEach(
@@ -3273,24 +3897,57 @@
                 const venue =
                     card.dataset.venue || "";
 
+                const jobRegion =
+                    normalizeJobRegion(
+                        card.dataset.jobRegion
+                    );
 
-                const matches =
-                    !query
-                    ||
-                    title.includes(query)
-                    ||
-                    business.includes(query)
-                    ||
-                    venue.includes(query);
+
+                const matchesSearch =
+                    (
+                        !query
+                        ||
+                        title.includes(
+                            query
+                        )
+                        ||
+                        business.includes(
+                            query
+                        )
+                        ||
+                        venue.includes(
+                            query
+                        )
+                        ||
+                        jobRegion.includes(
+                            query
+                        )
+                    );
+
+
+                const matchesRegion =
+                    (
+                        selectedRegion === "all"
+                        ||
+                        jobRegion === selectedRegion
+                    );
+
+
+                const visible =
+                    (
+                        matchesSearch
+                        &&
+                        matchesRegion
+                    );
 
 
                 card.style.display =
-                    matches
-                    ? ""
-                    : "none";
+                    visible
+                        ? ""
+                        : "none";
 
 
-                if (matches) {
+                if (visible) {
 
                     visibleCount += 1;
                 }
@@ -3298,21 +3955,39 @@
         );
 
 
-        if (categorySearchResultCount) {
+        // =====================================
+        // RESULT COUNT
+        // =====================================
 
-            if (!query) {
+        if (
+            categorySearchResultCount
+        ) {
+
+            const regionIsFiltered =
+                selectedRegion !== "all";
+
+
+            if (
+                !query
+                &&
+                !regionIsFiltered
+            ) {
 
                 categorySearchResultCount.textContent =
                     "";
             }
 
-            else if (visibleCount === 0) {
+            else if (
+                visibleCount === 0
+            ) {
 
                 categorySearchResultCount.textContent =
                     "No matching listings found.";
             }
 
-            else if (visibleCount === 1) {
+            else if (
+                visibleCount === 1
+            ) {
 
                 categorySearchResultCount.textContent =
                     "1 matching listing";
@@ -3327,17 +4002,45 @@
         }
 
 
-        if (categorySearchClear) {
+        // =====================================
+        // CLEAR SEARCH BUTTON
+        // =====================================
+
+        if (
+            categorySearchClear
+        ) {
 
             categorySearchClear.style.display =
                 query
-                ? "flex"
-                : "none";
+                    ? "flex"
+                    : "none";
         }
+
+
+        // =====================================
+        // JOB FILTER EMPTY STATE
+        // =====================================
+
+        if (
+            jobFilterEmpty
+        ) {
+
+            jobFilterEmpty.classList.toggle(
+                "show",
+                visibleCount === 0
+            );
+        }
+
     }
 
 
-    if (categorySearchInput) {
+    // =========================================
+    // SEARCH INPUT
+    // =========================================
+
+    if (
+        categorySearchInput
+    ) {
 
         categorySearchInput.addEventListener(
             "input",
@@ -3346,22 +4049,91 @@
     }
 
 
-    if (categorySearchClear) {
+    // =========================================
+    // CLEAR SEARCH
+    // =========================================
+
+    if (
+        categorySearchClear
+    ) {
 
         categorySearchClear.addEventListener(
             "click",
             function() {
 
-                categorySearchInput.value =
-                    "";
+                if (
+                    categorySearchInput
+                ) {
+
+                    categorySearchInput.value =
+                        "";
+
+                    categorySearchInput.focus();
+                }
+
 
                 filterCategoryListings();
 
-                categorySearchInput.focus();
             }
         );
     }
 
+
+    // =========================================
+    // JOB REGION FILTER BUTTONS
+    // =========================================
+
+    jobRegionButtons.forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    selectedJobRegion =
+                        button.dataset.jobRegionFilter
+                        || "all";
+
+
+                    jobRegionButtons.forEach(
+                        function(otherButton) {
+
+                            const isActive =
+                                (
+                                    otherButton
+                                    === button
+                                );
+
+
+                            otherButton.classList.toggle(
+                                "active",
+                                isActive
+                            );
+
+
+                            otherButton.setAttribute(
+                                "aria-pressed",
+                                isActive
+                                    ? "true"
+                                    : "false"
+                            );
+
+                        }
+                    );
+
+
+                    filterCategoryListings();
+
+                }
+            );
+
+        }
+    );
+
+
+    // =========================================
+    // INITIAL FILTER STATE
+    // =========================================
 
     filterCategoryListings();
 
