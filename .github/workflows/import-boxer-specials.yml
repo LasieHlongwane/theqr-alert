@@ -1,0 +1,88 @@
+name: Import Boxer Specials
+
+on:
+
+  workflow_dispatch:
+
+  schedule:
+    # Runs every 6 hours.
+    # GitHub cron is UTC.
+    - cron: "37 */6 * * *"
+
+
+jobs:
+
+  import-boxer-specials:
+
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+      # ======================================================
+      # CHECKOUT
+      # ======================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # ======================================================
+      # PYTHON
+      # ======================================================
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+        with:
+          python-version: "3.12"
+
+
+      # ======================================================
+      # DEPENDENCIES
+      # ======================================================
+
+      - name: Install importer dependencies
+
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+
+      # ======================================================
+      # WAKE RENDER
+      # ======================================================
+
+      - name: Wake Kalxa Render service
+
+        run: |
+          curl \
+            --location \
+            --max-time 90 \
+            --retry 3 \
+            --retry-delay 10 \
+            "${{ secrets.KALXA_APP_URL }}" \
+            || true
+
+          sleep 15
+
+
+      # ======================================================
+      # IMPORT BOXER
+      # ======================================================
+
+      - name: Import Boxer promotions
+
+        env:
+
+          KALXA_RETAIL_IMPORT_URL:
+            ${{ secrets.KALXA_RETAIL_IMPORT_URL }}
+
+          KALXA_RETAIL_IMPORT_TOKEN:
+            ${{ secrets.KALXA_RETAIL_IMPORT_TOKEN }}
+
+          KALXA_RETAIL_ZONE_ID:
+            "1"
+
+        run: |
+          python scripts/import_boxer_promotions.py
