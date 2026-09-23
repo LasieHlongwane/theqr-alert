@@ -22,6 +22,105 @@
         ) }}"
     >
 
+
+    <style>
+
+        /* =========================================================
+           JOB LOCATION / REGION
+        ========================================================= */
+
+        .job-location-review {
+
+            margin:
+                14px 0;
+
+            padding:
+                14px 16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.12
+                );
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.035
+                );
+        }
+
+
+        .job-location-review p {
+
+            margin:
+                5px 0;
+        }
+
+
+        .job-region-badge {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            margin-top:
+                7px;
+
+            padding:
+                5px 10px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.18
+                );
+
+            border-radius:
+                999px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.08
+                );
+
+            color:
+                #fff4df;
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.7px;
+
+            text-transform:
+                uppercase;
+        }
+
+    </style>
+
 </head>
 
 
@@ -278,8 +377,57 @@
                 {% if item.zone %}
 
                 <p>
-                    📍 {{ item.zone.name }}
+                    📍 Kalxa Zone:
+                    {{ item.zone.name }}
                 </p>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     JOB LOCATION CLASSIFICATION
+                ================================== -->
+
+                {% if item.category == "jobs" %}
+
+                <div class="job-location-review">
+
+                    {% if item.venue %}
+
+                    <p>
+                        <strong>
+                            Job Location:
+                        </strong>
+
+                        {{ item.venue }}
+                    </p>
+
+                    {% endif %}
+
+
+                    {% if item.location_classification %}
+
+                    <p>
+                        <strong>
+                            Kalxa Region:
+                        </strong>
+                    </p>
+
+
+                    <span class="job-region-badge">
+                        {{ item.location_classification }}
+                    </span>
+
+                    {% else %}
+
+                    <p class="muted">
+                        Kalxa Region:
+                        Not classified
+                    </p>
+
+                    {% endif %}
+
+                </div>
 
                 {% endif %}
 
@@ -510,7 +658,7 @@
                      LISTING DETAILS
                 ================================== -->
 
-                {% if item.venue %}
+                {% if item.venue and item.category != "jobs" %}
 
                 <p>
                     📍 Venue:
@@ -602,7 +750,11 @@
 
                 <p>
 
-                    📅 Ends:
+                    {% if item.category == "jobs" %}
+                        📅 Closes:
+                    {% else %}
+                        📅 Ends:
+                    {% endif %}
 
                     {{
                         item.end_date.strftime(
@@ -696,9 +848,6 @@
 
                 <!-- =================================
                      PAYMENT MANAGEMENT
-
-                     The PendingSubmission mirrors payment
-                     status from ContentItem.
                 ================================== -->
 
                 {% if item.pricing_model %}
