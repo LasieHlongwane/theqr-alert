@@ -751,10 +751,22 @@ def create_pending_retail_campaign(
     # DUPLICATE CHECK
     # ========================================================
 
+    
     duplicate = (
-        find_duplicate_retail_campaign(
-            source_url
-        )
+      find_duplicate_retail_campaign(
+
+        source_url=
+            source_url,
+
+        title=
+            title,
+
+        start_date=
+            start_date,
+
+        end_date=
+            end_date,
+      )
     )
 
 
