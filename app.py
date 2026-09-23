@@ -475,11 +475,14 @@ def find_duplicate_retail_campaign(
 # ============================================================
 # CREATE PENDING RETAIL CAMPAIGN
 # ============================================================
-
 def create_pending_retail_campaign(
     campaign,
     zone_id,
 ):
+
+    # ========================================================
+    # NORMALIZE INPUT
+    # ========================================================
 
     retailer = (
         str(
@@ -565,22 +568,105 @@ def create_pending_retail_campaign(
 
 
     # ========================================================
-    # RETAILER VALIDATION
+    # VALIDATE ZONE
     # ========================================================
 
+    try:
+
+        zone_id = (
+            int(
+                zone_id
+            )
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return {
+            "created": False,
+            "reason": "invalid_zone_id",
+        }
+
+
+    zone = (
+        db.session.get(
+            Zone,
+            zone_id,
+        )
+    )
+
+
+    if not zone:
+
+        return {
+            "created": False,
+            "reason": "zone_not_found",
+        }
+
+
+    # ========================================================
+    # RETAILER NORMALIZATION
+    # ========================================================
+
+    retailer_lookup = {
+
+        "shoprite":
+            "Shoprite",
+
+        "boxer":
+            "Boxer",
+
+        "roots":
+            "Roots",
+
+        "obc":
+            "OBC",
+
+        "pep":
+            "PEP",
+
+        "ackermans":
+            "Ackermans",
+
+        "mr price":
+            "Mr Price",
+
+        "mrprice":
+            "Mr Price",
+
+        "jet":
+            "Jet",
+    }
+
+
+    normalized_retailer = (
+        retailer_lookup.get(
+            retailer.lower(),
+            retailer,
+        )
+    )
+
+
     if (
-        retailer
+        normalized_retailer
         not in
         KALXA_ALLOWED_RETAILERS
     ):
 
-        retailer = (
+        normalized_retailer = (
             "Other"
         )
 
 
+    retailer = (
+        normalized_retailer
+    )
+
+
     # ========================================================
-    # DUPLICATE
+    # DUPLICATE CHECK
     # ========================================================
 
     duplicate = (
@@ -593,9 +679,21 @@ def create_pending_retail_campaign(
     if duplicate:
 
         return {
-            "created": False,
-            "reason": "duplicate",
-            "submission_id": duplicate.id,
+
+            "created":
+                False,
+
+            "reason":
+                "duplicate",
+
+            "submission_id":
+                duplicate.id,
+
+            "title":
+                duplicate.title,
+
+            "retailer":
+                duplicate.business_name,
         }
 
 
@@ -622,6 +720,24 @@ def create_pending_retail_campaign(
 
 
     # ========================================================
+    # INVALID DATE RANGE
+    # ========================================================
+
+    if (
+        start_date
+        and
+        end_date
+        and
+        end_date < start_date
+    ):
+
+        return {
+            "created": False,
+            "reason": "invalid_date_range",
+        }
+
+
+    # ========================================================
     # EXPIRED CAMPAIGN
     # ========================================================
 
@@ -638,13 +754,23 @@ def create_pending_retail_campaign(
     ):
 
         return {
-            "created": False,
-            "reason": "expired",
+
+            "created":
+                False,
+
+            "reason":
+                "expired",
+
+            "retailer":
+                retailer,
+
+            "title":
+                title,
         }
 
 
     # ========================================================
-    # REGION
+    # REGION CLASSIFICATION
     # ========================================================
 
     region = (
@@ -666,39 +792,92 @@ def create_pending_retail_campaign(
     # ONLY IMPORT RELEVANT REGIONS
     # ========================================================
 
+    allowed_regions = {
+        "KwaMhlanga",
+        "Mpumalanga",
+        "Gauteng",
+        "National",
+    }
+
+
     if (
         region
-        not in {
-            "KwaMhlanga",
-            "Mpumalanga",
-            "Gauteng",
-            "National",
-        }
+        not in
+        allowed_regions
     ):
 
         return {
-            "created": False,
-            "reason": "irrelevant_region",
+
+            "created":
+                False,
+
+            "reason":
+                "irrelevant_region",
+
+            "retailer":
+                retailer,
+
+            "title":
+                title,
+
+            "detected_region":
+                region,
         }
+
+
+    # ========================================================
+    # FINAL LOCATION
+    # ========================================================
+
+    final_location = (
+        location
+        or region
+    )
 
 
     # ========================================================
     # DESCRIPTION
     # ========================================================
 
-    final_description = (
-        description
-        or
-        (
+    if description:
+
+        final_description = (
+            description
+        )
+
+    else:
+
+        final_description = (
             f"Current {retailer} specials. "
             "Open the official retailer promotion "
             "to view available deals."
         )
-    )
 
 
     # ========================================================
-    # CREATE
+    # ADD SOURCE CONTEXT
+    # ========================================================
+
+    source_note = (
+        f"\n\nSource: Official {retailer} promotion."
+    )
+
+
+    if (
+        source_note.strip().lower()
+        not in
+        final_description.lower()
+    ):
+
+        final_description = (
+            final_description.rstrip()
+            +
+            source_note
+        )
+
+
+    # ========================================================
+    # CREATE PENDING SUBMISSION
     # ========================================================
 
     submission = (
@@ -723,13 +902,18 @@ def create_pending_retail_campaign(
                 final_description,
 
             venue=
-                location
-                or region,
+                final_location,
 
             price=
                 None,
 
             contact=
+                None,
+
+            whatsapp_number=
+                None,
+
+            directions_url=
                 None,
 
             ticket_url=
@@ -747,14 +931,27 @@ def create_pending_retail_campaign(
             pricing_model=
                 None,
 
+            commercial_duration_days=
+                None,
+
+            amount_due=
+                None,
+
             payment_status=
                 "waived",
 
             notification_eligible=
                 True,
+
+            listing_level=
+                "discovery",
         )
     )
 
+
+    # ========================================================
+    # ADD TO SESSION
+    # ========================================================
 
     db.session.add(
         submission
@@ -764,9 +961,14 @@ def create_pending_retail_campaign(
     db.session.flush()
 
 
+    # ========================================================
+    # RETURN RESULT
+    # ========================================================
+
     return {
 
-        "created": True,
+        "created":
+            True,
 
         "submission_id":
             submission.id,
@@ -774,8 +976,31 @@ def create_pending_retail_campaign(
         "retailer":
             retailer,
 
+        "title":
+            title,
+
         "region":
             region,
+
+        "location":
+            final_location,
+
+        "start_date":
+            (
+                start_date.isoformat()
+                if start_date
+                else None
+            ),
+
+        "end_date":
+            (
+                end_date.isoformat()
+                if end_date
+                else None
+            ),
+
+        "source_url":
+            source_url,
     }
 
 # ============================================================
