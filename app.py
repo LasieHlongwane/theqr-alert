@@ -2326,6 +2326,9 @@ def create_pending_rss_job(
     )
 
 
+    
+
+
     venue = (
         str(
             job.get(
@@ -2337,13 +2340,35 @@ def create_pending_rss_job(
     )
 
 
+    location_classification = (
+      str(
+        job.get(
+            "kalxa_location_classification"
+        )
+        or ""
+      )
+      .strip()
+    )
+
+
+    if location_classification not in {
+      "KwaMhlanga",
+      "Mpumalanga",
+      "Gauteng",
+      "National",
+      "Remote",
+    }:
+
+      location_classification = None
+
+
     description = (
-        str(
+      str(
             job.get(
                 "description"
             )
             or ""
-        )
+      )
         .strip()
     )
 
