@@ -2819,6 +2819,7 @@ def approve_submission(submission_id):
             end_time=submission.end_time,
             listing_level="discovery",
             ownership_status="unclaimed",
+            location_classification=submission.location_classification,
             is_verified=False,
             featured=False,
             active=True,
