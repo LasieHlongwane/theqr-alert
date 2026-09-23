@@ -2517,106 +2517,636 @@ def submissions():
     )
 
 
-@admin_bp.route("/submissions/<int:submission_id>/edit", methods=["GET", "POST"])
-def edit_submission(submission_id):
+@admin_bp.route(
+    "/submissions/<int:submission_id>/edit",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def edit_submission(
+    submission_id,
+):
+
     auth = require_admin()
+
     if auth:
         return auth
 
-    submission = PendingSubmission.query.get_or_404(submission_id)
-    if submission.status != "pending":
-        flash("Only pending submissions can be edited.", "error")
-        return redirect(url_for("admin.submissions", status=submission.status))
 
-    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
-    categories = get_categories()
+    submission = (
+        PendingSubmission
+        .query
+        .get_or_404(
+            submission_id
+        )
+    )
 
-    if request.method == "POST":
-        zone_id = request.form.get("zone_id", type=int)
-        raw_category = request.form.get("category", "").strip().lower()
-        category = normalize_category(raw_category)
-        content_type = request.form.get("content_type", submission.content_type or "").strip().lower() or None
-        title = request.form.get("title", "").strip()
 
-        if not zone_id or not category or not title:
-            flash("Zone, category and title are required.", "error")
-            return _render_submission_edit(submission, zones, categories)
+    if (
+        submission.status
+        != "pending"
+    ):
 
-        zone = db.session.get(Zone, zone_id)
-        if not zone or not zone.active:
-            flash("Please select a valid active zone.", "error")
-            return _render_submission_edit(submission, zones, categories)
-        if not get_category_by_slug(category):
-            flash("Please select a valid active category.", "error")
-            return _render_submission_edit(submission, zones, categories)
+        flash(
+            "Only pending submissions can be edited.",
+            "error",
+        )
 
-        workflow = get_content_workflow(category, content_type)
-        canonical_category = normalize_category(category)
-        lifetime_type = submission.lifetime_type or workflow.get("lifetime_type")
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status=
+                    submission.status,
+            )
+        )
 
-        if canonical_category == "jobs":
-            closing_date_raw = request.form.get("end_date", "").strip()
-            lifetime_type = "time_specific" if closing_date_raw else "until_unavailable"
+
+    zones = (
+        Zone
+        .query
+        .filter_by(
+            active=True
+        )
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+
+    categories = (
+        get_categories()
+    )
+
+
+    if (
+        request.method
+        == "POST"
+    ):
+
+        zone_id = (
+            request.form.get(
+                "zone_id",
+                type=int,
+            )
+        )
+
+
+        raw_category = (
+            request.form.get(
+                "category",
+                "",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        category = (
+            normalize_category(
+                raw_category
+            )
+        )
+
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                submission.content_type
+                or "",
+            )
+            .strip()
+            .lower()
+            or None
+        )
+
+
+        title = (
+            request.form.get(
+                "title",
+                "",
+            )
+            .strip()
+        )
+
+
+        if (
+            not zone_id
+            or
+            not category
+            or
+            not title
+        ):
+
+            flash(
+                "Zone, category and title are required.",
+                "error",
+            )
+
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
+
+
+        zone = (
+            db.session.get(
+                Zone,
+                zone_id,
+            )
+        )
+
+
+        if (
+            not zone
+            or
+            not zone.active
+        ):
+
+            flash(
+                "Please select a valid active zone.",
+                "error",
+            )
+
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
+
+
+        if (
+            not get_category_by_slug(
+                category
+            )
+        ):
+
+            flash(
+                "Please select a valid active category.",
+                "error",
+            )
+
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
+
+
+        workflow = (
+            get_content_workflow(
+                category,
+                content_type,
+            )
+        )
+
+
+        canonical_category = (
+            normalize_category(
+                category
+            )
+        )
+
+
+        lifetime_type = (
+            submission.lifetime_type
+            or
+            workflow.get(
+                "lifetime_type"
+            )
+        )
+
+
+        # ====================================================
+        # JOB-SPECIFIC MODERATION
+        # ====================================================
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            closing_date_raw = (
+                request.form.get(
+                    "end_date",
+                    "",
+                )
+                .strip()
+            )
+
+
+            lifetime_type = (
+                "time_specific"
+                if closing_date_raw
+                else "until_unavailable"
+            )
+
+
+            raw_location_classification = (
+                request.form.get(
+                    "location_classification",
+                    "",
+                )
+                .strip()
+            )
+
+
+            if (
+                raw_location_classification
+                in
+                KALXA_ALLOWED_JOB_LOCATION_CLASSES
+            ):
+
+                location_classification = (
+                    raw_location_classification
+                )
+
+            else:
+
+                location_classification = (
+                    None
+                )
+
+        else:
+
+            # ------------------------------------------------
+            # Non-job listings should never retain a stale
+            # jobs-region classification.
+            # ------------------------------------------------
+
+            location_classification = (
+                None
+            )
+
+
+        # ====================================================
+        # DATES
+        # ====================================================
 
         try:
-            dates, error = _validate_and_normalize_content_dates(category, request.form, lifetime_type=lifetime_type)
+
+            dates, error = (
+                _validate_and_normalize_content_dates(
+                    category,
+                    request.form,
+                    lifetime_type=
+                        lifetime_type,
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid dates.", "error")
-            return _render_submission_edit(submission, zones, categories)
+
+            flash(
+                "Please enter valid dates.",
+                "error",
+            )
+
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
+
+
         if error:
-            flash(error, "error")
-            return _render_submission_edit(submission, zones, categories)
+
+            flash(
+                error,
+                "error",
+            )
+
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
+
+
+        # ====================================================
+        # TIMES
+        # ====================================================
 
         try:
-            start_time = parse_optional_time(request.form.get("start_time"))
-            end_time = parse_optional_time(request.form.get("end_time"))
+
+            start_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "start_time"
+                    )
+                )
+            )
+
+
+            end_time = (
+                parse_optional_time(
+                    request.form.get(
+                        "end_time"
+                    )
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid start and end times.", "error")
-            return _render_submission_edit(submission, zones, categories)
 
-        submission.zone_id = zone.id
-        submission.category = category
-        submission.content_type = content_type
-        submission.lifetime_type = lifetime_type
-        submission.notification_eligible = bool(workflow.get("notification_eligible", True))
-        submission.title = title
-        submission.description = request.form.get("description", "").strip() or None
-        submission.business_name = request.form.get("business_name", "").strip() or None
-        submission.venue = request.form.get("venue", "").strip() or None
-        submission.price = request.form.get("price", "").strip() or None
-        submission.contact = request.form.get("contact", "").strip() or None
-        submission.whatsapp_number = request.form.get("whatsapp_number", "").strip() or None
-        submission.directions_url = request.form.get("directions_url", "").strip() or None
-        submission.ticket_url = request.form.get("ticket_url", "").strip() or None
-        submission.submitter_name = request.form.get("submitter_name", "").strip()
-        submission.submitter_phone = request.form.get("submitter_phone", "").strip() or None
-        submission.submitter_email = request.form.get("submitter_email", "").strip() or None
+            flash(
+                "Please enter valid start and end times.",
+                "error",
+            )
 
-        for key, value in dates.items():
-            setattr(submission, key, value)
-        submission.start_time = start_time
-        submission.end_time = end_time
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
 
-        if canonical_category == "jobs":
-            submission.pricing_model = None
-            submission.commercial_duration_days = None
-            submission.amount_due = None
-            submission.payment_status = "waived"
-            submission.distribution_zone_ids = []
+
+        # ====================================================
+        # SAVE CORE SUBMISSION FIELDS
+        # ====================================================
+
+        submission.zone_id = (
+            zone.id
+        )
+
+
+        submission.category = (
+            category
+        )
+
+
+        submission.content_type = (
+            content_type
+        )
+
+
+        submission.lifetime_type = (
+            lifetime_type
+        )
+
+
+        submission.notification_eligible = (
+            bool(
+                workflow.get(
+                    "notification_eligible",
+                    True,
+                )
+            )
+        )
+
+
+        submission.title = (
+            title
+        )
+
+
+        submission.description = (
+            request.form.get(
+                "description",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.venue = (
+            request.form.get(
+                "venue",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        # ====================================================
+        # JOB LOCATION CLASSIFICATION
+        # ====================================================
+
+        submission.location_classification = (
+            location_classification
+        )
+
+
+        submission.price = (
+            request.form.get(
+                "price",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.contact = (
+            request.form.get(
+                "contact",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.whatsapp_number = (
+            request.form.get(
+                "whatsapp_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.directions_url = (
+            request.form.get(
+                "directions_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.ticket_url = (
+            request.form.get(
+                "ticket_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.submitter_name = (
+            request.form.get(
+                "submitter_name",
+                "",
+            )
+            .strip()
+        )
+
+
+        submission.submitter_phone = (
+            request.form.get(
+                "submitter_phone",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        submission.submitter_email = (
+            request.form.get(
+                "submitter_email",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        # ====================================================
+        # NORMALIZED DATES
+        # ====================================================
+
+        for key, value in (
+            dates.items()
+        ):
+
+            setattr(
+                submission,
+                key,
+                value,
+            )
+
+
+        submission.start_time = (
+            start_time
+        )
+
+
+        submission.end_time = (
+            end_time
+        )
+
+
+        # ====================================================
+        # JOBS ARE FREE
+        # ====================================================
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            submission.pricing_model = (
+                None
+            )
+
+            submission.commercial_duration_days = (
+                None
+            )
+
+            submission.amount_due = (
+                None
+            )
+
+            submission.payment_status = (
+                "waived"
+            )
+
+            submission.distribution_zone_ids = (
+                []
+            )
+
+
+        # ====================================================
+        # COMMIT
+        # ====================================================
 
         try:
+
             db.session.commit()
+
         except Exception as exc:
+
             db.session.rollback()
-            current_app.logger.exception("[Kalxa Admin] Unable to update submission submission_id=%s error=%s", submission.id, exc)
-            flash("Submission could not be updated.", "error")
-            return _render_submission_edit(submission, zones, categories)
 
-        flash("Submission updated successfully. You can now approve it.", "success")
-        return redirect(url_for("admin.submissions", status="pending"))
 
-    return _render_submission_edit(submission, zones, categories)
+            current_app.logger.exception(
+                (
+                    "[Kalxa Admin] Unable to update "
+                    "submission submission_id=%s error=%s"
+                ),
+                submission.id,
+                exc,
+            )
 
+
+            flash(
+                "Submission could not be updated.",
+                "error",
+            )
+
+
+            return (
+                _render_submission_edit(
+                    submission,
+                    zones,
+                    categories,
+                )
+            )
+
+
+        flash(
+            (
+                "Submission updated successfully. "
+                "You can now approve it."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
+
+    return (
+        _render_submission_edit(
+            submission,
+            zones,
+            categories,
+        )
+    )
 
 def _send_content_push_notification(content, category_record=None):
     existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
