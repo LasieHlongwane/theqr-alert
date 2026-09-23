@@ -3777,6 +3777,366 @@ def approve_all_jobs():
 
 
 # ============================================================
+# APPROVE NEXT 10 RETAIL SPECIALS
+# ============================================================
+
+@admin_bp.route(
+    "/submissions/retail-specials/approve-all",
+    methods=[
+        "POST",
+    ],
+)
+def approve_all_retail_specials():
+
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+
+    # ========================================================
+    # LOAD NEXT 10 IMPORTED RETAIL CAMPAIGNS
+    # ========================================================
+
+    pending_retail_specials = (
+        PendingSubmission
+        .query
+        .filter(
+            PendingSubmission.status
+            == "pending",
+
+            PendingSubmission.category
+            == "retail_specials",
+
+            PendingSubmission.content_type
+            == "retailer_campaign",
+        )
+        .order_by(
+            PendingSubmission.created_at.asc(),
+            PendingSubmission.id.asc(),
+        )
+        .limit(
+            10
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # NOTHING TO APPROVE
+    # ========================================================
+
+    if not pending_retail_specials:
+
+        flash(
+            "There are no pending retailer campaigns to approve.",
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
+
+    # ========================================================
+    # COUNTERS
+    # ========================================================
+
+    approved_count = 0
+
+    failed_count = 0
+
+    failed_deals = []
+
+    approved_contents = []
+
+
+    # ========================================================
+    # PROCESS MAXIMUM OF 10
+    # ========================================================
+
+    for submission in pending_retail_specials:
+
+        submission_id = (
+            submission.id
+        )
+
+
+        submission_title = (
+            submission.title
+            or
+            f"Submission #{submission_id}"
+        )
+
+
+        try:
+
+            # =================================================
+            # USE SHARED PUBLISHING LOGIC
+            # =================================================
+
+            result = (
+                _publish_pending_submission(
+                    submission
+                )
+            )
+
+
+            content = (
+                result[
+                    "content"
+                ]
+            )
+
+
+            category = (
+                result[
+                    "category"
+                ]
+            )
+
+
+            # =================================================
+            # COMMIT EACH DEAL INDEPENDENTLY
+            # =================================================
+
+            db.session.commit()
+
+
+            approved_count += 1
+
+
+            approved_contents.append(
+                (
+                    content.id,
+
+                    category.slug
+                    if hasattr(
+                        category,
+                        "slug",
+                    )
+                    else submission.category,
+                )
+            )
+
+
+            current_app.logger.info(
+                (
+                    "[KALXA BULK RETAIL APPROVAL] "
+                    "Approved submission #%s: %s"
+                ),
+                submission_id,
+                submission_title,
+            )
+
+
+        except Exception as exc:
+
+            db.session.rollback()
+
+
+            failed_count += 1
+
+
+            failed_deals.append(
+                (
+                    submission_id,
+                    submission_title,
+                    str(
+                        exc
+                    ),
+                )
+            )
+
+
+            current_app.logger.exception(
+                (
+                    "[KALXA BULK RETAIL APPROVAL ERROR] "
+                    "Submission #%s: %s | error=%s"
+                ),
+                submission_id,
+                submission_title,
+                exc,
+            )
+
+
+    # ========================================================
+    # SEND PUSH NOTIFICATIONS AFTER DATABASE WORK
+    # ========================================================
+
+    for (
+        content_id,
+        category_slug,
+    ) in approved_contents:
+
+        try:
+
+            content = (
+                db.session.get(
+                    ContentItem,
+                    content_id,
+                )
+            )
+
+
+            if not content:
+
+                continue
+
+
+            category_record = (
+                get_category_by_slug(
+                    category_slug
+                )
+            )
+
+
+            if not category_record:
+
+                category_record = (
+                    get_category_by_slug(
+                        content.category
+                    )
+                )
+
+
+            if category_record:
+
+                _send_approved_content_push(
+                    content,
+                    category_record,
+                )
+
+
+        except Exception as exc:
+
+            current_app.logger.exception(
+                (
+                    "[KALXA BULK RETAIL PUSH WARNING] "
+                    "Content #%s push failed: %s"
+                ),
+                content_id,
+                exc,
+            )
+
+
+    # ========================================================
+    # COUNT REMAINING RETAIL CAMPAIGNS
+    # ========================================================
+
+    remaining_count = (
+        PendingSubmission
+        .query
+        .filter(
+            PendingSubmission.status
+            == "pending",
+
+            PendingSubmission.category
+            == "retail_specials",
+
+            PendingSubmission.content_type
+            == "retailer_campaign",
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # RESULT MESSAGE
+    # ========================================================
+
+    if (
+        approved_count > 0
+        and
+        failed_count == 0
+    ):
+
+        flash(
+            (
+                f"✓ {approved_count} "
+                f"{'retail deal was' if approved_count == 1 else 'retail deals were'} "
+                "approved successfully. "
+                f"{remaining_count} "
+                f"{'deal remains' if remaining_count == 1 else 'deals remain'} "
+                "pending."
+            ),
+            "success",
+        )
+
+
+    elif (
+        approved_count > 0
+        and
+        failed_count > 0
+    ):
+
+        flash(
+            (
+                f"{approved_count} "
+                f"{'retail deal was' if approved_count == 1 else 'retail deals were'} "
+                "approved. "
+                f"{failed_count} "
+                f"{'deal failed' if failed_count == 1 else 'deals failed'}. "
+                f"{remaining_count} "
+                f"{'deal remains' if remaining_count == 1 else 'deals remain'} "
+                "pending."
+            ),
+            "warning",
+        )
+
+
+    else:
+
+        flash(
+            (
+                "0 retail deals approved. "
+                f"{failed_count} "
+                f"{'deal failed' if failed_count == 1 else 'deals failed'}. "
+                "Check the Render logs for the exact error."
+            ),
+            "danger",
+        )
+
+
+    # ========================================================
+    # LOG FAILURES
+    # ========================================================
+
+    if failed_deals:
+
+        for (
+            failed_submission_id,
+            failed_submission_title,
+            failed_error,
+        ) in failed_deals:
+
+            current_app.logger.error(
+                (
+                    "[KALXA BULK RETAIL FAILED] "
+                    "#%s | %s | %s"
+                ),
+                failed_submission_id,
+                failed_submission_title,
+                failed_error,
+            )
+
+
+    # ========================================================
+    # RETURN TO PENDING
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "admin.submissions",
+            status="pending",
+        )
+    )
+
+
+# ============================================================
 # SUBMISSIONS PAGE
 # ============================================================
 
@@ -3903,6 +4263,39 @@ def submissions():
             pending_jobs_count,
             10,
         )
+    )
+
+
+    # ========================================================
+# PENDING IMPORTED RETAIL SPECIALS COUNT
+# ========================================================
+
+    pending_retail_specials_count = (
+      PendingSubmission
+      .query
+      .filter(
+        PendingSubmission.status
+        == "pending",
+
+        PendingSubmission.category
+        == "retail_specials",
+
+        PendingSubmission.content_type
+        == "retailer_campaign",
+      )
+      .count()
+    )
+
+
+# ========================================================
+# NEXT RETAIL BATCH SIZE
+# ========================================================
+
+    next_retail_batch_count = (
+      min(
+        pending_retail_specials_count,
+        10,
+      )
     )
 
 
