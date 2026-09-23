@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
   schedule:
+    # Every 6 hours at minute 17.
     - cron: "17 */6 * * *"
       timezone: "Africa/Johannesburg"
 
@@ -26,10 +27,36 @@ jobs:
           BASE_URL="${KALXA_BASE_URL:-https://lac-local-access.onrender.com}"
           BASE_URL="${BASE_URL%/}"
 
+
           echo "========================================"
           echo "KALXA RSS JOBS IMPORT"
           echo "========================================"
           echo ""
+
+
+          # ==================================================
+          # ROTATION NUMBER
+          #
+          # One slot = 6 hours.
+          #
+          # This number continuously increases.
+          #
+          # Kalxa uses modulo against each feed's own
+          # batch_count.
+          # ==================================================
+
+          CURRENT_EPOCH=$(date +%s)
+
+          ROTATION_BATCH=$(
+            (
+              CURRENT_EPOCH / 21600
+            )
+          )
+
+
+          echo "Rotation batch: ${ROTATION_BATCH}"
+          echo ""
+
 
           # ==================================================
           # WAKE RENDER FREE
@@ -49,17 +76,18 @@ jobs:
             --output /dev/null \
             "${BASE_URL}/"
 
+
           echo "Kalxa is awake."
 
           sleep 3
 
 
           # ==================================================
-          # FEEDS
+          # RSS FEEDS
           #
           # Format:
           #
-          # index|url
+          # feed_index|rss_url
           #
           # Index must match KALXA_JOB_FEEDS_JSON on Render.
           # ==================================================
@@ -78,23 +106,31 @@ jobs:
           do
 
             FEED_INDEX="${FEED%%|*}"
+
             FEED_URL="${FEED#*|}"
+
 
             echo ""
             echo "========================================"
             echo "FEED INDEX ${FEED_INDEX}"
             echo "========================================"
+
             echo "Source: ${FEED_URL}"
+
+            echo "Requested rotation batch: ${ROTATION_BATCH}"
+
             echo ""
 
 
             # ================================================
-            # DOWNLOAD RSS DIRECTLY FROM GITHUB RUNNER
+            # DOWNLOAD RSS USING GITHUB
             # ================================================
 
             RSS_FILE="$(mktemp)"
 
+
             echo "Downloading RSS feed..."
+
 
             curl \
               --fail \
@@ -107,11 +143,13 @@ jobs:
               --connect-timeout 20 \
               --max-time 120 \
               --header "Accept: application/rss+xml, application/atom+xml, application/xml, text/xml, */*" \
-              --header "User-Agent: Kalxa-GitHub-RSS-Fetcher/1.0" \
+              --header "User-Agent: Kalxa-GitHub-RSS-Fetcher/2.0" \
               --output "$RSS_FILE" \
               "$FEED_URL"
 
+
             RSS_SIZE=$(wc -c < "$RSS_FILE")
+
 
             echo "Downloaded ${RSS_SIZE} bytes."
 
@@ -130,17 +168,30 @@ jobs:
 
 
             # ================================================
-            # SEND XML TO KALXA
+            # SEND RSS TO KALXA
+            #
+            # GitHub sends the continuously increasing
+            # rotation batch number.
+            #
+            # Kalxa converts it to the feed-specific
+            # effective batch.
             # ================================================
 
             RESPONSE_FILE="$(mktemp)"
 
-            TARGET_URL="${BASE_URL}/internal/jobs/import/rss-payload?feed_index=${FEED_INDEX}"
+
+            TARGET_URL="${BASE_URL}/internal/jobs/import/rss-payload?feed_index=${FEED_INDEX}&batch=${ROTATION_BATCH}"
+
+
+            echo ""
 
             echo "Sending feed to Kalxa..."
+
             echo "Target: ${TARGET_URL}"
 
+
             set +e
+
 
             HTTP_STATUS=$(curl \
               --silent \
@@ -152,35 +203,51 @@ jobs:
               --header "Authorization: Bearer ${KALXA_RSS_IMPORT_TOKEN}" \
               --header "Content-Type: application/xml" \
               --header "Accept: application/json" \
-              --header "User-Agent: Kalxa-GitHub-Actions-RSS-Importer/2.0" \
+              --header "User-Agent: Kalxa-GitHub-Actions-RSS-Importer/3.0" \
               --connect-timeout 10 \
               --max-time 28 \
               --data-binary "@${RSS_FILE}" \
               "${TARGET_URL}")
 
+
             CURL_EXIT=$?
+
 
             set -e
 
 
             echo ""
+
             echo "Curl exit code: ${CURL_EXIT}"
+
             echo "HTTP status: ${HTTP_STATUS:-none}"
+
             echo ""
+
 
             echo "Response:"
 
+
             if [ -s "$RESPONSE_FILE" ]; then
+
               cat "$RESPONSE_FILE"
+
             else
+
               echo "(no response body)"
+
             fi
+
 
             echo ""
 
 
             rm -f "$RSS_FILE"
 
+
+            # ================================================
+            # CURL FAILURE
+            # ================================================
 
             if [ "$CURL_EXIT" -ne 0 ]; then
 
@@ -193,6 +260,10 @@ jobs:
             fi
 
 
+            # ================================================
+            # HTTP FAILURE
+            # ================================================
+
             if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
 
               rm -f "$RESPONSE_FILE"
@@ -203,6 +274,10 @@ jobs:
 
             fi
 
+
+            # ================================================
+            # KALXA API FAILURE
+            # ================================================
 
             if grep -q '"success":false' "$RESPONSE_FILE"; then
 
@@ -217,8 +292,11 @@ jobs:
 
             rm -f "$RESPONSE_FILE"
 
+
             echo ""
+
             echo "Feed ${FEED_INDEX} completed successfully."
+
 
             sleep 2
 
