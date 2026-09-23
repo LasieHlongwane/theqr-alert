@@ -1360,6 +1360,12 @@ class PendingSubmission(db.Model):
         nullable=True,
     )
 
+    location_classification = db.Column(
+        db.String(50),
+        nullable=True,
+        index=True,
+    )
+
     price = db.Column(
         db.String(50),
         nullable=True,
