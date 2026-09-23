@@ -24,3 +24,4 @@ gunicorn
 cloudinary
 pywebpush
 requests>=2.31.0
+beautifulsoup4
