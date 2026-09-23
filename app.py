@@ -974,74 +974,68 @@ def create_pending_retail_campaign(
     # CREATE PENDING SUBMISSION
     # ========================================================
 
-    submission = (
-        PendingSubmission(
+    submission = PendingSubmission(
 
-            zone_id=
-                zone_id,
+      zone_id=
+        zone_id,
 
-            category=
-                KALXA_RETAIL_SPECIALS_CATEGORY,
+      category=
+        KALXA_RETAIL_SPECIALS_CATEGORY,
 
-            content_type=
-                KALXA_RETAIL_CAMPAIGN_CONTENT_TYPE,
+      content_type=
+        KALXA_RETAIL_CAMPAIGN_CONTENT_TYPE,
 
-            title=
-                title,
+      title=
+        title,
 
-            business_name=
-                retailer,
+      business_name=
+        retailer,
 
-            description=
-                final_description,
+      description=
+        final_description,
 
-            venue=
-                final_location,
+      venue=
+        final_location,
 
-            price=
-                None,
+      price=
+        None,
 
-            contact=
-                None,
+      contact=
+        None,
 
-            whatsapp_number=
-                None,
+      whatsapp_number=
+        None,
 
-            directions_url=
-                None,
+      directions_url=
+        None,
 
-            ticket_url=
-                source_url,
+      ticket_url=
+        source_url,
 
-            start_date=
-                start_date,
+      start_date=
+        start_date,
 
-            end_date=
-                end_date,
+      end_date=
+        end_date,
 
-            status=
-                "pending",
+      status=
+        "pending",
 
-            pricing_model=
-                None,
+      pricing_model=
+        None,
 
-            commercial_duration_days=
-                None,
+      commercial_duration_days=
+        None,
 
-            amount_due=
-                None,
+      amount_due=
+        None,
 
-            payment_status=
-                "waived",
+      payment_status=
+        "waived",
 
-            notification_eligible=
-                True,
-
-            listing_level=
-                "discovery",
-        )
+      notification_eligible=
+        True,
     )
-
 
     # ========================================================
     # ADD TO SESSION
