@@ -5544,30 +5544,59 @@ def import_rss_jobs_payload():
     )
 
 
-    jobs = (
-      locally_relevant_jobs[
-        :20
-      ]
+    raw_offset = (
+      request.args.get(
+        "offset",
+        "0",
+      )
     )
 
 
+    try:
+
+      offset = max(
+        0,
+        int(
+            raw_offset
+        ),
+      )
+
+    except (
+      TypeError,
+      ValueError,
+    ):
+
+      offset = 0
+
+
+    batch_size = 20
+
+
+    jobs = (
+      locally_relevant_jobs[
+        offset:
+        offset + batch_size
+      ]
+    ) 
+
+
     filtered_out = (
-      total_feed_items
-      - relevant_feed_items
+     total_feed_items
+     - relevant_feed_items
     )
 
 
     current_app.logger.info(
-      (
-        "[Kalxa RSS Location] "
-        "feed=%s total=%s relevant=%s "
-        "filtered=%s counts=%s"
-      ),
-      feed_name,
-      total_feed_items,
-      relevant_feed_items,
-      filtered_out,
-      location_counts,
+    (
+     "[Kalxa RSS Location] "
+     "feed=%s total=%s relevant=%s "
+     "filtered=%s counts=%s"
+    ),
+     feed_name,
+     total_feed_items,
+     relevant_feed_items,
+     filtered_out,
+     location_counts,
     )
 
 
