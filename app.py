@@ -441,6 +441,9 @@ def classify_retail_campaign_region(
 
 def find_duplicate_retail_campaign(
     source_url,
+    title=None,
+    start_date=None,
+    end_date=None,
 ):
 
     source_url = (
@@ -452,23 +455,102 @@ def find_duplicate_retail_campaign(
     )
 
 
-    if not source_url:
+    title = (
+        str(
+            title
+            or ""
+        )
+        .strip()
+    )
 
-        return None
 
-
-    return (
+    query = (
         PendingSubmission
         .query
         .filter(
             PendingSubmission.category
-            == KALXA_RETAIL_SPECIALS_CATEGORY,
-
-            PendingSubmission.ticket_url
-            == source_url,
+            == KALXA_RETAIL_SPECIALS_CATEGORY
         )
-        .first()
     )
+
+
+    # ========================================================
+    # PREFER CAMPAIGN IDENTITY
+    # ========================================================
+
+    if title:
+
+        query = (
+            query.filter(
+                PendingSubmission.title
+                == title
+            )
+        )
+
+
+    if start_date:
+
+        query = (
+            query.filter(
+                PendingSubmission.start_date
+                == start_date
+            )
+        )
+
+
+    if end_date:
+
+        query = (
+            query.filter(
+                PendingSubmission.end_date
+                == end_date
+            )
+        )
+
+
+    if (
+        title
+        and
+        (
+            start_date
+            or end_date
+        )
+    ):
+
+        duplicate = (
+            query.first()
+        )
+
+
+        if duplicate:
+
+            return duplicate
+
+
+    # ========================================================
+    # FALLBACK TO SOURCE URL
+    # ========================================================
+
+    if source_url:
+
+        return (
+            PendingSubmission
+            .query
+            .filter(
+                PendingSubmission.category
+                == KALXA_RETAIL_SPECIALS_CATEGORY,
+
+                PendingSubmission.ticket_url
+                == source_url,
+
+                PendingSubmission.title
+                == title,
+            )
+            .first()
+        )
+
+
+    return None
 
 
 
