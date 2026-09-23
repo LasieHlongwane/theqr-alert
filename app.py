@@ -5156,25 +5156,28 @@ def submit_job():
         )
     )
 
+
 @app.route(
     "/internal/jobs/import/rss-payload",
     methods=["POST"],
 )
 def import_rss_jobs_payload():
     """
-    Import RSS/Atom XML that has already been downloaded
-    by GitHub Actions.
+    Import RSS/Atom XML already downloaded by GitHub Actions.
 
-    This keeps slow external network requests away from
-    Render Free.
+    GitHub handles the slow external download.
+
+    Render only:
+        1. Parses the XML
+        2. Filters by location
+        3. Selects one rotating batch
+        4. Creates PendingSubmission records
 
     Example:
 
-        POST /internal/jobs/import/rss-payload?feed_index=0
-
-    Request body:
-
-        Raw RSS / Atom XML
+        POST /internal/jobs/import/rss-payload
+            ?feed_index=0
+            &batch=3
     """
 
     # ========================================================
@@ -5264,7 +5267,58 @@ def import_rss_jobs_payload():
 
 
     # ========================================================
-    # CONFIGURED FEEDS
+    # REQUESTED ROTATION BATCH
+    #
+    # GitHub sends a continuously increasing batch number.
+    #
+    # Kalxa converts it to the correct batch for each feed.
+    #
+    # Example:
+    #
+    # Feed has 31 relevant jobs
+    # batch_size = 20
+    #
+    # batch_count = 2
+    #
+    # requested batch 0 -> effective batch 0
+    # requested batch 1 -> effective batch 1
+    # requested batch 2 -> effective batch 0
+    # requested batch 3 -> effective batch 1
+    # ========================================================
+
+    raw_batch = (
+        request.args.get(
+            "batch",
+            "0",
+        )
+    )
+
+
+    try:
+
+        requested_batch = max(
+            0,
+            int(
+                raw_batch
+            ),
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return jsonify(
+            {
+                "success": False,
+                "error":
+                    "batch must be a valid non-negative integer.",
+            }
+        ), 400
+
+
+    # ========================================================
+    # FEED CONFIGURATION
     # ========================================================
 
     feed_configs = (
@@ -5378,7 +5432,7 @@ def import_rss_jobs_payload():
 
 
     # ========================================================
-    # RAW XML
+    # RAW XML BODY
     # ========================================================
 
     xml_content = (
@@ -5399,7 +5453,7 @@ def import_rss_jobs_payload():
         ), 400
 
 
-    # Protect Render from unexpectedly huge feeds.
+    # Maximum 5 MB.
     max_xml_size = (
         5
         * 1024
@@ -5422,6 +5476,10 @@ def import_rss_jobs_payload():
 
     # ========================================================
     # PARSE XML
+    #
+    # IMPORTANT:
+    #
+    # Do NOT default missing external locations to KwaMhlanga.
     # ========================================================
 
     try:
@@ -5467,28 +5525,26 @@ def import_rss_jobs_payload():
 
 
     # ========================================================
-    # LIMIT WORK PER RENDER REQUEST
-    #
-    # This is intentional for Render Free.
-    # Only the newest 20 items are processed during each run.
+    # TOTAL ITEMS BEFORE LOCATION FILTER
     # ========================================================
-# ========================================================
-# LOCATION CLASSIFICATION
-# ========================================================
 
     total_feed_items = len(
-      jobs
+        jobs
     )
 
 
+    # ========================================================
+    # LOCATION CLASSIFICATION
+    # ========================================================
+
     location_counts = {
 
-      "KwaMhlanga": 0,
-      "Mpumalanga": 0,
-      "Gauteng": 0,
-      "National": 0,
-      "Remote": 0,
-      "Other": 0,
+        "KwaMhlanga": 0,
+        "Mpumalanga": 0,
+        "Gauteng": 0,
+        "National": 0,
+        "Remote": 0,
+        "Other": 0,
     }
 
 
@@ -5497,106 +5553,142 @@ def import_rss_jobs_payload():
 
     for job in jobs:
 
-      classification = (
-        classify_external_job_location(
+        classification = (
+            classify_external_job_location(
+                job
+            )
+        )
+
+
+        location_counts[
+            classification
+        ] = (
+            location_counts.get(
+                classification,
+                0,
+            )
+            + 1
+        )
+
+
+        # Store the classification in the in-memory
+        # job dictionary for later use.
+        job[
+            "kalxa_location_classification"
+        ] = classification
+
+
+        if not is_job_location_relevant_to_kwamhlanga(
+            classification
+        ):
+
+            continue
+
+
+        locally_relevant_jobs.append(
             job
         )
-      )
 
 
-      location_counts[
-        classification
-      ] = (
-        location_counts.get(
-            classification,
-            0,
-        )
-        + 1
-      )
-
-
-    # Save classification inside the in-memory job record.
-      job[
-        "kalxa_location_classification"
-      ] = (
-        classification
-      )
-
-
-      if not is_job_location_relevant_to_kwamhlanga(
-        classification
-      ):
-
-        continue
-
-
-      locally_relevant_jobs.append(
-        job
-      )
-
-
-# ========================================================
-# RENDER FREE WORK LIMIT
-# ========================================================
+    # ========================================================
+    # RELEVANT / FILTERED COUNTS
+    # ========================================================
 
     relevant_feed_items = len(
-      locally_relevant_jobs
+        locally_relevant_jobs
     )
 
 
-    raw_offset = (
-      request.args.get(
-        "offset",
-        "0",
-      )
+    filtered_out = (
+        total_feed_items
+        - relevant_feed_items
     )
 
 
-    try:
-
-      offset = max(
-        0,
-        int(
-            raw_offset
-        ),
-      )
-
-    except (
-      TypeError,
-      ValueError,
-    ):
-
-      offset = 0
-
+    # ========================================================
+    # ROTATING BATCH
+    #
+    # Render Free:
+    #
+    # Keep each request limited to 20 relevant opportunities.
+    #
+    # GitHub continuously increases requested_batch.
+    #
+    # Modulo ensures every feed wraps independently.
+    # ========================================================
 
     batch_size = 20
 
 
-    jobs = (
-      locally_relevant_jobs[
-        offset:
-        offset + batch_size
-      ]
-    ) 
+    if relevant_feed_items > 0:
+
+        batch_count = (
+            (
+                relevant_feed_items
+                + batch_size
+                - 1
+            )
+            // batch_size
+        )
 
 
-    filtered_out = (
-     total_feed_items
-     - relevant_feed_items
-    )
+        effective_batch = (
+            requested_batch
+            % batch_count
+        )
 
+
+        offset = (
+            effective_batch
+            * batch_size
+        )
+
+
+        jobs_to_process = (
+            locally_relevant_jobs[
+                offset:
+                offset + batch_size
+            ]
+        )
+
+    else:
+
+        batch_count = 0
+        effective_batch = 0
+        offset = 0
+        jobs_to_process = []
+
+
+    # ========================================================
+    # LOG ROTATION
+    # ========================================================
 
     current_app.logger.info(
-    (
-     "[Kalxa RSS Location] "
-     "feed=%s total=%s relevant=%s "
-     "filtered=%s counts=%s"
-    ),
-     feed_name,
-     total_feed_items,
-     relevant_feed_items,
-     filtered_out,
-     location_counts,
+        (
+            "[Kalxa RSS Rotation] "
+            "feed=%s "
+            "total=%s "
+            "relevant=%s "
+            "filtered=%s "
+            "requested_batch=%s "
+            "effective_batch=%s "
+            "batch_count=%s "
+            "offset=%s "
+            "processing=%s "
+            "locations=%s"
+        ),
+        feed_name,
+        total_feed_items,
+        relevant_feed_items,
+        filtered_out,
+        requested_batch,
+        effective_batch,
+        batch_count,
+        offset,
+        len(
+            jobs_to_process
+        ),
+        location_counts,
     )
 
 
@@ -5611,12 +5703,12 @@ def import_rss_jobs_payload():
 
 
     # ========================================================
-    # CREATE PENDING SUBMISSIONS
+    # PROCESS CURRENT BATCH
     # ========================================================
 
     try:
 
-        for job in jobs:
+        for job in jobs_to_process:
 
             try:
 
@@ -5637,6 +5729,10 @@ def import_rss_jobs_payload():
                     )
                 )
 
+
+                # ============================================
+                # NORMALIZE RETURN VALUE
+                # ============================================
 
                 if isinstance(
                     result,
@@ -5668,6 +5764,10 @@ def import_rss_jobs_payload():
                 )
 
 
+                # ============================================
+                # COUNTERS
+                # ============================================
+
                 if status == "created":
 
                     created += 1
@@ -5697,12 +5797,19 @@ def import_rss_jobs_payload():
                     (
                         "[Kalxa RSS Payload] "
                         "Job processing failed. "
-                        "feed=%s error=%s"
+                        "feed=%s "
+                        "batch=%s "
+                        "error=%s"
                     ),
                     feed_name,
+                    effective_batch,
                     job_exc,
                 )
 
+
+        # ====================================================
+        # COMMIT CURRENT BATCH
+        # ====================================================
 
         db.session.commit()
 
@@ -5715,7 +5822,7 @@ def import_rss_jobs_payload():
         current_app.logger.exception(
             (
                 "[Kalxa RSS Payload] "
-                "Feed transaction failed. "
+                "Batch transaction failed. "
                 "feed=%s error=%s"
             ),
             feed_name,
@@ -5732,6 +5839,32 @@ def import_rss_jobs_payload():
                     ),
             }
         ), 500
+
+
+    # ========================================================
+    # NEXT BATCH INFORMATION
+    # ========================================================
+
+    if batch_count > 0:
+
+        next_effective_batch = (
+            (
+                effective_batch
+                + 1
+            )
+            % batch_count
+        )
+
+
+        next_offset = (
+            next_effective_batch
+            * batch_size
+        )
+
+    else:
+
+        next_effective_batch = None
+        next_offset = None
 
 
     # ========================================================
@@ -5755,16 +5888,12 @@ def import_rss_jobs_payload():
             "zone_name":
                 zone.name,
 
+            # -----------------------------------------------
+            # FEED COUNTS
+            # -----------------------------------------------
+
             "feed_items":
                 total_feed_items,
-
-            "processed":
-                len(
-                    jobs
-                ),
-
-            "created":
-                created,
 
             "relevant_feed_items":
                 relevant_feed_items,
@@ -5775,6 +5904,43 @@ def import_rss_jobs_payload():
             "location_counts":
                 location_counts,
 
+            # -----------------------------------------------
+            # ROTATION
+            # -----------------------------------------------
+
+            "batch_size":
+                batch_size,
+
+            "batch_count":
+                batch_count,
+
+            "requested_batch":
+                requested_batch,
+
+            "effective_batch":
+                effective_batch,
+
+            "offset":
+                offset,
+
+            "next_effective_batch":
+                next_effective_batch,
+
+            "next_offset":
+                next_offset,
+
+            # -----------------------------------------------
+            # CURRENT BATCH
+            # -----------------------------------------------
+
+            "processed":
+                len(
+                    jobs_to_process
+                ),
+
+            "created":
+                created,
+
             "duplicates":
                 duplicates,
 
@@ -5784,10 +5950,18 @@ def import_rss_jobs_payload():
             "invalid":
                 invalid,
 
+            # -----------------------------------------------
+            # MESSAGE
+            # -----------------------------------------------
+
             "message":
                 (
                     f"{created} job(s) added "
-                    "to Kalxa moderation."
+                    f"from batch {effective_batch + 1}"
+                    f"/{batch_count}."
+                    if batch_count > 0
+                    else
+                    "No locally relevant jobs were found."
                 ),
         }
     ), 200
