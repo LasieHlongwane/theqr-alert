@@ -106,7 +106,37 @@ db.init_app(app)
 migrate = Migrate(app, db)
 app.register_blueprint(admin_bp)
 
+# ============================================================
+# KALXA RETAIL SPECIALS
+# ============================================================
 
+KALXA_RETAIL_SPECIALS_CATEGORY = "retail_specials"
+
+
+KALXA_ALLOWED_RETAILERS = {
+    "Shoprite",
+    "Boxer",
+    "Roots",
+    "OBC",
+    "PEP",
+    "Ackermans",
+    "Mr Price",
+    "Jet",
+    "Other",
+}
+
+
+KALXA_RETAIL_CAMPAIGN_CONTENT_TYPE = (
+    "retailer_campaign"
+)
+
+
+KALXA_RETAIL_REGIONS = {
+    "KwaMhlanga",
+    "Mpumalanga",
+    "Gauteng",
+    "National",
+}
 # ============================================================
 # GLOBAL CONFIGURATION
 # ============================================================
