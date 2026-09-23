@@ -4326,6 +4326,12 @@ def submissions():
 
         next_job_batch_count=
             next_job_batch_count,
+
+        pending_retail_specials_count=
+            pending_retail_specials_count,
+
+        next_retail_batch_count=
+           next_retail_batch_count,
     )
 
 @admin_bp.route(
