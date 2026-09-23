@@ -5112,6 +5112,7 @@ def submit_job():
         description=description,
         business_name=business_name,
         venue=venue,
+        location_classification= location_classification,
         price=salary_text,
         contact=contact,
         whatsapp_number=whatsapp_number,
