@@ -3222,189 +3222,924 @@ def _send_content_push_notification(content, category_record=None):
     return push_record
 
 
-@admin_bp.route("/submissions/<int:submission_id>/approve", methods=["POST"])
-def approve_submission(submission_id):
+@admin_bp.route(
+    "/submissions/<int:submission_id>/approve",
+    methods=[
+        "POST",
+    ],
+)
+def approve_submission(
+    submission_id,
+):
+
     auth = require_admin()
+
     if auth:
         return auth
 
-    submission = PendingSubmission.query.get_or_404(submission_id)
-    if submission.status != "pending":
-        flash("Submission has already been reviewed.", "error")
-        return redirect(url_for("admin.submissions"))
 
-    zone = db.session.get(Zone, submission.zone_id)
+    submission = (
+        PendingSubmission
+        .query
+        .get_or_404(
+            submission_id
+        )
+    )
+
+
+    if (
+        submission.status
+        != "pending"
+    ):
+
+        flash(
+            "Submission has already been reviewed.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions"
+            )
+        )
+
+
+    zone = (
+        db.session.get(
+            Zone,
+            submission.zone_id,
+        )
+    )
+
+
     if not zone:
-        flash("The submission zone no longer exists.", "error")
-        return redirect(url_for("admin.submissions"))
 
-    category = get_category_by_slug(submission.category)
+        flash(
+            "The submission zone no longer exists.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions"
+            )
+        )
+
+
+    category = (
+        get_category_by_slug(
+            submission.category
+        )
+    )
+
+
     if not category:
-        flash("The submission category is inactive or unavailable.", "error")
-        return redirect(url_for("admin.submissions"))
 
-    canonical_category = normalize_category(submission.category)
+        flash(
+            (
+                "The submission category is inactive "
+                "or unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions"
+            )
+        )
+
+
+    canonical_category = (
+        normalize_category(
+            submission.category
+        )
+    )
+
+
     content = None
 
+
     try:
-        submission_images = list(submission.images)
-        first_image_url = submission.image_url or (submission_images[0].image_url if submission_images else None)
-        content_type = submission.content_type or None
-        lifetime_type = submission.lifetime_type or None
-        availability_status = submission.availability_status or "available"
-        notification_eligible = bool(submission.notification_eligible)
+
+        submission_images = (
+            list(
+                submission.images
+            )
+        )
+
+
+        first_image_url = (
+            submission.image_url
+            or
+            (
+                submission_images[0].image_url
+                if submission_images
+                else None
+            )
+        )
+
+
+        content_type = (
+            submission.content_type
+            or None
+        )
+
+
+        lifetime_type = (
+            submission.lifetime_type
+            or None
+        )
+
+
+        availability_status = (
+            submission.availability_status
+            or "available"
+        )
+
+
+        notification_eligible = (
+            bool(
+                submission.notification_eligible
+            )
+        )
+
+
+        # ====================================================
+        # LOCATION CLASSIFICATION
+        # ====================================================
+
+        location_classification = (
+            None
+        )
+
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            candidate_location_classification = (
+                str(
+                    submission.location_classification
+                    or ""
+                )
+                .strip()
+            )
+
+
+            if (
+                candidate_location_classification
+                in
+                KALXA_ALLOWED_JOB_LOCATION_CLASSES
+            ):
+
+                location_classification = (
+                    candidate_location_classification
+                )
+
+
+        # ====================================================
+        # WORKFLOW FALLBACK
+        # ====================================================
 
         if not lifetime_type:
-            workflow = get_content_workflow(submission.category, content_type)
-            lifetime_type = workflow.get("lifetime_type") or "ongoing"
-            notification_eligible = bool(workflow.get("notification_eligible", notification_eligible))
 
-        if canonical_category == "jobs":
-            pricing_model = None
-            commercial_duration_days = None
-            amount_due = None
-            payment_status = "waived"
-            distribution_zone_ids = []
-            lifetime_type = "time_specific" if submission.end_date else "until_unavailable"
-            notification_eligible = True
+            workflow = (
+                get_content_workflow(
+                    submission.category,
+                    content_type,
+                )
+            )
+
+
+            lifetime_type = (
+                workflow.get(
+                    "lifetime_type"
+                )
+                or "ongoing"
+            )
+
+
+            notification_eligible = (
+                bool(
+                    workflow.get(
+                        "notification_eligible",
+                        notification_eligible,
+                    )
+                )
+            )
+
+
+        # ====================================================
+        # JOBS
+        # ====================================================
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            pricing_model = (
+                None
+            )
+
+            commercial_duration_days = (
+                None
+            )
+
+            amount_due = (
+                None
+            )
+
+            payment_status = (
+                "waived"
+            )
+
+            distribution_zone_ids = (
+                []
+            )
+
+            lifetime_type = (
+                "time_specific"
+                if submission.end_date
+                else "until_unavailable"
+            )
+
+            notification_eligible = (
+                True
+            )
+
+
+        # ====================================================
+        # COMMERCIAL CONTENT
+        # ====================================================
+
         else:
-            pricing_model = submission.pricing_model or None
-            commercial_duration_days = submission.commercial_duration_days
-            amount_due = submission.amount_due
-            payment_status = submission.payment_status or ("unpaid" if pricing_model else "waived")
-            if payment_status not in ALLOWED_PAYMENT_STATUSES:
-                payment_status = "unpaid"
+
+            pricing_model = (
+                submission.pricing_model
+                or None
+            )
+
+
+            commercial_duration_days = (
+                submission.commercial_duration_days
+            )
+
+
+            amount_due = (
+                submission.amount_due
+            )
+
+
+            payment_status = (
+                submission.payment_status
+                or
+                (
+                    "unpaid"
+                    if pricing_model
+                    else "waived"
+                )
+            )
+
+
+            if (
+                payment_status
+                not in
+                ALLOWED_PAYMENT_STATUSES
+            ):
+
+                payment_status = (
+                    "unpaid"
+                )
+
 
             if pricing_model:
-                if pricing_model not in {PRICING_MODEL_PRESENCE, PRICING_MODEL_CAMPAIGN}:
-                    raise ValueError("Unsupported Kalxa pricing model.")
-                if not commercial_duration_days:
-                    raise ValueError("Commercial submission has no package duration.")
+
+                if (
+                    pricing_model
+                    not in {
+                        PRICING_MODEL_PRESENCE,
+                        PRICING_MODEL_CAMPAIGN,
+                    }
+                ):
+
+                    raise ValueError(
+                        "Unsupported Kalxa pricing model."
+                    )
+
+
+                if (
+                    not commercial_duration_days
+                ):
+
+                    raise ValueError(
+                        (
+                            "Commercial submission has "
+                            "no package duration."
+                        )
+                    )
+
+
                 try:
-                    commercial_duration_days = int(commercial_duration_days)
-                except (TypeError, ValueError):
-                    raise ValueError("Commercial submission has an invalid package duration.")
-                if amount_due is None:
-                    raise ValueError("Commercial submission has no calculated amount due.")
 
-            distribution_zone_ids = []
-            if pricing_model == PRICING_MODEL_CAMPAIGN:
-                for raw_zone_id in submission.distribution_zone_ids or []:
+                    commercial_duration_days = (
+                        int(
+                            commercial_duration_days
+                        )
+                    )
+
+                except (
+                    TypeError,
+                    ValueError,
+                ):
+
+                    raise ValueError(
+                        (
+                            "Commercial submission has "
+                            "an invalid package duration."
+                        )
+                    )
+
+
+                if (
+                    amount_due
+                    is None
+                ):
+
+                    raise ValueError(
+                        (
+                            "Commercial submission has "
+                            "no calculated amount due."
+                        )
+                    )
+
+
+            distribution_zone_ids = (
+                []
+            )
+
+
+            if (
+                pricing_model
+                == PRICING_MODEL_CAMPAIGN
+            ):
+
+                for raw_zone_id in (
+                    submission.distribution_zone_ids
+                    or []
+                ):
+
                     try:
-                        distribution_zone_id = int(raw_zone_id)
-                    except (TypeError, ValueError):
+
+                        distribution_zone_id = (
+                            int(
+                                raw_zone_id
+                            )
+                        )
+
+                    except (
+                        TypeError,
+                        ValueError,
+                    ):
+
                         continue
-                    if distribution_zone_id not in distribution_zone_ids:
-                        distribution_zone_ids.append(distribution_zone_id)
-                if submission.zone_id not in distribution_zone_ids:
-                    distribution_zone_ids.insert(0, submission.zone_id)
-                if len(distribution_zone_ids) > 3:
-                    raise ValueError("Campaign submission exceeds the current 3-zone limit.")
-                valid_zone_ids = {z.id for z in Zone.query.filter(Zone.id.in_(distribution_zone_ids)).all()}
-                if len(valid_zone_ids) != len(distribution_zone_ids):
-                    raise ValueError("One or more campaign distribution zones no longer exist.")
-            elif pricing_model == PRICING_MODEL_PRESENCE:
-                distribution_zone_ids = []
 
-        commercial_starts_at = commercial_expires_at = amount_paid = paid_at = None
-        if pricing_model and payment_status in {"paid", "waived"}:
-            commercial_starts_at = datetime.utcnow()
-            commercial_expires_at = commercial_starts_at + timedelta(days=commercial_duration_days)
-            if payment_status == "paid":
-                amount_paid = amount_due
-                paid_at = getattr(submission, "paid_at", None) or commercial_starts_at
 
-        content = ContentItem(
-            organizer_id=submission.organizer_id,
-            zone_id=submission.zone_id,
-            category=submission.category,
-            content_type=content_type,
-            lifetime_type=lifetime_type,
-            availability_status=availability_status,
-            notification_eligible=notification_eligible,
-            pricing_model=pricing_model,
-            commercial_duration_days=commercial_duration_days,
-            commercial_starts_at=commercial_starts_at,
-            commercial_expires_at=commercial_expires_at,
-            payment_status=payment_status,
-            amount_due=amount_due,
-            amount_paid=amount_paid,
-            paid_at=paid_at,
-            title=submission.title,
-            description=submission.description,
-            business_name=submission.business_name,
-            venue=submission.venue,
-            price=submission.price,
-            contact=submission.contact,
-            whatsapp_number=submission.whatsapp_number,
-            directions_url=submission.directions_url,
-            ticket_url=submission.ticket_url,
-            image_url=first_image_url,
-            publish_from=submission.publish_from,
-            event_date=submission.event_date,
-            event_end_date=submission.event_end_date,
-            start_date=submission.start_date,
-            start_time=submission.start_time,
-            end_date=submission.end_date,
-            end_time=submission.end_time,
-            listing_level="discovery",
-            ownership_status="unclaimed",
-            location_classification=submission.location_classification,
-            is_verified=False,
-            featured=False,
-            active=True,
-            archived=False,
+                    if (
+                        distribution_zone_id
+                        not in
+                        distribution_zone_ids
+                    ):
+
+                        distribution_zone_ids.append(
+                            distribution_zone_id
+                        )
+
+
+                if (
+                    submission.zone_id
+                    not in
+                    distribution_zone_ids
+                ):
+
+                    distribution_zone_ids.insert(
+                        0,
+                        submission.zone_id,
+                    )
+
+
+                if (
+                    len(
+                        distribution_zone_ids
+                    )
+                    > 3
+                ):
+
+                    raise ValueError(
+                        (
+                            "Campaign submission exceeds "
+                            "the current 3-zone limit."
+                        )
+                    )
+
+
+                valid_zone_ids = {
+                    z.id
+                    for z in (
+                        Zone
+                        .query
+                        .filter(
+                            Zone.id.in_(
+                                distribution_zone_ids
+                            )
+                        )
+                        .all()
+                    )
+                }
+
+
+                if (
+                    len(
+                        valid_zone_ids
+                    )
+                    !=
+                    len(
+                        distribution_zone_ids
+                    )
+                ):
+
+                    raise ValueError(
+                        (
+                            "One or more campaign "
+                            "distribution zones no "
+                            "longer exist."
+                        )
+                    )
+
+
+            elif (
+                pricing_model
+                == PRICING_MODEL_PRESENCE
+            ):
+
+                distribution_zone_ids = (
+                    []
+                )
+
+
+        # ====================================================
+        # COMMERCIAL ACTIVATION
+        # ====================================================
+
+        commercial_starts_at = (
+            None
         )
-        db.session.add(content)
+
+        commercial_expires_at = (
+            None
+        )
+
+        amount_paid = (
+            None
+        )
+
+        paid_at = (
+            None
+        )
+
+
+        if (
+            pricing_model
+            and
+            payment_status
+            in {
+                "paid",
+                "waived",
+            }
+        ):
+
+            commercial_starts_at = (
+                datetime.utcnow()
+            )
+
+
+            commercial_expires_at = (
+                commercial_starts_at
+                +
+                timedelta(
+                    days=
+                        commercial_duration_days
+                )
+            )
+
+
+            if (
+                payment_status
+                == "paid"
+            ):
+
+                amount_paid = (
+                    amount_due
+                )
+
+
+                paid_at = (
+                    getattr(
+                        submission,
+                        "paid_at",
+                        None,
+                    )
+                    or
+                    commercial_starts_at
+                )
+
+
+        # ====================================================
+        # CREATE PUBLIC CONTENT ITEM
+        # ====================================================
+
+        content = (
+            ContentItem(
+
+                organizer_id=
+                    submission.organizer_id,
+
+                zone_id=
+                    submission.zone_id,
+
+                category=
+                    submission.category,
+
+                content_type=
+                    content_type,
+
+                lifetime_type=
+                    lifetime_type,
+
+                availability_status=
+                    availability_status,
+
+                notification_eligible=
+                    notification_eligible,
+
+                pricing_model=
+                    pricing_model,
+
+                commercial_duration_days=
+                    commercial_duration_days,
+
+                commercial_starts_at=
+                    commercial_starts_at,
+
+                commercial_expires_at=
+                    commercial_expires_at,
+
+                payment_status=
+                    payment_status,
+
+                amount_due=
+                    amount_due,
+
+                amount_paid=
+                    amount_paid,
+
+                paid_at=
+                    paid_at,
+
+                title=
+                    submission.title,
+
+                description=
+                    submission.description,
+
+                business_name=
+                    submission.business_name,
+
+                venue=
+                    submission.venue,
+
+                location_classification=
+                    location_classification,
+
+                price=
+                    submission.price,
+
+                contact=
+                    submission.contact,
+
+                whatsapp_number=
+                    submission.whatsapp_number,
+
+                directions_url=
+                    submission.directions_url,
+
+                ticket_url=
+                    submission.ticket_url,
+
+                image_url=
+                    first_image_url,
+
+                publish_from=
+                    submission.publish_from,
+
+                event_date=
+                    submission.event_date,
+
+                event_end_date=
+                    submission.event_end_date,
+
+                start_date=
+                    submission.start_date,
+
+                start_time=
+                    submission.start_time,
+
+                end_date=
+                    submission.end_date,
+
+                end_time=
+                    submission.end_time,
+
+                listing_level=
+                    "discovery",
+
+                ownership_status=
+                    "unclaimed",
+
+                is_verified=
+                    False,
+
+                featured=
+                    False,
+
+                active=
+                    True,
+
+                archived=
+                    False,
+            )
+        )
+
+
+        db.session.add(
+            content
+        )
+
+
         db.session.flush()
 
-        if pricing_model == PRICING_MODEL_CAMPAIGN:
-            for distribution_zone_id in distribution_zone_ids:
-                db.session.add(ContentDistributionZone(content_item_id=content.id, zone_id=distribution_zone_id))
 
-        submission.published_content_id = content.id
-        for image in submission_images:
+        # ====================================================
+        # DISTRIBUTION ZONES
+        # ====================================================
+
+        if (
+            pricing_model
+            == PRICING_MODEL_CAMPAIGN
+        ):
+
+            for distribution_zone_id in (
+                distribution_zone_ids
+            ):
+
+                db.session.add(
+                    ContentDistributionZone(
+
+                        content_item_id=
+                            content.id,
+
+                        zone_id=
+                            distribution_zone_id,
+                    )
+                )
+
+
+        # ====================================================
+        # LINK PUBLISHED CONTENT
+        # ====================================================
+
+        submission.published_content_id = (
+            content.id
+        )
+
+
+        # ====================================================
+        # COPY IMAGES
+        # ====================================================
+
+        for image in (
+            submission_images
+        ):
+
             if image.image_url:
-                db.session.add(ContentImage(content_item_id=content.id, image_url=image.image_url, display_order=image.display_order))
 
-        submission.status = "approved"
-        submission.reviewed_at = datetime.utcnow()
-        if canonical_category == "jobs":
-            submission.pricing_model = None
-            submission.commercial_duration_days = None
-            submission.amount_due = None
-            submission.payment_status = "waived"
-            submission.distribution_zone_ids = []
+                db.session.add(
+                    ContentImage(
+
+                        content_item_id=
+                            content.id,
+
+                        image_url=
+                            image.image_url,
+
+                        display_order=
+                            image.display_order,
+                    )
+                )
+
+
+        # ====================================================
+        # COMPLETE MODERATION
+        # ====================================================
+
+        submission.status = (
+            "approved"
+        )
+
+
+        submission.reviewed_at = (
+            datetime.utcnow()
+        )
+
+
+        if (
+            canonical_category
+            == "jobs"
+        ):
+
+            submission.pricing_model = (
+                None
+            )
+
+            submission.commercial_duration_days = (
+                None
+            )
+
+            submission.amount_due = (
+                None
+            )
+
+            submission.payment_status = (
+                "waived"
+            )
+
+            submission.distribution_zone_ids = (
+                []
+            )
+
+
         db.session.commit()
 
+
     except Exception as exc:
+
         db.session.rollback()
-        current_app.logger.exception("[Kalxa] Approve submission failed submission_id=%s error=%s", submission_id, exc)
-        flash("Unable to approve submission.", "error")
-        return redirect(url_for("admin.submissions"))
 
-    commercial_is_visible = content.pricing_model is None or (
-        content.payment_status in {"paid", "waived"}
-        and content.commercial_starts_at is not None
-        and content.commercial_expires_at is not None
+
+        current_app.logger.exception(
+            (
+                "[Kalxa] Approve submission failed "
+                "submission_id=%s error=%s"
+            ),
+            submission_id,
+            exc,
+        )
+
+
+        flash(
+            "Unable to approve submission.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.submissions"
+            )
+        )
+
+
+    # ========================================================
+    # PUSH NOTIFICATION
+    # ========================================================
+
+    commercial_is_visible = (
+        content.pricing_model
+        is None
+        or
+        (
+            content.payment_status
+            in {
+                "paid",
+                "waived",
+            }
+            and
+            content.commercial_starts_at
+            is not None
+            and
+            content.commercial_expires_at
+            is not None
+        )
     )
-    if content.active and content.notification_eligible and commercial_is_visible:
+
+
+    if (
+        content.active
+        and
+        content.notification_eligible
+        and
+        commercial_is_visible
+    ):
+
         try:
-            _send_content_push_notification(content, category_record=category)
+
+            _send_content_push_notification(
+                content,
+                category_record=
+                    category,
+            )
+
         except Exception as exc:
+
             db.session.rollback()
-            current_app.logger.exception("[Kalxa Push] Approval notification failed content_id=%s error=%s", content.id, exc)
 
-    if canonical_category == "jobs":
-        flash("Free job opportunity approved and published.", "success")
-    elif content.pricing_model and content.payment_status == "unpaid":
-        flash("Submission approved, but the listing is hidden until payment is confirmed.", "success")
-    elif content.pricing_model and content.payment_status == "refunded":
-        flash("Submission approved, but the listing is hidden because its payment is refunded.", "success")
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa Push] Approval notification "
+                    "failed content_id=%s error=%s"
+                ),
+                content.id,
+                exc,
+            )
+
+
+    # ========================================================
+    # SUCCESS MESSAGE
+    # ========================================================
+
+    if (
+        canonical_category
+        == "jobs"
+    ):
+
+        flash(
+            (
+                "Free job opportunity approved "
+                "and published."
+            ),
+            "success",
+        )
+
+
+    elif (
+        content.pricing_model
+        and
+        content.payment_status
+        == "unpaid"
+    ):
+
+        flash(
+            (
+                "Submission approved, but the listing "
+                "is hidden until payment is confirmed."
+            ),
+            "success",
+        )
+
+
+    elif (
+        content.pricing_model
+        and
+        content.payment_status
+        == "refunded"
+    ):
+
+        flash(
+            (
+                "Submission approved, but the listing "
+                "is hidden because its payment is "
+                "refunded."
+            ),
+            "success",
+        )
+
+
     else:
-        flash("Submission approved and published.", "success")
-    return redirect(url_for("admin.submissions"))
 
+        flash(
+            "Submission approved and published.",
+            "success",
+        )
+
+
+    return redirect(
+        url_for(
+            "admin.submissions"
+        )
+    )
 
 @admin_bp.route("/submissions/<int:submission_id>/confirm-payment", methods=["POST"])
 def confirm_submission_payment(submission_id):
