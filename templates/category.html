@@ -294,55 +294,34 @@
         }
 
 
-        .campaign-countdown {
-            background: #fff4df;
-            color: #3f4348;
-        }
+        .campaign-countdown,
+        .campaign-tomorrow,
+        .campaign-today,
+        .campaign-active {
 
-
-        .campaign-tomorrow {
             background: #fff4df;
             color: #111316;
         }
 
 
-        .campaign-today {
-            background: #fff4df;
-            color: #111316;
-        }
+        .campaign-tonight,
+        .campaign-ending,
+        .campaign-ending-soon {
 
-
-        .campaign-tonight {
             background: #111316;
             color: #fff4df;
         }
 
 
         .campaign-live {
+
             background: #d92d20;
             color: #ffffff;
         }
 
 
-        .campaign-active {
-            background: #fff4df;
-            color: #111316;
-        }
-
-
-        .campaign-ending {
-            background: #111316;
-            color: #fff4df;
-        }
-
-
-        .campaign-ending-soon {
-            background: #111316;
-            color: #fff4df;
-        }
-
-
         .campaign-ended {
+
             background: #e8e8e8;
             color: #666666;
         }
@@ -354,7 +333,7 @@
 
 
         /* =========================================================
-           STEP 10H — REMINDER PANEL
+           REMINDER PANEL
         ========================================================= */
 
         .kalxa-reminder-wrap {
@@ -405,10 +384,6 @@
         }
 
 
-        /* =========================================================
-           REMINDER TIME OPTIONS
-        ========================================================= */
-
         .kalxa-reminder-options {
 
             display: grid;
@@ -452,27 +427,6 @@
             font-weight: 800;
 
             cursor: pointer;
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                background 0.2s ease,
-                color 0.2s ease,
-                border-color 0.2s ease,
-                transform 0.15s ease;
-        }
-
-
-        .kalxa-reminder-option:hover {
-
-            background:
-                rgba(255, 255, 255, 0.08);
-        }
-
-
-        .kalxa-reminder-option:active {
-            transform: scale(0.97);
         }
 
 
@@ -486,10 +440,6 @@
         }
 
 
-        /* =========================================================
-           SET REMINDER BUTTON
-        ========================================================= */
-
         .kalxa-remind-btn {
 
             width: 100%;
@@ -501,8 +451,6 @@
             gap: 7px;
 
             padding: 11px 14px;
-
-            box-sizing: border-box;
 
             border:
                 1px solid
@@ -518,39 +466,6 @@
             font-weight: 900;
 
             cursor: pointer;
-
-            box-shadow:
-                0 4px 14px
-                rgba(0, 0, 0, 0.18);
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                background 0.2s ease,
-                opacity 0.2s ease,
-                transform 0.15s ease,
-                box-shadow 0.2s ease;
-        }
-
-
-        .kalxa-remind-btn:hover {
-
-            background: #f7e8ca;
-
-            box-shadow:
-                0 6px 18px
-                rgba(0, 0, 0, 0.22);
-        }
-
-
-        .kalxa-remind-btn:active {
-            transform: scale(0.98);
-        }
-
-
-        .kalxa-remind-btn:disabled {
-            cursor: default;
         }
 
 
@@ -563,10 +478,6 @@
             opacity: 0.60;
         }
 
-
-        /* =========================================================
-           SAVED REMINDER
-        ========================================================= */
 
         .kalxa-reminder-saved {
 
@@ -641,21 +552,11 @@
             font-weight: 800;
 
             cursor: pointer;
-
-            -webkit-tap-highlight-color:
-                transparent;
-        }
-
-
-        .kalxa-reminder-cancel:hover {
-
-            background:
-                rgba(255, 255, 255, 0.05);
         }
 
 
         /* =========================================================
-           SPECIAL OFFER PREVIEW
+           SPECIAL OFFER
         ========================================================= */
 
         .listing-card-offer {
@@ -718,10 +619,6 @@
             line-height: 1.45;
         }
 
-
-        /* =========================================================
-           OPENING HOURS
-        ========================================================= */
 
         .listing-hours-card {
             grid-column: 1 / -1;
@@ -810,89 +707,7 @@
 
 
         /* =========================================================
-           QUICK ACTIONS
-        ========================================================= */
-
-        .kalxa-quick-actions {
-            margin-top: 16px;
-        }
-
-
-        .kalxa-quick-actions-title {
-
-            display: block;
-
-            margin-bottom: 9px;
-
-            color:
-                rgba(255, 255, 255, 0.48);
-
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }
-
-
-        .kalxa-quick-actions-grid {
-
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-
-        .kalxa-quick-action {
-
-            min-height: 42px;
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-
-            padding: 10px 13px;
-
-            box-sizing: border-box;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-
-            border-radius: 12px;
-
-            background:
-                rgba(255, 255, 255, 0.06);
-
-            color: #f4f4f4;
-
-            text-decoration: none;
-
-            font-size: 11px;
-            font-weight: 800;
-
-            -webkit-tap-highlight-color:
-                transparent;
-        }
-
-
-        .kalxa-quick-action:active {
-            opacity: 0.70;
-        }
-
-
-        .kalxa-ticket-action {
-
-            background: #fff4df;
-            color: #252525;
-
-            border-color:
-                rgba(255, 244, 223, 0.25);
-        }
-
-
-        /* =========================================================
-           KALXA JOBS - FREE COMMUNITY SUBMISSION
+           JOB COMMUNITY SUBMIT
         ========================================================= */
 
         .jobs-community-submit {
@@ -964,8 +779,7 @@
 
         .jobs-community-submit-button {
 
-            flex:
-                0 0 auto;
+            flex: 0 0 auto;
 
             min-height: 40px;
 
@@ -974,8 +788,7 @@
             align-items: center;
             justify-content: center;
 
-            padding:
-                8px 12px;
+            padding: 8px 12px;
 
             background: #fff4df;
 
@@ -991,7 +804,7 @@
 
 
         /* =========================================================
-           KALXA JOBS - LOCATION FILTERS
+           FILTERS
         ========================================================= */
 
         .job-region-filter-section {
@@ -1027,30 +840,23 @@
 
         .job-region-filter-heading {
 
-            display:
-                flex;
+            display: flex;
 
-            flex-direction:
-                column;
+            flex-direction: column;
 
-            gap:
-                3px;
+            gap: 3px;
 
-            margin-bottom:
-                12px;
+            margin-bottom: 12px;
         }
 
 
         .job-region-filter-heading strong {
 
-            color:
-                #fff4df;
+            color: #fff4df;
 
-            font-size:
-                12px;
+            font-size: 12px;
 
-            font-weight:
-                900;
+            font-weight: 900;
         }
 
 
@@ -1064,39 +870,29 @@
                     0.48
                 );
 
-            font-size:
-                9px;
+            font-size: 9px;
 
-            font-weight:
-                600;
+            font-weight: 600;
 
-            line-height:
-                1.4;
+            line-height: 1.4;
         }
 
 
         .job-region-filters {
 
-            display:
-                flex;
+            display: flex;
 
-            align-items:
-                center;
+            align-items: center;
 
-            gap:
-                8px;
+            gap: 8px;
 
-            overflow-x:
-                auto;
+            overflow-x: auto;
 
-            padding-bottom:
-                3px;
+            padding-bottom: 3px;
 
-            scrollbar-width:
-                none;
+            scrollbar-width: none;
 
-            -webkit-overflow-scrolling:
-                touch;
+            -webkit-overflow-scrolling: touch;
         }
 
 
@@ -1107,23 +903,17 @@
 
         .job-region-filter {
 
-            flex:
-                0 0 auto;
+            flex: 0 0 auto;
 
-            min-height:
-                36px;
+            min-height: 36px;
 
-            display:
-                inline-flex;
+            display: inline-flex;
 
-            align-items:
-                center;
+            align-items: center;
 
-            justify-content:
-                center;
+            justify-content: center;
 
-            padding:
-                8px 12px;
+            padding: 8px 12px;
 
             border:
                 1px solid
@@ -1134,8 +924,7 @@
                     0.13
                 );
 
-            border-radius:
-                999px;
+            border-radius: 999px;
 
             background:
                 rgba(
@@ -1153,66 +942,39 @@
                     0.68
                 );
 
-            font-size:
-                10px;
+            font-size: 10px;
 
-            font-weight:
-                850;
+            font-weight: 850;
 
-            white-space:
-                nowrap;
+            white-space: nowrap;
 
-            cursor:
-                pointer;
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                background 0.15s ease,
-                color 0.15s ease,
-                border-color 0.15s ease,
-                transform 0.15s ease;
-        }
-
-
-        .job-region-filter:active {
-
-            transform:
-                scale(0.97);
+            cursor: pointer;
         }
 
 
         .job-region-filter.active {
 
-            border-color:
-                #fff4df;
+            border-color: #fff4df;
 
-            background:
-                #fff4df;
+            background: #fff4df;
 
-            color:
-                #17191d;
+            color: #17191d;
         }
 
 
         /* =========================================================
-           KALXA JOBS - REGION BADGE
+           JOB REGION BADGE
         ========================================================= */
 
         .job-region-card-row {
 
-            display:
-                flex;
+            display: flex;
 
-            align-items:
-                center;
+            align-items: center;
 
-            flex-wrap:
-                wrap;
+            flex-wrap: wrap;
 
-            gap:
-                7px;
+            gap: 7px;
 
             margin:
                 10px 0
@@ -1230,33 +992,25 @@
                     0.45
                 );
 
-            font-size:
-                9px;
+            font-size: 9px;
 
-            font-weight:
-                800;
+            font-weight: 800;
 
-            letter-spacing:
-                0.5px;
+            letter-spacing: 0.5px;
 
-            text-transform:
-                uppercase;
+            text-transform: uppercase;
         }
 
 
         .job-region-card-badge {
 
-            display:
-                inline-flex;
+            display: inline-flex;
 
-            align-items:
-                center;
+            align-items: center;
 
-            justify-content:
-                center;
+            justify-content: center;
 
-            padding:
-                6px 10px;
+            padding: 6px 10px;
 
             border:
                 1px solid
@@ -1267,8 +1021,7 @@
                     0.17
                 );
 
-            border-radius:
-                999px;
+            border-radius: 999px;
 
             background:
                 rgba(
@@ -1278,43 +1031,33 @@
                     0.075
                 );
 
-            color:
-                #fff4df;
+            color: #fff4df;
 
-            font-size:
-                9px;
+            font-size: 9px;
 
-            font-weight:
-                900;
+            font-weight: 900;
 
-            line-height:
-                1;
+            line-height: 1;
 
-            letter-spacing:
-                0.65px;
+            letter-spacing: 0.65px;
 
-            text-transform:
-                uppercase;
+            text-transform: uppercase;
         }
 
 
         /* =========================================================
-           JOB FILTER EMPTY STATE
+           FILTER EMPTY
         ========================================================= */
 
         .job-filter-empty {
 
-            display:
-                none;
+            display: none;
 
-            margin:
-                22px 0;
+            margin: 22px 0;
 
-            padding:
-                28px 20px;
+            padding: 28px 20px;
 
-            text-align:
-                center;
+            text-align: center;
 
             border:
                 1px solid
@@ -1325,8 +1068,7 @@
                     0.10
                 );
 
-            border-radius:
-                18px;
+            border-radius: 18px;
 
             background:
                 rgba(
@@ -1345,17 +1087,13 @@
 
         .job-filter-empty strong {
 
-            display:
-                block;
+            display: block;
 
-            margin-bottom:
-                6px;
+            margin-bottom: 6px;
 
-            color:
-                #fff4df;
+            color: #fff4df;
 
-            font-size:
-                14px;
+            font-size: 14px;
         }
 
 
@@ -1369,11 +1107,9 @@
                     0.50
                 );
 
-            font-size:
-                11px;
+            font-size: 11px;
 
-            line-height:
-                1.5;
+            line-height: 1.5;
         }
 
 
@@ -1421,20 +1157,13 @@
 
             background: #f5f1e8;
 
-            border:
-                1px solid
-                rgba(0, 0, 0, 0.05);
-
             border-radius: 50%;
         }
 
 
         .lac-empty-icon {
 
-            display: block;
-
             font-size: 38px;
-            line-height: 1;
         }
 
 
@@ -1453,21 +1182,16 @@
 
         .lac-empty-title {
 
-            max-width: 340px;
-
             margin: 0 auto 10px;
 
             color: #3f4348;
 
             font-size: 21px;
             font-weight: 850;
-            line-height: 1.25;
         }
 
 
         .lac-empty-message {
-
-            max-width: 350px;
 
             margin: 0 auto 23px;
 
@@ -1475,24 +1199,15 @@
                 rgba(63, 67, 72, 0.70);
 
             font-size: 13px;
-            font-weight: 500;
             line-height: 1.55;
         }
 
-
-        /* =========================================================
-           EMPTY STATE PRIMARY CTA
-        ========================================================= */
 
         .lac-empty-primary {
 
             width: 100%;
             max-width: 280px;
             min-height: 48px;
-
-            margin: 0 auto;
-
-            box-sizing: border-box;
 
             display: inline-flex;
             align-items: center;
@@ -1503,10 +1218,6 @@
 
             background: #f5f1e8 !important;
 
-            border:
-                1px solid
-                rgba(63, 67, 72, 0.10);
-
             border-radius: 14px;
 
             color: #3f4348 !important;
@@ -1515,27 +1226,8 @@
 
             font-size: 12px;
             font-weight: 800;
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                transform 0.15s ease,
-                opacity 0.15s ease;
         }
 
-
-        .lac-empty-primary:active {
-
-            transform: scale(0.97);
-
-            opacity: 0.86;
-        }
-
-
-        /* =========================================================
-           ADD A LISTING
-        ========================================================= */
 
         .lac-empty-contribute {
 
@@ -1560,7 +1252,6 @@
 
             font-size: 11px;
             font-weight: 600;
-            line-height: 1.4;
         }
 
 
@@ -1576,24 +1267,8 @@
 
             font-size: 12px;
             font-weight: 850;
-
-            border-bottom:
-                1px solid
-                rgba(63, 67, 72, 0.28);
-
-            -webkit-tap-highlight-color:
-                transparent;
         }
 
-
-        .lac-empty-secondary:active {
-            opacity: 0.60;
-        }
-
-
-        /* =========================================================
-           EXPLORE OTHER CATEGORIES
-        ========================================================= */
 
         .lac-empty-explore {
 
@@ -1608,76 +1283,8 @@
 
             font-size: 11px;
             font-weight: 700;
-
-            -webkit-tap-highlight-color:
-                transparent;
         }
 
-
-        .lac-empty-explore:active {
-            opacity: 0.55;
-        }
-
-
-        /* =========================================================
-           DESKTOP
-        ========================================================= */
-
-        @media (hover: hover) and (pointer: fine) {
-
-            .lac-empty-primary:hover {
-                opacity: 0.88;
-            }
-
-
-            .lac-empty-secondary:hover,
-            .lac-empty-explore:hover {
-                opacity: 0.65;
-            }
-
-
-            .kalxa-quick-action:hover {
-                opacity: 0.82;
-            }
-
-
-            .job-region-filter:hover {
-
-                border-color:
-                    rgba(
-                        255,
-                        244,
-                        223,
-                        0.28
-                    );
-
-                background:
-                    rgba(
-                        255,
-                        244,
-                        223,
-                        0.08
-                    );
-
-                color:
-                    #fff4df;
-            }
-
-
-            .job-region-filter.active:hover {
-
-                background:
-                    #fff4df;
-
-                color:
-                    #17191d;
-            }
-        }
-
-
-        /* =========================================================
-           MOBILE
-        ========================================================= */
 
         @media (max-width: 520px) {
 
@@ -1696,122 +1303,7 @@
 
             .job-region-filter-section {
 
-                padding:
-                    14px 13px;
-            }
-
-        }
-
-
-        @media (max-width: 480px) {
-
-            .listing-date-strip {
-
-                margin-top: 12px;
-
-                padding: 11px 12px;
-
-                gap: 10px;
-
-                border-radius: 12px;
-            }
-
-
-            .listing-date-strip-icon {
-
-                width: 32px;
-                height: 32px;
-
-                flex-basis: 32px;
-
-                font-size: 15px;
-            }
-
-
-            .listing-date-strip-value {
-                font-size: 12px;
-            }
-
-
-            .kalxa-quick-actions-grid {
-
-                display: grid;
-
-                grid-template-columns:
-                    repeat(
-                        2,
-                        minmax(0, 1fr)
-                    );
-            }
-
-
-            .kalxa-quick-action {
-                width: 100%;
-            }
-
-
-            .kalxa-reminder-option {
-                font-size: 9px;
-            }
-        }
-
-
-        @media (max-width: 420px) {
-
-            .lac-empty-state {
-
-                margin-top: 24px;
-
-                padding: 28px 18px;
-
-                border-radius: 20px;
-            }
-
-
-            .lac-empty-icon-wrap {
-
-                width: 74px;
-                height: 74px;
-            }
-
-
-            .lac-empty-icon {
-                font-size: 34px;
-            }
-
-
-            .lac-empty-title {
-                font-size: 19px;
-            }
-
-
-            .lac-empty-message {
-                font-size: 12px;
-            }
-        }
-
-
-        /* =========================================================
-           ACCESSIBILITY
-        ========================================================= */
-
-        @media (prefers-reduced-motion: reduce) {
-
-            .lac-empty-primary,
-            .kalxa-remind-btn,
-            .kalxa-reminder-option,
-            .job-region-filter {
-
-                transition: none;
-            }
-
-
-            .lac-empty-primary:active,
-            .kalxa-remind-btn:active,
-            .kalxa-reminder-option:active,
-            .job-region-filter:active {
-
-                transform: none;
+                padding: 14px 13px;
             }
         }
 
@@ -1852,10 +1344,6 @@
 
     <main class="access-container">
 
-
-        <!-- =========================================
-             LOCATION
-        ========================================== -->
 
         <div class="location-label">
 
@@ -1957,7 +1445,7 @@
 
 
         <!-- =====================================
-             CATEGORY SEARCH
+             CATEGORY SEARCH + FILTERS
         ====================================== -->
 
         {% if items %}
@@ -2031,7 +1519,6 @@
                     All
                 </button>
 
-
                 <button
                     type="button"
                     class="job-region-filter"
@@ -2040,7 +1527,6 @@
                 >
                     KwaMhlanga
                 </button>
-
 
                 <button
                     type="button"
@@ -2051,7 +1537,6 @@
                     Mpumalanga
                 </button>
 
-
                 <button
                     type="button"
                     class="job-region-filter"
@@ -2061,7 +1546,6 @@
                     Gauteng
                 </button>
 
-
                 <button
                     type="button"
                     class="job-region-filter"
@@ -2070,7 +1554,6 @@
                 >
                     National
                 </button>
-
 
                 <button
                     type="button"
@@ -2097,6 +1580,146 @@
 
             <span>
                 Try another region or clear your search.
+            </span>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- =====================================
+             RETAILER FILTERS
+        ====================================== -->
+
+        {% if canonical_category == "retail_specials" %}
+
+        <section class="job-region-filter-section">
+
+            <div class="job-region-filter-heading">
+
+                <strong>
+                    🛒 Browse specials by retailer
+                </strong>
+
+                <span>
+                    Quickly find the stores and promotions
+                    you want to see.
+                </span>
+
+            </div>
+
+
+            <div
+                class="job-region-filters"
+                role="group"
+                aria-label="Filter specials by retailer"
+            >
+
+                <button
+                    type="button"
+                    class="job-region-filter active"
+                    data-retailer-filter="all"
+                    aria-pressed="true"
+                >
+                    All
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="Boxer"
+                    aria-pressed="false"
+                >
+                    Boxer
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="Shoprite"
+                    aria-pressed="false"
+                >
+                    Shoprite
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="Roots"
+                    aria-pressed="false"
+                >
+                    Roots
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="OBC"
+                    aria-pressed="false"
+                >
+                    OBC
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="PEP"
+                    aria-pressed="false"
+                >
+                    PEP
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="Ackermans"
+                    aria-pressed="false"
+                >
+                    Ackermans
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="Mr Price"
+                    aria-pressed="false"
+                >
+                    Mr Price
+                </button>
+
+
+                <button
+                    type="button"
+                    class="job-region-filter"
+                    data-retailer-filter="Jet"
+                    aria-pressed="false"
+                >
+                    Jet
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <div
+            id="retail-filter-empty"
+            class="job-filter-empty"
+        >
+
+            <strong>
+                No matching specials
+            </strong>
+
+            <span>
+                Try another retailer or clear your search.
             </span>
 
         </div>
@@ -2136,9 +1759,15 @@
                     data-venue="{{ (item.venue or '')|lower }}"
                     data-listing-level="{{ item.listing_level }}"
                     data-content-item-id="{{ item.id }}"
+
                     {% if canonical_category == "jobs" %}
                     data-job-region="{{ item.location_classification or '' }}"
                     {% endif %}
+
+                    {% if canonical_category == "retail_specials" %}
+                    data-retailer="{{ item.business_name or '' }}"
+                    {% endif %}
+
                     data-sponsored="{{
                         'true'
                         if (
@@ -2155,7 +1784,6 @@
                     ================================== -->
 
                     {% if item.can_use_business_features() %}
-
 
                         {% if item.images %}
 
@@ -2188,111 +1816,13 @@
                                     loading="lazy"
                                 >
 
-
-                                {% if
-                                    loop.first
-                                    and item.images|length > 1
-                                %}
-
-                                <span class="gallery-count-badge">
-                                    📷 {{ item.images|length }}
-                                </span>
-
-                                {% endif %}
-
                             </button>
 
                             {% endfor %}
 
                         </div>
 
-
-                        {% elif
-                            item.image_url
-                            or item.image_url_2
-                            or item.image_url_3
-                        %}
-
-
-                            {% set business_gallery = [
-                                item.image_url,
-                                item.image_url_2,
-                                item.image_url_3
-                            ] %}
-
-
-                            {% set gallery_count =
-                                (
-                                    [
-                                        item.image_url,
-                                        item.image_url_2,
-                                        item.image_url_3
-                                    ]
-                                    | select
-                                    | list
-                                    | length
-                                )
-                            %}
-
-
-                            <div
-                                class="
-                                    content-gallery
-
-                                    {% if gallery_count == 1 %}
-                                        single-gallery
-                                    {% elif gallery_count == 2 %}
-                                        two-gallery
-                                    {% endif %}
-                                "
-                            >
-
-                                {% for image_url in business_gallery %}
-
-                                    {% if image_url %}
-
-                                    <button
-                                        type="button"
-                                        class="gallery-image-button"
-                                        data-image-url="{{ image_url }}"
-                                        data-image-alt="{{ item.title }}"
-                                        onclick="openImageModalFromButton(this)"
-                                        aria-label="View {{ item.title }} image"
-                                    >
-
-                                        <img
-                                            src="{{ image_url }}"
-                                            alt="{{ item.title }}"
-                                            loading="lazy"
-                                        >
-
-
-                                        {% if
-                                            loop.first
-                                            and gallery_count > 1
-                                        %}
-
-                                        <span class="gallery-count-badge">
-                                            📷 {{ gallery_count }}
-                                        </span>
-
-                                        {% endif %}
-
-                                    </button>
-
-                                    {% endif %}
-
-                                {% endfor %}
-
-                            </div>
-
-                        {% endif %}
-
-
-                    {% else %}
-
-
-                        {% if item.image_url %}
+                        {% elif item.image_url %}
 
                         <div class="content-gallery single-gallery">
 
@@ -2302,7 +1832,6 @@
                                 data-image-url="{{ item.image_url }}"
                                 data-image-alt="{{ item.title }}"
                                 onclick="openImageModalFromButton(this)"
-                                aria-label="View {{ item.title }} image"
                             >
 
                                 <img
@@ -2315,43 +1844,30 @@
 
                         </div>
 
-
-                        {% elif item.images %}
-
-
-                            {% set discovery_image =
-                                item.images|first
-                            %}
-
-
-                            {% if discovery_image %}
-
-                            <div class="content-gallery single-gallery">
-
-                                <button
-                                    type="button"
-                                    class="gallery-image-button"
-                                    data-image-url="{{ discovery_image.image_url }}"
-                                    data-image-alt="{{ item.title }}"
-                                    onclick="openImageModalFromButton(this)"
-                                    aria-label="View {{ item.title }} image"
-                                >
-
-                                    <img
-                                        src="{{ discovery_image.image_url }}"
-                                        alt="{{ item.title }}"
-                                        loading="lazy"
-                                    >
-
-                                </button>
-
-                            </div>
-
-                            {% endif %}
-
-
                         {% endif %}
 
+
+                    {% elif item.image_url %}
+
+                    <div class="content-gallery single-gallery">
+
+                        <button
+                            type="button"
+                            class="gallery-image-button"
+                            data-image-url="{{ item.image_url }}"
+                            data-image-alt="{{ item.title }}"
+                            onclick="openImageModalFromButton(this)"
+                        >
+
+                            <img
+                                src="{{ item.image_url }}"
+                                alt="{{ item.title }}"
+                                loading="lazy"
+                            >
+
+                        </button>
+
+                    </div>
 
                     {% endif %}
 
@@ -2368,10 +1884,7 @@
                             and item.sponsorship_active
                         %}
 
-                        <span
-                            class="sponsored-badge"
-                            title="Paid placement"
-                        >
+                        <span class="sponsored-badge">
                             SPONSORED
                         </span>
 
@@ -2400,18 +1913,6 @@
 
 
                         {% if
-                            item.listing_level == "business"
-                            and not item.is_verified
-                        %}
-
-                        <span class="listing-level-badge business">
-                            BUSINESS
-                        </span>
-
-                        {% endif %}
-
-
-                        {% if
                             canonical_category != "events"
                             and item.start_date
                             and item.start_date > today
@@ -2419,19 +1920,6 @@
 
                         <span class="public-status-badge upcoming">
                             🟡 UPCOMING
-                        </span>
-
-                        {% endif %}
-
-
-                        {% if
-                            canonical_category == "events"
-                            and item.event_date
-                            and item.event_date > today
-                        %}
-
-                        <span class="public-status-badge upcoming">
-                            🟡 UPCOMING EVENT
                         </span>
 
                         {% endif %}
@@ -2476,30 +1964,10 @@
                                 {{ item.business_name }}
                             </span>
 
-
-                            {% if
-                                item.can_use_business_features()
-                                and item.is_verified
-                            %}
-
-                            <span
-                                class="business-inline-verified"
-                                title="Verified by Kalxa"
-                                aria-label="Verified by Kalxa"
-                            >
-                                ✓
-                            </span>
-
-                            {% endif %}
-
                         </div>
 
                         {% endif %}
 
-
-                        <!-- =================================
-                             JOB REGION
-                        ================================== -->
 
                         {% if
                             canonical_category == "jobs"
@@ -2533,11 +2001,10 @@
 
 
                     <!-- =================================
-                         PROMINENT DATE / AVAILABILITY
+                         DATES
                     ================================== -->
 
                     {% if canonical_category == "events" %}
-
 
                         {% if item.event_date %}
 
@@ -2547,31 +2014,15 @@
                                 📅
                             </div>
 
-
                             <div class="listing-date-strip-content">
 
                                 <span class="listing-date-strip-label">
-
-                                    {% if
-                                        item.event_end_date
-                                        and item.event_end_date != item.event_date
-                                    %}
-
-                                        Event Dates
-
-                                    {% else %}
-
-                                        Event Date
-
-                                    {% endif %}
-
+                                    Event Date
                                 </span>
-
 
                                 <strong class="listing-date-strip-value">
 
                                     {{ item.event_date.strftime("%d %b %Y") }}
-
 
                                     {% if
                                         item.event_end_date
@@ -2594,16 +2045,18 @@
 
                     {% else %}
 
-
-                        {% if
-                            item.start_date
-                            or item.end_date
-                        %}
+                        {% if item.start_date or item.end_date %}
 
                         <div class="listing-date-strip">
 
                             <div class="listing-date-strip-icon">
-                                📅
+
+                                {% if canonical_category == "retail_specials" %}
+                                    🛒
+                                {% else %}
+                                    📅
+                                {% endif %}
+
                             </div>
 
 
@@ -2613,41 +2066,21 @@
 
                                     {% if canonical_category == "jobs" %}
 
-                                        {% if
-                                            item.start_date
-                                            and item.end_date
-                                        %}
-
+                                        {% if item.start_date and item.end_date %}
                                             Opportunity Dates
-
                                         {% elif item.start_date %}
-
                                             Opens
-
                                         {% else %}
-
                                             Closing Date
-
                                         {% endif %}
+
+                                    {% elif canonical_category == "retail_specials" %}
+
+                                        Special Valid
 
                                     {% else %}
 
-                                        {% if
-                                            item.start_date
-                                            and item.end_date
-                                        %}
-
-                                            Available
-
-                                        {% elif item.start_date %}
-
-                                            Starts
-
-                                        {% else %}
-
-                                            Available Until
-
-                                        {% endif %}
+                                        Available
 
                                     {% endif %}
 
@@ -2656,14 +2089,9 @@
 
                                 <strong class="listing-date-strip-value">
 
-                                    {% if
-                                        item.start_date
-                                        and item.end_date
-                                    %}
+                                    {% if item.start_date and item.end_date %}
 
-                                        {% if
-                                            item.start_date == item.end_date
-                                        %}
+                                        {% if item.start_date == item.end_date %}
 
                                             {{ item.start_date.strftime("%d %b %Y") }}
 
@@ -2681,12 +2109,6 @@
 
                                     {% elif item.end_date %}
 
-                                        {% if canonical_category == "jobs" %}
-                                            Closes
-                                        {% else %}
-                                            Until
-                                        {% endif %}
-
                                         {{ item.end_date.strftime("%d %b %Y") }}
 
                                     {% endif %}
@@ -2698,7 +2120,6 @@
                         </div>
 
                         {% endif %}
-
 
                     {% endif %}
 
@@ -2742,7 +2163,10 @@
                     <div class="listing-detail-grid">
 
 
-                        {% if item.venue %}
+                        {% if
+                            item.venue
+                            and canonical_category != "retail_specials"
+                        %}
 
                         <div class="listing-detail-card">
 
@@ -2778,120 +2202,28 @@
                             and item.price
                         %}
 
-                        <div
-                            class="
-                                listing-detail-card
-                                listing-price-card
-                            "
-                        >
-
-
-                            {% if canonical_category == "rentals" %}
-
-                                <span class="listing-detail-icon">
-                                    🏠
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Rent
-                                    </span>
-
-                                    <strong>
-                                        {{ item.price }}
-                                    </strong>
-
-                                </div>
-
-
-                            {% elif canonical_category == "events" %}
-
-                                <span class="listing-detail-icon">
-                                    🎟️
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Entry
-                                    </span>
-
-                                    <strong>
-                                        {{ item.price }}
-                                    </strong>
-
-                                </div>
-
-
-                            {% elif canonical_category == "jobs" %}
-
-                                <span class="listing-detail-icon">
-                                    💰
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Salary / Compensation
-                                    </span>
-
-                                    <strong>
-                                        {{ item.price }}
-                                    </strong>
-
-                                </div>
-
-
-                            {% else %}
-
-                                <span class="listing-detail-icon">
-                                    💰
-                                </span>
-
-                                <div>
-
-                                    <span class="listing-detail-label">
-                                        Price / Deal
-                                    </span>
-
-                                    <strong>
-                                        {{ item.price }}
-                                    </strong>
-
-                                </div>
-
-                            {% endif %}
-
-                        </div>
-
-                        {% endif %}
-
-
-                        {% if
-                            item.can_use_business_features()
-                            and item.opening_hours
-                        %}
-
-                        <div
-                            class="
-                                listing-detail-card
-                                listing-hours-card
-                            "
-                        >
+                        <div class="listing-detail-card listing-price-card">
 
                             <span class="listing-detail-icon">
-                                🕒
+                                💰
                             </span>
 
                             <div>
 
                                 <span class="listing-detail-label">
-                                    Opening Hours
+
+                                    {% if canonical_category == "jobs" %}
+                                        Salary / Compensation
+                                    {% elif canonical_category == "retail_specials" %}
+                                        Deal
+                                    {% else %}
+                                        Price / Deal
+                                    {% endif %}
+
                                 </span>
 
                                 <strong>
-                                    {{ item.opening_hours }}
+                                    {{ item.price }}
                                 </strong>
 
                             </div>
@@ -2924,130 +2256,19 @@
 
 
                     <!-- =================================
-                         STEP 10H — REMINDER CONTROLS
-                    ================================== -->
-
-                    {% if
-                        item.campaign_state is defined
-                        and item.campaign_state
-                        and not item.campaign_state.is_ended
-                    %}
-
-                    <div
-                        class="kalxa-reminder-wrap"
-                        data-reminder-wrap
-                        data-item-id="{{ item.id }}"
-                    >
-
-                        <div class="kalxa-reminder-header">
-
-                            <span class="kalxa-reminder-title">
-                                🔔 Remind Me
-                            </span>
-
-                            <span class="kalxa-reminder-subtitle">
-
-                                {% if canonical_category == "jobs" %}
-                                    Get an alert before it closes
-                                {% else %}
-                                    Get an alert before it starts
-                                {% endif %}
-
-                            </span>
-
-                        </div>
-
-
-                        <div class="kalxa-reminder-options">
-
-                            <button
-                                type="button"
-                                class="kalxa-reminder-option is-selected"
-                                data-reminder-offset="60"
-                            >
-                                1 hour
-                            </button>
-
-
-                            <button
-                                type="button"
-                                class="kalxa-reminder-option"
-                                data-reminder-offset="180"
-                            >
-                                3 hours
-                            </button>
-
-
-                            <button
-                                type="button"
-                                class="kalxa-reminder-option"
-                                data-reminder-offset="1440"
-                            >
-                                1 day
-                            </button>
-
-                        </div>
-
-
-                        <button
-                            type="button"
-                            class="kalxa-remind-btn"
-                            data-reminder-button
-                            data-item-id="{{ item.id }}"
-                            data-zone-id="{{ zone.id }}"
-                            data-access-point-id="{{ access_point.id }}"
-                            data-minutes-before="60"
-                        >
-                            🔔 Set Reminder
-                        </button>
-
-
-                        <div
-                            class="kalxa-reminder-saved"
-                            data-reminder-saved
-                            hidden
-                        >
-
-                            <div>
-
-                                <strong
-                                    data-reminder-saved-label
-                                >
-                                    ✓ Reminder saved
-                                </strong>
-
-                                <span
-                                    class="kalxa-reminder-saved-detail"
-                                    data-reminder-saved-detail
-                                ></span>
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                class="kalxa-reminder-cancel"
-                                data-reminder-cancel
-                            >
-                                Cancel
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {% endif %}
-
-
-                    <!-- =================================
                          QUICK ACTIONS
                     ================================== -->
 
                     {% if
                         item.contact
                         or item.whatsapp_number
-                        or item.directions_url
-                        or item.venue
+                        or (
+                            canonical_category != "retail_specials"
+                            and (
+                                item.directions_url
+                                or item.venue
+                            )
+                        )
                         or item.ticket_url
                     %}
 
@@ -3065,36 +2286,22 @@
                                 <strong>
 
                                     {% if canonical_category == "jobs" %}
+
                                         Apply or contact
+
+                                    {% elif canonical_category == "retail_specials" %}
+
+                                        View this promotion
+
                                     {% else %}
+
                                         Contact, visit or book
+
                                     {% endif %}
 
                                 </strong>
 
                             </div>
-
-
-                            {% if
-                                item.whatsapp_number
-                                or item.contact
-                            %}
-
-                            <span class="listing-contact-number">
-
-                                {% if item.whatsapp_number %}
-
-                                    {{ item.whatsapp_number }}
-
-                                {% else %}
-
-                                    {{ item.contact }}
-
-                                {% endif %}
-
-                            </span>
-
-                            {% endif %}
 
                         </div>
 
@@ -3148,38 +2355,39 @@
                             {% endif %}
 
 
-                            {% if item.directions_url %}
+                            {% if
+                                canonical_category != "retail_specials"
+                            %}
 
-                            <a
-                                href="{{ item.directions_url }}"
-                                class="
-                                    listing-action-button
-                                    directions-button
-                                "
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                data-lac-event="directions_click"
-                                data-content-item-id="{{ item.id }}"
-                            >
-                                📍 Directions
-                            </a>
+                                {% if item.directions_url %}
 
+                                <a
+                                    href="{{ item.directions_url }}"
+                                    class="
+                                        listing-action-button
+                                        directions-button
+                                    "
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    📍 Directions
+                                </a>
 
-                            {% elif item.venue %}
+                                {% elif item.venue %}
 
-                            <a
-                                href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
-                                class="
-                                    listing-action-button
-                                    directions-button
-                                "
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                data-lac-event="directions_click"
-                                data-content-item-id="{{ item.id }}"
-                            >
-                                📍 Directions
-                            </a>
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
+                                    class="
+                                        listing-action-button
+                                        directions-button
+                                    "
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    📍 Directions
+                                </a>
+
+                                {% endif %}
 
                             {% endif %}
 
@@ -3188,33 +2396,51 @@
 
                                 {% if canonical_category == "jobs" %}
 
-                                    <a
-                                        href="{{ item.ticket_url }}"
-                                        class="
-                                            listing-action-button
-                                            ticket-button
-                                        "
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        data-lac-event="job_apply_click"
-                                        data-content-item-id="{{ item.id }}"
-                                    >
-                                        💼 Apply Now
-                                    </a>
+                                <a
+                                    href="{{ item.ticket_url }}"
+                                    class="
+                                        listing-action-button
+                                        ticket-button
+                                    "
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    data-lac-event="job_apply_click"
+                                    data-content-item-id="{{ item.id }}"
+                                >
+                                    💼 Apply Now
+                                </a>
+
+
+                                {% elif canonical_category == "retail_specials" %}
+
+                                <a
+                                    href="{{ item.ticket_url }}"
+                                    class="
+                                        listing-action-button
+                                        ticket-button
+                                    "
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    data-lac-event="retail_special_click"
+                                    data-content-item-id="{{ item.id }}"
+                                >
+                                    🛒 View Specials
+                                </a>
+
 
                                 {% else %}
 
-                                    <a
-                                        href="{{ item.ticket_url }}"
-                                        class="
-                                            listing-action-button
-                                            ticket-button
-                                        "
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        🎟 Get Tickets
-                                    </a>
+                                <a
+                                    href="{{ item.ticket_url }}"
+                                    class="
+                                        listing-action-button
+                                        ticket-button
+                                    "
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    🎟 Get Tickets
+                                </a>
 
                                 {% endif %}
 
@@ -3259,57 +2485,25 @@
                     <h2 class="lac-empty-title">
 
                         {% if canonical_category == "events" %}
-
                             Nothing happening here yet
-
                         {% elif canonical_category == "restaurants" %}
-
                             Nothing tasty listed here yet
-
                         {% elif canonical_category == "beauty" %}
-
                             No salons, barbers or beauty spots listed yet
-
                         {% elif canonical_category == "retail_specials" %}
-
                             No local specials right now
-
                         {% elif canonical_category == "accommodation" %}
-
                             No places to stay listed right now
-
                         {% elif canonical_category == "rentals" %}
-
                             No rooms or rentals listed right now
-
                         {% elif canonical_category == "delivery" %}
-
                             No delivery services listed yet
-
                         {% elif canonical_category == "services" %}
-
                             No local services listed yet
-
                         {% elif canonical_category == "jobs" %}
-
                             No opportunities listed right now
-
-                        {% elif canonical_category == "emergency" %}
-
-                            No emergency information listed here
-
-                        {% elif canonical_category == "announcements" %}
-
-                            No community updates right now
-
-                        {% elif canonical_category == "building" %}
-
-                            No building or hardware listings yet
-
                         {% else %}
-
                             No listings available right now
-
                         {% endif %}
 
                     </h2>
@@ -3317,74 +2511,10 @@
 
                     <p class="lac-empty-message">
 
-                        {% if canonical_category == "events" %}
-
-                            New events happening around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "restaurants" %}
-
-                            Restaurants, takeaways and food spots around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "beauty" %}
-
-                            Barbers, salons, nail technicians and beauty
-                            services around {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "retail_specials" %}
-
-                            New store specials and deals around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "accommodation" %}
-
-                            Hotels, lodges, guest houses and places to stay
-                            around {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "rentals" %}
-
-                            Rooms, houses and rental opportunities around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "delivery" %}
-
-                            Delivery, pickup and courier services around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "services" %}
-
-                            Trusted local service providers around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "jobs" %}
-
-                            Jobs, internships, learnerships and
-                            opportunities relevant to KwaMhlanga,
-                            Mpumalanga, Gauteng and South Africa
-                            will appear here.
-
-                        {% elif canonical_category == "emergency" %}
-
-                            Important emergency and safety information for
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "announcements" %}
-
-                            Important community updates around
-                            {{ zone.name }} will appear here.
-
-                        {% elif canonical_category == "building" %}
-
-                            Hardware stores, materials and builders around
-                            {{ zone.name }} will appear here.
-
-                        {% else %}
-
-                            New local listings around
-                            {{ zone.name }} will appear here soon.
-
-                        {% endif %}
+                        New
+                        {{ consumer_category.title|lower }}
+                        listings will appear here as they
+                        become available.
 
                     </p>
 
@@ -3396,122 +2526,11 @@
                         ) }}#lac-alerts"
                         class="lac-empty-primary"
                     >
-
-                        <span>
-                            🔔
-                        </span>
-
-
-                        <span>
-
-                            {% if canonical_category == "events" %}
-
-                                Get Event Alerts
-
-                            {% elif canonical_category == "restaurants" %}
-
-                                Get Food Alerts
-
-                            {% elif canonical_category == "beauty" %}
-
-                                Get Beauty Alerts
-
-                            {% elif canonical_category == "retail_specials" %}
-
-                                Get Deal Alerts
-
-                            {% elif canonical_category == "accommodation" %}
-
-                                Get Stay Alerts
-
-                            {% elif canonical_category == "rentals" %}
-
-                                Get Rental Alerts
-
-                            {% elif canonical_category == "delivery" %}
-
-                                Get Delivery Alerts
-
-                            {% elif canonical_category == "services" %}
-
-                                Get Service Alerts
-
-                            {% elif canonical_category == "jobs" %}
-
-                                Get Opportunity Alerts
-
-                            {% elif canonical_category == "announcements" %}
-
-                                Get Community Alerts
-
-                            {% elif canonical_category == "building" %}
-
-                                Get Local Alerts
-
-                            {% else %}
-
-                                Get Local Alerts
-
-                            {% endif %}
-
-                        </span>
-
+                        🔔 Get Alerts
                     </a>
 
 
                     <div class="lac-empty-contribute">
-
-
-                        <span class="lac-empty-contribute-text">
-
-                            {% if canonical_category == "events" %}
-
-                                Hosting an event?
-
-                            {% elif canonical_category == "restaurants" %}
-
-                                Own a restaurant or food business?
-
-                            {% elif canonical_category == "beauty" %}
-
-                                Own a salon, barbershop or beauty business?
-
-                            {% elif canonical_category == "retail_specials" %}
-
-                                Running a local special?
-
-                            {% elif canonical_category == "accommodation" %}
-
-                                Have a place for people to stay?
-
-                            {% elif canonical_category == "rentals" %}
-
-                                Have a room or property available?
-
-                            {% elif canonical_category == "delivery" %}
-
-                                Offer delivery or courier services?
-
-                            {% elif canonical_category == "services" %}
-
-                                Offer a local service?
-
-                            {% elif canonical_category == "jobs" %}
-
-                                Have an opportunity to share?
-
-                            {% elif canonical_category == "building" %}
-
-                                Own a hardware or building business?
-
-                            {% else %}
-
-                                Have something local to share?
-
-                            {% endif %}
-
-                        </span>
-
 
                         {% if canonical_category == "jobs" %}
 
@@ -3624,10 +2643,6 @@
     </main>
 
 
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
     <footer class="public-footer">
 
         <div class="footer-brand">
@@ -3680,7 +2695,7 @@
 
 
 <!-- =====================================================
-     IMAGE MODAL + SEARCH + JOB REGION FILTERS
+     IMAGE MODAL + SEARCH + FILTERING
 ===================================================== -->
 
 <script>
@@ -3720,11 +2735,7 @@
             );
 
 
-        if (
-            !modal
-            || !image
-        ) {
-
+        if (!modal || !image) {
             return;
         }
 
@@ -3764,7 +2775,6 @@
 
 
         if (!modal) {
-
             return;
         }
 
@@ -3781,8 +2791,11 @@
 
         if (image) {
 
-            image.src = "";
-            image.alt = "";
+            image.src =
+                "";
+
+            image.alt =
+                "";
         }
 
 
@@ -3806,7 +2819,7 @@
 
 
     // =========================================
-    // SEARCH + JOB REGION FILTERING
+    // SEARCH + JOB + RETAIL FILTERING
     // =========================================
 
     const categorySearchInput =
@@ -3833,6 +2846,12 @@
         );
 
 
+    const retailFilterEmpty =
+        document.getElementById(
+            "retail-filter-empty"
+        );
+
+
     const listingCards =
         Array.from(
             document.querySelectorAll(
@@ -3849,11 +2868,23 @@
         );
 
 
+    const retailerButtons =
+        Array.from(
+            document.querySelectorAll(
+                "[data-retailer-filter]"
+            )
+        );
+
+
     let selectedJobRegion =
         "all";
 
 
-    function normalizeJobRegion(
+    let selectedRetailer =
+        "all";
+
+
+    function normalizeFilterValue(
         value
     ) {
 
@@ -3875,9 +2906,15 @@
                 : "";
 
 
-        const selectedRegion =
-            normalizeJobRegion(
+        const selectedJobRegionValue =
+            normalizeFilterValue(
                 selectedJobRegion
+            );
+
+
+        const selectedRetailerValue =
+            normalizeFilterValue(
+                selectedRetailer
             );
 
 
@@ -3891,15 +2928,24 @@
                 const title =
                     card.dataset.title || "";
 
+
                 const business =
                     card.dataset.business || "";
+
 
                 const venue =
                     card.dataset.venue || "";
 
+
                 const jobRegion =
-                    normalizeJobRegion(
+                    normalizeFilterValue(
                         card.dataset.jobRegion
+                    );
+
+
+                const retailer =
+                    normalizeFilterValue(
+                        card.dataset.retailer
                     );
 
 
@@ -3922,14 +2968,30 @@
                         jobRegion.includes(
                             query
                         )
+                        ||
+                        retailer.includes(
+                            query
+                        )
                     );
 
 
-                const matchesRegion =
+                const matchesJobRegion =
                     (
-                        selectedRegion === "all"
+                        selectedJobRegionValue
+                        === "all"
                         ||
-                        jobRegion === selectedRegion
+                        jobRegion
+                        === selectedJobRegionValue
+                    );
+
+
+                const matchesRetailer =
+                    (
+                        selectedRetailerValue
+                        === "all"
+                        ||
+                        retailer
+                        === selectedRetailerValue
                     );
 
 
@@ -3937,7 +2999,9 @@
                     (
                         matchesSearch
                         &&
-                        matchesRegion
+                        matchesJobRegion
+                        &&
+                        matchesRetailer
                     );
 
 
@@ -3951,30 +3015,34 @@
 
                     visibleCount += 1;
                 }
+
             }
         );
 
-
-        // =====================================
-        // RESULT COUNT
-        // =====================================
 
         if (
             categorySearchResultCount
         ) {
 
-            const regionIsFiltered =
-                selectedRegion !== "all";
+            const filtersActive =
+                (
+                    selectedJobRegionValue
+                    !== "all"
+                    ||
+                    selectedRetailerValue
+                    !== "all"
+                );
 
 
             if (
                 !query
                 &&
-                !regionIsFiltered
+                !filtersActive
             ) {
 
                 categorySearchResultCount.textContent =
                     "";
+
             }
 
             else if (
@@ -3983,6 +3051,7 @@
 
                 categorySearchResultCount.textContent =
                     "No matching listings found.";
+
             }
 
             else if (
@@ -3991,6 +3060,7 @@
 
                 categorySearchResultCount.textContent =
                     "1 matching listing";
+
             }
 
             else {
@@ -4001,10 +3071,6 @@
             }
         }
 
-
-        // =====================================
-        // CLEAR SEARCH BUTTON
-        // =====================================
 
         if (
             categorySearchClear
@@ -4017,10 +3083,6 @@
         }
 
 
-        // =====================================
-        // JOB FILTER EMPTY STATE
-        // =====================================
-
         if (
             jobFilterEmpty
         ) {
@@ -4031,11 +3093,22 @@
             );
         }
 
+
+        if (
+            retailFilterEmpty
+        ) {
+
+            retailFilterEmpty.classList.toggle(
+                "show",
+                visibleCount === 0
+            );
+        }
+
     }
 
 
     // =========================================
-    // SEARCH INPUT
+    // SEARCH
     // =========================================
 
     if (
@@ -4048,10 +3121,6 @@
         );
     }
 
-
-    // =========================================
-    // CLEAR SEARCH
-    // =========================================
 
     if (
         categorySearchClear
@@ -4080,7 +3149,7 @@
 
 
     // =========================================
-    // JOB REGION FILTER BUTTONS
+    // JOB REGIONS
     // =========================================
 
     jobRegionButtons.forEach(
@@ -4091,7 +3160,8 @@
                 function() {
 
                     selectedJobRegion =
-                        button.dataset.jobRegionFilter
+                        button.dataset
+                            .jobRegionFilter
                         || "all";
 
 
@@ -4099,10 +3169,8 @@
                         function(otherButton) {
 
                             const isActive =
-                                (
-                                    otherButton
-                                    === button
-                                );
+                                otherButton
+                                === button;
 
 
                             otherButton.classList.toggle(
@@ -4132,852 +3200,57 @@
 
 
     // =========================================
-    // INITIAL FILTER STATE
+    // RETAILERS
     // =========================================
 
+    retailerButtons.forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    selectedRetailer =
+                        button.dataset
+                            .retailerFilter
+                        || "all";
+
+
+                    retailerButtons.forEach(
+                        function(otherButton) {
+
+                            const isActive =
+                                otherButton
+                                === button;
+
+
+                            otherButton.classList.toggle(
+                                "active",
+                                isActive
+                            );
+
+
+                            otherButton.setAttribute(
+                                "aria-pressed",
+                                isActive
+                                    ? "true"
+                                    : "false"
+                            );
+
+                        }
+                    );
+
+
+                    filterCategoryListings();
+
+                }
+            );
+
+        }
+    );
+
+
     filterCategoryListings();
-
-</script>
-
-
-<!-- =========================================
-     STEP 10H — KALXA REMINDER ENGINE
-========================================== -->
-
-<script>
-
-    // =====================================================
-    // PUSH SUBSCRIPTION
-    // =====================================================
-
-    async function getKalxaPushSubscription() {
-
-        if (
-            !("serviceWorker" in navigator)
-            ||
-            !("PushManager" in window)
-        ) {
-
-            return null;
-        }
-
-
-        try {
-
-            const registration =
-                await navigator
-                    .serviceWorker
-                    .ready;
-
-
-            return await registration
-                .pushManager
-                .getSubscription();
-
-        }
-        catch (error) {
-
-            console.error(
-                "[Kalxa Reminder] Unable to read push subscription:",
-                error
-            );
-
-            return null;
-        }
-
-    }
-
-
-    // =====================================================
-    // HUMAN REMINDER LABEL
-    // =====================================================
-
-    function getReminderOffsetLabel(
-        minutes
-    ) {
-
-        const value =
-            Number(
-                minutes
-            );
-
-
-        if (value === 60) {
-
-            return "1 hour before";
-        }
-
-
-        if (value === 180) {
-
-            return "3 hours before";
-        }
-
-
-        if (value === 1440) {
-
-            return "1 day before";
-        }
-
-
-        return "before it starts";
-    }
-
-
-    // =====================================================
-    // SET SELECTED OFFSET
-    // =====================================================
-
-    function setSelectedReminderOffset(
-        wrap,
-        minutes
-    ) {
-
-        const value =
-            String(
-                minutes
-            );
-
-
-        wrap
-            .querySelectorAll(
-                "[data-reminder-offset]"
-            )
-            .forEach(
-                function(button) {
-
-                    const selected =
-                        button.dataset.reminderOffset
-                        === value;
-
-
-                    button.classList.toggle(
-                        "is-selected",
-                        selected
-                    );
-
-                }
-            );
-
-
-        const saveButton =
-            wrap.querySelector(
-                "[data-reminder-button]"
-            );
-
-
-        if (saveButton) {
-
-            saveButton.dataset.minutesBefore =
-                value;
-        }
-
-    }
-
-
-    // =====================================================
-    // SHOW SAVED STATE
-    // =====================================================
-
-    function showReminderSaved(
-        wrap,
-        reminderId,
-        minutesBefore
-    ) {
-
-        const options =
-            wrap.querySelector(
-                ".kalxa-reminder-options"
-            );
-
-        const saveButton =
-            wrap.querySelector(
-                "[data-reminder-button]"
-            );
-
-        const savedPanel =
-            wrap.querySelector(
-                "[data-reminder-saved]"
-            );
-
-        const detail =
-            wrap.querySelector(
-                "[data-reminder-saved-detail]"
-            );
-
-        const cancelButton =
-            wrap.querySelector(
-                "[data-reminder-cancel]"
-            );
-
-
-        setSelectedReminderOffset(
-            wrap,
-            minutesBefore
-        );
-
-
-        if (options) {
-
-            options.hidden =
-                true;
-        }
-
-
-        if (saveButton) {
-
-            saveButton.hidden =
-                true;
-
-            saveButton.disabled =
-                false;
-
-            saveButton.classList.remove(
-                "is-saving"
-            );
-
-            saveButton.textContent =
-                "🔔 Set Reminder";
-        }
-
-
-        if (savedPanel) {
-
-            savedPanel.hidden =
-                false;
-        }
-
-
-        if (detail) {
-
-            detail.textContent =
-                getReminderOffsetLabel(
-                    minutesBefore
-                );
-        }
-
-
-        if (cancelButton) {
-
-            cancelButton.dataset.reminderId =
-                String(
-                    reminderId
-                );
-        }
-
-    }
-
-
-    // =====================================================
-    // RESET REMINDER UI
-    // =====================================================
-
-    function resetReminderUI(
-        wrap
-    ) {
-
-        const options =
-            wrap.querySelector(
-                ".kalxa-reminder-options"
-            );
-
-        const saveButton =
-            wrap.querySelector(
-                "[data-reminder-button]"
-            );
-
-        const savedPanel =
-            wrap.querySelector(
-                "[data-reminder-saved]"
-            );
-
-        const cancelButton =
-            wrap.querySelector(
-                "[data-reminder-cancel]"
-            );
-
-
-        if (options) {
-
-            options.hidden =
-                false;
-        }
-
-
-        if (saveButton) {
-
-            saveButton.hidden =
-                false;
-
-            saveButton.disabled =
-                false;
-
-            saveButton.classList.remove(
-                "is-saving"
-            );
-
-            saveButton.textContent =
-                "🔔 Set Reminder";
-        }
-
-
-        if (savedPanel) {
-
-            savedPanel.hidden =
-                true;
-        }
-
-
-        if (cancelButton) {
-
-            delete cancelButton.dataset.reminderId;
-        }
-
-
-        setSelectedReminderOffset(
-            wrap,
-            60
-        );
-
-    }
-
-
-    // =====================================================
-    // SELECT REMINDER OFFSET
-    // =====================================================
-
-    document.addEventListener(
-        "click",
-        function(event) {
-
-            const option =
-                event.target.closest(
-                    "[data-reminder-offset]"
-                );
-
-
-            if (!option) {
-
-                return;
-            }
-
-
-            const wrap =
-                option.closest(
-                    "[data-reminder-wrap]"
-                );
-
-
-            if (!wrap) {
-
-                return;
-            }
-
-
-            setSelectedReminderOffset(
-                wrap,
-                option.dataset.reminderOffset
-            );
-
-        }
-    );
-
-
-    // =====================================================
-    // CREATE / UPDATE REMINDER
-    // =====================================================
-
-    document.addEventListener(
-        "click",
-        async function(event) {
-
-            const button =
-                event.target.closest(
-                    "[data-reminder-button]"
-                );
-
-
-            if (!button) {
-
-                return;
-            }
-
-
-            const wrap =
-                button.closest(
-                    "[data-reminder-wrap]"
-                );
-
-
-            if (!wrap) {
-
-                return;
-            }
-
-
-            const itemId =
-                button.dataset.itemId;
-
-            const zoneId =
-                button.dataset.zoneId;
-
-            const accessPointId =
-                button.dataset.accessPointId;
-
-            const minutesBefore =
-                button.dataset.minutesBefore
-                || "60";
-
-
-            if (!itemId) {
-
-                return;
-            }
-
-
-            button.disabled =
-                true;
-
-            button.classList.add(
-                "is-saving"
-            );
-
-            button.textContent =
-                "Checking notifications...";
-
-
-            try {
-
-                const subscription =
-                    await getKalxaPushSubscription();
-
-
-                if (!subscription) {
-
-                    throw new Error(
-                        "Please enable Kalxa notifications first."
-                    );
-                }
-
-
-                if (!subscription.endpoint) {
-
-                    throw new Error(
-                        "Your Kalxa notification subscription could not be read."
-                    );
-                }
-
-
-                const body =
-                    new URLSearchParams();
-
-
-                body.append(
-                    "minutes_before",
-                    minutesBefore
-                );
-
-
-                body.append(
-                    "push_endpoint",
-                    subscription.endpoint
-                );
-
-
-                if (zoneId) {
-
-                    body.append(
-                        "zone_id",
-                        zoneId
-                    );
-                }
-
-
-                if (accessPointId) {
-
-                    body.append(
-                        "access_point_id",
-                        accessPointId
-                    );
-                }
-
-
-                button.textContent =
-                    "Saving reminder...";
-
-
-                const response =
-                    await fetch(
-                        `/listing/${itemId}/remind`,
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/x-www-form-urlencoded",
-
-                            },
-
-                            body:
-                                body.toString(),
-
-                        }
-                    );
-
-
-                let result = {};
-
-
-                try {
-
-                    result =
-                        await response.json();
-
-                }
-                catch (jsonError) {
-
-                    console.error(
-                        "[Kalxa Reminder] Invalid reminder response:",
-                        jsonError
-                    );
-                }
-
-
-                if (
-                    result.requires_push
-                ) {
-
-                    throw new Error(
-                        result.message
-                        ||
-                        "Please enable Kalxa notifications first."
-                    );
-                }
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        result.message
-                        ||
-                        "Could not save reminder."
-                    );
-                }
-
-
-                if (!result.reminder_id) {
-
-                    throw new Error(
-                        "Reminder was saved but its ID was not returned."
-                    );
-                }
-
-
-                showReminderSaved(
-                    wrap,
-                    result.reminder_id,
-                    result.minutes_before
-                    || minutesBefore
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "[Kalxa Reminder]",
-                    error
-                );
-
-
-                button.disabled =
-                    false;
-
-                button.classList.remove(
-                    "is-saving"
-                );
-
-                button.textContent =
-                    "🔔 Set Reminder";
-
-
-                alert(
-                    error.message
-                    ||
-                    "Could not save reminder."
-                );
-            }
-
-        }
-    );
-
-
-    // =====================================================
-    // CANCEL REMINDER
-    // =====================================================
-
-    document.addEventListener(
-        "click",
-        async function(event) {
-
-            const button =
-                event.target.closest(
-                    "[data-reminder-cancel]"
-                );
-
-
-            if (!button) {
-
-                return;
-            }
-
-
-            const reminderId =
-                button.dataset.reminderId;
-
-
-            const wrap =
-                button.closest(
-                    "[data-reminder-wrap]"
-                );
-
-
-            if (
-                !reminderId
-                ||
-                !wrap
-            ) {
-
-                return;
-            }
-
-
-            button.disabled =
-                true;
-
-            button.textContent =
-                "Cancelling...";
-
-
-            try {
-
-                const subscription =
-                    await getKalxaPushSubscription();
-
-
-                if (!subscription) {
-
-                    throw new Error(
-                        "Notification subscription unavailable."
-                    );
-                }
-
-
-                const response =
-                    await fetch(
-                        `/reminders/${reminderId}/cancel`,
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json",
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    push_endpoint:
-                                        subscription.endpoint,
-
-                                }),
-
-                        }
-                    );
-
-
-                let result = {};
-
-
-                try {
-
-                    result =
-                        await response.json();
-
-                }
-                catch (jsonError) {
-
-                    console.error(
-                        "[Kalxa Reminder] Invalid cancel response:",
-                        jsonError
-                    );
-                }
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        result.message
-                        ||
-                        "Could not cancel reminder."
-                    );
-                }
-
-
-                resetReminderUI(
-                    wrap
-                );
-
-
-                button.disabled =
-                    false;
-
-                button.textContent =
-                    "Cancel";
-
-            }
-            catch (error) {
-
-                console.error(
-                    "[Kalxa Reminder]",
-                    error
-                );
-
-
-                button.disabled =
-                    false;
-
-                button.textContent =
-                    "Cancel";
-
-
-                alert(
-                    error.message
-                    ||
-                    "Could not cancel reminder."
-                );
-            }
-
-        }
-    );
-
-
-    // =====================================================
-    // RESTORE SAVED REMINDERS
-    // =====================================================
-
-    async function restoreKalxaReminders() {
-
-        const subscription =
-            await getKalxaPushSubscription();
-
-
-        if (!subscription) {
-
-            return;
-        }
-
-
-        const wraps =
-            document.querySelectorAll(
-                "[data-reminder-wrap]"
-            );
-
-
-        for (
-            const wrap
-            of wraps
-        ) {
-
-            const itemId =
-                wrap.dataset.itemId;
-
-
-            if (!itemId) {
-
-                continue;
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `/listing/${itemId}/reminder-status`,
-                        {
-
-                            method:
-                                "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json",
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    push_endpoint:
-                                        subscription.endpoint,
-
-                                }),
-
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    continue;
-                }
-
-
-                const result =
-                    await response.json();
-
-
-                if (
-                    result.has_reminder
-                ) {
-
-                    showReminderSaved(
-                        wrap,
-                        result.reminder_id,
-                        result.minutes_before
-                    );
-
-                }
-
-            }
-            catch (error) {
-
-                console.error(
-                    "[Kalxa Reminder] Restore failed:",
-                    error
-                );
-            }
-
-        }
-
-    }
-
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function() {
-
-            restoreKalxaReminders();
-
-        }
-    );
 
 </script>
 
@@ -5007,10 +3280,6 @@ window.LAC_ENGAGEMENT_CONFIG = {
 </script>
 
 
-<!-- =========================================
-     ENGAGEMENT ENGINE
-========================================== -->
-
 <script
     src="{{ url_for(
         'static',
@@ -5018,10 +3287,6 @@ window.LAC_ENGAGEMENT_CONFIG = {
     ) }}"
 ></script>
 
-
-<!-- =========================================
-     RECORD CATEGORY VIEW
-========================================== -->
 
 <script>
 
