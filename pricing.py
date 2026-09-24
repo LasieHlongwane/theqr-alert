@@ -27,7 +27,7 @@ from decimal import Decimal
 # Campaign
 #     = pay for time-sensitive distribution/reach
 #
-# Sponsored
+# Sponsored / Featured Boost
 #     = optional paid visibility boost
 #
 # IMPORTANT:
@@ -45,7 +45,31 @@ from decimal import Decimal
 # Used for longer-life commercial listings.
 #
 # Price depends on DURATION only.
+#
+# MVP PRICING:
+#
+# 30 days  = R30
+# 90 days  = R60
+# 180 days = R100
+# 365 days = R150
 # =========================================================
+
+KALXA_PRESENCE_PRICING = {
+
+    30:
+        Decimal("30.00"),
+
+    90:
+        Decimal("60.00"),
+
+    180:
+        Decimal("100.00"),
+
+    365:
+        Decimal("150.00"),
+
+}
+
 
 # =========================================================
 # CAMPAIGN PRICING
@@ -56,37 +80,20 @@ from decimal import Decimal
 # - specials
 # - jobs
 # - opportunities
+# - property campaigns
+# - restaurant specials
+# - beauty specials
 # - other time-sensitive content
 #
 # Price depends on:
 #
 # duration + number of zones reached
-# =========================================================
-KALXA_PRESENCE_PRICING = {
-
-    30:
-        Decimal("50.00"),
-
-    90:
-        Decimal("100.00"),
-
-    180:
-        Decimal("150.00"),
-
-    365:
-        Decimal("250.00"),
-
-}
-# =========================================================
-# CAMPAIGN PRICING
-#
-# Affordable community-first pricing.
 #
 # Base duration:
 #
-# 7 days  = R20
-# 14 days = R30
-# 30 days = R50
+# 7 days  = R10
+# 14 days = R20
+# 30 days = R30
 #
 # Additional reach:
 #
@@ -98,15 +105,28 @@ KALXA_PRESENCE_PRICING = {
 #
 #             1 zone   2 zones   3 zones
 #
-# 7 days       R20       R40       R60
-# 14 days      R30       R50       R70
-# 30 days      R50       R70       R90
+# 7 days       R10       R30       R50
+# 14 days      R20       R40       R60
+# 30 days      R30       R50       R70
 #
 # =========================================================
 
 KALXA_CAMPAIGN_PRICING = {
 
     7: {
+
+        1:
+            Decimal("10.00"),
+
+        2:
+            Decimal("30.00"),
+
+        3:
+            Decimal("50.00"),
+
+    },
+
+    14: {
 
         1:
             Decimal("20.00"),
@@ -119,7 +139,7 @@ KALXA_CAMPAIGN_PRICING = {
 
     },
 
-    14: {
+    30: {
 
         1:
             Decimal("30.00"),
@@ -132,24 +152,11 @@ KALXA_CAMPAIGN_PRICING = {
 
     },
 
-    30: {
-
-        1:
-            Decimal("50.00"),
-
-        2:
-            Decimal("70.00"),
-
-        3:
-            Decimal("90.00"),
-
-    },
-
 }
 
 
 # =========================================================
-# SPONSORED PRICING
+# SPONSORED / FEATURED BOOST PRICING
 #
 # Sponsored is an OPTIONAL VISIBILITY BOOST.
 #
@@ -160,27 +167,24 @@ KALXA_CAMPAIGN_PRICING = {
 # - existing payment_status
 # - existing commercial expiry
 #
-# Example:
+# MVP FEATURED BOOST PRICING:
 #
-# Business already has a valid listing.
+# 3 days  -> R5
+# 7 days  -> R10
+# 14 days -> R15
 #
-# Then it can optionally buy:
-#
-# 7 days  -> R50
-# 14 days -> R80
-# 30 days -> R150
 # =========================================================
 
 KALXA_SPONSORED_PRICING = {
 
+    3:
+        Decimal("5.00"),
+
     7:
-        Decimal("50.00"),
+        Decimal("10.00"),
 
     14:
-        Decimal("80.00"),
-
-    30:
-        Decimal("150.00"),
+        Decimal("15.00"),
 
 }
 
@@ -246,16 +250,16 @@ CAMPAIGN_DURATION_OPTIONS = (
 
 
 # =========================================================
-# SPONSORED DURATION OPTIONS
+# SPONSORED / FEATURED BOOST DURATION OPTIONS
 # =========================================================
 
 SPONSORED_DURATION_OPTIONS = (
 
+    3,
+
     7,
 
     14,
-
-    30,
 
 )
 
@@ -407,7 +411,7 @@ def calculate_campaign_price(
 
 
 # =========================================================
-# CALCULATE SPONSORED PRICE
+# CALCULATE SPONSORED / FEATURED BOOST PRICE
 #
 # Sponsored pricing is based only on sponsored duration.
 #
@@ -467,7 +471,7 @@ def calculate_sponsored_price(
 # - Presence
 # - Campaign
 #
-# Sponsored is calculated separately using:
+# Sponsored / Featured Boost is calculated separately using:
 #
 # calculate_sponsored_price()
 # =========================================================
@@ -610,8 +614,6 @@ def calculate_kalxa_price(
     )
 
 
-
-
 # =========================================================
 # GET DURATION OPTIONS
 #
@@ -658,12 +660,13 @@ def get_duration_options(
 
 
 # =========================================================
-# GET SPONSORED DURATION OPTIONS
+# GET SPONSORED / FEATURED BOOST DURATION OPTIONS
 # =========================================================
 
 def get_sponsored_duration_options():
     """
-    Return the supported Kalxa Sponsored durations.
+    Return the supported Kalxa Sponsored / Featured Boost
+    durations.
     """
 
     return list(
@@ -737,7 +740,7 @@ def get_pricing_options(
 
 
 # =========================================================
-# GET SPONSORED PRICING OPTIONS
+# GET SPONSORED / FEATURED BOOST PRICING OPTIONS
 #
 # Useful for:
 #
@@ -748,9 +751,9 @@ def get_pricing_options(
 # Returns:
 #
 # {
-#     7: Decimal("50.00"),
-#     14: Decimal("80.00"),
-#     30: Decimal("150.00"),
+#     3: Decimal("5.00"),
+#     7: Decimal("10.00"),
+#     14: Decimal("15.00"),
 # }
 # =========================================================
 
@@ -1015,6 +1018,7 @@ KALXA_PRICING_MODEL_OVERRIDES = {
 # ============================================================
 # GET PRICING MODEL
 # ============================================================
+
 def get_pricing_model(
     category,
     content_type=None,
@@ -1153,6 +1157,3 @@ def get_pricing_model(
     return (
         PRICING_MODEL_CAMPAIGN
     )
-
-
-
