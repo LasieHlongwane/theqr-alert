@@ -93,8 +93,8 @@
                 linear-gradient(
                     180deg,
                     #111316 0%,
-                    #1d2024 42%,
-                    #ece9e2 42%,
+                    #1d2024 38%,
+                    #ece9e2 38%,
                     #f4f1ea 100%
                 );
 
@@ -130,7 +130,7 @@
             width:
                 min(
                     100% - 24px,
-                    720px
+                    620px
                 );
 
             margin:
@@ -139,7 +139,7 @@
             padding:
                 18px
                 0
-                72px;
+                70px;
         }
 
 
@@ -155,7 +155,7 @@
 
             gap: 15px;
 
-            margin-bottom: 22px;
+            margin-bottom: 18px;
 
             color: #fff4df;
         }
@@ -224,9 +224,9 @@
 
         .jobs-hero {
             padding:
-                20px
-                4px
-                31px;
+                18px
+                3px
+                28px;
 
             color: #ffffff;
         }
@@ -250,15 +250,15 @@
 
 
         .jobs-hero h1 {
-            max-width: 600px;
+            max-width: 520px;
 
             margin: 0;
 
             font-size:
                 clamp(
-                    31px,
+                    30px,
                     8vw,
-                    48px
+                    46px
                 );
 
             line-height: 1;
@@ -270,10 +270,10 @@
 
 
         .jobs-intro {
-            max-width: 580px;
+            max-width: 520px;
 
             margin:
-                13px
+                12px
                 0
                 0;
 
@@ -282,11 +282,11 @@
                     255,
                     255,
                     255,
-                    .66
+                    .67
                 );
 
             font-size: 12px;
-            line-height: 1.65;
+            line-height: 1.55;
         }
 
 
@@ -297,7 +297,7 @@
 
             gap: 5px;
 
-            margin-top: 15px;
+            margin-top: 14px;
 
             padding:
                 7px
@@ -336,7 +336,7 @@
                     .08
                 );
 
-            border-radius: 24px;
+            border-radius: 22px;
 
             box-shadow:
                 0
@@ -352,7 +352,10 @@
 
 
         .jobs-card-header {
-            padding: 20px;
+            padding:
+                18px
+                18px
+                17px;
 
             background:
                 linear-gradient(
@@ -385,7 +388,7 @@
             color: #74716a;
 
             font-size: 10px;
-            line-height: 1.5;
+            line-height: 1.45;
         }
 
 
@@ -399,8 +402,8 @@
             gap: 8px;
 
             padding:
-                18px
-                18px
+                16px
+                16px
                 0;
         }
 
@@ -460,83 +463,14 @@
         .jobs-form {
             display: grid;
 
-            gap: 0;
+            gap: 15px;
 
-            padding: 20px;
-        }
-
-
-        .form-section {
-            padding:
-                20px
-                0;
-
-            border-top:
-                1px solid
-                #ececef;
-        }
-
-
-        .form-section:first-child {
-            padding-top: 0;
-
-            border-top: 0;
-        }
-
-
-        .form-section-title {
-            display: block;
-
-            margin-bottom: 4px;
-
-            color: #202327;
-
-            font-size: 13px;
-            font-weight: 950;
-        }
-
-
-        .form-section-copy {
-            margin:
-                0
-                0
-                15px;
-
-            color: #777c84;
-
-            font-size: 10px;
-            line-height: 1.55;
-        }
-
-
-        /* =====================================================
-           FIELD GRID
-        ===================================================== */
-
-        .field-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap: 13px;
+            padding: 18px;
         }
 
 
         .field {
             min-width: 0;
-        }
-
-
-        .field.full {
-            grid-column:
-                1 / -1;
         }
 
 
@@ -561,10 +495,10 @@
         .field textarea {
             width: 100%;
 
-            min-height: 46px;
+            min-height: 48px;
 
             padding:
-                10px
+                11px
                 12px;
 
             background: #f7f8f9;
@@ -577,7 +511,7 @@
 
             border-radius: 11px;
 
-            font-size: 11px;
+            font-size: 12px;
 
             outline: none;
 
@@ -589,11 +523,11 @@
 
 
         .field textarea {
-            min-height: 145px;
+            min-height: 120px;
 
             resize: vertical;
 
-            line-height: 1.55;
+            line-height: 1.5;
         }
 
 
@@ -618,11 +552,6 @@
         }
 
 
-        .field input[type="file"] {
-            padding: 9px;
-        }
-
-
         .field-help {
             display: block;
 
@@ -631,57 +560,24 @@
             color: #92969d;
 
             font-size: 8px;
-            line-height: 1.45;
+            line-height: 1.4;
         }
 
 
         /* =====================================================
-           APPLICATION METHODS
+           SIMPLE MESSAGE
         ===================================================== */
 
-        .application-note {
-            margin-bottom: 15px;
-
-            padding:
-                11px
-                12px;
-
-            background: #f4f5f6;
-
-            color: #656a72;
-
-            border:
-                1px solid
-                #e0e2e5;
-
-            border-radius: 11px;
-
-            font-size: 9px;
-            line-height: 1.55;
-        }
-
-
-        .application-note strong {
-            color: #30343a;
-        }
-
-
-        /* =====================================================
-           FREE INFO
-        ===================================================== */
-
-        .free-info {
+        .simple-message {
             display: flex;
 
             align-items: flex-start;
 
-            gap: 10px;
-
-            margin-bottom: 18px;
+            gap: 9px;
 
             padding:
-                13px
-                14px;
+                12px
+                13px;
 
             background: #edf7f0;
 
@@ -691,19 +587,19 @@
                 1px solid
                 #cfe7d6;
 
-            border-radius: 13px;
+            border-radius: 12px;
 
             font-size: 10px;
             line-height: 1.5;
         }
 
 
-        .free-info-icon {
+        .simple-message-icon {
             flex:
                 0 0 auto;
 
-            width: 22px;
-            height: 22px;
+            width: 21px;
+            height: 21px;
 
             display: grid;
 
@@ -724,7 +620,7 @@
 
 
         /* =====================================================
-           SUBMIT BUTTON
+           SUBMIT
         ===================================================== */
 
         .submit-button {
@@ -816,12 +712,12 @@
 
 
         .moderation-note {
-            max-width: 520px;
-
             margin:
-                10px
+                -3px
                 auto
                 0;
+
+            max-width: 500px;
 
             color: #8a8f96;
 
@@ -833,7 +729,7 @@
 
 
         /* =====================================================
-           FOOTER NOTE
+           FOOTER
         ===================================================== */
 
         .jobs-footer-note {
@@ -842,7 +738,7 @@
                 auto
                 0;
 
-            max-width: 560px;
+            max-width: 520px;
 
             color:
                 rgba(
@@ -872,8 +768,8 @@
                     linear-gradient(
                         180deg,
                         #111316 0%,
-                        #1d2024 35%,
-                        #ece9e2 35%,
+                        #1d2024 32%,
+                        #ece9e2 32%,
                         #f4f1ea 100%
                     );
             }
@@ -883,7 +779,7 @@
                 width:
                     min(
                         100% - 16px,
-                        720px
+                        620px
                     );
 
                 padding-top: 12px;
@@ -891,7 +787,7 @@
 
 
             .jobs-nav {
-                margin-bottom: 12px;
+                margin-bottom: 10px;
             }
 
 
@@ -907,37 +803,39 @@
 
             .jobs-hero {
                 padding:
-                    18px
+                    17px
                     2px
-                    27px;
-            }
-
-
-            .field-grid {
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .field.full {
-                grid-column: auto;
+                    25px;
             }
 
 
             .jobs-card {
-                border-radius: 19px;
+                border-radius: 18px;
             }
 
 
             .jobs-card-header {
                 padding:
-                    17px
-                    16px;
+                    16px
+                    15px;
             }
 
 
             .jobs-form {
-                padding: 16px;
+                gap: 13px;
+
+                padding: 15px;
+            }
+
+
+            .field input,
+            .field select {
+                min-height: 50px;
+            }
+
+
+            .field textarea {
+                min-height: 112px;
             }
 
         }
@@ -1019,21 +917,20 @@
 
 
         <h1>
-            Share a job opportunity.
+            Post a job.
         </h1>
 
 
         <p class="jobs-intro">
 
-            Help people around your community discover
-            jobs, internships, learnerships, training,
-            tenders and other opportunities.
+            Share a local job opportunity in a few seconds.
+            Posting on Kalxa Jobs is free.
 
         </p>
 
 
         <span class="free-pill">
-            ✓ Free to submit
+            ✓ Free to post
         </span>
 
     </section>
@@ -1049,12 +946,12 @@
         <div class="jobs-card-header">
 
             <strong>
-                Post an opportunity
+                Job details
             </strong>
 
 
             <span>
-                Kalxa reviews every submission before it appears publicly.
+                Keep it short. Kalxa reviews the job before publishing it.
             </span>
 
         </div>
@@ -1095,617 +992,310 @@
 
 
         <!-- =================================================
-             FORM
+             SIMPLE JOB FORM
         ================================================== -->
 
         <form
             method="POST"
-            enctype="multipart/form-data"
             class="jobs-form"
             id="jobs-submit-form"
         >
 
 
             <!-- =============================================
-                 OPPORTUNITY DETAILS
+                 BACKEND DEFAULTS
             ============================================== -->
 
-            <section class="form-section">
+            <input
+                type="hidden"
+                name="job_type"
+                value="job"
+            >
 
-                <strong class="form-section-title">
-                    Opportunity
-                </strong>
 
+            <input
+                type="hidden"
+                id="submitter_name"
+                name="submitter_name"
+                value="{{ request.form.get('submitter_name', '') }}"
+            >
 
-                <p class="form-section-copy">
-                    Tell people what opportunity is available.
-                </p>
 
+            <input
+                type="hidden"
+                name="submitter_email"
+                value=""
+            >
 
-                <div class="field-grid">
 
+            <input
+                type="hidden"
+                name="submitter_phone"
+                value=""
+            >
 
-                    <!-- =====================================
-                         AREA
-                    ====================================== -->
 
-                    <div class="field">
+            <input
+                type="hidden"
+                name="application_url"
+                value=""
+            >
 
-                        <label for="zone_id">
-                            Area *
-                        </label>
 
+            <input
+                type="hidden"
+                name="application_email"
+                value=""
+            >
 
-                        <select
-                            id="zone_id"
-                            name="zone_id"
-                            required
-                        >
 
-                            <option value="">
-                                Choose area
-                            </option>
+            <input
+                type="hidden"
+                name="whatsapp_number"
+                value=""
+            >
 
 
-                            {% for zone in zones %}
+            <input
+                type="hidden"
+                name="salary_text"
+                value=""
+            >
 
-                                {% set current_zone_id =
-                                    request.form.get(
-                                        'zone_id',
-                                        type=int
-                                    )
-                                    or selected_zone_id
-                                %}
 
-                                <option
-                                    value="{{ zone.id }}"
-                                    {% if
-                                        current_zone_id
-                                        == zone.id
-                                    %}
-                                        selected
-                                    {% endif %}
-                                >
-                                    {{ zone.name }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- =====================================
-                         OPPORTUNITY TYPE
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="job_type">
-                            Opportunity type *
-                        </label>
-
-
-                        <select
-                            id="job_type"
-                            name="job_type"
-                            required
-                        >
-
-                            {% for value, label in job_types.items() %}
-
-                                <option
-                                    value="{{ value }}"
-                                    {% if
-                                        request.form.get(
-                                            'job_type',
-                                            'job'
-                                        )
-                                        == value
-                                    %}
-                                        selected
-                                    {% endif %}
-                                >
-                                    {{ label }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- =====================================
-                         TITLE
-                    ====================================== -->
-
-                    <div class="field full">
-
-                        <label for="title">
-                            Job / opportunity title *
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            maxlength="200"
-                            value="{{ request.form.get('title', '') }}"
-                            placeholder="Example: Shop Assistant"
-                            autocomplete="organization-title"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         EMPLOYER
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="business_name">
-                            Employer / organisation *
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="business_name"
-                            name="business_name"
-                            maxlength="150"
-                            value="{{ request.form.get('business_name', '') }}"
-                            placeholder="Example: ABC Supermarket"
-                            autocomplete="organization"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         LOCATION
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="venue">
-                            Job location *
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="venue"
-                            name="venue"
-                            maxlength="150"
-                            value="{{ request.form.get('venue', '') }}"
-                            placeholder="Example: KwaMhlanga"
-                            autocomplete="street-address"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         DESCRIPTION
-                    ====================================== -->
-
-                    <div class="field full">
-
-                        <label for="description">
-                            Opportunity description *
-                        </label>
-
-
-                        <textarea
-                            id="description"
-                            name="description"
-                            maxlength="5000"
-                            placeholder="Describe the role, requirements, responsibilities and anything applicants should know."
-                            required
-                        >{{ request.form.get('description', '') }}</textarea>
-
-
-                        <span class="field-help">
-                            Include requirements, experience, duties and any important application instructions.
-                        </span>
-
-                    </div>
-
-
-                    <!-- =====================================
-                         SALARY
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="salary_text">
-                            Salary / compensation
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="salary_text"
-                            name="salary_text"
-                            maxlength="100"
-                            value="{{ request.form.get('salary_text', '') }}"
-                            placeholder="Example: R6,500 per month"
-                        >
-
-
-                        <span class="field-help">
-                            Optional. You can also enter “Negotiable”.
-                        </span>
-
-                    </div>
-
-
-                    <!-- =====================================
-                         CLOSING DATE
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="closing_date">
-                            Closing date
-                        </label>
-
-
-                        <input
-                            type="date"
-                            id="closing_date"
-                            name="closing_date"
-                            value="{{ request.form.get('closing_date', '') }}"
-                        >
-
-
-                        <span class="field-help">
-                            Leave blank if applications remain open until the position is filled.
-                        </span>
-
-                    </div>
-
-
-                </div>
-
-            </section>
+            <input
+                type="hidden"
+                name="closing_date"
+                value=""
+            >
 
 
             <!-- =============================================
-                 APPLICATION METHOD
+                 AREA
             ============================================== -->
 
-            <section class="form-section">
+            <div class="field">
 
-                <strong class="form-section-title">
-                    How should people apply?
-                </strong>
-
-
-                <p class="form-section-copy">
-                    Give applicants at least one public way to apply.
-                </p>
+                <label for="zone_id">
+                    Area
+                </label>
 
 
-                <div class="application-note">
+                <select
+                    id="zone_id"
+                    name="zone_id"
+                    required
+                >
+
+                    <option value="">
+                        Select area
+                    </option>
+
+
+                    {% for zone in zones %}
+
+                        {% set current_zone_id =
+                            request.form.get(
+                                'zone_id',
+                                type=int
+                            )
+                            or selected_zone_id
+                        %}
+
+                        <option
+                            value="{{ zone.id }}"
+                            {% if
+                                current_zone_id
+                                == zone.id
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ zone.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- =============================================
+                 1. JOB TITLE
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="title">
+                    Job title
+                </label>
+
+
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    maxlength="200"
+                    value="{{ request.form.get('title', '') }}"
+                    placeholder="Example: Shop Assistant"
+                    required
+                >
+
+            </div>
+
+
+            <!-- =============================================
+                 2. EMPLOYER
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="business_name">
+                    Employer / business
+                </label>
+
+
+                <input
+                    type="text"
+                    id="business_name"
+                    name="business_name"
+                    maxlength="150"
+                    value="{{ request.form.get('business_name', '') }}"
+                    placeholder="Example: ABC Supermarket"
+                    autocomplete="organization"
+                    required
+                >
+
+            </div>
+
+
+            <!-- =============================================
+                 3. LOCATION
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="venue">
+                    Job location
+                </label>
+
+
+                <input
+                    type="text"
+                    id="venue"
+                    name="venue"
+                    maxlength="150"
+                    value="{{ request.form.get('venue', '') }}"
+                    placeholder="Example: KwaMhlanga"
+                    required
+                >
+
+            </div>
+
+
+            <!-- =============================================
+                 4. DESCRIPTION
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="description">
+                    Job description
+                </label>
+
+
+                <textarea
+                    id="description"
+                    name="description"
+                    maxlength="3000"
+                    placeholder="Example: Looking for a shop assistant. Must be reliable and available Monday to Saturday."
+                    required
+                >{{ request.form.get('description', '') }}</textarea>
+
+
+                <span class="field-help">
+                    Mention the main requirements and what the person will do.
+                </span>
+
+            </div>
+
+
+            <!-- =============================================
+                 5. APPLICATION CONTACT
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="contact">
+                    Phone / WhatsApp to apply
+                </label>
+
+
+                <input
+                    type="tel"
+                    id="contact"
+                    name="contact"
+                    maxlength="100"
+                    value="{{ request.form.get('contact', '') }}"
+                    placeholder="Example: 079 123 4567"
+                    autocomplete="tel"
+                    inputmode="tel"
+                    required
+                >
+
+
+                <span class="field-help">
+                    Applicants will use this number to contact you.
+                </span>
+
+            </div>
+
+
+            <!-- =============================================
+                 FREE MESSAGE
+            ============================================== -->
+
+            <div class="simple-message">
+
+                <span class="simple-message-icon">
+                    ✓
+                </span>
+
+
+                <span>
 
                     <strong>
-                        At least one application method is required.
+                        Free job posting.
                     </strong>
 
-                    You can provide a website, email address,
-                    phone number or WhatsApp number.
+                    No payment is required.
+                    Your job will appear after Kalxa approves it.
 
-                </div>
+                </span>
 
-
-                <div class="field-grid">
-
-
-                    <!-- =====================================
-                         APPLICATION WEBSITE
-                    ====================================== -->
-
-                    <div class="field full">
-
-                        <label for="application_url">
-                            Application website
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="application_url"
-                            name="application_url"
-                            maxlength="500"
-                            value="{{ request.form.get('application_url', '') }}"
-                            placeholder="https://company.co.za/jobs/..."
-                            inputmode="url"
-                            autocomplete="url"
-                        >
-
-
-                        <span class="field-help">
-                            Kalxa will add https:// automatically if you leave it out.
-                        </span>
-
-                    </div>
-
-
-                    <!-- =====================================
-                         APPLICATION EMAIL
-                    ====================================== -->
-
-                    <div class="field full">
-
-                        <label for="application_email">
-                            Application email
-                        </label>
-
-
-                        <input
-                            type="email"
-                            id="application_email"
-                            name="application_email"
-                            maxlength="200"
-                            value="{{ request.form.get('application_email', '') }}"
-                            placeholder="jobs@example.co.za"
-                            autocomplete="email"
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         PHONE
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="contact">
-                            Public phone
-                        </label>
-
-
-                        <input
-                            type="tel"
-                            id="contact"
-                            name="contact"
-                            maxlength="100"
-                            value="{{ request.form.get('contact', '') }}"
-                            placeholder="012 345 6789"
-                            autocomplete="tel"
-                            inputmode="tel"
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         WHATSAPP
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="whatsapp_number">
-                            Public WhatsApp
-                        </label>
-
-
-                        <input
-                            type="tel"
-                            id="whatsapp_number"
-                            name="whatsapp_number"
-                            maxlength="50"
-                            value="{{ request.form.get('whatsapp_number', '') }}"
-                            placeholder="079 123 4567"
-                            autocomplete="tel"
-                            inputmode="tel"
-                        >
-
-                    </div>
-
-
-                </div>
-
-            </section>
-
-
-            <!-- =============================================
-                 JOB POSTER
-            ============================================== -->
-
-            <section class="form-section">
-
-                <strong class="form-section-title">
-                    Job poster
-                </strong>
-
-
-                <p class="form-section-copy">
-                    Optional. Upload one poster or company image.
-                </p>
-
-
-                <div class="field">
-
-                    <label for="image">
-                        Image
-                    </label>
-
-
-                    <input
-                        type="file"
-                        id="image"
-                        name="image"
-                        accept="
-                            image/jpeg,
-                            image/png,
-                            image/webp
-                        "
-                    >
-
-
-                    <span class="field-help">
-                        JPG, JPEG, PNG or WebP. Maximum upload size is controlled by Kalxa.
-                    </span>
-
-                </div>
-
-            </section>
-
-
-            <!-- =============================================
-                 SUBMITTER DETAILS
-            ============================================== -->
-
-            <section class="form-section">
-
-                <strong class="form-section-title">
-                    Your details
-                </strong>
-
-
-                <p class="form-section-copy">
-                    Kalxa uses these details to help verify the submission.
-                    They are not automatically shown publicly.
-                </p>
-
-
-                <div class="field-grid">
-
-
-                    <!-- =====================================
-                         NAME
-                    ====================================== -->
-
-                    <div class="field full">
-
-                        <label for="submitter_name">
-                            Your name *
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="submitter_name"
-                            name="submitter_name"
-                            maxlength="150"
-                            value="{{ request.form.get('submitter_name', '') }}"
-                            autocomplete="name"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         EMAIL
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="submitter_email">
-                            Your email
-                        </label>
-
-
-                        <input
-                            type="email"
-                            id="submitter_email"
-                            name="submitter_email"
-                            maxlength="200"
-                            value="{{ request.form.get('submitter_email', '') }}"
-                            autocomplete="email"
-                        >
-
-                    </div>
-
-
-                    <!-- =====================================
-                         PHONE
-                    ====================================== -->
-
-                    <div class="field">
-
-                        <label for="submitter_phone">
-                            Your phone
-                        </label>
-
-
-                        <input
-                            type="tel"
-                            id="submitter_phone"
-                            name="submitter_phone"
-                            maxlength="100"
-                            value="{{ request.form.get('submitter_phone', '') }}"
-                            autocomplete="tel"
-                            inputmode="tel"
-                        >
-
-                    </div>
-
-
-                </div>
-
-            </section>
+            </div>
 
 
             <!-- =============================================
                  SUBMIT
             ============================================== -->
 
-            <section class="form-section">
+            <button
+                type="submit"
+                class="submit-button"
+                id="jobs-submit-button"
+            >
+                Post Job for Free
+            </button>
 
 
-                <div class="free-info">
+            <p class="moderation-note">
 
-                    <span class="free-info-icon">
-                        ✓
-                    </span>
+                Kalxa may reject misleading, fraudulent,
+                duplicated or unsafe job listings.
 
-
-                    <span>
-
-                        <strong>
-                            No payment required.
-                        </strong>
-
-                        Job and opportunity submissions in
-                        Kalxa Jobs are free. They only need
-                        to pass moderation before appearing publicly.
-
-                    </span>
-
-                </div>
-
-
-                <button
-                    type="submit"
-                    class="submit-button"
-                    id="jobs-submit-button"
-                >
-                    Submit Opportunity for Review
-                </button>
-
-
-                <p class="moderation-note">
-
-                    Submissions may be rejected if they appear
-                    misleading, duplicated, unsafe, fraudulent
-                    or unrelated to employment and opportunities.
-
-                </p>
-
-
-            </section>
+            </p>
 
 
         </form>
@@ -1716,9 +1306,8 @@
 
     <p class="jobs-footer-note">
 
-        Kalxa Jobs helps local communities discover legitimate
-        employment and opportunity information.
-        Employers remain responsible for the accuracy of their listings.
+        Kalxa Jobs helps local people discover nearby
+        employment opportunities.
 
     </p>
 
@@ -1727,7 +1316,7 @@
 
 
 <!-- =========================================================
-     FORM SUBMISSION FEEDBACK
+     FORM SUBMISSION
 ========================================================= -->
 
 <script>
@@ -1748,6 +1337,18 @@ document.addEventListener(
             );
 
 
+        const businessName =
+            document.getElementById(
+                "business_name"
+            );
+
+
+        const submitterName =
+            document.getElementById(
+                "submitter_name"
+            );
+
+
         if (
             !form
             ||
@@ -1763,6 +1364,27 @@ document.addEventListener(
             "submit",
             function () {
 
+                /*
+                 * Keep the moderation-side
+                 * submitter_name populated
+                 * without asking the user
+                 * for another field.
+                 */
+
+                if (
+                    businessName
+                    &&
+                    submitterName
+                ) {
+
+                    submitterName.value =
+                        businessName.value.trim()
+                        ||
+                        "Kalxa Job Submitter";
+
+                }
+
+
                 if (
                     !form.checkValidity()
                 ) {
@@ -1777,7 +1399,7 @@ document.addEventListener(
 
 
                 submitButton.textContent =
-                    "Submitting Opportunity...";
+                    "Posting Job...";
 
             }
         );
