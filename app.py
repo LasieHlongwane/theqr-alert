@@ -6574,8 +6574,16 @@ def import_external_jobs():
     }), 200
 
 
+
+
+
 @app.route("/jobs/submit", methods=["GET", "POST"])
 def submit_job():
+
+    # ============================================================
+    # ACTIVE ZONES
+    # ============================================================
+
     zones = (
         Zone.query
         .filter_by(active=True)
@@ -6583,16 +6591,42 @@ def submit_job():
         .all()
     )
 
-    selected_zone_id = request.args.get("zone_id", type=int)
+
+    # ============================================================
+    # SELECTED ZONE FROM URL
+    # ============================================================
+
+    selected_zone_id = request.args.get(
+        "zone_id",
+        type=int,
+    )
+
     selected_zone = None
 
+
     if selected_zone_id:
-        selected_zone = db.session.get(Zone, selected_zone_id)
-        if not selected_zone or not selected_zone.active:
+
+        selected_zone = db.session.get(
+            Zone,
+            selected_zone_id,
+        )
+
+
+        if (
+            not selected_zone
+            or not selected_zone.active
+        ):
+
             selected_zone_id = None
             selected_zone = None
 
+
+    # ============================================================
+    # FORM RENDERER
+    # ============================================================
+
     def render_job_form(status_code=200):
+
         return (
             render_template(
                 "jobs_submit.html",
@@ -6604,61 +6638,323 @@ def submit_job():
             status_code,
         )
 
+
+    # ============================================================
+    # GET
+    # ============================================================
+
     if request.method == "GET":
         return render_job_form()
 
-    zone_id = request.form.get("zone_id", type=int)
-    content_type = (request.form.get("job_type", "job") or "job").strip().lower()
-    title = (request.form.get("title", "") or "").strip()
-    business_name = (request.form.get("business_name", "") or "").strip()
-    venue = (request.form.get("venue", "") or "").strip()
-    description = (request.form.get("description", "") or "").strip()
-    salary_text = (request.form.get("salary_text", "") or "").strip() or None
-    closing_date_raw = (request.form.get("closing_date", "") or "").strip()
-    application_url = (request.form.get("application_url", "") or "").strip()
-    application_email = (request.form.get("application_email", "") or "").strip()
-    contact = (request.form.get("contact", "") or "").strip() or None
-    whatsapp_number = (request.form.get("whatsapp_number", "") or "").strip() or None
-    submitter_name = (request.form.get("submitter_name", "") or "").strip()
-    submitter_email = (request.form.get("submitter_email", "") or "").strip() or None
-    submitter_phone = (request.form.get("submitter_phone", "") or "").strip() or None
 
-    zone = db.session.get(Zone, zone_id) if zone_id else None
-    if not zone or not zone.active:
-        flash("Please select a valid area.", "error")
+    # ============================================================
+    # READ SIMPLE JOB FORM
+    # ============================================================
+
+    zone_id = request.form.get(
+        "zone_id",
+        type=int,
+    )
+
+
+    content_type = (
+        request.form.get(
+            "job_type",
+            "job",
+        )
+        or
+        "job"
+    ).strip().lower()
+
+
+    title = (
+        request.form.get(
+            "title",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    business_name = (
+        request.form.get(
+            "business_name",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    venue = (
+        request.form.get(
+            "venue",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    description = (
+        request.form.get(
+            "description",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    contact = (
+        request.form.get(
+            "contact",
+            "",
+        )
+        or
+        ""
+    ).strip() or None
+
+
+    # ============================================================
+    # OPTIONAL / LEGACY JOB FIELDS
+    #
+    # The short form currently sends most of these as hidden
+    # empty values. Keeping them here maintains compatibility
+    # with the existing PendingSubmission model and admin flow.
+    # ============================================================
+
+    salary_text = (
+        request.form.get(
+            "salary_text",
+            "",
+        )
+        or
+        ""
+    ).strip() or None
+
+
+    closing_date_raw = (
+        request.form.get(
+            "closing_date",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    application_url = (
+        request.form.get(
+            "application_url",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    application_email = (
+        request.form.get(
+            "application_email",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    whatsapp_number = (
+        request.form.get(
+            "whatsapp_number",
+            "",
+        )
+        or
+        ""
+    ).strip() or None
+
+
+    submitter_name = (
+        request.form.get(
+            "submitter_name",
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+
+    submitter_email = (
+        request.form.get(
+            "submitter_email",
+            "",
+        )
+        or
+        ""
+    ).strip() or None
+
+
+    submitter_phone = (
+        request.form.get(
+            "submitter_phone",
+            "",
+        )
+        or
+        ""
+    ).strip() or None
+
+
+    # ============================================================
+    # SUBMITTER NAME FALLBACK
+    #
+    # The simplified form does not ask users to type their name.
+    # Normally JavaScript copies business_name into submitter_name.
+    #
+    # This backend fallback protects the submission if JavaScript
+    # does not run for any reason.
+    # ============================================================
+
+    if not submitter_name:
+
+        submitter_name = (
+            business_name
+            or
+            "Kalxa Job Submitter"
+        )
+
+
+    # ============================================================
+    # VALIDATE ZONE
+    # ============================================================
+
+    zone = (
+        db.session.get(
+            Zone,
+            zone_id,
+        )
+        if zone_id
+        else None
+    )
+
+
+    if (
+        not zone
+        or not zone.active
+    ):
+
+        flash(
+            "Please select a valid area.",
+            "error",
+        )
+
         return render_job_form(400)
+
 
     selected_zone_id = zone.id
     selected_zone = zone
 
+
+    # ============================================================
+    # REQUIRED FIELDS
+    # ============================================================
+
     required_checks = (
-        (title, "Please enter the job title."),
-        (business_name, "Please enter the employer or organisation name."),
-        (venue, "Please enter the job location."),
-        (description, "Please describe the opportunity."),
-        (submitter_name, "Please enter your name."),
+
+        (
+            title,
+            "Please enter the job title.",
+        ),
+
+        (
+            business_name,
+            "Please enter the employer or organisation name.",
+        ),
+
+        (
+            venue,
+            "Please enter the job location.",
+        ),
+
+        (
+            description,
+            "Please describe the opportunity.",
+        ),
+
+        (
+            contact,
+            "Please enter a phone or WhatsApp number for applications.",
+        ),
+
     )
 
+
     for value, message in required_checks:
+
         if not value:
-            flash(message, "error")
+
+            flash(
+                message,
+                "error",
+            )
+
             return render_job_form(400)
+
+
+    # ============================================================
+    # JOB TYPE
+    # ============================================================
 
     if content_type not in KALXA_JOB_TYPES:
-        flash("Please select a valid opportunity type.", "error")
+
+        flash(
+            "Please select a valid opportunity type.",
+            "error",
+        )
+
         return render_job_form(400)
 
+
+    # ============================================================
+    # OPTIONAL CLOSING DATE
+    # ============================================================
+
     closing_date = None
+
+
     if closing_date_raw:
+
         try:
-            closing_date = datetime.strptime(closing_date_raw, "%Y-%m-%d").date()
+
+            closing_date = datetime.strptime(
+                closing_date_raw,
+                "%Y-%m-%d",
+            ).date()
+
+
         except ValueError:
-            flash("Please enter a valid closing date.", "error")
+
+            flash(
+                "Please enter a valid closing date.",
+                "error",
+            )
+
             return render_job_form(400)
 
+
         if closing_date < date.today():
-            flash("The closing date cannot be in the past.", "error")
+
+            flash(
+                "The closing date cannot be in the past.",
+                "error",
+            )
+
             return render_job_form(400)
+
+
+    # ============================================================
+    # APPLICATION URL
+    # ============================================================
 
     public_application_url = build_job_application_url(
         application_url=application_url,
@@ -6666,13 +6962,54 @@ def submit_job():
         job_title=title,
     )
 
-    if not public_application_url and not contact and not whatsapp_number:
+
+    # ============================================================
+    # APPLICATION METHOD
+    #
+    # The new short form requires the contact field, therefore
+    # contact is normally enough.
+    # ============================================================
+
+    if (
+        not public_application_url
+        and not contact
+        and not whatsapp_number
+    ):
+
         flash(
-            "Please provide at least one way for people to apply: "
-            "application link, email, phone or WhatsApp.",
+            "Please provide a phone or WhatsApp number for applications.",
             "error",
         )
+
         return render_job_form(400)
+
+
+    # ============================================================
+    # LOCATION CLASSIFICATION
+    #
+    # The short form does not ask users to classify locations.
+    # Kalxa derives a basic value automatically.
+    # ============================================================
+
+    venue_lower = venue.lower()
+
+
+    if "remote" in venue_lower:
+
+        location_classification = "Remote"
+
+    elif venue:
+
+        location_classification = "Local"
+
+    else:
+
+        location_classification = "Unspecified"
+
+
+    # ============================================================
+    # DUPLICATE CHECK
+    # ============================================================
 
     duplicate = find_duplicate_job_submission(
         zone_id=zone.id,
@@ -6682,111 +7019,266 @@ def submit_job():
         end_date=closing_date,
     )
 
+
     if duplicate:
+
         if duplicate["type"] == "pending":
+
             flash(
                 "A very similar job opportunity is already waiting for Kalxa review.",
                 "error",
             )
+
         else:
+
             flash(
                 "A very similar job opportunity is already published on Kalxa.",
                 "error",
             )
+
+
         return render_job_form(409)
 
-    uploaded_image = request.files.get("image")
+
+    # ============================================================
+    # OPTIONAL JOB IMAGE
+    # ============================================================
+
+    uploaded_image = request.files.get(
+        "image"
+    )
+
+
     if (
         uploaded_image
         and uploaded_image.filename
-        and not allowed_image_file(uploaded_image.filename)
+        and not allowed_image_file(
+            uploaded_image.filename
+        )
     ):
-        flash("Job poster must be JPG, JPEG, PNG or WebP.", "error")
+
+        flash(
+            "Job poster must be JPG, JPEG, PNG or WebP.",
+            "error",
+        )
+
         return render_job_form(400)
 
-    lifetime_type = "time_specific" if closing_date else "until_unavailable"
 
-    submission = PendingSubmission(
-        organizer_id=None,
-        zone_id=zone.id,
-        category="jobs",
-        content_type=content_type,
-        lifetime_type=lifetime_type,
-        availability_status="available",
-        notification_eligible=True,
-        title=title,
-        description=description,
-        business_name=business_name,
-        venue=venue,
-        location_classification= location_classification,
-        price=salary_text,
-        contact=contact,
-        whatsapp_number=whatsapp_number,
-        ticket_url=public_application_url,
-        start_date=None,
-        end_date=closing_date,
-        start_time=None,
-        end_time=None,
-        publish_from=None,
-        event_date=None,
-        event_end_date=None,
-        pricing_model=None,
-        commercial_duration_days=None,
-        amount_due=None,
-        payment_status="waived",
-        distribution_zone_ids=[],
-        submitter_name=submitter_name,
-        submitter_email=submitter_email,
-        submitter_phone=submitter_phone,
-        status="pending",
+    # ============================================================
+    # LIFETIME
+    # ============================================================
+
+    lifetime_type = (
+        "time_specific"
+        if closing_date
+        else "until_unavailable"
     )
 
+
+    # ============================================================
+    # CREATE PENDING SUBMISSION
+    # ============================================================
+
+    submission = PendingSubmission(
+
+        organizer_id=None,
+
+        zone_id=zone.id,
+
+        category="jobs",
+
+        content_type=content_type,
+
+        lifetime_type=lifetime_type,
+
+        availability_status="available",
+
+        notification_eligible=True,
+
+        title=title,
+
+        description=description,
+
+        business_name=business_name,
+
+        venue=venue,
+
+        location_classification=location_classification,
+
+        price=salary_text,
+
+        contact=contact,
+
+        whatsapp_number=whatsapp_number,
+
+        ticket_url=public_application_url,
+
+        start_date=None,
+
+        end_date=closing_date,
+
+        start_time=None,
+
+        end_time=None,
+
+        publish_from=None,
+
+        event_date=None,
+
+        event_end_date=None,
+
+        pricing_model=None,
+
+        commercial_duration_days=None,
+
+        amount_due=None,
+
+        payment_status="waived",
+
+        distribution_zone_ids=[],
+
+        submitter_name=submitter_name,
+
+        submitter_email=submitter_email,
+
+        submitter_phone=submitter_phone,
+
+        status="pending",
+
+    )
+
+
+    # ============================================================
+    # TRACKING CODE
+    # ============================================================
+
     if not submission.tracking_code:
-        submission.tracking_code = uuid.uuid4().hex[:12].upper()
+
+        submission.tracking_code = (
+            uuid.uuid4()
+            .hex[:12]
+            .upper()
+        )
+
+
+    # ============================================================
+    # SAVE
+    # ============================================================
 
     try:
-        db.session.add(submission)
+
+        db.session.add(
+            submission
+        )
+
+
         db.session.flush()
 
-        if uploaded_image and uploaded_image.filename:
-            image_url = upload_lac_image(uploaded_image, folder="lac/jobs")
+
+        # ========================================================
+        # OPTIONAL IMAGE UPLOAD
+        # ========================================================
+
+        if (
+            uploaded_image
+            and uploaded_image.filename
+        ):
+
+            image_url = upload_lac_image(
+                uploaded_image,
+                folder="lac/jobs",
+            )
+
+
             if image_url:
-                submission.image_url = image_url
-                db.session.add(
-                    PendingSubmissionImage(
-                        submission_id=submission.id,
-                        image_url=image_url,
-                        display_order=1,
-                    )
+
+                submission.image_url = (
+                    image_url
                 )
+
+
+                db.session.add(
+
+                    PendingSubmissionImage(
+
+                        submission_id=
+                            submission.id,
+
+                        image_url=
+                            image_url,
+
+                        display_order=
+                            1,
+
+                    )
+
+                )
+
 
         db.session.commit()
 
+
     except Exception as error:
+
         db.session.rollback()
+
+
         current_app.logger.exception(
             "[Kalxa Jobs] Unable to create free job submission error=%s",
             error,
         )
+
+
         flash(
             "Kalxa could not submit this opportunity right now. Please try again.",
             "error",
         )
+
+
         return render_job_form(500)
 
+
+    # ============================================================
+    # LOG
+    # ============================================================
+
     current_app.logger.info(
-        "[Kalxa Jobs] Free job submitted submission_id=%s zone_id=%s type=%s",
+
+        "[Kalxa Jobs] Free job submitted "
+        "submission_id=%s zone_id=%s type=%s",
+
         submission.id,
+
         submission.zone_id,
+
         submission.content_type,
+
     )
 
+
+    # ============================================================
+    # SUCCESS
+    # ============================================================
+
     return redirect(
+
         url_for(
+
             "job_submission_success",
-            code=submission.tracking_code,
+
+            code=
+                submission.tracking_code,
+
         )
+
     )
+
+
+    
+    
+
+    
 
 
 @app.route(
