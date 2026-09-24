@@ -6717,7 +6717,7 @@ def submit_job():
         title=title,
         description=description,
         business_name=business_name,
-        venue=location,
+        venue=venue,
         location_classification= location_classification,
         price=salary_text,
         contact=contact,
