@@ -113,6 +113,7 @@
 
         .lac-entry-body {
             min-height: 100vh;
+
             background:
                 radial-gradient(
                     circle at 50% -10%,
@@ -122,6 +123,7 @@
                 #08090b;
 
             color: #ffffff;
+
             font-family:
                 Inter,
                 -apple-system,
@@ -133,6 +135,7 @@
 
         .lac-entry-page {
             min-height: 100vh;
+
             display: flex;
             flex-direction: column;
         }
@@ -144,6 +147,7 @@
 
         .lac-entry-nav {
             width: 100%;
+
             padding: 22px 22px 0;
         }
 
@@ -151,6 +155,7 @@
         .lac-entry-nav-inner {
             width: 100%;
             max-width: 720px;
+
             margin: 0 auto;
 
             display: flex;
@@ -162,6 +167,7 @@
         .lac-nav-brand {
             display: flex;
             align-items: center;
+
             gap: 10px;
         }
 
@@ -169,6 +175,7 @@
         .lac-nav-logo {
             font-size: 1.45rem;
             font-weight: 900;
+
             letter-spacing: -1px;
         }
 
@@ -176,6 +183,7 @@
         .lac-nav-divider {
             width: 1px;
             height: 17px;
+
             background: rgba(255, 255, 255, 0.18);
         }
 
@@ -183,7 +191,9 @@
         .lac-nav-label {
             font-size: 0.65rem;
             font-weight: 700;
+
             letter-spacing: 1.4px;
+
             color: rgba(255, 255, 255, 0.45);
         }
 
@@ -191,17 +201,20 @@
         .lac-network-status {
             display: flex;
             align-items: center;
+
             gap: 7px;
 
             padding: 7px 10px;
 
             border: 1px solid rgba(255, 255, 255, 0.09);
+
             border-radius: 999px;
 
             background: rgba(255, 255, 255, 0.035);
 
             font-size: 0.66rem;
             font-weight: 700;
+
             letter-spacing: 0.5px;
 
             color: rgba(255, 255, 255, 0.62);
@@ -211,9 +224,13 @@
         .lac-status-dot {
             width: 6px;
             height: 6px;
+
             border-radius: 50%;
+
             background: #ffffff;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+
+            box-shadow:
+                0 0 8px rgba(255, 255, 255, 0.7);
         }
 
 
@@ -245,13 +262,15 @@
 
         .lac-entry-hero {
             text-align: center;
-            margin-bottom: 50px;
+
+            margin-bottom: 42px;
         }
 
 
         .lac-entry-badge {
             display: inline-flex;
             align-items: center;
+
             gap: 8px;
 
             margin-bottom: 20px;
@@ -259,6 +278,7 @@
             padding: 8px 13px;
 
             border: 1px solid rgba(255, 255, 255, 0.1);
+
             border-radius: 999px;
 
             background: rgba(255, 255, 255, 0.035);
@@ -267,6 +287,7 @@
 
             font-size: 0.68rem;
             font-weight: 700;
+
             letter-spacing: 1.3px;
         }
 
@@ -314,6 +335,288 @@
             line-height: 1.7;
 
             color: rgba(255, 255, 255, 0.57);
+        }
+
+
+        /* =========================================
+           KALXA TICKETS
+        ========================================== */
+
+        .lac-tickets-section {
+            margin-bottom: 18px;
+        }
+
+
+        .lac-tickets-card {
+            position: relative;
+
+            display: block;
+
+            overflow: hidden;
+
+            min-height: 190px;
+
+            padding: 27px;
+
+            border: 1px solid rgba(255, 255, 255, 0.16);
+
+            border-radius: 22px;
+
+            background:
+                radial-gradient(
+                    circle at 88% 12%,
+                    rgba(255, 255, 255, 0.17),
+                    transparent 29%
+                ),
+                linear-gradient(
+                    135deg,
+                    #1b1d22 0%,
+                    #101114 48%,
+                    #090a0c 100%
+                );
+
+            color: #ffffff;
+            text-decoration: none;
+
+            box-shadow:
+                0 25px 70px rgba(0, 0, 0, 0.32);
+
+            transition:
+                transform 0.22s ease,
+                border-color 0.22s ease,
+                box-shadow 0.22s ease;
+        }
+
+
+        .lac-tickets-card::before {
+            content: "";
+
+            position: absolute;
+
+            width: 180px;
+            height: 180px;
+
+            right: -75px;
+            bottom: -100px;
+
+            border: 1px solid rgba(255, 255, 255, 0.09);
+
+            border-radius: 50%;
+        }
+
+
+        .lac-tickets-card::after {
+            content: "";
+
+            position: absolute;
+
+            width: 115px;
+            height: 115px;
+
+            right: -35px;
+            bottom: -62px;
+
+            border: 1px solid rgba(255, 255, 255, 0.08);
+
+            border-radius: 50%;
+        }
+
+
+        .lac-tickets-card:hover {
+            transform: translateY(-3px);
+
+            border-color: rgba(255, 255, 255, 0.3);
+
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.42);
+        }
+
+
+        .lac-tickets-card:active {
+            transform: scale(0.99);
+        }
+
+
+        .lac-tickets-top {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-bottom: 28px;
+        }
+
+
+        .lac-tickets-label {
+            display: inline-flex;
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 0.64rem;
+            font-weight: 800;
+
+            letter-spacing: 1.6px;
+
+            color: rgba(255, 255, 255, 0.58);
+        }
+
+
+        .lac-tickets-label-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: #ffffff;
+
+            box-shadow:
+                0 0 9px rgba(255, 255, 255, 0.6);
+        }
+
+
+        .lac-tickets-live {
+            padding: 6px 9px;
+
+            border: 1px solid rgba(255, 255, 255, 0.1);
+
+            border-radius: 999px;
+
+            background: rgba(255, 255, 255, 0.055);
+
+            font-size: 0.58rem;
+            font-weight: 800;
+
+            letter-spacing: 1px;
+
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+
+        .lac-tickets-content {
+            position: relative;
+            z-index: 2;
+        }
+
+
+        .lac-tickets-content h2 {
+            margin: 0;
+
+            font-size: clamp(
+                1.75rem,
+                7vw,
+                2.4rem
+            );
+
+            line-height: 1;
+
+            letter-spacing: -1.5px;
+        }
+
+
+        .lac-tickets-content p {
+            max-width: 390px;
+
+            margin: 12px 0 0;
+
+            font-size: 0.85rem;
+            line-height: 1.55;
+
+            color: rgba(255, 255, 255, 0.52);
+        }
+
+
+        .lac-tickets-action {
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            margin-top: 24px;
+
+            padding-top: 18px;
+
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+
+        .lac-tickets-action-text {
+            font-size: 0.72rem;
+            font-weight: 800;
+
+            letter-spacing: 1px;
+        }
+
+
+        .lac-tickets-arrow {
+            width: 40px;
+            height: 40px;
+
+            flex: 0 0 40px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #ffffff;
+
+            color: #08090b;
+
+            font-size: 1.05rem;
+            font-weight: 900;
+
+            transition:
+                transform 0.2s ease;
+        }
+
+
+        .lac-tickets-card:hover
+        .lac-tickets-arrow {
+            transform: translateX(4px);
+        }
+
+
+        .lac-discovery-divider {
+            display: flex;
+            align-items: center;
+
+            gap: 13px;
+
+            margin: 26px 4px;
+        }
+
+
+        .lac-discovery-divider::before,
+        .lac-discovery-divider::after {
+            content: "";
+
+            height: 1px;
+
+            flex: 1;
+
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+
+        .lac-discovery-divider span {
+            flex: 0 0 auto;
+
+            font-size: 0.59rem;
+            font-weight: 800;
+
+            letter-spacing: 1.7px;
+
+            color: rgba(255, 255, 255, 0.31);
         }
 
 
@@ -411,6 +714,7 @@
 
         .lac-zone-list {
             display: grid;
+
             gap: 10px;
         }
 
@@ -459,7 +763,8 @@
 
             background: rgba(255, 255, 255, 0);
 
-            transition: background 0.18s ease;
+            transition:
+                background 0.18s ease;
         }
 
 
@@ -524,7 +829,9 @@
             display: block;
 
             overflow: hidden;
+
             text-overflow: ellipsis;
+
             white-space: nowrap;
 
             font-size: 1rem;
@@ -537,6 +844,7 @@
         .lac-zone-action {
             display: flex;
             align-items: center;
+
             gap: 6px;
 
             margin-top: 6px;
@@ -581,7 +889,8 @@
         }
 
 
-        .lac-zone-card:hover .lac-zone-arrow {
+        .lac-zone-card:hover
+        .lac-zone-arrow {
             transform: translateX(3px);
 
             background: rgba(255, 255, 255, 0.12);
@@ -607,12 +916,14 @@
 
         .lac-no-zones-icon {
             margin-bottom: 12px;
+
             font-size: 1.5rem;
         }
 
 
         .lac-no-zones strong {
             display: block;
+
             margin-bottom: 7px;
         }
 
@@ -633,13 +944,16 @@
 
         .lac-network-explanation {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+
+            grid-template-columns:
+                repeat(3, 1fr);
 
             margin-top: 32px;
 
             padding: 22px 0 0;
 
-            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            border-top:
+                1px solid rgba(255, 255, 255, 0.07);
         }
 
 
@@ -661,7 +975,6 @@
             right: -15%;
 
             width: 30%;
-
             height: 1px;
 
             background: rgba(255, 255, 255, 0.08);
@@ -785,7 +1098,7 @@
 
 
             .lac-entry-hero {
-                margin-bottom: 40px;
+                margin-bottom: 34px;
             }
 
 
@@ -796,6 +1109,35 @@
 
             .lac-entry-description {
                 font-size: 0.88rem;
+            }
+
+
+            .lac-tickets-card {
+                min-height: 180px;
+
+                padding: 22px;
+
+                border-radius: 19px;
+            }
+
+
+            .lac-tickets-top {
+                margin-bottom: 24px;
+            }
+
+
+            .lac-tickets-content h2 {
+                font-size: 1.75rem;
+            }
+
+
+            .lac-tickets-content p {
+                font-size: 0.8rem;
+            }
+
+
+            .lac-tickets-action {
+                margin-top: 20px;
             }
 
 
@@ -921,12 +1263,85 @@
 
 
                 <p class="lac-entry-description">
-
-                Join thousand people discovering what’s happening nearby
-                                        
+                    Join thousands of people discovering
+                    what’s happening nearby.
                 </p>
 
             </header>
+
+
+            <!-- =========================================
+                 KALXA TICKETS
+            ========================================== -->
+
+            <section class="lac-tickets-section">
+
+                <a
+                    class="lac-tickets-card"
+                    href="https://tickets.kalxa.co.za"
+                    aria-label="Open Kalxa Tickets"
+                >
+
+                    <div class="lac-tickets-top">
+
+                        <span class="lac-tickets-label">
+
+                            <span class="lac-tickets-label-dot"></span>
+
+                            KALXA EXPERIENCES
+
+                        </span>
+
+
+                        <span class="lac-tickets-live">
+                            TICKETS
+                        </span>
+
+                    </div>
+
+
+                    <div class="lac-tickets-content">
+
+                        <h2>
+                            KALXA TICKETS
+                        </h2>
+
+                        <p>
+                            Discover and book local experiences
+                            happening around you.
+                        </p>
+
+                    </div>
+
+
+                    <div class="lac-tickets-action">
+
+                        <span class="lac-tickets-action-text">
+                            EXPLORE EXPERIENCES
+                        </span>
+
+                        <span class="lac-tickets-arrow">
+                            →
+                        </span>
+
+                    </div>
+
+                </a>
+
+            </section>
+
+
+            <!-- =========================================
+                 DISCOVERY DIVIDER
+            ========================================== -->
+
+            <div class="lac-discovery-divider">
+
+                <span>
+                    OR EXPLORE YOUR AREA
+                </span>
+
+            </div>
 
 
             <!-- =========================================
@@ -941,7 +1356,7 @@
                     <div>
 
                         <p class="lac-zone-eyebrow">
-                            .
+                            DISCOVERY NETWORK
                         </p>
 
                         <h2>
@@ -958,7 +1373,7 @@
                 </div>
 
 
-                <p class="lac-zone-help">               
+                <p class="lac-zone-help">
                     More areas are coming soon.
                     If your area isn’t listed yet, STAY TUNED
                 </p>
@@ -1198,7 +1613,6 @@
                 type="button"
                 id="lac-install-button"
                 class="lac-install-button"
-                
             >
                 Add KALXA to Home Screen
             </button>
@@ -1207,7 +1621,6 @@
             <p
                 id="lac-installed-message"
                 class="lac-installed-message"
-                
             >
                 ✓ KALXA is installed on this device.
             </p>
