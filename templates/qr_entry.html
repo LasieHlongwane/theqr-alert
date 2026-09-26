@@ -567,41 +567,51 @@
 
         /* =========================================
            TICKETS ARROW
-           WHITE / SILVER GRADIENT
+           FORCED WHITE / SILVER BACKGROUND
         ========================================== */
 
         .lac-tickets-card .lac-tickets-arrow {
             width: 42px !important;
             height: 42px !important;
 
+            min-width: 42px !important;
+            min-height: 42px !important;
+
             flex: 0 0 42px !important;
 
-            display: flex !important;
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
 
-            border-radius: 50% !important;
+            padding: 0 !important;
+            margin: 0 !important;
 
-            background-color: #ffffff !important;
+            border-radius: 999px !important;
+
+            background: #ffffff !important;
 
             background-image:
                 linear-gradient(
-                    145deg,
+                    135deg,
                     #ffffff 0%,
-                    #ffffff 28%,
-                    #f4f4f4 60%,
-                    #d9d9d9 100%
+                    #ffffff 30%,
+                    #f7f7f7 58%,
+                    #e2e2e2 100%
                 ) !important;
 
-            border: 1px solid #cfcfcf !important;
+            background-color: #ffffff !important;
+
+            border: 1px solid #d4d4d4 !important;
 
             color: #08090b !important;
 
             box-shadow:
-                0 7px 18px rgba(0, 0, 0, 0.18),
-                inset 0 1px 2px rgba(255, 255, 255, 1) !important;
+                0 7px 18px rgba(0, 0, 0, 0.16),
+                inset 0 1px 1px #ffffff !important;
 
             overflow: hidden !important;
+
+            opacity: 1 !important;
 
             transition:
                 transform 0.2s ease,
@@ -611,14 +621,28 @@
 
         .lac-tickets-card
         .lac-tickets-arrow svg {
-            width: 18px !important;
-            height: 18px !important;
+            width: 19px !important;
+            height: 19px !important;
 
             display: block !important;
 
             fill: none !important;
 
             stroke: #08090b !important;
+
+            color: #08090b !important;
+
+            opacity: 1 !important;
+        }
+
+
+        .lac-tickets-card
+        .lac-tickets-arrow svg path {
+            fill: none !important;
+
+            stroke: #08090b !important;
+
+            color: #08090b !important;
         }
 
 
@@ -626,19 +650,22 @@
         .lac-tickets-arrow {
             transform: translateX(4px);
 
-            background-color: #ffffff !important;
+            background: #ffffff !important;
 
             background-image:
                 linear-gradient(
-                    145deg,
+                    135deg,
                     #ffffff 0%,
-                    #fafafa 45%,
+                    #ffffff 30%,
+                    #f5f5f5 62%,
                     #dddddd 100%
                 ) !important;
 
+            background-color: #ffffff !important;
+
             box-shadow:
-                0 10px 24px rgba(0, 0, 0, 0.22),
-                inset 0 1px 2px rgba(255, 255, 255, 1) !important;
+                0 10px 24px rgba(0, 0, 0, 0.20),
+                inset 0 1px 1px #ffffff !important;
         }
 
 
@@ -1540,20 +1567,46 @@
                         </span>
 
 
-                        <!-- WHITE GRADIENT ARROW -->
+                        <!-- =========================================
+                             WHITE / SILVER TICKETS ARROW
+                        ========================================== -->
 
-                        <span class="lac-tickets-arrow">
+                        <span
+                            class="lac-tickets-arrow"
+                            style="
+                                background-color: #ffffff !important;
+                                background-image: linear-gradient(
+                                    135deg,
+                                    #ffffff 0%,
+                                    #ffffff 30%,
+                                    #f5f5f5 60%,
+                                    #dedede 100%
+                                ) !important;
+                                border: 1px solid #d0d0d0 !important;
+                            "
+                        >
 
                             <svg
                                 viewBox="0 0 24 24"
                                 aria-hidden="true"
+                                style="
+                                    width: 19px !important;
+                                    height: 19px !important;
+                                    display: block !important;
+                                    fill: none !important;
+                                    stroke: #08090b !important;
+                                "
                             >
+
                                 <path
                                     d="M5 12H19M13 6L19 12L13 18"
+                                    fill="none"
+                                    stroke="#08090b"
                                     stroke-width="2"
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                 ></path>
+
                             </svg>
 
                         </span>
