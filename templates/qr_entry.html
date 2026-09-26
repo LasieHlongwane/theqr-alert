@@ -1039,6 +1039,150 @@
 
 
         /* =========================================
+           ABOUT US
+        ========================================== */
+
+        .lac-about-section {
+            margin-top: 18px;
+        }
+
+
+        .lac-about-link {
+            width: 100%;
+
+            min-height: 68px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 15px 18px;
+
+            border: 1px solid rgba(255, 255, 255, 0.09);
+
+            border-radius: 16px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255, 255, 255, 0.045),
+                    rgba(255, 255, 255, 0.015)
+                );
+
+            color: #ffffff;
+            text-decoration: none;
+
+            transition:
+                transform 0.18s ease,
+                background 0.18s ease,
+                border-color 0.18s ease;
+        }
+
+
+        .lac-about-link:hover {
+            transform: translateY(-2px);
+
+            background: rgba(255, 255, 255, 0.07);
+
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+
+        .lac-about-link:active {
+            transform: scale(0.99);
+        }
+
+
+        .lac-about-left {
+            display: flex;
+            align-items: center;
+
+            gap: 13px;
+
+            min-width: 0;
+        }
+
+
+        .lac-about-icon {
+            width: 38px;
+            height: 38px;
+
+            flex: 0 0 38px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 11px;
+
+            background: rgba(255, 255, 255, 0.07);
+
+            border: 1px solid rgba(255, 255, 255, 0.07);
+
+            font-size: 0.85rem;
+            font-weight: 900;
+        }
+
+
+        .lac-about-information {
+            min-width: 0;
+        }
+
+
+        .lac-about-title {
+            display: block;
+
+            font-size: 0.82rem;
+            font-weight: 850;
+
+            letter-spacing: 1.2px;
+        }
+
+
+        .lac-about-description {
+            display: block;
+
+            margin-top: 4px;
+
+            font-size: 0.7rem;
+
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+
+        .lac-about-arrow {
+            width: 36px;
+            height: 36px;
+
+            flex: 0 0 36px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: rgba(255, 255, 255, 0.07);
+
+            color: #ffffff;
+
+            transition:
+                transform 0.18s ease,
+                background 0.18s ease;
+        }
+
+
+        .lac-about-link:hover
+        .lac-about-arrow {
+            transform: translateX(3px);
+
+            background: rgba(255, 255, 255, 0.13);
+        }
+
+
+        /* =========================================
            FOOTER
         ========================================== */
 
@@ -1142,6 +1286,7 @@
 
             .lac-tickets-content h2 {
                 font-size: 1.65rem;
+
                 line-height: 1.08;
             }
 
@@ -1190,6 +1335,20 @@
                 height: 33px;
 
                 flex-basis: 33px;
+            }
+
+
+            .lac-about-link {
+                min-height: 64px;
+
+                padding:
+                    13px
+                    14px;
+            }
+
+
+            .lac-about-description {
+                font-size: 0.66rem;
             }
 
         }
@@ -1544,6 +1703,49 @@
 
                 </div>
 
+
+            </section>
+
+
+            <!-- =========================================
+                 ABOUT US
+            ========================================== -->
+
+            <section class="lac-about-section">
+
+                <a
+                    class="lac-about-link"
+                    href="https://lac-acess-delivered.onrender.com/"
+                    aria-label="Learn more about Kalxa"
+                >
+
+                    <div class="lac-about-left">
+
+                        <span class="lac-about-icon">
+                            i
+                        </span>
+
+
+                        <span class="lac-about-information">
+
+                            <span class="lac-about-title">
+                                ABOUT US
+                            </span>
+
+                            <span class="lac-about-description">
+                                Learn more about Kalxa and LaC
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+                    <span class="lac-about-arrow">
+                        →
+                    </span>
+
+                </a>
 
             </section>
 
