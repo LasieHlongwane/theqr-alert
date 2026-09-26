@@ -567,46 +567,58 @@
 
         /* =========================================
            TICKETS ARROW
-           WHITE GRADIENT BACKGROUND
+           WHITE / SILVER GRADIENT
         ========================================== */
 
         .lac-tickets-card .lac-tickets-arrow {
-            width: 40px;
-            height: 40px;
+            width: 42px !important;
+            height: 42px !important;
 
-            flex: 0 0 40px;
+            flex: 0 0 42px !important;
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
 
-            border-radius: 50%;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #ffffff 0%,
-                    #ffffff 25%,
-                    #f5f5f5 55%,
-                    #e5e5e5 100%
-                ) !important;
+            border-radius: 50% !important;
 
             background-color: #ffffff !important;
 
-            border: 1px solid rgba(0, 0, 0, 0.10);
+            background-image:
+                linear-gradient(
+                    145deg,
+                    #ffffff 0%,
+                    #ffffff 28%,
+                    #f4f4f4 60%,
+                    #d9d9d9 100%
+                ) !important;
+
+            border: 1px solid #cfcfcf !important;
 
             color: #08090b !important;
 
-            font-size: 1.05rem;
-            font-weight: 900;
-
             box-shadow:
-                0 8px 20px rgba(0, 0, 0, 0.14),
-                inset 0 1px 0 rgba(255, 255, 255, 1);
+                0 7px 18px rgba(0, 0, 0, 0.18),
+                inset 0 1px 2px rgba(255, 255, 255, 1) !important;
+
+            overflow: hidden !important;
 
             transition:
                 transform 0.2s ease,
-                box-shadow 0.2s ease;
+                box-shadow 0.2s ease !important;
+        }
+
+
+        .lac-tickets-card
+        .lac-tickets-arrow svg {
+            width: 18px !important;
+            height: 18px !important;
+
+            display: block !important;
+
+            fill: none !important;
+
+            stroke: #08090b !important;
         }
 
 
@@ -614,21 +626,19 @@
         .lac-tickets-arrow {
             transform: translateX(4px);
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #ffffff 0%,
-                    #fafafa 40%,
-                    #e8e8e8 100%
-                ) !important;
-
             background-color: #ffffff !important;
 
-            color: #08090b !important;
+            background-image:
+                linear-gradient(
+                    145deg,
+                    #ffffff 0%,
+                    #fafafa 45%,
+                    #dddddd 100%
+                ) !important;
 
             box-shadow:
-                0 10px 24px rgba(0, 0, 0, 0.18),
-                inset 0 1px 0 rgba(255, 255, 255, 1);
+                0 10px 24px rgba(0, 0, 0, 0.22),
+                inset 0 1px 2px rgba(255, 255, 255, 1) !important;
         }
 
 
@@ -1529,20 +1539,23 @@
                             EXPLORE EXPERIENCES
                         </span>
 
-                        <span
-                            class="lac-tickets-arrow"
-                            style="
-                                background: linear-gradient(
-                                    135deg,
-                                    #ffffff 0%,
-                                    #f8f8f8 45%,
-                                    #e4e4e4 100%
-                                ) !important;
-                                background-color: #ffffff !important;
-                                color: #08090b !important;
-                            "
-                        >
-                            →
+
+                        <!-- WHITE GRADIENT ARROW -->
+
+                        <span class="lac-tickets-arrow">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M5 12H19M13 6L19 12L13 18"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                ></path>
+                            </svg>
+
                         </span>
 
                     </div>
