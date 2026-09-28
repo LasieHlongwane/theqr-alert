@@ -2727,13 +2727,13 @@
 
         </section>
 
-        
+
         <section class="kalxa-ticketing-top">
 
             <a
                 href="https://www.kalxa.co.za"
                 class="kalxa-ticketing-top-link"
-                aria-label="Explore Kalxa Ticketing"
+                aria-label="Switch Kalxa locations"
             >
 
                 <span class="kalxa-ticketing-top-copy">
@@ -2747,7 +2747,7 @@
                     </span>
 
                     <span class="kalxa-ticketing-top-description">
-                        EXPLORE THE VIBE HAPPENING IN YOU AREA
+                        EXPLORE THE VIBE HAPPENING IN YOUR AREA
                     </span>
 
                 </span>
@@ -2763,6 +2763,8 @@
             </a>
 
         </section>
+
+
         <!-- =========================================
              LOCATION
         ========================================== -->
@@ -2971,10 +2973,11 @@
         <!-- =========================================================
              NEW
 
-             EVERY CATEGORY IS ALLOWED EXCEPT:
-             - jobs
-             - opportunities
-             - retail_specials
+             BACKEND RULE:
+             - CONTENT MUST BE ACTIVE
+             - CONTENT MUST BE NEW
+             - JOB CONTENT IS EXCLUDED
+             - OTHER CATEGORIES, INCLUDING SPECIALS, ARE ALLOWED
         ========================================================== -->
 
         {% if new_items %}
@@ -3009,143 +3012,135 @@
 
                 {% for item in new_items %}
 
-                    {% if item.category not in [
-                        "jobs",
-                        "opportunities",
-                        "retail_specials"
-                    ] %}
+
+                    {% set item_category =
+                        category_lookup.get(
+                            item.category
+                        )
+                    %}
 
 
-                        {% set item_category =
-                            category_lookup.get(
-                                item.category
-                            )
-                        %}
+                    {% set item_consumer =
+                        consumer_category_lookup.get(
+                            item.category,
+                            {}
+                        )
+                    %}
 
 
-                        {% set item_consumer =
-                            consumer_category_lookup.get(
-                                item.category,
-                                {}
-                            )
-                        %}
+                    <a
+                        href="{{ url_for(
+                            'listing_detail',
+                            item_id=item.id
+                        ) }}"
+                        class="lac-new-card"
+                    >
 
-
-                        <a
-                            href="{{ url_for(
-                                'listing_detail',
-                                item_id=item.id
-                            ) }}"
-                            class="lac-new-card"
+                        <div
+                            class="
+                                lac-new-card-image
+                                lac-image-loading
+                            "
                         >
 
-                            <div
-                                class="
-                                    lac-new-card-image
-                                    lac-image-loading
-                                "
-                            >
+                            {% if item.image_url %}
 
-                                {% if item.image_url %}
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="{{ item.title }}"
+                                    loading="lazy"
+                                >
 
-                                    <img
-                                        src="{{ item.image_url }}"
-                                        alt="{{ item.title }}"
-                                        loading="lazy"
-                                    >
+                            {% else %}
 
-                                {% else %}
-
-                                    <div
-                                        class="
-                                            lac-new-card-image-fallback
-                                        "
-                                    >
-
-                                        {{
-                                            item_consumer.get(
-                                                "icon",
-                                                item_category.icon
-                                                if item_category
-                                                else "📍"
-                                            )
-                                        }}
-
-                                    </div>
-
-                                {% endif %}
-
-
-                                <div class="lac-new-card-badge">
-                                    NEW
-                                </div>
-
-                            </div>
-
-
-                            <div class="lac-new-card-content">
-
-                                <div class="lac-new-card-category">
+                                <div
+                                    class="
+                                        lac-new-card-image-fallback
+                                    "
+                                >
 
                                     {{
                                         item_consumer.get(
-                                            "title",
-                                            item_category.name
+                                            "icon",
+                                            item_category.icon
                                             if item_category
-                                            else (
-                                                item.category
-                                                | replace("-", " ")
-                                                | replace("_", " ")
-                                                | title
-                                            )
+                                            else "📍"
                                         )
                                     }}
 
                                 </div>
 
-
-                                <div class="lac-new-card-title">
-                                    {{ item.title }}
-                                </div>
+                            {% endif %}
 
 
-                                {% if
-                                    item.campaign_state
-                                    and item.campaign_state.label
-                                %}
+                            <div class="lac-new-card-badge">
+                                NEW
+                            </div>
 
-                                    <span
-                                        class="
-                                            lac-campaign-state
-                                            {{ item.campaign_state.css_class }}
-                                        "
-                                    >
-                                        {{ item.campaign_state.label }}
-                                    </span>
-
-                                {% endif %}
+                        </div>
 
 
-                                {% if item.business_name %}
+                        <div class="lac-new-card-content">
 
-                                    <div class="lac-new-card-business">
-                                        {{ item.business_name }}
-                                    </div>
+                            <div class="lac-new-card-category">
 
-                                {% elif item.venue %}
-
-                                    <div class="lac-new-card-business">
-                                        📍 {{ item.venue }}
-                                    </div>
-
-                                {% endif %}
+                                {{
+                                    item_consumer.get(
+                                        "title",
+                                        item_category.name
+                                        if item_category
+                                        else (
+                                            item.category
+                                            | replace("-", " ")
+                                            | replace("_", " ")
+                                            | title
+                                        )
+                                    )
+                                }}
 
                             </div>
 
-                        </a>
+
+                            <div class="lac-new-card-title">
+                                {{ item.title }}
+                            </div>
 
 
-                    {% endif %}
+                            {% if
+                                item.campaign_state
+                                and item.campaign_state.label
+                            %}
+
+                                <span
+                                    class="
+                                        lac-campaign-state
+                                        {{ item.campaign_state.css_class }}
+                                    "
+                                >
+                                    {{ item.campaign_state.label }}
+                                </span>
+
+                            {% endif %}
+
+
+                            {% if item.business_name %}
+
+                                <div class="lac-new-card-business">
+                                    {{ item.business_name }}
+                                </div>
+
+                            {% elif item.venue %}
+
+                                <div class="lac-new-card-business">
+                                    📍 {{ item.venue }}
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </a>
+
 
                 {% endfor %}
 
@@ -3158,6 +3153,15 @@
 
         <!-- =========================================
              CATEGORY SECTION
+
+             ONLY CATEGORIES WITH ACTIVE CONTENT
+             ARE DISPLAYED.
+
+             count > 0:
+                 DISPLAY CATEGORY
+
+             count == 0:
+                 HIDE CATEGORY
         ========================================== -->
 
         <section class="category-section">
@@ -3190,22 +3194,6 @@
                     %}
 
 
-                    {% if category %}
-
-                        {% set category_images =
-                            category_background_images.get(
-                                category.id,
-                                []
-                            ) or []
-                        %}
-
-                    {% else %}
-
-                        {% set category_images = [] %}
-
-                    {% endif %}
-
-
                     {% set stats =
                         category_stats.get(
                             canonical_key,
@@ -3214,112 +3202,129 @@
                     %}
 
 
-                    <a
-                        class="
-                            lac-category-row
-                            {% if not category_images %}
-                                no-category-image
-                            {% endif %}
-                        "
-                        href="{{
-                            consumer.get(
-                                'url',
-                                '#'
-                            )
-                        }}"
-                        data-category-images='{{
-                            category_images
-                            | tojson
-                            | forceescape
-                        }}'
-                    >
-
-                        {% if category_images %}
-
-                            <div
-                                class="
-                                    lac-category-background
-                                    lac-category-background-a
-                                    is-visible
-                                "
-                                style="
-                                    background-image:
-                                        url('{{ category_images[0] | e }}');
-                                "
-                            ></div>
+                    {% if stats.get("count", 0) > 0 %}
 
 
-                            <div
-                                class="
-                                    lac-category-background
-                                    lac-category-background-b
-                                "
-                            ></div>
+                        {% if category %}
 
-
-                            <div
-                                class="lac-category-light-overlay"
-                            ></div>
+                            {% set category_images =
+                                category_background_images.get(
+                                    category.id,
+                                    []
+                                ) or []
+                            %}
 
                         {% else %}
 
-                            <div
-                                class="lac-category-fallback-large"
-                                aria-hidden="true"
-                            >
-
-                                {{
-                                    consumer.get(
-                                        "icon",
-                                        (
-                                            category.icon
-                                            if (
-                                                category
-                                                and category.icon
-                                            )
-                                            else "📌"
-                                        )
-                                    )
-                                }}
-
-                            </div>
+                            {% set category_images = [] %}
 
                         {% endif %}
 
 
-                        <div class="lac-category-info">
+                        <a
+                            class="
+                                lac-category-row
+                                {% if not category_images %}
+                                    no-category-image
+                                {% endif %}
+                            "
+                            href="{{
+                                consumer.get(
+                                    'url',
+                                    '#'
+                                )
+                            }}"
+                            data-category-images='{{
+                                category_images
+                                | tojson
+                                | forceescape
+                            }}'
+                        >
 
-                            <div class="lac-category-subtitle">
+                            {% if category_images %}
 
-                                {{
-                                    consumer.get(
-                                        "subtitle",
-                                        ""
-                                    )
-                                }}
+                                <div
+                                    class="
+                                        lac-category-background
+                                        lac-category-background-a
+                                        is-visible
+                                    "
+                                    style="
+                                        background-image:
+                                            url('{{ category_images[0] | e }}');
+                                    "
+                                ></div>
 
-                            </div>
+
+                                <div
+                                    class="
+                                        lac-category-background
+                                        lac-category-background-b
+                                    "
+                                ></div>
 
 
-                            <div class="lac-category-title">
+                                <div
+                                    class="lac-category-light-overlay"
+                                ></div>
 
-                                {{
-                                    consumer.get(
-                                        "title",
-                                        (
-                                            category.name
-                                            if category
-                                            else canonical_key
+                            {% else %}
+
+                                <div
+                                    class="lac-category-fallback-large"
+                                    aria-hidden="true"
+                                >
+
+                                    {{
+                                        consumer.get(
+                                            "icon",
+                                            (
+                                                category.icon
+                                                if (
+                                                    category
+                                                    and category.icon
+                                                )
+                                                else "📌"
+                                            )
                                         )
-                                    )
-                                }}
+                                    }}
 
-                            </div>
+                                </div>
+
+                            {% endif %}
 
 
-                            <div class="lac-category-status">
+                            <div class="lac-category-info">
 
-                                {% if stats.get("count", 0) > 0 %}
+                                <div class="lac-category-subtitle">
+
+                                    {{
+                                        consumer.get(
+                                            "subtitle",
+                                            ""
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                <div class="lac-category-title">
+
+                                    {{
+                                        consumer.get(
+                                            "title",
+                                            (
+                                                category.name
+                                                if category
+                                                else canonical_key
+                                            )
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                <div class="lac-category-status">
 
                                     <span class="lac-status-badge">
 
@@ -3352,56 +3357,43 @@
 
                                     </span>
 
-                                {% else %}
 
-                                    <span class="lac-status-badge">
+                                    {% if stats.get("new_count", 0) > 0 %}
 
-                                        <span>
-                                            📍
+                                        <span
+                                            class="
+                                                lac-status-badge
+                                                lac-status-badge-new
+                                            "
+                                        >
+                                            ✨
+                                            {{
+                                                stats.get(
+                                                    "new_count",
+                                                    0
+                                                )
+                                            }}
+                                            NEW
                                         </span>
 
-                                        <span>
-                                            EXPLORE
-                                        </span>
+                                    {% endif %}
 
-                                    </span>
-
-                                {% endif %}
-
-
-                                {% if stats.get("new_count", 0) > 0 %}
-
-                                    <span
-                                        class="
-                                            lac-status-badge
-                                            lac-status-badge-new
-                                        "
-                                    >
-                                        ✨
-                                        {{
-                                            stats.get(
-                                                "new_count",
-                                                0
-                                            )
-                                        }}
-                                        NEW
-                                    </span>
-
-                                {% endif %}
+                                </div>
 
                             </div>
 
-                        </div>
+
+                            <div
+                                class="lac-category-chevron"
+                                aria-hidden="true"
+                            >
+                                ›
+                            </div>
+
+                        </a>
 
 
-                        <div
-                            class="lac-category-chevron"
-                            aria-hidden="true"
-                        >
-                            ›
-                        </div>
-
-                    </a>
+                    {% endif %}
 
                 {% endfor %}
 
@@ -3829,65 +3821,6 @@
 
 
 </div>
-
-
-<!-- =========================================================
-     HIDE EMPTY NEW SECTION
-
-     This only hides the section if every new item was:
-     - jobs
-     - opportunities
-     - retail_specials
-
-     All other categories remain eligible.
-========================================================= -->
-
-<script>
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        const newSection =
-            document.getElementById(
-                "lac-new-nearby"
-            );
-
-
-        const newRail =
-            document.getElementById(
-                "lac-new-rail"
-            );
-
-
-        if (
-            !newSection
-            ||
-            !newRail
-        ) {
-
-            return;
-        }
-
-
-        const visibleNewCards =
-            newRail.querySelectorAll(
-                ".lac-new-card"
-            );
-
-
-        if (
-            visibleNewCards.length === 0
-        ) {
-
-            newSection.remove();
-
-        }
-
-    }
-);
-
-</script>
 
 
 <!-- =========================================
