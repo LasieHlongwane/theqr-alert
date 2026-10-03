@@ -9181,6 +9181,10 @@ def get_active_content(zone_id, category_slug):
 @app.route("/q/<access_code>")
 def qr_access(access_code):
 
+    # ============================================================
+    # ACCESS POINT
+    # ============================================================
+
     access_point = (
         AccessPoint.query
         .filter_by(
@@ -9191,9 +9195,7 @@ def qr_access(access_code):
     )
 
 
-    zone = (
-        access_point.zone
-    )
+    zone = access_point.zone
 
 
     # ============================================================
@@ -9204,17 +9206,12 @@ def qr_access(access_code):
 
         db.session.add(
             QRScan(
-                access_point_id=
-                    access_point.id,
-
-                event_type=
-                    "scan",
-
-                user_agent=
-                    request.headers.get(
-                        "User-Agent",
-                        "",
-                    ),
+                access_point_id=access_point.id,
+                event_type="scan",
+                user_agent=request.headers.get(
+                    "User-Agent",
+                    "",
+                ),
             )
         )
 
@@ -9261,20 +9258,14 @@ def qr_access(access_code):
 
         if not category_record:
 
-            abort(
-                404
-            )
+            abort(404)
 
 
         return redirect(
             url_for(
                 "qr_category",
-
-                code=
-                    access_point.code,
-
-                category=
-                    category_slug,
+                code=access_point.code,
+                category=category_slug,
             )
         )
 
@@ -9283,14 +9274,10 @@ def qr_access(access_code):
     # LOAD ACTIVE CATEGORIES
     # ============================================================
 
-    categories = (
-        get_active_categories()
-    )
+    categories = get_active_categories()
 
 
-    today = (
-        date.today()
-    )
+    today = date.today()
 
 
     # ============================================================
@@ -9399,17 +9386,23 @@ def qr_access(access_code):
 
     consumer_categories = []
 
-    seen_consumer_category_keys = (
-        set()
-    )
+    seen_consumer_category_keys = set()
 
 
     for category in categories:
+
+        # --------------------------------------------------------
+        # Original slug
+        # --------------------------------------------------------
 
         category_lookup[
             category.slug
         ] = category
 
+
+        # --------------------------------------------------------
+        # Canonical category key
+        # --------------------------------------------------------
 
         canonical_key = (
             normalize_category(
@@ -9427,6 +9420,10 @@ def qr_access(access_code):
                 canonical_key
             ] = category
 
+
+        # --------------------------------------------------------
+        # Consumer-facing presentation
+        # --------------------------------------------------------
 
         presentation = (
             get_consumer_category(
@@ -9469,6 +9466,10 @@ def qr_access(access_code):
         )
 
 
+        # --------------------------------------------------------
+        # Prevent duplicate consumer categories
+        # --------------------------------------------------------
+
         if (
             canonical_key
             in seen_consumer_category_keys
@@ -9508,12 +9509,8 @@ def qr_access(access_code):
                 "url":
                     url_for(
                         "qr_category",
-
-                        code=
-                            access_point.code,
-
-                        category=
-                            canonical_key,
+                        code=access_point.code,
+                        category=canonical_key,
                     ),
             }
         )
@@ -9522,20 +9519,16 @@ def qr_access(access_code):
     # ============================================================
     # CATEGORY STATISTICS
     #
-    # IMPORTANT:
-    #
-    # get_active_content() is the source of truth.
+    # get_active_content() remains the source of truth.
     #
     # Therefore:
     #
-    # expired content
-    # inactive content
-    # future/invalid content according to your rules
+    # - expired content is excluded
+    # - inactive content is excluded
+    # - invalid/future content is excluded according to the
+    #   rules inside get_active_content()
     #
-    # must be excluded by get_active_content().
-    #
-    # A category with count == 0 will NOT be rendered
-    # by access.html.
+    # access.html only renders categories whose count > 0.
     # ============================================================
 
     category_stats = {}
@@ -9570,11 +9563,8 @@ def qr_access(access_code):
 
             active_items = (
                 get_active_content(
-                    zone_id=
-                        zone.id,
-
-                    category_slug=
-                        canonical_key,
+                    zone_id=zone.id,
+                    category_slug=canonical_key,
                 )
             )
 
@@ -9604,9 +9594,7 @@ def qr_access(access_code):
 
         unique_active_items = []
 
-        seen_active_item_ids = (
-            set()
-        )
+        seen_active_item_ids = set()
 
 
         for item in active_items:
@@ -9633,38 +9621,34 @@ def qr_access(access_code):
         # COUNTS
         # ========================================================
 
-        item_count = (
-            len(
-                unique_active_items
-            )
+        item_count = len(
+            unique_active_items
         )
 
 
-        new_count = (
-            sum(
-                1
+        new_count = sum(
+            1
 
-                for item
-                in unique_active_items
+            for item
+            in unique_active_items
 
-                if (
-                    getattr(
-                        item,
-                        "created_at",
-                        None,
-                    )
-
-                    and
-
-                    item.created_at
-                    >= new_cutoff
+            if (
+                getattr(
+                    item,
+                    "created_at",
+                    None,
                 )
+
+                and
+
+                item.created_at
+                >= new_cutoff
             )
         )
 
 
         # ========================================================
-        # BADGES
+        # CATEGORY BADGES
         # ========================================================
 
         badge_map = {
@@ -9750,24 +9734,19 @@ def qr_access(access_code):
 
 
     # ============================================================
-    # NEW
+    # NEW CONTENT
     #
     # RULE:
     #
-    # All active categories can enter NEW except job content.
+    # All active content can enter the NEW rail except jobs.
     #
-    # IMPORTANT:
-    # Jobs are removed BEFORE sorting and BEFORE [:8].
-    #
-    # This prevents jobs from occupying one of the eight slots
-    # and hiding a restaurant, event, special, rental, etc.
+    # Jobs are excluded BEFORE sorting and BEFORE the eight-item
+    # limit. This prevents jobs from consuming homepage slots.
     # ============================================================
 
     new_items_pool = []
 
-    seen_new_item_ids = (
-        set()
-    )
+    seen_new_item_ids = set()
 
 
     excluded_new_categories = {
@@ -9804,11 +9783,8 @@ def qr_access(access_code):
 
             category_items = (
                 get_active_content(
-                    zone_id=
-                        zone.id,
-
-                    category_slug=
-                        canonical_key,
+                    zone_id=zone.id,
+                    category_slug=canonical_key,
                 )
             )
 
@@ -9834,6 +9810,10 @@ def qr_access(access_code):
 
         for item in category_items:
 
+            # ----------------------------------------------------
+            # Prevent duplicates
+            # ----------------------------------------------------
+
             if (
                 item.id
                 in seen_new_item_ids
@@ -9845,8 +9825,9 @@ def qr_access(access_code):
             # ====================================================
             # EXTRA JOB SAFETY CHECK
             #
-            # Protects NEW if an alias/category normalization
-            # causes job content to enter another collection.
+            # This protects the NEW rail if category aliases or
+            # normalization cause job content to enter another
+            # collection.
             # ====================================================
 
             item_category_key = (
@@ -9889,13 +9870,12 @@ def qr_access(access_code):
         key=lambda item:
             item.created_at
             or datetime.min,
-
         reverse=True,
     )
 
 
     # ============================================================
-    # ONLY ITEMS POSTED WITHIN LAST 7 DAYS ARE "NEW"
+    # ONLY ITEMS POSTED WITHIN THE LAST 7 DAYS ARE "NEW"
     # ============================================================
 
     new_items_pool = [
@@ -9938,24 +9918,24 @@ def qr_access(access_code):
 
     featured_items_pool = []
 
-    seen_featured_item_ids = (
-        set()
-    )
+    seen_featured_item_ids = set()
 
 
     for consumer_category in consumer_categories:
+
+        canonical_key = (
+            consumer_category[
+                "key"
+            ]
+        )
+
 
         try:
 
             category_items = (
                 get_active_content(
-                    zone_id=
-                        zone.id,
-
-                    category_slug=
-                        consumer_category[
-                            "key"
-                        ],
+                    zone_id=zone.id,
+                    category_slug=canonical_key,
                 )
             )
 
@@ -9971,9 +9951,7 @@ def qr_access(access_code):
                     "error=%s"
                 ),
                 zone.id,
-                consumer_category[
-                    "key"
-                ],
+                canonical_key,
                 exc,
             )
 
@@ -9983,9 +9961,24 @@ def qr_access(access_code):
 
         for item in category_items:
 
+            # ----------------------------------------------------
+            # Only featured content
+            # ----------------------------------------------------
+
+            if not getattr(
+                item,
+                "featured",
+                False,
+            ):
+
+                continue
+
+
+            # ----------------------------------------------------
+            # Prevent duplicates
+            # ----------------------------------------------------
+
             if (
-                not item.featured
-                or
                 item.id
                 in seen_featured_item_ids
             ):
@@ -10011,10 +10004,13 @@ def qr_access(access_code):
         key=lambda item:
             item.created_at
             or datetime.min,
-
         reverse=True,
     )
 
+
+    # ============================================================
+    # FEATURED HOMEPAGE LIMIT
+    # ============================================================
 
     featured_items = (
         featured_items_pool[
@@ -10030,38 +10026,29 @@ def qr_access(access_code):
     return render_template(
         "access.html",
 
-        zone=
-            zone,
+        zone=zone,
 
-        access_point=
-            access_point,
+        access_point=access_point,
 
-        categories=
-            categories,
+        categories=categories,
 
-        consumer_categories=
-            consumer_categories,
+        consumer_categories=consumer_categories,
 
         consumer_category_lookup=
             consumer_category_lookup,
 
-        category_stats=
-            category_stats,
+        category_stats=category_stats,
 
-        new_items=
-            new_items,
+        new_items=new_items,
 
-        category_lookup=
-            category_lookup,
+        category_lookup=category_lookup,
 
-        featured_items=
-            featured_items,
+        featured_items=featured_items,
 
         category_background_images=
             category_background_images,
 
-        today=
-            today,
+        today=today,
     )
 
 @app.route("/q/<code>/<category>")
