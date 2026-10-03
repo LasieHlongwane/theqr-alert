@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        {{ submission.title }} | Kalxa Review
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .topbar-inner {
+            width: min(
+                100%,
+                800px
+            );
+            margin: 0 auto;
+            padding: 15px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: 950;
+        }
+
+        .community {
+            color: rgba(
+                255,
+                255,
+                255,
+                0.65
+            );
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                800px
+            );
+            margin: 0 auto;
+            padding: 24px 18px 60px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: #626870;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 850;
+        }
+
+
+        /* =====================================================
+           CARD
+        ===================================================== */
+
+        .card {
+            padding: 21px;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow:
+                0 8px 24px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.045
+                );
+        }
+
+        .eyebrow {
+            color: #7b8189;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            margin: 7px 0 0;
+            font-size: 25px;
+            line-height: 1.2;
+        }
+
+        .description {
+            margin-top: 14px;
+            color: #555c64;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+
+        /* =====================================================
+           DETAILS
+        ===================================================== */
+
+        .details {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 9px;
+        }
+
+        .detail {
+            padding: 13px;
+            border-radius: 10px;
+            background: #f3f4f5;
+        }
+
+        .detail-label {
+            color: #858b92;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+        }
+
+        .detail-value {
+            margin-top: 5px;
+            font-size: 11px;
+            font-weight: 800;
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           IMAGE
+        ===================================================== */
+
+        .image {
+            width: 100%;
+            margin-top: 18px;
+            border-radius: 13px;
+            display: block;
+        }
+
+
+        /* =====================================================
+           PAYMENT
+        ===================================================== */
+
+        .payment-box {
+            margin-top: 18px;
+            padding: 15px;
+            border-radius: 12px;
+            background: #f3f4f5;
+        }
+
+        .payment-label {
+            color: #858b92;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .payment-status {
+            margin-top: 5px;
+            font-size: 14px;
+            font-weight: 950;
+        }
+
+        .finance-note {
+            margin-top: 7px;
+            color: #777d85;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           MODERATION PLACEHOLDER
+        ===================================================== */
+
+        .moderation {
+            margin-top: 18px;
+            padding: 18px;
+            border:
+                1px dashed
+                #bfc4c9;
+            border-radius: 13px;
+            color: #717780;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="topbar">
+
+    <div class="topbar-inner">
+
+        <div class="brand">
+            KALXA
+        </div>
+
+        <div class="community">
+            {{ zone.name }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="page">
+
+
+    <a
+        class="back-link"
+        href="{{ url_for(
+            'ambassador_submissions'
+        ) }}"
+    >
+        ← Submissions
+    </a>
+
+
+    <div class="card">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <div class="eyebrow">
+            SUBMISSION REVIEW
+        </div>
+
+        <h1>
+            {{ submission.title }}
+        </h1>
+
+
+        {% if submission.description %}
+
+            <div class="description">
+                {{ submission.description }}
+            </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             IMAGE
+        ================================================== -->
+
+        {% if submission.image_url %}
+
+            <img
+                class="image"
+                src="{{ submission.image_url }}"
+                alt="{{ submission.title }}"
+            >
+
+        {% endif %}
+
+
+        <!-- =================================================
+             DETAILS
+        ================================================== -->
+
+        <div class="details">
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    COMMUNITY
+                </div>
+
+                <div class="detail-value">
+                    {{ zone.name }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    CATEGORY
+                </div>
+
+                <div class="detail-value">
+                    {{ submission.category }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    STATUS
+                </div>
+
+                <div class="detail-value">
+                    {{ submission.status.replace(
+                        '_',
+                        ' '
+                    ).title() }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    TRACKING CODE
+                </div>
+
+                <div class="detail-value">
+                    {{ submission.tracking_code }}
+                </div>
+
+            </div>
+
+
+            {% if submission.business_name %}
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        BUSINESS
+                    </div>
+
+                    <div class="detail-value">
+                        {{ submission.business_name }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            {% if submission.venue %}
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        VENUE
+                    </div>
+
+                    <div class="detail-value">
+                        {{ submission.venue }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    SUBMITTED BY
+                </div>
+
+                <div class="detail-value">
+                    {{ submission.submitter_name }}
+                </div>
+
+            </div>
+
+
+            {% if submission.submitter_phone %}
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        CONTACT
+                    </div>
+
+                    <div class="detail-value">
+                        {{ submission.submitter_phone }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+        </div>
+
+
+        <!-- =================================================
+             PAYMENT
+        ================================================== -->
+
+        <div class="payment-box">
+
+            <div class="payment-label">
+                PAYMENT STATUS
+            </div>
+
+            <div class="payment-status">
+                {{ submission.payment_status.upper() }}
+            </div>
+
+            <div class="finance-note">
+                Payment information is read-only for
+                Community Ambassadors. Financial controls
+                remain with Kalxa.
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MODERATION
+        ================================================== -->
+
+        <div class="moderation">
+
+            <strong>
+                Moderation controls
+            </strong>
+
+            <br><br>
+
+            Approve, reject and request-changes controls
+            will be connected here after the zone security
+            boundary has been verified.
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
