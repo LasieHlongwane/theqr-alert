@@ -3999,6 +3999,147 @@ def ambassador_login():
     )
 
 
+
+# ============================================================
+# COMMUNITY AMBASSADOR - DASHBOARD
+# ============================================================
+
+@app.route(
+    "/ambassador",
+    methods=[
+        "GET",
+    ],
+)
+def ambassador_dashboard():
+
+    # ========================================================
+    # REQUIRE AMBASSADOR SESSION
+    # ========================================================
+
+    ambassador_id = session.get(
+        "ambassador_id"
+    )
+
+
+    if not ambassador_id:
+
+        flash(
+            (
+                "Please log in to access the "
+                "Community Ambassador dashboard."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # LOAD AMBASSADOR FROM DATABASE
+    # ========================================================
+
+    ambassador = db.session.get(
+        CommunityAmbassador,
+        ambassador_id,
+    )
+
+
+    # ========================================================
+    # VALIDATE ACCOUNT
+    # ========================================================
+
+    if (
+        not ambassador
+        or not ambassador.active
+    ):
+
+        session.pop(
+            "ambassador_id",
+            None,
+        )
+
+        session.pop(
+            "ambassador_zone_id",
+            None,
+        )
+
+        session.pop(
+            "ambassador_name",
+            None,
+        )
+
+
+        flash(
+            (
+                "Your Community Ambassador "
+                "session is no longer valid."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # VALIDATE ASSIGNED ZONE
+    # ========================================================
+
+    if (
+        not ambassador.zone
+        or not ambassador.zone.active
+    ):
+
+        flash(
+            (
+                "Your assigned Kalxa community "
+                "is currently unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # IMPORTANT
+    # ========================================================
+    #
+    # We deliberately use ambassador.zone_id from the
+    # DATABASE.
+    #
+    # We do NOT trust a zone_id supplied through:
+    #
+    #     URL
+    #     query string
+    #     form
+    #     browser
+    #
+    # The database assignment is the source of truth.
+    # ========================================================
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/dashboard.html",
+        ambassador=ambassador,
+        zone=ambassador.zone,
+    )
+
 # ============================================================
 # COMMUNITY AMBASSADOR - LOGOUT
 # ============================================================
