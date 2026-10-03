@@ -10150,6 +10150,9 @@ def qr_access(access_code):
     # ============================================================
     # RENDER ACCESS PAGE
     # ============================================================
+    # ============================================================
+    # RENDER ACCESS PAGE
+    # ============================================================
 
     return render_template(
         "access.html",
@@ -10177,6 +10180,13 @@ def qr_access(access_code):
             category_background_images,
 
         today=today,
+
+        # ========================================================
+        # KALXA STORIES
+        # ========================================================
+
+        kalxa_stories=
+            kalxa_stories,
     )
 
 @app.route("/q/<code>/<category>")
