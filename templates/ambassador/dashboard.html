@@ -88,6 +88,10 @@
             font-weight: 800;
         }
 
+        .logout-button:active {
+            transform: scale(0.97);
+        }
+
 
         /* =====================================================
            PAGE
@@ -140,14 +144,17 @@
             border-radius: 10px;
             background: #ffffff;
             font-size: 12px;
+            line-height: 1.5;
         }
 
         .flash-success {
             border-color: #9fc8ad;
+            background: #f5fff8;
         }
 
         .flash-error {
             border-color: #daa8a8;
+            background: #fff7f7;
         }
 
 
@@ -243,20 +250,80 @@
 
 
         /* =====================================================
-           PLACEHOLDER
+           COMMUNITY OPERATIONS
         ===================================================== */
 
-        .coming-next {
+        .community-operations {
             margin-top: 18px;
             padding: 20px;
             border:
-                1px dashed
-                #bdc1c6;
+                1px solid
+                #d8dbdf;
             border-radius: 14px;
+            background: #f7f8f9;
+        }
+
+        .operations-eyebrow {
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .operations-title {
+            margin-top: 6px;
+            color: #17191d;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .operations-description {
+            margin-top: 7px;
             color: #747a82;
-            font-size: 12px;
-            line-height: 1.6;
-            text-align: center;
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+        .operations-actions {
+            margin-top: 15px;
+        }
+
+        .operations-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 11px 15px;
+            border-radius: 10px;
+            background: #111318;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 900;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .operations-button:active {
+            transform: scale(0.97);
+        }
+
+
+        /* =====================================================
+           SECURITY / SCOPE NOTE
+        ===================================================== */
+
+        .scope-note {
+            margin-top: 14px;
+            padding: 13px 14px;
+            border-radius: 11px;
+            background: #eef0f2;
+            color: #6f757d;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .scope-note strong {
+            color: #34383d;
         }
 
 
@@ -274,6 +341,18 @@
 
             h1 {
                 font-size: 26px;
+            }
+
+            .community-card {
+                padding: 18px;
+            }
+
+            .community-operations {
+                padding: 17px;
+            }
+
+            .operations-button {
+                width: 100%;
             }
 
         }
@@ -379,6 +458,11 @@
 
     <div class="community-card">
 
+
+        <!-- =================================================
+             COMMUNITY IDENTITY
+        ================================================== -->
+
         <div class="community-label">
             ASSIGNED COMMUNITY
         </div>
@@ -398,6 +482,11 @@
 
         <div class="info-grid">
 
+
+            <!-- =============================================
+                 AMBASSADOR
+            ============================================== -->
+
             <div class="info-card">
 
                 <div class="info-label">
@@ -411,6 +500,10 @@
             </div>
 
 
+            <!-- =============================================
+                 EMAIL
+            ============================================== -->
+
             <div class="info-card">
 
                 <div class="info-label">
@@ -423,29 +516,83 @@
 
             </div>
 
+
         </div>
 
 
         <!-- =================================================
-             NEXT STAGE
+             COMMUNITY OPERATIONS
         ================================================== -->
 
-        <div class="coming-next">
+        <div class="community-operations">
 
-            Local moderation tools will appear here.
+            <div class="operations-eyebrow">
+                LOCAL MODERATION
+            </div>
 
-            <br>
+            <div class="operations-title">
+                Community Submissions
+            </div>
 
-            Your account will only be able to manage
-            content belonging to
-            <strong>{{ zone.name }}</strong>.
+            <div class="operations-description">
+
+                Review content submitted for
+                <strong>{{ zone.name }}</strong>.
+
+                Your moderation area is automatically
+                restricted to your assigned community.
+
+            </div>
+
+
+            <!-- =============================================
+                 ACTIONS
+            ============================================== -->
+
+            <div class="operations-actions">
+
+                <a
+                    href="{{ url_for(
+                        'ambassador_submissions'
+                    ) }}"
+                    class="operations-button"
+                >
+                    Review Submissions
+                    <span>
+                        →
+                    </span>
+                </a>
+
+            </div>
+
+
+            <!-- =============================================
+                 SCOPE
+            ============================================== -->
+
+            <div class="scope-note">
+
+                <strong>
+                    Community scope:
+                </strong>
+
+                You can only access submissions belonging
+                to {{ zone.name }}.
+
+                Payment information is visible for review,
+                but financial controls remain managed
+                centrally by Kalxa.
+
+            </div>
 
         </div>
+
 
     </div>
 
 
 </div>
+
 
 </body>
 
