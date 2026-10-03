@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Create Community Ambassador | Kalxa
+    </title>
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f2f3f5;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                720px
+            );
+            margin: 0 auto;
+            padding: 32px 18px 60px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .eyebrow {
+            margin-bottom: 8px;
+            color: #737982;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.1;
+        }
+
+        .intro {
+            margin: 10px 0 0;
+            color: #666c75;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash {
+            margin-top: 20px;
+            padding: 13px 14px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid #d9dce0;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .flash-success {
+            border-color: #9ecfaf;
+        }
+
+        .flash-error {
+            border-color: #dfaaaa;
+        }
+
+
+        /* =====================================================
+           CARD
+        ===================================================== */
+
+        .card {
+            margin-top: 24px;
+            padding: 22px;
+            border: 1px solid #dfe2e5;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow:
+                0 10px 28px
+                rgba(0, 0, 0, 0.05);
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px 12px;
+            border: 1px solid #cfd3d8;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #17191d;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #17191d;
+        }
+
+        .hint {
+            margin-top: 6px;
+            color: #81868d;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+
+        /* =====================================================
+           BUTTON
+        ===================================================== */
+
+        .submit-button {
+            width: 100%;
+            border: 0;
+            border-radius: 11px;
+            padding: 14px 16px;
+            background: #111318;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 850;
+        }
+
+        .submit-button:active {
+            transform: scale(0.99);
+        }
+
+
+        /* =====================================================
+           SECURITY NOTE
+        ===================================================== */
+
+        .security-note {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 11px;
+            background: #f5f6f7;
+            color: #5f656d;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="eyebrow">
+        KALXA COMMUNITY OPERATIONS
+    </div>
+
+    <h1>
+        Create Community Ambassador
+    </h1>
+
+    <p class="intro">
+        Create a local Kalxa administrator and assign
+        them to one community.
+    </p>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="
+                        flash
+                        flash-{{ category }}
+                    "
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         CREATE FORM
+    ====================================================== -->
+
+    <div class="card">
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'admin_create_community_ambassador'
+            ) }}"
+        >
+
+
+            <!-- =============================================
+                 NAME
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="name">
+                    Ambassador Name
+                </label>
+
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value="{{ request.form.get(
+                        'name',
+                        ''
+                    ) }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- =============================================
+                 EMAIL
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value="{{ request.form.get(
+                        'email',
+                        ''
+                    ) }}"
+                    autocomplete="email"
+                    required
+                >
+
+                <div class="hint">
+                    This will later be used to log into the
+                    Community Ambassador dashboard.
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 PHONE
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="phone">
+                    Phone Number
+                </label>
+
+                <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value="{{ request.form.get(
+                        'phone',
+                        ''
+                    ) }}"
+                    autocomplete="tel"
+                >
+
+            </div>
+
+
+            <!-- =============================================
+                 COMMUNITY
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="zone_id">
+                    Community
+                </label>
+
+                <select
+                    id="zone_id"
+                    name="zone_id"
+                    required
+                >
+
+                    <option value="">
+                        Select community
+                    </option>
+
+                    {% for zone in zones %}
+
+                        <option
+                            value="{{ zone.id }}"
+                            {% if
+                                request.form.get(
+                                    'zone_id'
+                                )
+                                ==
+                                zone.id|string
+                            %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ zone.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <div class="hint">
+                    The ambassador will eventually only
+                    manage content belonging to this
+                    community.
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 PASSWORD
+            ============================================== -->
+
+            <div class="field">
+
+                <label for="password">
+                    Temporary Password
+                </label>
+
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <div class="hint">
+                    Minimum 8 characters. The password is
+                    stored as a secure hash, not plain text.
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 SUBMIT
+            ============================================== -->
+
+            <button
+                class="submit-button"
+                type="submit"
+            >
+                Create Community Ambassador
+            </button>
+
+
+        </form>
+
+
+        <!-- =================================================
+             SECURITY NOTE
+        ================================================== -->
+
+        <div class="security-note">
+
+            Community Ambassadors are local operational
+            accounts.
+
+            They will not receive access to Kalxa payment
+            administration, pricing configuration or
+            platform-level settings.
+
+        </div>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
