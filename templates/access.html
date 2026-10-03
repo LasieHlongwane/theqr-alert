@@ -103,12 +103,9 @@
         .access-container {
             width: 100%;
             max-width: 680px;
-
             margin: 0 auto;
-
             padding-left: 16px;
             padding-right: 16px;
-
             box-sizing: border-box;
         }
 
@@ -120,11 +117,8 @@
         .location-label {
             display: inline-flex;
             align-items: center;
-
             gap: 7px;
-
             margin-bottom: 20px;
-
             padding: 8px 12px;
 
             border:
@@ -146,6 +140,527 @@
 
         .location-icon {
             font-size: 13px;
+        }
+
+
+        /* =========================================================
+           KALXA STORIES
+        ========================================================= */
+
+        .kalxa-stories-section {
+            width: 100%;
+            margin:
+                0
+                0
+                34px;
+        }
+
+
+        .kalxa-stories-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+
+            margin-bottom: 15px;
+        }
+
+
+        .kalxa-stories-header-copy {
+            min-width: 0;
+            flex: 1;
+        }
+
+
+        .kalxa-stories-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-bottom: 6px;
+
+            color:
+                rgba(255, 244, 223, 0.62);
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: 1.25px;
+
+            text-transform: uppercase;
+        }
+
+
+        .kalxa-stories-eyebrow-dot {
+            width: 6px;
+            height: 6px;
+
+            flex: 0 0 6px;
+
+            border-radius: 50%;
+
+            background: #fff4df;
+
+            box-shadow:
+                0 0 0 4px
+                rgba(255, 244, 223, 0.08);
+        }
+
+
+        .kalxa-stories-title {
+            margin: 0;
+
+            color: #ffffff;
+
+            font-size:
+                clamp(
+                    23px,
+                    6vw,
+                    29px
+                );
+
+            font-weight: 900;
+
+            line-height: 1.05;
+
+            letter-spacing: -0.55px;
+        }
+
+
+        .kalxa-stories-subtitle {
+            margin:
+                7px
+                0
+                0;
+
+            max-width: 430px;
+
+            color:
+                rgba(255, 255, 255, 0.52);
+
+            font-size: 10px;
+            font-weight: 600;
+
+            line-height: 1.45;
+        }
+
+
+        .kalxa-stories-all {
+            flex: 0 0 auto;
+
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+
+            padding:
+                8px
+                10px;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 999px;
+
+            background:
+                rgba(255, 255, 255, 0.04);
+
+            color:
+                rgba(255, 255, 255, 0.72);
+
+            text-decoration: none;
+
+            font-size: 9px;
+            font-weight: 850;
+
+            white-space: nowrap;
+        }
+
+
+        .kalxa-stories-all:active {
+            transform: scale(0.97);
+        }
+
+
+        .kalxa-stories-rail-wrap {
+            position: relative;
+        }
+
+
+        .kalxa-stories-rail {
+            width:
+                calc(
+                    100%
+                    +
+                    16px
+                );
+
+            display: flex;
+
+            gap: 13px;
+
+            overflow-x: auto;
+            overflow-y: hidden;
+
+            margin-right: -16px;
+
+            padding:
+                2px
+                16px
+                14px
+                0;
+
+            scroll-snap-type:
+                x mandatory;
+
+            scroll-padding-left: 0;
+
+            overscroll-behavior-x:
+                contain;
+
+            scrollbar-width: none;
+
+            -webkit-overflow-scrolling:
+                touch;
+        }
+
+
+        .kalxa-stories-rail::-webkit-scrollbar {
+            display: none;
+        }
+
+
+        .kalxa-story-card {
+            position: relative;
+
+            flex:
+                0
+                0
+                82%;
+
+            width: 82%;
+            max-width: 360px;
+            min-height: 330px;
+
+            display: block;
+
+            overflow: hidden;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+
+            border-radius: 22px;
+
+            background: #f5f1e8;
+
+            color: #222326;
+
+            text-decoration: none;
+
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+
+            box-shadow:
+                0 10px 30px
+                rgba(0, 0, 0, 0.24);
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease;
+        }
+
+
+        .kalxa-story-card:active {
+            transform: scale(0.985);
+        }
+
+
+        .kalxa-story-image {
+            position: relative;
+
+            width: 100%;
+            height: 205px;
+
+            overflow: hidden;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #292a2d,
+                    #121315
+                );
+        }
+
+
+        .kalxa-story-image img {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+
+            transition:
+                transform
+                0.4s
+                ease;
+        }
+
+
+        .kalxa-story-card:hover
+        .kalxa-story-image img {
+            transform: scale(1.025);
+        }
+
+
+        .kalxa-story-image-fallback {
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #d8d0c2,
+                    #b7aa96
+                );
+
+            color: #ffffff;
+
+            font-size: 54px;
+        }
+
+
+        .kalxa-story-image-shade {
+            position: absolute;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            background:
+                linear-gradient(
+                    to top,
+                    rgba(0, 0, 0, 0.30),
+                    rgba(0, 0, 0, 0.00) 55%
+                );
+        }
+
+
+        .kalxa-story-top-badges {
+            position: absolute;
+
+            z-index: 3;
+
+            top: 11px;
+            left: 11px;
+            right: 11px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 8px;
+
+            pointer-events: none;
+        }
+
+
+        .kalxa-story-type {
+            max-width: 70%;
+
+            overflow: hidden;
+
+            padding:
+                7px
+                9px;
+
+            border-radius: 999px;
+
+            background:
+                rgba(17, 18, 20, 0.82);
+
+            color: #fff4df;
+
+            font-size: 8px;
+            font-weight: 900;
+
+            letter-spacing: 0.65px;
+
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            white-space: nowrap;
+
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+
+        .kalxa-story-sponsored {
+            flex: 0 0 auto;
+
+            padding:
+                7px
+                9px;
+
+            border-radius: 999px;
+
+            background: #fff4df;
+
+            color: #292c30;
+
+            font-size: 8px;
+            font-weight: 900;
+
+            letter-spacing: 0.4px;
+
+            text-transform: uppercase;
+        }
+
+
+        .kalxa-story-content {
+            position: relative;
+
+            min-height: 125px;
+
+            display: flex;
+            flex-direction: column;
+
+            padding:
+                16px
+                17px
+                17px;
+        }
+
+
+        .kalxa-story-brand {
+            margin-bottom: 7px;
+
+            color:
+                rgba(63, 67, 72, 0.52);
+
+            font-size: 8px;
+            font-weight: 900;
+
+            letter-spacing: 1.05px;
+
+            text-transform: uppercase;
+        }
+
+
+        .kalxa-story-title {
+            margin: 0;
+
+            color: #292c30;
+
+            font-size: 18px;
+            font-weight: 900;
+
+            line-height: 1.18;
+
+            letter-spacing: -0.3px;
+
+            display: -webkit-box;
+
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+
+            overflow: hidden;
+        }
+
+
+        .kalxa-story-excerpt {
+            margin:
+                8px
+                0
+                0;
+
+            color:
+                rgba(63, 67, 72, 0.68);
+
+            font-size: 10px;
+            font-weight: 600;
+
+            line-height: 1.45;
+
+            display: -webkit-box;
+
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+
+            overflow: hidden;
+        }
+
+
+        .kalxa-story-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 12px;
+
+            margin-top: auto;
+            padding-top: 14px;
+        }
+
+
+        .kalxa-story-read {
+            color:
+                rgba(63, 67, 72, 0.58);
+
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+
+        .kalxa-story-arrow {
+            width: 30px;
+            height: 30px;
+
+            flex: 0 0 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #292c30;
+
+            color: #fff4df;
+
+            font-size: 15px;
+        }
+
+
+        .kalxa-stories-swipe-hint {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-top: 2px;
+
+            color:
+                rgba(255, 255, 255, 0.36);
+
+            font-size: 9px;
+            font-weight: 750;
+        }
+
+
+        .kalxa-stories-swipe-line {
+            width: 22px;
+            height: 1px;
+
+            background:
+                rgba(255, 255, 255, 0.20);
         }
 
 
@@ -292,6 +807,8 @@
             font-weight: 600;
 
             line-height: 1.45;
+
+            opacity: 0.86;
         }
 
 
@@ -317,7 +834,7 @@
 
             background: #ffffff;
 
-            color: #45484d;
+            color: #45484d !important;
 
             font-size: 22px;
             font-weight: 500;
@@ -356,11 +873,6 @@
         .kalxa-ticketing-top-title,
         .kalxa-ticketing-top-description {
             color: #ffffff !important;
-        }
-
-
-        .kalxa-ticketing-top-description {
-            opacity: 0.86;
         }
 
 
@@ -1618,7 +2130,6 @@
 
         /* =========================================================
            LAC WEBSITE / APP SERVICES
-           SKY GREY GRADIENT
         ========================================================= */
 
         .kalxa-lac-services {
@@ -1646,31 +2157,6 @@
             box-shadow:
                 0 10px 28px
                 rgba(72, 86, 94, 0.22);
-        }
-
-
-        .kalxa-lac-services-icon {
-            width: 42px;
-            height: 42px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            margin-bottom: 12px;
-
-            border-radius: 13px;
-
-            background:
-                rgba(255, 255, 255, 0.88);
-
-            color: #292c30;
-
-            font-size: 19px;
-
-            box-shadow:
-                0 4px 12px
-                rgba(55, 67, 74, 0.12);
         }
 
 
@@ -1935,6 +2421,32 @@
 
         @media (max-width: 480px) {
 
+            .kalxa-story-card {
+                flex-basis: 84%;
+                width: 84%;
+                min-height: 320px;
+            }
+
+
+            .kalxa-story-image {
+                height: 195px;
+            }
+
+
+            .kalxa-stories-title {
+                font-size: 24px;
+            }
+
+
+            .kalxa-stories-all {
+                padding:
+                    7px
+                    9px;
+
+                font-size: 8px;
+            }
+
+
             .kalxa-ticketing-top-link {
                 min-height: 104px;
 
@@ -1970,6 +2482,12 @@
 
 
         @media (min-width: 700px) {
+
+            .kalxa-story-card {
+                flex-basis: 56%;
+                width: 56%;
+            }
+
 
             .lac-category-row {
                 min-height: 250px;
@@ -2317,8 +2835,6 @@
 
                 <div class="kalxa-lac-services">
 
-
-
                     <h3>
                         Your business needs a website or app?
                     </h3>
@@ -2427,14 +2943,6 @@
 
 
         <!-- =========================================
-             KALXA TICKETING
-        ========================================== -->
-
-        <section class="kalxa-ticketing-top">
-
-
-
-        <!-- =========================================
              LOCATION
         ========================================== -->
 
@@ -2449,6 +2957,233 @@
             </span>
 
         </div>
+
+
+        <!-- =====================================================
+             KALXA STORIES
+        ====================================================== -->
+
+        {% if kalxa_stories %}
+
+        <section
+            class="kalxa-stories-section"
+            aria-labelledby="kalxa-stories-heading"
+        >
+
+            <div class="kalxa-stories-header">
+
+                <div class="kalxa-stories-header-copy">
+
+                    <div class="kalxa-stories-eyebrow">
+
+                        <span
+                            class="kalxa-stories-eyebrow-dot"
+                            aria-hidden="true"
+                        ></span>
+
+                        <span>
+                            KALXA EDITORIAL
+                        </span>
+
+                    </div>
+
+
+                    <h2
+                        class="kalxa-stories-title"
+                        id="kalxa-stories-heading"
+                    >
+                        Kalxa Stories
+                    </h2>
+
+
+                    <p class="kalxa-stories-subtitle">
+                        Stories, places and experiences worth discovering.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="https://kalxa-stories.onrender.com/stories?utm_source=kalxa_discovery&amp;utm_medium=discovery&amp;utm_campaign=stories_feed"
+                    class="kalxa-stories-all"
+                >
+                    Stories
+                    <span aria-hidden="true">
+                        ↗
+                    </span>
+                </a>
+
+            </div>
+
+
+            <div class="kalxa-stories-rail-wrap">
+
+                <div
+                    class="kalxa-stories-rail"
+                    aria-label="Kalxa Stories"
+                >
+
+                    {% for story in kalxa_stories %}
+
+                        {% set story_url =
+                            story.get(
+                                "story_url",
+                                ""
+                            )
+                        %}
+
+                        {% set separator =
+                            "&"
+                            if "?" in story_url
+                            else "?"
+                        %}
+
+                        {% set story_type =
+                            story.get(
+                                "article_type",
+                                "story"
+                            )
+                            | replace("_", " ")
+                        %}
+
+
+                        {% if story_url %}
+
+                        <a
+                            href="{{
+                                story_url
+                            }}{{
+                                separator
+                            }}utm_source=kalxa_discovery&amp;utm_medium=discovery&amp;utm_campaign=stories_feed&amp;kalxa_zone={{
+                                zone.name | urlencode
+                            }}&amp;kalxa_access_code={{
+                                access_point.code | urlencode
+                            }}"
+                            class="kalxa-story-card"
+                            data-kalxa-story-id="{{
+                                story.get(
+                                    'id',
+                                    ''
+                                )
+                            }}"
+                        >
+
+                            <div
+                                class="
+                                    kalxa-story-image
+                                    lac-image-loading
+                                "
+                            >
+
+                                {% if story.get("cover_image_url") %}
+
+                                    <img
+                                        src="{{ story.get('cover_image_url') }}"
+                                        alt="{{ story.get('title', 'Kalxa Story') }}"
+                                        loading="lazy"
+                                    >
+
+                                {% else %}
+
+                                    <div class="kalxa-story-image-fallback">
+                                        ◇
+                                    </div>
+
+                                {% endif %}
+
+
+                                <div class="kalxa-story-image-shade"></div>
+
+
+                                <div class="kalxa-story-top-badges">
+
+                                    <span class="kalxa-story-type">
+                                        {{ story_type }}
+                                    </span>
+
+
+                                    {% if story.get("is_sponsored") %}
+
+                                        <span class="kalxa-story-sponsored">
+                                            Sponsored
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="kalxa-story-content">
+
+                                <div class="kalxa-story-brand">
+                                    Kalxa Stories
+                                </div>
+
+
+                                <h3 class="kalxa-story-title">
+                                    {{ story.get("title", "Kalxa Story") }}
+                                </h3>
+
+
+                                {% if story.get("excerpt") %}
+
+                                    <p class="kalxa-story-excerpt">
+                                        {{ story.get("excerpt") }}
+                                    </p>
+
+                                {% endif %}
+
+
+                                <div class="kalxa-story-footer">
+
+                                    <span class="kalxa-story-read">
+                                        Read story
+                                    </span>
+
+                                    <span
+                                        class="kalxa-story-arrow"
+                                        aria-hidden="true"
+                                    >
+                                        ↗
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </a>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            {% if kalxa_stories | length > 1 %}
+
+                <div
+                    class="kalxa-stories-swipe-hint"
+                    aria-hidden="true"
+                >
+
+                    <span class="kalxa-stories-swipe-line"></span>
+
+                    <span>
+                        Swipe to discover more
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+        {% endif %}
 
 
         <!-- =========================================
@@ -2978,12 +3713,10 @@
 
 
         <!-- =========================================
-             BUSINESS CTA
+             KALXA TICKETING CTA
         ========================================== -->
 
         <section class="kalxa-business-cta">
-
-
 
             <a
                 href="https://tickets.kalxa.co.za"
@@ -3012,12 +3745,14 @@
         </section>
 
 
+        <!-- =========================================
+             KALXA STORIES CTA
+        ========================================== -->
+
         <section class="kalxa-business-cta">
 
-
-
             <a
-                href="https://kalxa-stories.onrender.com/"
+                href="https://kalxa-stories.onrender.com/?utm_source=kalxa_discovery&amp;utm_medium=discovery&amp;utm_campaign=stories_feed"
                 class="kalxa-ticketing-top-link"
             >
 
@@ -3043,6 +3778,12 @@
         </section>
 
 
+        <!-- =========================================
+             BUSINESS / JOB SUBMISSION
+        ========================================== -->
+
+        <section class="kalxa-business-cta">
+
             <a
                 href="{{ url_for(
                     'submit_content',
@@ -3055,7 +3796,9 @@
 
 
             <div class="kalxa-business-cta-divider">
-                <span>HIRING?</span>
+                <span>
+                    HIRING?
+                </span>
             </div>
 
 
@@ -3074,6 +3817,9 @@
                 No Kalxa listing fee. Job submissions are reviewed
                 before they appear publicly.
             </div>
+
+        </section>
+
 
         <!-- =========================================
              NOTIFICATIONS
@@ -3113,7 +3859,7 @@
                 id="lac-notification-status"
                 class="lac-notification-status"
             >
-                 No account required.
+                No account required.
             </p>
 
 
