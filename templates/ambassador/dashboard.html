@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        {{ zone.name }} | Kalxa Community Operations
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .topbar-inner {
+            width: min(
+                100%,
+                1000px
+            );
+            margin: 0 auto;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: 950;
+            letter-spacing: -0.6px;
+        }
+
+        .logout-button {
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.22
+                );
+            border-radius: 9px;
+            padding: 8px 11px;
+            background: transparent;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                1000px
+            );
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .eyebrow {
+            margin-bottom: 6px;
+            color: #6f757d;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1.2px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.1;
+        }
+
+        .welcome {
+            margin: 9px 0 0;
+            color: #686e76;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
+
+        .flash {
+            margin-top: 18px;
+            padding: 12px 13px;
+            border: 1px solid #ccd0d4;
+            border-radius: 10px;
+            background: #ffffff;
+            font-size: 12px;
+        }
+
+        .flash-success {
+            border-color: #9fc8ad;
+        }
+
+        .flash-error {
+            border-color: #daa8a8;
+        }
+
+
+        /* =====================================================
+           COMMUNITY CARD
+        ===================================================== */
+
+        .community-card {
+            margin-top: 24px;
+            padding: 22px;
+            border:
+                1px solid
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
+            border-radius: 17px;
+            background: #ffffff;
+            box-shadow:
+                0 10px 30px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
+        }
+
+        .community-label {
+            color: #777d85;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .community-name {
+            margin-top: 6px;
+            font-size: 25px;
+            font-weight: 950;
+        }
+
+        .status {
+            display: inline-flex;
+            margin-top: 12px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: #e7f4eb;
+            color: #24613a;
+            font-size: 9px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           ACCOUNT INFORMATION
+        ===================================================== */
+
+        .info-grid {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 10px;
+        }
+
+        .info-card {
+            padding: 15px;
+            border-radius: 12px;
+            background: #f4f5f6;
+        }
+
+        .info-label {
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 850;
+            letter-spacing: 0.7px;
+        }
+
+        .info-value {
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: 800;
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           PLACEHOLDER
+        ===================================================== */
+
+        .coming-next {
+            margin-top: 18px;
+            padding: 20px;
+            border:
+                1px dashed
+                #bdc1c6;
+            border-radius: 14px;
+            color: #747a82;
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<div class="topbar">
+
+    <div class="topbar-inner">
+
+        <div class="brand">
+            KALXA
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'ambassador_logout'
+            ) }}"
+        >
+
+            <button
+                class="logout-button"
+                type="submit"
+            >
+                Log Out
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
+<div class="page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="eyebrow">
+        COMMUNITY OPERATIONS
+    </div>
+
+    <h1>
+        {{ zone.name }}
+    </h1>
+
+    <p class="welcome">
+        Welcome, {{ ambassador.name }}.
+        This is your assigned Kalxa community.
+    </p>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="
+                        flash
+                        flash-{{ category }}
+                    "
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         COMMUNITY
+    ====================================================== -->
+
+    <div class="community-card">
+
+        <div class="community-label">
+            ASSIGNED COMMUNITY
+        </div>
+
+        <div class="community-name">
+            {{ zone.name }}
+        </div>
+
+        <div class="status">
+            ACTIVE COMMUNITY AMBASSADOR
+        </div>
+
+
+        <!-- =================================================
+             ACCOUNT INFORMATION
+        ================================================== -->
+
+        <div class="info-grid">
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    AMBASSADOR
+                </div>
+
+                <div class="info-value">
+                    {{ ambassador.name }}
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-label">
+                    EMAIL
+                </div>
+
+                <div class="info-value">
+                    {{ ambassador.email }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             NEXT STAGE
+        ================================================== -->
+
+        <div class="coming-next">
+
+            Local moderation tools will appear here.
+
+            <br>
+
+            Your account will only be able to manage
+            content belonging to
+            <strong>{{ zone.name }}</strong>.
+
+        </div>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>
