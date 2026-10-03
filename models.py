@@ -396,10 +396,20 @@ class Zone(db.Model):
 
     __tablename__ = "zones"
 
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
+
+
+    # ========================================================
+    # IDENTITY
+    # ========================================================
 
     name = db.Column(
         db.String(100),
@@ -412,10 +422,20 @@ class Zone(db.Model):
         nullable=False,
     )
 
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
     active = db.Column(
         db.Boolean,
         default=True,
     )
+
+
+    # ========================================================
+    # EXISTING RELATIONSHIPS
+    # ========================================================
 
     access_points = db.relationship(
         "AccessPoint",
@@ -429,6 +449,260 @@ class Zone(db.Model):
         lazy=True,
     )
 
+
+    # ========================================================
+    # COMMUNITY AMBASSADORS
+    # ========================================================
+
+    community_ambassadors = db.relationship(
+        "CommunityAmbassador",
+        back_populates="zone",
+        lazy=True,
+    )
+
+
+    # ========================================================
+    # HELPERS
+    # ========================================================
+
+    @property
+    def active_community_ambassadors(self):
+
+        return [
+            ambassador
+            for ambassador
+            in self.community_ambassadors
+            if ambassador.active
+        ]
+
+
+    # ========================================================
+    # REPRESENTATION
+    # ========================================================
+
+    def __repr__(self):
+
+        return (
+            f"<Zone "
+            f"id={self.id} "
+            f"name={self.name}>"
+        )
+
+# ============================================================
+# COMMUNITY AMBASSADOR
+# ============================================================
+
+class CommunityAmbassador(db.Model):
+    """
+    A trusted Kalxa community administrator.
+
+    Community Ambassadors are responsible for the local
+    operational management of one Kalxa Zone.
+
+    Example:
+
+        Kalxa
+            ↓
+        KwaMhlanga Zone
+            ↓
+        Community Ambassador
+
+    IMPORTANT:
+
+    A Community Ambassador is NOT an Organizer.
+
+    Organizer:
+        Owns/submits business or event content.
+
+    Community Ambassador:
+        Moderates and manages Kalxa activity for an
+        assigned community.
+
+    Financial control remains with the Kalxa Super Admin.
+
+    Stage 1 intentionally assigns one primary zone to an
+    ambassador.
+
+    The authorization layer added in later stages must
+    enforce this zone boundary server-side.
+    """
+
+    __tablename__ = "community_ambassadors"
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # IDENTITY
+    # ========================================================
+
+    name = db.Column(
+        db.String(150),
+        nullable=False,
+    )
+
+    email = db.Column(
+        db.String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    phone = db.Column(
+        db.String(50),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    password_hash = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+
+    # ========================================================
+    # COMMUNITY / ZONE ASSIGNMENT
+    # ========================================================
+
+    zone_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "zones.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    zone = db.relationship(
+        "Zone",
+        back_populates="community_ambassadors",
+    )
+
+
+    # ========================================================
+    # ACCOUNT STATUS
+    # ========================================================
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # PASSWORD HELPERS
+    # ========================================================
+
+    def set_password(
+        self,
+        password,
+    ):
+
+        self.password_hash = (
+            generate_password_hash(
+                password
+            )
+        )
+
+
+    def check_password(
+        self,
+        password,
+    ):
+
+        if not self.password_hash:
+            return False
+
+        return check_password_hash(
+            self.password_hash,
+            password,
+        )
+
+
+    # ========================================================
+    # ZONE HELPERS
+    # ========================================================
+
+    def belongs_to_zone(
+        self,
+        zone_id,
+    ):
+        """
+        Return True only when this ambassador belongs to
+        the supplied Kalxa zone.
+        """
+
+        try:
+
+            return (
+                self.zone_id
+                == int(zone_id)
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            return False
+
+
+    @property
+    def zone_name(self):
+
+        if not self.zone:
+            return None
+
+        return self.zone.name
+
+
+    # ========================================================
+    # REPRESENTATION
+    # ========================================================
+
+    def __repr__(self):
+
+        return (
+            f"<CommunityAmbassador "
+            f"id={self.id} "
+            f"name={self.name} "
+            f"zone_id={self.zone_id}>"
+        )
 
 # ============================================================
 # ACCESS POINT
