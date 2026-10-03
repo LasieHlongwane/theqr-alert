@@ -3775,6 +3775,277 @@ def admin_create_community_ambassador():
             "admin_create_community_ambassador"
         )
     )
+
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - LOGIN
+# ============================================================
+
+@app.route(
+    "/ambassador/login",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def ambassador_login():
+
+    # ========================================================
+    # ALREADY LOGGED IN
+    # ========================================================
+
+    if session.get(
+        "ambassador_id"
+    ):
+
+        return redirect(
+            url_for(
+                "ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # GET
+    # ========================================================
+
+    if request.method == "GET":
+
+        return render_template(
+            "ambassador/login.html"
+        )
+
+
+    # ========================================================
+    # POST - LOGIN DETAILS
+    # ========================================================
+
+    email = (
+        request.form
+        .get(
+            "email",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+    password = (
+        request.form
+        .get(
+            "password",
+            "",
+        )
+    )
+
+
+    # ========================================================
+    # VALIDATION
+    # ========================================================
+
+    if not email or not password:
+
+        flash(
+            (
+                "Enter your email address "
+                "and password."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "ambassador/login.html"
+        )
+
+
+    # ========================================================
+    # FIND AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        CommunityAmbassador.query
+        .filter(
+            db.func.lower(
+                CommunityAmbassador.email
+            )
+            == email
+        )
+        .first()
+    )
+
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    if (
+        not ambassador
+        or not ambassador.check_password(
+            password
+        )
+    ):
+
+        flash(
+            (
+                "Invalid email address "
+                "or password."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "ambassador/login.html"
+        )
+
+
+    # ========================================================
+    # ACCOUNT STATUS
+    # ========================================================
+
+    if not ambassador.active:
+
+        flash(
+            (
+                "Your Community Ambassador "
+                "account is currently inactive."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "ambassador/login.html"
+        )
+
+
+    # ========================================================
+    # ZONE VALIDATION
+    # ========================================================
+
+    if (
+        not ambassador.zone
+        or not ambassador.zone.active
+    ):
+
+        flash(
+            (
+                "Your assigned Kalxa community "
+                "is currently unavailable."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "ambassador/login.html"
+        )
+
+
+    # ========================================================
+    # CREATE AMBASSADOR SESSION
+    # ========================================================
+
+    #
+    # Clear any old Ambassador session values before
+    # creating the new authenticated session.
+    #
+
+    session.pop(
+        "ambassador_id",
+        None,
+    )
+
+    session.pop(
+        "ambassador_zone_id",
+        None,
+    )
+
+    session.pop(
+        "ambassador_name",
+        None,
+    )
+
+
+    session[
+        "ambassador_id"
+    ] = ambassador.id
+
+    session[
+        "ambassador_zone_id"
+    ] = ambassador.zone_id
+
+    session[
+        "ambassador_name"
+    ] = ambassador.name
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            f"Welcome, {ambassador.name}. "
+            f"You are managing "
+            f"{ambassador.zone.name}."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "ambassador_dashboard"
+        )
+    )
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - LOGOUT
+# ============================================================
+
+@app.route(
+    "/ambassador/logout",
+    methods=[
+        "POST",
+    ],
+)
+def ambassador_logout():
+
+    # ========================================================
+    # REMOVE AMBASSADOR SESSION
+    # ========================================================
+
+    session.pop(
+        "ambassador_id",
+        None,
+    )
+
+    session.pop(
+        "ambassador_zone_id",
+        None,
+    )
+
+    session.pop(
+        "ambassador_name",
+        None,
+    )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        "You have been logged out.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "ambassador_login"
+        )
+    )
 # ============================================================
 # APPROVE NEXT 10 JOBS
 #
