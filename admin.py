@@ -10,6 +10,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    g,
     send_file,
     session,
     url_for,
@@ -3391,7 +3392,200 @@ def _send_approved_content_push(
 # ============================================================
 # SINGLE SUBMISSION APPROVAL
 # ============================================================
+# ============================================================
+# COMMUNITY AMBASSADOR - AUTHENTICATION HELPERS
+# ============================================================
 
+
+def clear_ambassador_session():
+    """
+    Remove all Community Ambassador authentication data
+    from the current Flask session.
+
+    This helper gives Kalxa one central place for clearing
+    Ambassador authentication.
+    """
+
+    session.pop(
+        "ambassador_id",
+        None,
+    )
+
+    session.pop(
+        "ambassador_zone_id",
+        None,
+    )
+
+    session.pop(
+        "ambassador_name",
+        None,
+    )
+
+
+def get_current_ambassador():
+    """
+    Return the currently authenticated Community Ambassador.
+
+    SECURITY:
+
+    The database is the source of truth.
+
+    We do NOT trust:
+
+        ambassador_zone_id
+        ambassador_name
+
+    stored in the browser session when deciding what the
+    Ambassador is allowed to access.
+
+    The session only identifies the Ambassador account.
+
+    The Ambassador's current:
+
+        active status
+        zone assignment
+        zone status
+
+    are loaded from the database on every protected request.
+    """
+
+    # ========================================================
+    # ALREADY LOADED DURING THIS REQUEST
+    # ========================================================
+
+    if hasattr(
+        g,
+        "current_ambassador",
+    ):
+
+        return g.current_ambassador
+
+
+    # ========================================================
+    # SESSION IDENTITY
+    # ========================================================
+
+    ambassador_id = session.get(
+        "ambassador_id"
+    )
+
+
+    if not ambassador_id:
+
+        g.current_ambassador = None
+
+        return None
+
+
+    # ========================================================
+    # LOAD FROM DATABASE
+    # ========================================================
+
+    ambassador = db.session.get(
+        CommunityAmbassador,
+        ambassador_id,
+    )
+
+
+    # ========================================================
+    # VALIDATE ACCOUNT
+    # ========================================================
+
+    if not ambassador:
+
+        clear_ambassador_session()
+
+        g.current_ambassador = None
+
+        return None
+
+
+    if not ambassador.active:
+
+        clear_ambassador_session()
+
+        g.current_ambassador = None
+
+        return None
+
+
+    # ========================================================
+    # VALIDATE COMMUNITY
+    # ========================================================
+
+    if not ambassador.zone:
+
+        clear_ambassador_session()
+
+        g.current_ambassador = None
+
+        return None
+
+
+    if not ambassador.zone.active:
+
+        clear_ambassador_session()
+
+        g.current_ambassador = None
+
+        return None
+
+
+    # ========================================================
+    # CURRENT REQUEST
+    # ========================================================
+
+    g.current_ambassador = ambassador
+
+    return ambassador
+
+
+def ambassador_required(
+    view_function,
+):
+    """
+    Protect a Flask route so that only an authenticated,
+    active Community Ambassador assigned to an active
+    Kalxa Zone can access it.
+    """
+
+    @wraps(
+        view_function
+    )
+    def wrapped_view(
+        *args,
+        **kwargs,
+    ):
+
+        ambassador = (
+            get_current_ambassador()
+        )
+
+
+        if not ambassador:
+
+            flash(
+                (
+                    "Please log in to access the "
+                    "Community Ambassador area."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "ambassador_login"
+                )
+            )
+
+
+        return view_function(
+            *args,
+            **kwargs,
+        )
+
+
+    return wrapped_view
 
 # ============================================================
 # ADMIN - CREATE COMMUNITY AMBASSADOR
@@ -3949,22 +4143,9 @@ def ambassador_login():
     # creating the new authenticated session.
     #
 
-    session.pop(
-        "ambassador_id",
-        None,
-    )
-
-    session.pop(
-        "ambassador_zone_id",
-        None,
-    )
-
-    session.pop(
-        "ambassador_name",
-        None,
-    )
-
-
+    
+    clear_ambassador_session()
+         
     session[
         "ambassador_id"
     ] = ambassador.id
@@ -4010,124 +4191,23 @@ def ambassador_login():
         "GET",
     ],
 )
+@ambassador_required
 def ambassador_dashboard():
 
     # ========================================================
-    # REQUIRE AMBASSADOR SESSION
+    # CURRENT AMBASSADOR
     # ========================================================
 
-    ambassador_id = session.get(
-        "ambassador_id"
-    )
-
-
-    if not ambassador_id:
-
-        flash(
-            (
-                "Please log in to access the "
-                "Community Ambassador dashboard."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "ambassador_login"
-            )
-        )
-
-
-    # ========================================================
-    # LOAD AMBASSADOR FROM DATABASE
-    # ========================================================
-
-    ambassador = db.session.get(
-        CommunityAmbassador,
-        ambassador_id,
+    ambassador = (
+        get_current_ambassador()
     )
 
 
     # ========================================================
-    # VALIDATE ACCOUNT
+    # ASSIGNED COMMUNITY
     # ========================================================
 
-    if (
-        not ambassador
-        or not ambassador.active
-    ):
-
-        session.pop(
-            "ambassador_id",
-            None,
-        )
-
-        session.pop(
-            "ambassador_zone_id",
-            None,
-        )
-
-        session.pop(
-            "ambassador_name",
-            None,
-        )
-
-
-        flash(
-            (
-                "Your Community Ambassador "
-                "session is no longer valid."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "ambassador_login"
-            )
-        )
-
-
-    # ========================================================
-    # VALIDATE ASSIGNED ZONE
-    # ========================================================
-
-    if (
-        not ambassador.zone
-        or not ambassador.zone.active
-    ):
-
-        flash(
-            (
-                "Your assigned Kalxa community "
-                "is currently unavailable."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "ambassador_login"
-            )
-        )
-
-
-    # ========================================================
-    # IMPORTANT
-    # ========================================================
-    #
-    # We deliberately use ambassador.zone_id from the
-    # DATABASE.
-    #
-    # We do NOT trust a zone_id supplied through:
-    #
-    #     URL
-    #     query string
-    #     form
-    #     browser
-    #
-    # The database assignment is the source of truth.
-    # ========================================================
+    zone = ambassador.zone
 
 
     # ========================================================
@@ -4137,9 +4217,12 @@ def ambassador_dashboard():
     return render_template(
         "ambassador/dashboard.html",
         ambassador=ambassador,
-        zone=ambassador.zone,
+        zone=zone,
     )
 
+# ============================================================
+# COMMUNITY AMBASSADOR - DASHBOARD
+# ============================================================
 # ============================================================
 # COMMUNITY AMBASSADOR - LOGOUT
 # ============================================================
@@ -4153,23 +4236,10 @@ def ambassador_dashboard():
 def ambassador_logout():
 
     # ========================================================
-    # REMOVE AMBASSADOR SESSION
+    # CLEAR SESSION
     # ========================================================
 
-    session.pop(
-        "ambassador_id",
-        None,
-    )
-
-    session.pop(
-        "ambassador_zone_id",
-        None,
-    )
-
-    session.pop(
-        "ambassador_name",
-        None,
-    )
+    clear_ambassador_session()
 
 
     # ========================================================
@@ -4187,9 +4257,93 @@ def ambassador_logout():
             "ambassador_login"
         )
     )
+
+
+
+
+
+@app.context_processor
+def inject_current_ambassador():
+
+    ambassador = None
+
+
+    if session.get(
+        "ambassador_id"
+    ):
+
+        ambassador = (
+            get_current_ambassador()
+        )
+
+
+    return {
+        "current_ambassador": ambassador,
+    }
+
+
+
 # ============================================================
-# APPROVE NEXT 10 JOBS
-#
+# COMMUNITY AMBASSADOR - ZONE AUTHORIZATION HELPERS
+# ============================================================
+
+def get_ambassador_submission_or_404(
+    submission_id,
+):
+    """
+    Load a PendingSubmission only when it belongs to the
+    currently authenticated Community Ambassador's zone.
+
+    SECURITY:
+
+    The submission ID alone is NOT enough.
+
+    Both conditions must match:
+
+        PendingSubmission.id == submission_id
+
+        AND
+
+        PendingSubmission.zone_id
+            == current_ambassador.zone_id
+
+    This prevents an Ambassador from accessing another
+    community's submission by changing the URL.
+    """
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    if not ambassador:
+
+        abort(
+            404
+        )
+
+
+    submission = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.id
+            == submission_id,
+
+            PendingSubmission.zone_id
+            == ambassador.zone_id,
+        )
+        .first()
+    )
+
+
+    if not submission:
+
+        abort(
+            404
+        )
+
+
+    return submission
 # IMPORTANT:
 # The endpoint/function name remains approve_all_jobs so your
 # current submissions.html url_for("admin.approve_all_jobs")
@@ -4572,6 +4726,172 @@ def approve_all_jobs():
     )
 
 
+# ============================================================
+# COMMUNITY AMBASSADOR - SUBMISSIONS
+# ============================================================
+
+@app.route(
+    "/ambassador/submissions",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_submissions():
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    # ========================================================
+    # STATUS FILTER
+    # ========================================================
+
+    status = (
+        request.args
+        .get(
+            "status",
+            "pending",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    allowed_statuses = {
+        "all",
+        "pending",
+        "approved",
+        "rejected",
+        "needs_changes",
+    }
+
+
+    if status not in allowed_statuses:
+
+        status = "pending"
+
+
+    # ========================================================
+    # ZONE-SCOPED QUERY
+    # ========================================================
+
+    query = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id
+        )
+    )
+
+
+    # ========================================================
+    # OPTIONAL STATUS FILTER
+    # ========================================================
+
+    if status != "all":
+
+        query = query.filter(
+            PendingSubmission.status
+            == status
+        )
+
+
+    # ========================================================
+    # ORDER
+    # ========================================================
+
+    submissions = (
+        query
+        .order_by(
+            PendingSubmission.created_at.desc()
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # COUNTS
+    # ========================================================
+
+    pending_count = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id,
+
+            PendingSubmission.status
+            == "pending",
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/submissions.html",
+        ambassador=ambassador,
+        zone=ambassador.zone,
+        submissions=submissions,
+        selected_status=status,
+        pending_count=pending_count,
+    )
+
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - SUBMISSION DETAIL
+# ============================================================
+
+@app.route(
+    "/ambassador/submissions/<int:submission_id>",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_submission_detail(
+    submission_id,
+):
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    # ========================================================
+    # ZONE-SCOPED SUBMISSION
+    # ========================================================
+
+    submission = (
+        get_ambassador_submission_or_404(
+            submission_id
+        )
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/submission_detail.html",
+        ambassador=ambassador,
+        zone=ambassador.zone,
+        submission=submission,
+    )
 # ============================================================
 # APPROVE NEXT 10 RETAIL SPECIALS
 # ============================================================
