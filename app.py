@@ -10018,7 +10018,135 @@ def qr_access(access_code):
         ]
     )
 
+    
+        # ============================================================
+    # KALXA STORIES
+    #
+    # Kalxa Stories is a separate Flask application/database.
+    #
+    # Discovery consumes its public API rather than duplicating
+    # Stories data inside the Discovery database.
+    #
+    # IMPORTANT:
+    #
+    # A Stories outage must NEVER prevent Kalxa Discovery from
+    # loading. If the request fails, we simply render Discovery
+    # without the Stories rail.
+    # ============================================================
 
+    kalxa_stories = []
+
+
+    kalxa_stories_api_url = (
+        "https://kalxa-stories.onrender.com"
+        "/api/public/stories"
+    )
+
+
+    try:
+
+        stories_response = (
+            requests.get(
+                kalxa_stories_api_url,
+
+                params={
+                    "limit": 8,
+                },
+
+                timeout=5,
+            )
+        )
+
+
+        stories_response.raise_for_status()
+
+
+        stories_payload = (
+            stories_response.json()
+        )
+
+
+        if isinstance(
+            stories_payload,
+            dict,
+        ):
+
+            stories_data = (
+                stories_payload.get(
+                    "stories",
+                    [],
+                )
+            )
+
+
+            if isinstance(
+                stories_data,
+                list,
+            ):
+
+                kalxa_stories = [
+
+                    story
+
+                    for story
+                    in stories_data
+
+                    if (
+                        isinstance(
+                            story,
+                            dict,
+                        )
+
+                        and
+
+                        story.get(
+                            "story_url"
+                        )
+                    )
+
+                ]
+
+
+        app.logger.info(
+            (
+                "Loaded %s Kalxa Stories "
+                "for Discovery "
+                "zone=%s"
+            ),
+            len(
+                kalxa_stories
+            ),
+            zone.id,
+        )
+
+
+    except requests.RequestException as exc:
+
+        app.logger.warning(
+            (
+                "Kalxa Stories API unavailable "
+                "zone=%s "
+                "error=%s"
+            ),
+            zone.id,
+            exc,
+        )
+
+
+    except (
+        ValueError,
+        TypeError,
+    ) as exc:
+
+        app.logger.warning(
+            (
+                "Invalid Kalxa Stories API response "
+                "zone=%s "
+                "error=%s"
+            ),
+            zone.id,
+            exc,
+        )
     # ============================================================
     # RENDER ACCESS PAGE
     # ============================================================
