@@ -36,7 +36,9 @@ from models import (
     Zone,
     ZoneCategoryAppearance,
     db,
+    CommunityAmbassador,
 )
+
 from pricing import (
     KalxaPricingError,
     PRICING_MODEL_CAMPAIGN,
@@ -3391,6 +3393,388 @@ def _send_approved_content_push(
 # ============================================================
 
 
+# ============================================================
+# ADMIN - CREATE COMMUNITY AMBASSADOR
+# ============================================================
+
+@app.route(
+    "/admin/community-ambassadors/new",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_create_community_ambassador():
+
+    # ========================================================
+    # SUPER ADMIN AUTHENTICATION
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Replace this with the SAME admin authentication check
+    # already used by your existing Kalxa admin routes.
+    #
+    # Do not allow organizers or future ambassadors to access
+    # this route.
+    # ========================================================
+
+    if not session.get("admin_logged_in"):
+
+        flash(
+            "Please log in as an administrator.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_login"
+            )
+        )
+
+
+    # ========================================================
+    # LOAD ACTIVE KALXA COMMUNITIES
+    # ========================================================
+
+    zones = (
+        Zone.query
+        .filter_by(
+            active=True,
+        )
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # GET
+    # ========================================================
+
+    if request.method == "GET":
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    # ========================================================
+    # POST - FORM VALUES
+    # ========================================================
+
+    name = (
+        request.form
+        .get(
+            "name",
+            "",
+        )
+        .strip()
+    )
+
+    email = (
+        request.form
+        .get(
+            "email",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+    phone = (
+        request.form
+        .get(
+            "phone",
+            "",
+        )
+        .strip()
+    )
+
+    password = (
+        request.form
+        .get(
+            "password",
+            "",
+        )
+    )
+
+    zone_id_raw = (
+        request.form
+        .get(
+            "zone_id",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # VALIDATION - REQUIRED FIELDS
+    # ========================================================
+
+    if not name:
+
+        flash(
+            "Ambassador name is required.",
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    if not email:
+
+        flash(
+            "Ambassador email is required.",
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    if not password:
+
+        flash(
+            "Ambassador password is required.",
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    if len(password) < 8:
+
+        flash(
+            (
+                "Ambassador password must contain "
+                "at least 8 characters."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    # ========================================================
+    # VALIDATION - ZONE
+    # ========================================================
+
+    try:
+
+        zone_id = int(
+            zone_id_raw
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        flash(
+            "Please select a valid community.",
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    zone = db.session.get(
+        Zone,
+        zone_id,
+    )
+
+
+    if not zone:
+
+        flash(
+            "The selected community does not exist.",
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    if not zone.active:
+
+        flash(
+            "The selected community is not active.",
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    # ========================================================
+    # VALIDATION - UNIQUE EMAIL
+    # ========================================================
+
+    existing_email = (
+        CommunityAmbassador.query
+        .filter(
+            db.func.lower(
+                CommunityAmbassador.email
+            )
+            == email
+        )
+        .first()
+    )
+
+
+    if existing_email:
+
+        flash(
+            (
+                "A Community Ambassador with that "
+                "email address already exists."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    # ========================================================
+    # VALIDATION - UNIQUE PHONE
+    # ========================================================
+
+    if phone:
+
+        existing_phone = (
+            CommunityAmbassador.query
+            .filter_by(
+                phone=phone,
+            )
+            .first()
+        )
+
+
+        if existing_phone:
+
+            flash(
+                (
+                    "A Community Ambassador with that "
+                    "phone number already exists."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_form.html",
+                zones=zones,
+            )
+
+
+    # ========================================================
+    # CREATE COMMUNITY AMBASSADOR
+    # ========================================================
+
+    ambassador = CommunityAmbassador(
+
+        name=name,
+
+        email=email,
+
+        phone=(
+            phone
+            or None
+        ),
+
+        zone_id=zone.id,
+
+        active=True,
+
+    )
+
+
+    ambassador.set_password(
+        password
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.add(
+            ambassador
+        )
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Failed to create Community "
+                "Ambassador."
+            )
+        )
+
+        flash(
+            (
+                "The Community Ambassador could "
+                "not be created."
+            ),
+            "error",
+        )
+
+        return render_template(
+            "admin/community_ambassador_form.html",
+            zones=zones,
+        )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            f"{ambassador.name} was created as "
+            f"the Community Ambassador for "
+            f"{zone.name}."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_create_community_ambassador"
+        )
+    )
 # ============================================================
 # APPROVE NEXT 10 JOBS
 #
