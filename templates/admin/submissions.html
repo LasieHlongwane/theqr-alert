@@ -482,6 +482,238 @@
         }
 
 
+        /* =========================================================
+           PAYMENT / MODERATION WORKFLOW
+        ========================================================= */
+
+        .payment-waiting-box {
+
+            margin:
+                16px 0;
+
+            padding:
+                16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.18
+                );
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.055
+                );
+        }
+
+
+        .payment-waiting-box strong {
+
+            color:
+                #fff4df;
+        }
+
+
+        .payment-waiting-box p {
+
+            margin:
+                7px 0;
+
+            line-height:
+                1.5;
+        }
+
+
+        .payment-confirmed-box {
+
+            margin:
+                16px 0;
+
+            padding:
+                16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.14
+                );
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.055
+                );
+        }
+
+
+        .payment-confirmed-box strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                6px;
+
+            color:
+                #fff4df;
+        }
+
+
+        .payment-confirmed-box p {
+
+            margin:
+                5px 0;
+
+            line-height:
+                1.5;
+        }
+
+
+        .moderation-locked-box {
+
+            width:
+                100%;
+
+            padding:
+                14px 16px;
+
+            border:
+                1px dashed
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.22
+                );
+
+            border-radius:
+                12px;
+
+            background:
+                rgba(
+                    255,
+                    244,
+                    223,
+                    0.04
+                );
+        }
+
+
+        .moderation-locked-box strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                5px;
+
+            color:
+                #fff4df;
+        }
+
+
+        .moderation-locked-box p {
+
+            margin:
+                0;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.56
+                );
+
+            font-size:
+                11px;
+
+            line-height:
+                1.5;
+        }
+
+
+        .ambassador-ready-box {
+
+            width:
+                100%;
+
+            padding:
+                14px 16px;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.14
+                );
+
+            border-radius:
+                12px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.055
+                );
+        }
+
+
+        .ambassador-ready-box strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                5px;
+
+            color:
+                #fff4df;
+        }
+
+
+        .ambassador-ready-box p {
+
+            margin:
+                0;
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.56
+                );
+
+            font-size:
+                11px;
+
+            line-height:
+                1.5;
+        }
+
+
         @media (max-width: 650px) {
 
             .bulk-job-approval {
@@ -575,8 +807,8 @@
 
 
         <p>
-            Review submissions, commercial packages
-            and customer payments.
+            Review submissions, confirm customer
+            payments and monitor Ambassador moderation.
         </p>
 
     </section>
@@ -707,6 +939,9 @@
                 {{ pending_jobs_count }}
                 pending jobs / opportunities are waiting
                 for review.
+
+                Jobs are free and do not require
+                payment confirmation.
 
                 A maximum of 10 will be processed
                 at a time.
@@ -1212,6 +1447,7 @@
                             {% if item.distribution_zone_ids %}
 
                                 {{ item.distribution_zone_ids|length }}
+
                                 zone{% if item.distribution_zone_ids|length != 1 %}s{% endif %}
 
                             {% else %}
@@ -1253,18 +1489,160 @@
                     </p>
 
 
+                    <!-- =================================
+                         PAYMENT WAITING
+                    ================================== -->
+
                     {% if
                         item.status == "pending"
-                        and item.payment_status == "unpaid"
+                        and item.payment_status not in [
+                            "paid",
+                            "waived"
+                        ]
                     %}
 
-                    <p class="muted">
+                    <div class="payment-waiting-box">
 
-                        Payment has not yet been confirmed.
-                        The listing will remain hidden if
-                        approved before payment.
+                        <strong>
+                            PAYMENT WAITING
+                        </strong>
 
-                    </p>
+
+                        <p>
+
+                            Payment must be confirmed
+                            before this submission can
+                            be approved.
+
+                        </p>
+
+
+                        {% if item.amount_due is not none %}
+
+                        <p>
+
+                            Amount expected:
+
+                            <strong>
+                                R{{ "%.2f"|format(item.amount_due) }}
+                            </strong>
+
+                        </p>
+
+                        {% endif %}
+
+
+                        {% if item.payment_status == "unpaid" %}
+
+                        <p>
+
+                            Verify the transaction in Yoco,
+                            then confirm the payment below.
+
+                        </p>
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.confirm_submission_payment',
+                                submission_id=item.id
+                            ) }}"
+                            onsubmit="
+                                return confirm(
+                                    'Have you verified this payment in Yoco?'
+                                );
+                            "
+                        >
+
+                            <button type="submit">
+                                ✓ Confirm Payment
+                            </button>
+
+                        </form>
+
+
+                        {% elif item.payment_status == "refunded" %}
+
+                        <p>
+                            This payment has been refunded.
+                        </p>
+
+
+                        {% elif item.payment_status == "failed" %}
+
+                        <p>
+                            The payment attempt failed.
+                        </p>
+
+
+                        {% else %}
+
+                        <p>
+                            Payment is not yet ready
+                            for confirmation.
+                        </p>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================
+                         PAYMENT CONFIRMED
+                    ================================== -->
+
+                    {% elif
+                        item.status == "pending"
+                        and item.payment_status == "paid"
+                    %}
+
+                    <div class="payment-confirmed-box">
+
+                        <strong>
+                            ✓ PAYMENT CONFIRMED
+                        </strong>
+
+
+                        {% if item.amount_due is not none %}
+
+                        <p>
+                            R{{ "%.2f"|format(item.amount_due) }}
+                        </p>
+
+                        {% endif %}
+
+
+                        <p>
+                            The Community Ambassador can
+                            now review and approve this
+                            submission.
+                        </p>
+
+                    </div>
+
+
+                    <!-- =================================
+                         PAYMENT WAIVED
+                    ================================== -->
+
+                    {% elif
+                        item.status == "pending"
+                        and item.payment_status == "waived"
+                    %}
+
+                    <div class="payment-confirmed-box">
+
+                        <strong>
+                            ✓ PAYMENT WAIVED
+                        </strong>
+
+                        <p>
+                            This submission is ready
+                            for moderation.
+                        </p>
+
+                    </div>
 
                     {% endif %}
 
@@ -1476,10 +1854,15 @@
                 <p>
 
                     {% if item.category in ["jobs", "opportunities"] %}
+
                         📅 Opens:
+
                     {% else %}
+
                         📅 Starts:
+
                     {% endif %}
+
 
                     {{
                         item.start_date.strftime(
@@ -1500,10 +1883,15 @@
                 <p>
 
                     {% if item.category in ["jobs", "opportunities"] %}
+
                         📅 Closes:
+
                     {% else %}
+
                         📅 Ends:
+
                     {% endif %}
+
 
                     {{
                         item.end_date.strftime(
@@ -1525,20 +1913,95 @@
                 <div class="content-actions">
 
 
+                    <!-- =================================
+                         FREE CONTENT
+                    ================================== -->
+
+                    {% if not item.pricing_model %}
+
                     <form
                         method="POST"
                         action="{{ url_for(
                             'admin.approve_submission',
                             submission_id=item.id
                         ) }}"
+                        onsubmit="
+                            return confirm(
+                                'Approve and publish this free submission?'
+                            );
+                        "
                     >
 
                         <button type="submit">
-                            ✓ Approve
+                            ✓ Approve Free Content
                         </button>
 
                     </form>
 
+
+                    <!-- =================================
+                         COMMERCIAL - PAYMENT WAITING
+                    ================================== -->
+
+                    {% elif
+                        item.payment_status not in [
+                            "paid",
+                            "waived"
+                        ]
+                    %}
+
+                    <div class="moderation-locked-box">
+
+                        <strong>
+                            🔒 CAN'T APPROVE YET
+                        </strong>
+
+                        <p>
+
+                            Payment is waiting to be
+                            confirmed.
+
+                            Once Kalxa confirms payment,
+                            this submission will become
+                            available for Community
+                            Ambassador approval.
+
+                        </p>
+
+                    </div>
+
+
+                    <!-- =================================
+                         COMMERCIAL - READY FOR AMBASSADOR
+                    ================================== -->
+
+                    {% else %}
+
+                    <div class="ambassador-ready-box">
+
+                        <strong>
+                            ✓ READY FOR AMBASSADOR REVIEW
+                        </strong>
+
+                        <p>
+
+                            Payment has been confirmed.
+
+                            The Community Ambassador
+                            assigned to this zone can now
+                            approve or reject the
+                            submission.
+
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================
+                         SUPER ADMIN REJECTION
+                    ================================== -->
 
                     <form
                         method="POST"
@@ -1596,81 +2059,20 @@
 
 
                 <!-- =================================
-                     PAYMENT MANAGEMENT
+                     APPROVED PAYMENT STATUS
                 ================================== -->
 
                 {% if item.pricing_model %}
 
 
-                    {% if item.payment_status == "unpaid" %}
-
-                    <div class="admin-alert">
-
-                        <strong>
-                            PAYMENT REQUIRED
-                        </strong>
-
-                        <p>
-
-                            This listing is approved but
-                            remains hidden until payment
-                            is confirmed.
-
-                        </p>
-
-
-                        {% if item.amount_due is not none %}
-
-                        <p>
-
-                            Amount expected:
-
-                            <strong>
-                                R{{ "%.2f"|format(item.amount_due) }}
-                            </strong>
-
-                        </p>
-
-                        {% endif %}
-
-
-                        <p>
-
-                            Confirm only after verifying
-                            the payment in Yoco.
-
-                        </p>
-
-
-                        <form
-                            method="POST"
-                            action="{{ url_for(
-                                'admin.confirm_submission_payment',
-                                submission_id=item.id
-                            ) }}"
-                            onsubmit="
-                                return confirm(
-                                    'Have you verified this payment in Yoco?'
-                                );
-                            "
-                        >
-
-                            <button type="submit">
-                                ✓ Confirm Payment
-                            </button>
-
-                        </form>
-
-                    </div>
-
-
-                    {% elif item.payment_status == "paid" %}
+                    {% if item.payment_status == "paid" %}
 
                     <div class="submission-review-result approved">
 
                         <strong>
                             ✓ PAYMENT CONFIRMED
                         </strong>
+
 
                         {% if item.amount_due is not none %}
 
@@ -1700,6 +2102,18 @@
 
                         <strong>
                             PAYMENT REFUNDED
+                        </strong>
+
+                    </div>
+
+
+                    {% else %}
+
+                    <div class="admin-alert">
+
+                        <strong>
+                            PAYMENT STATUS:
+                            {{ item.payment_status|upper }}
                         </strong>
 
                     </div>
@@ -1768,6 +2182,33 @@
 
                 {% endif %}
 
+
+                {% if
+                    item.pricing_model
+                    and item.payment_status == "paid"
+                %}
+
+                <div class="admin-alert">
+
+                    <strong>
+                        PAYMENT WAS CONFIRMED
+                    </strong>
+
+                    <p>
+
+                        This submission was rejected
+                        after payment had already been
+                        confirmed.
+
+                        Review whether a refund or other
+                        customer action is required.
+
+                    </p>
+
+                </div>
+
+                {% endif %}
+
                 {% endif %}
 
 
@@ -1792,7 +2233,8 @@
             <p>
 
                 There is currently nothing
-                waiting for review.
+                waiting for payment confirmation
+                or moderation.
 
             </p>
 
@@ -1803,12 +2245,20 @@
                 No approved submissions yet.
             </h2>
 
+            <p>
+                Approved content will appear here.
+            </p>
+
 
             {% elif selected_status == "rejected" %}
 
             <h2>
                 No rejected submissions yet.
             </h2>
+
+            <p>
+                Rejected submissions will appear here.
+            </p>
 
             {% endif %}
 
