@@ -7970,6 +7970,253 @@ def ambassador_analytics():
 
 
 # ============================================================
+# ADMIN - COMMUNITY AMBASSADORS
+# ============================================================
+
+@admin_bp.route(
+    "/community-ambassadors",
+    methods=["GET"],
+)
+def admin_community_ambassadors():
+
+    # ========================================================
+    # ADMIN AUTHENTICATION
+    # ========================================================
+
+    if not session.get("lac_admin"):
+
+        flash(
+            "Please log in as an administrator.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.login"
+            )
+        )
+
+
+    # ========================================================
+    # FILTER
+    # ========================================================
+
+    status_filter = (
+        request.args
+        .get(
+            "status",
+            "all",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    allowed_statuses = {
+        "all",
+        "active",
+        "inactive",
+    }
+
+
+    if status_filter not in allowed_statuses:
+        status_filter = "all"
+
+
+    # ========================================================
+    # BASE QUERY
+    # ========================================================
+
+    query = (
+        CommunityAmbassador.query
+        .join(
+            Zone,
+            CommunityAmbassador.zone_id == Zone.id,
+        )
+    )
+
+
+    # ========================================================
+    # STATUS FILTER
+    # ========================================================
+
+    if status_filter == "active":
+
+        query = query.filter(
+            CommunityAmbassador.active.is_(True)
+        )
+
+
+    elif status_filter == "inactive":
+
+        query = query.filter(
+            CommunityAmbassador.active.is_(False)
+        )
+
+
+    # ========================================================
+    # LOAD AMBASSADORS
+    # ========================================================
+
+    ambassadors = (
+        query
+        .order_by(
+            Zone.name.asc(),
+            CommunityAmbassador.name.asc(),
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # COUNTS
+    # ========================================================
+
+    total_count = (
+        CommunityAmbassador.query
+        .count()
+    )
+
+
+    active_count = (
+        CommunityAmbassador.query
+        .filter(
+            CommunityAmbassador.active.is_(True)
+        )
+        .count()
+    )
+
+
+    inactive_count = (
+        CommunityAmbassador.query
+        .filter(
+            CommunityAmbassador.active.is_(False)
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "admin/community_ambassadors.html",
+        ambassadors=ambassadors,
+        status_filter=status_filter,
+        total_count=total_count,
+        active_count=active_count,
+        inactive_count=inactive_count,
+    )
+
+
+# ============================================================
+# ADMIN - TOGGLE COMMUNITY AMBASSADOR STATUS
+# ============================================================
+# ============================================================
+# ADMIN - TOGGLE COMMUNITY AMBASSADOR STATUS
+# ============================================================
+
+@admin_bp.route(
+    "/community-ambassadors/<int:ambassador_id>/toggle-status",
+    methods=["POST"],
+)
+def admin_toggle_community_ambassador_status(
+    ambassador_id,
+):
+
+    # ========================================================
+    # ADMIN AUTHENTICATION
+    # ========================================================
+
+    if not session.get("lac_admin"):
+
+        flash(
+            "Please log in as an administrator.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.login"
+            )
+        )
+
+
+    # ========================================================
+    # LOAD AMBASSADOR
+    # ========================================================
+
+    ambassador = db.session.get(
+        CommunityAmbassador,
+        ambassador_id,
+    )
+
+
+    if not ambassador:
+
+        abort(404)
+
+
+    # ========================================================
+    # CHANGE STATUS
+    # ========================================================
+
+    ambassador.active = not ambassador.active
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "Failed to change Community Ambassador status."
+        )
+
+        flash(
+            "The Ambassador status could not be changed.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.admin_community_ambassadors"
+            )
+        )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    if ambassador.active:
+
+        flash(
+            f"{ambassador.name} has been activated.",
+            "success",
+        )
+
+    else:
+
+        # Their existing session may technically remain alive
+        # until ambassador_required checks the account again.
+        # Your current helper already validates active status.
+        flash(
+            f"{ambassador.name} has been deactivated.",
+            "success",
+        )
+
+
+    return redirect(
+        url_for(
+            "admin.admin_community_ambassadors"
+        )
+    )
+# ============================================================
 # CONTENT PUSH NOTIFICATION HELPER
 # ============================================================
 
