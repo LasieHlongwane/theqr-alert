@@ -95,6 +95,90 @@
 
 
         /* =====================================================
+           AMBASSADOR LOCKED ZONE
+        ====================================================== */
+
+        .kalxa-locked-zone {
+
+            margin-top: 8px;
+
+            padding: 14px 16px;
+
+            border:
+                1px solid
+                rgba(128, 128, 128, 0.35);
+
+            border-radius: 10px;
+
+            background:
+                rgba(128, 128, 128, 0.08);
+        }
+
+
+        .kalxa-locked-zone-label {
+
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            letter-spacing: 0.7px;
+
+            text-transform: uppercase;
+
+            opacity: 0.7;
+        }
+
+
+        .kalxa-locked-zone-name {
+
+            font-size: 1rem;
+
+            font-weight: 800;
+        }
+
+
+        .kalxa-zone-lock-note {
+
+            margin-top: 8px;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+
+            opacity: 0.75;
+        }
+
+
+        .kalxa-ambassador-reach {
+
+            margin: 14px 0;
+
+            padding: 14px 16px;
+
+            border:
+                1px solid
+                rgba(128, 128, 128, 0.35);
+
+            border-radius: 10px;
+
+            background:
+                rgba(128, 128, 128, 0.06);
+        }
+
+
+        .kalxa-ambassador-reach strong {
+
+            display: block;
+
+            margin-bottom: 5px;
+        }
+
+
+        /* =====================================================
            SPONSORED VISIBILITY
         ====================================================== */
 
@@ -362,17 +446,39 @@
 
         <div class="admin-nav-links">
 
-            <a href="{{ url_for('admin.analytics') }}">
-                Analytics
-            </a>
+            {% if current_ambassador %}
 
-            <a href="{{ url_for('admin.categories') }}">
-                Categories
-            </a>
+                <a
+                    href="{{ url_for(
+                        'admin.ambassador_dashboard'
+                    ) }}"
+                >
+                    Dashboard
+                </a>
 
-            <a href="{{ url_for('admin.content_list') }}">
-                Content
-            </a>
+                <a
+                    href="{{ url_for(
+                        'admin.ambassador_content'
+                    ) }}"
+                >
+                    Content
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('admin.analytics') }}">
+                    Analytics
+                </a>
+
+                <a href="{{ url_for('admin.categories') }}">
+                    Categories
+                </a>
+
+                <a href="{{ url_for('admin.content_list') }}">
+                    Content
+                </a>
+
+            {% endif %}
 
         </div>
 
@@ -405,10 +511,25 @@
         </h1>
 
 
-        <p>
-            Select what you are listing. Kalxa will determine
-            the listing lifecycle and commercial pricing model.
-        </p>
+        {% if current_ambassador %}
+
+            <p>
+                Add local content for
+                <strong>
+                    {{ current_ambassador.zone.name }}
+                </strong>.
+                Your Ambassador account is restricted to
+                this community.
+            </p>
+
+        {% else %}
+
+            <p>
+                Select what you are listing. Kalxa will determine
+                the listing lifecycle and commercial pricing model.
+            </p>
+
+        {% endif %}
 
 
         <!-- =================================================
@@ -439,39 +560,88 @@
                  HOME ZONE
             ================================================== -->
 
-            <label>
+            {% if current_ambassador %}
 
-                Home Zone
+                <!-- =============================================
+                     AMBASSADOR:
+                     ZONE IS LOCKED TO ASSIGNED COMMUNITY
+                ============================================== -->
 
-                <select
-                    name="zone_id"
-                    id="zone-select"
-                    required
-                >
+                <label>
 
-                    {% for zone in zones %}
+                    Home Zone
 
-                        <option
-                            value="{{ zone.id }}"
+                    <div class="kalxa-locked-zone">
 
-                            {% if item and item.zone_id == zone.id %}
-                                selected
-                            {% endif %}
-                        >
-                            {{ zone.name }}
-                        </option>
+                        <span class="kalxa-locked-zone-label">
+                            Assigned Community
+                        </span>
 
-                    {% endfor %}
+                        <div class="kalxa-locked-zone-name">
+                            {{ current_ambassador.zone.name }}
+                        </div>
 
-                </select>
+                    </div>
 
 
-                <small class="muted">
-                    The home zone is where this business,
-                    event or opportunity originates.
-                </small>
+                    <input
+                        type="hidden"
+                        name="zone_id"
+                        id="zone-select"
+                        value="{{ current_ambassador.zone_id }}"
+                    >
 
-            </label>
+
+                    <div class="kalxa-zone-lock-note">
+                        Your Community Ambassador account can
+                        only publish content inside your assigned
+                        Kalxa community.
+                    </div>
+
+                </label>
+
+            {% else %}
+
+                <!-- =============================================
+                     CENTRAL ADMIN:
+                     NORMAL ZONE SELECTION
+                ============================================== -->
+
+                <label>
+
+                    Home Zone
+
+                    <select
+                        name="zone_id"
+                        id="zone-select"
+                        required
+                    >
+
+                        {% for zone in zones %}
+
+                            <option
+                                value="{{ zone.id }}"
+
+                                {% if item and item.zone_id == zone.id %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ zone.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+
+                    <small class="muted">
+                        The home zone is where this business,
+                        event or opportunity originates.
+                    </small>
+
+                </label>
+
+            {% endif %}
 
 
             <!-- =================================================
@@ -1335,63 +1505,110 @@
                     </h3>
 
 
-                    <p class="muted">
-                        Choose where this campaign should be
-                        distributed. The home zone is included
-                        automatically. Current MVP packages
-                        support up to 3 zones.
-                    </p>
+                    {% if current_ambassador %}
+
+                        <p class="muted">
+                            Community Ambassador campaigns are
+                            restricted to your assigned zone.
+                            Cross-zone distribution is controlled
+                            centrally by Kalxa.
+                        </p>
 
 
-                    <div
-                        class="zone-checkbox-list"
-                        style="
-                            display: grid;
-                            gap: 10px;
-                            margin: 14px 0;
-                        "
-                    >
+                        <div class="kalxa-ambassador-reach">
 
-                        {% for zone in zones %}
+                            <strong>
+                                Campaign Zone
+                            </strong>
 
-                            <label class="checkbox-label">
+                            {{ current_ambassador.zone.name }}
 
-                                <input
-                                    type="checkbox"
-                                    name="distribution_zone_ids"
-                                    value="{{ zone.id }}"
-                                    data-zone-id="{{ zone.id }}"
-                                    class="distribution-zone-checkbox"
-
-                                    {% if item %}
-                                        {% for link in item.distribution_zone_links %}
-                                            {% if link.zone_id == zone.id %}
-                                                checked
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                >
-
-                                {{ zone.name }}
-
-                            </label>
-
-                        {% endfor %}
-
-                    </div>
+                        </div>
 
 
-                    <div class="admin-alert">
+                        <input
+                            type="hidden"
+                            name="distribution_zone_ids"
+                            value="{{ current_ambassador.zone_id }}"
+                            data-zone-id="{{ current_ambassador.zone_id }}"
+                            class="distribution-zone-checkbox"
+                            data-ambassador-locked="true"
+                        >
 
-                        Campaign reach:
 
-                        <strong id="campaign-zone-count">
-                            0
-                        </strong>
+                        <div class="admin-alert">
 
-                        zone(s)
+                            Campaign reach:
 
-                    </div>
+                            <strong id="campaign-zone-count">
+                                1
+                            </strong>
+
+                            zone
+
+                        </div>
+
+                    {% else %}
+
+                        <p class="muted">
+                            Choose where this campaign should be
+                            distributed. The home zone is included
+                            automatically. Current MVP packages
+                            support up to 3 zones.
+                        </p>
+
+
+                        <div
+                            class="zone-checkbox-list"
+                            style="
+                                display: grid;
+                                gap: 10px;
+                                margin: 14px 0;
+                            "
+                        >
+
+                            {% for zone in zones %}
+
+                                <label class="checkbox-label">
+
+                                    <input
+                                        type="checkbox"
+                                        name="distribution_zone_ids"
+                                        value="{{ zone.id }}"
+                                        data-zone-id="{{ zone.id }}"
+                                        class="distribution-zone-checkbox"
+
+                                        {% if item %}
+                                            {% for link in item.distribution_zone_links %}
+                                                {% if link.zone_id == zone.id %}
+                                                    checked
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    >
+
+                                    {{ zone.name }}
+
+                                </label>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <div class="admin-alert">
+
+                            Campaign reach:
+
+                            <strong id="campaign-zone-count">
+                                0
+                            </strong>
+
+                            zone(s)
+
+                        </div>
+
+                    {% endif %}
 
                 </div>
 
@@ -2112,6 +2329,26 @@
         document.getElementById(
             "zone-select"
         );
+
+
+    // =====================================================
+    // AMBASSADOR CONTEXT
+    // =====================================================
+
+    const isAmbassadorContext =
+        {{ (
+            true
+            if current_ambassador
+            else false
+        ) | tojson }};
+
+
+    const ambassadorZoneId =
+        {{ (
+            current_ambassador.zone_id
+            if current_ambassador
+            else ''
+        ) | tojson }};
 
 
     // =====================================================
@@ -3546,6 +3783,18 @@
 
     function getSelectedZoneCount() {
 
+        /*
+         * Ambassador campaign reach is always exactly
+         * the Ambassador's assigned zone.
+         */
+
+        if (isAmbassadorContext) {
+
+            return 1;
+
+        }
+
+
         let count = 0;
 
 
@@ -3574,6 +3823,56 @@
     function ensureCampaignHomeZone() {
 
         if (!homeZoneSelect) {
+
+            return;
+
+        }
+
+
+        /*
+         * Ambassador zone is already locked in the HTML.
+         * Do not allow client-side distribution changes.
+         */
+
+        if (isAmbassadorContext) {
+
+            zoneCheckboxes.forEach(
+                function(checkbox) {
+
+                    if (
+                        String(
+                            checkbox.dataset.zoneId
+                        )
+                        ===
+                        String(
+                            ambassadorZoneId
+                        )
+                    ) {
+
+                        if (
+                            checkbox.type
+                            ===
+                            "checkbox"
+                        ) {
+
+                            checkbox.checked =
+                                true;
+
+                        }
+
+                    }
+
+                }
+            );
+
+
+            if (zoneCountDisplay) {
+
+                zoneCountDisplay.textContent =
+                    "1";
+
+            }
+
 
             return;
 
@@ -3957,8 +4256,19 @@
 
             if (pricingModelHelp) {
 
-                pricingModelHelp.textContent =
-                    "Campaign pricing is based on duration and geographic reach.";
+                if (isAmbassadorContext) {
+
+                    pricingModelHelp.textContent =
+                        "Campaign pricing is based on duration. Ambassador distribution is restricted to the assigned community.";
+
+                }
+
+                else {
+
+                    pricingModelHelp.textContent =
+                        "Campaign pricing is based on duration and geographic reach.";
+
+                }
 
             }
 
@@ -4056,7 +4366,11 @@
     // HOME ZONE CHANGE
     // =====================================================
 
-    if (homeZoneSelect) {
+    if (
+        homeZoneSelect
+        &&
+        !isAmbassadorContext
+    ) {
 
         homeZoneSelect.addEventListener(
             "change",
@@ -4101,93 +4415,101 @@
 
     // =====================================================
     // CAMPAIGN ZONE CHANGE
+    //
+    // Central Admin only.
+    //
+    // Ambassador reach is locked to the assigned zone.
     // =====================================================
 
-    zoneCheckboxes.forEach(
-        function(checkbox) {
+    if (!isAmbassadorContext) {
 
-            checkbox.addEventListener(
-                "change",
-                function() {
+        zoneCheckboxes.forEach(
+            function(checkbox) {
 
-                    const pricingModel =
-                        getSelectedPricingModel();
+                checkbox.addEventListener(
+                    "change",
+                    function() {
 
-
-                    if (
-                        pricingModel === "campaign"
-                    ) {
-
-                        ensureCampaignHomeZone();
-
-                    }
-
-
-                    let zoneCount =
-                        getSelectedZoneCount();
-
-
-                    if (
-                        zoneCount > 3
-                    ) {
-
-                        const homeZoneId =
-                            homeZoneSelect
-                                ? String(
-                                    homeZoneSelect.value
-                                )
-                                : "";
-
-
-                        const changedZoneId =
-                            String(
-                                checkbox.dataset.zoneId
-                            );
+                        const pricingModel =
+                            getSelectedPricingModel();
 
 
                         if (
-                            changedZoneId
-                            !==
-                            homeZoneId
+                            pricingModel === "campaign"
                         ) {
 
-                            checkbox.checked =
-                                false;
+                            ensureCampaignHomeZone();
 
                         }
 
 
-                        alert(
-                            "The current Kalxa Campaign packages support a maximum of 3 zones."
-                        );
-
-
-                        ensureCampaignHomeZone();
-
-
-                        zoneCount =
+                        let zoneCount =
                             getSelectedZoneCount();
 
-                    }
+
+                        if (
+                            zoneCount > 3
+                        ) {
+
+                            const homeZoneId =
+                                homeZoneSelect
+                                    ? String(
+                                        homeZoneSelect.value
+                                    )
+                                    : "";
 
 
-                    if (zoneCountDisplay) {
+                            const changedZoneId =
+                                String(
+                                    checkbox.dataset.zoneId
+                                );
 
-                        zoneCountDisplay.textContent =
-                            String(
-                                zoneCount
+
+                            if (
+                                changedZoneId
+                                !==
+                                homeZoneId
+                            ) {
+
+                                checkbox.checked =
+                                    false;
+
+                            }
+
+
+                            alert(
+                                "The current Kalxa Campaign packages support a maximum of 3 zones."
                             );
 
+
+                            ensureCampaignHomeZone();
+
+
+                            zoneCount =
+                                getSelectedZoneCount();
+
+                        }
+
+
+                        if (zoneCountDisplay) {
+
+                            zoneCountDisplay.textContent =
+                                String(
+                                    zoneCount
+                                );
+
+                        }
+
+
+                        updateKalxaPrice();
+
                     }
+                );
 
+            }
+        );
 
-                    updateKalxaPrice();
-
-                }
-            );
-
-        }
-    );
+    }
 
 
     // =====================================================
@@ -4403,12 +4725,6 @@
 
     // =====================================================
     // AUTOMATIC SPONSORED EXPIRY PREVIEW
-    //
-    // The browser calculates this for immediate feedback.
-    //
-    // IMPORTANT:
-    //
-    // The backend independently calculates the real expiry.
     // =====================================================
 
     function updateSponsoredExpiry() {
@@ -4610,11 +4926,6 @@
 
     // =====================================================
     // SPONSORED DURATION CHANGE
-    //
-    // Update BOTH:
-    //
-    // - price
-    // - expiry
     // =====================================================
 
     if (sponsoredDurationSelect) {
@@ -4635,9 +4946,6 @@
 
     // =====================================================
     // SPONSORED START CHANGE
-    //
-    // Changing the manually selected start immediately
-    // recalculates the expiry preview.
     // =====================================================
 
     if (sponsoredStartsAt) {
