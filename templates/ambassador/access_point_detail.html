@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        {{ access_point.code }} | Kalxa QR Network
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .topbar-inner {
+            width: min(
+                100%,
+                900px
+            );
+            margin: 0 auto;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .brand {
+            color: #ffffff;
+            font-size: 21px;
+            font-weight: 950;
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: #d8dadd;
+            font-size: 10px;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                900px
+            );
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+        }
+
+        .eyebrow {
+            color: #777d85;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            margin: 7px 0 0;
+            font-size: 28px;
+            line-height: 1.15;
+        }
+
+        .code {
+            margin-top: 7px;
+            color: #6f757d;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status-row {
+            margin-top: 13px;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 6px 9px;
+            border-radius: 999px;
+            font-size: 8px;
+            font-weight: 900;
+        }
+
+        .badge-active {
+            background: #e3f2e7;
+            color: #28633b;
+        }
+
+        .badge-inactive {
+            background: #eceef0;
+            color: #646a71;
+        }
+
+
+        /* =====================================================
+           METRIC
+        ===================================================== */
+
+        .scan-card {
+            margin-top: 20px;
+            padding: 21px;
+            border: 1px solid #d7dade;
+            border-radius: 15px;
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .scan-label {
+            color: #aeb2b8;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .scan-number {
+            margin-top: 7px;
+            font-size: 38px;
+            font-weight: 950;
+            letter-spacing: -1px;
+        }
+
+        .scan-description {
+            margin-top: 7px;
+            color: #bfc2c7;
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           CARD
+        ===================================================== */
+
+        .card {
+            margin-top: 17px;
+            padding: 20px;
+            border: 1px solid #d7dade;
+            border-radius: 15px;
+            background: #ffffff;
+        }
+
+        .card-eyebrow {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .card-title {
+            margin-top: 5px;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           DETAILS
+        ===================================================== */
+
+        .details {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 10px;
+        }
+
+        .detail {
+            padding: 13px;
+            border-radius: 10px;
+            background: #f4f5f6;
+        }
+
+        .detail-label {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.6px;
+        }
+
+        .detail-value {
+            margin-top: 5px;
+            color: #25282c;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           RECENT SCANS
+        ===================================================== */
+
+        .scan-list {
+            margin-top: 14px;
+            overflow: hidden;
+            border: 1px solid #e2e4e7;
+            border-radius: 11px;
+        }
+
+        .scan-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 13px;
+            border-bottom: 1px solid #eceef0;
+        }
+
+        .scan-item:last-child {
+            border-bottom: 0;
+        }
+
+        .scan-event {
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .scan-id {
+            color: #858a91;
+            font-size: 9px;
+        }
+
+        .empty {
+            padding: 25px 15px;
+            color: #858a91;
+            text-align: center;
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           SCOPE
+        ===================================================== */
+
+        .scope-note {
+            margin-top: 17px;
+            padding: 14px;
+            border-radius: 11px;
+            background: #eef0f2;
+            color: #6f757d;
+            font-size: 10px;
+            line-height: 1.55;
+        }
+
+        .scope-note strong {
+            color: #34383d;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .page {
+                padding:
+                    24px
+                    14px
+                    50px;
+            }
+
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<div class="topbar">
+
+    <div class="topbar-inner">
+
+        <a
+            href="{{ url_for(
+                'ambassador_dashboard'
+            ) }}"
+            class="brand"
+        >
+            KALXA
+        </a>
+
+        <a
+            href="{{ url_for(
+                'ambassador_access_points'
+            ) }}"
+            class="back-link"
+        >
+            ← QR Access Points
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
+<div class="page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="eyebrow">
+        QR ACCESS POINT
+    </div>
+
+    <h1>
+
+        {{
+            access_point.name
+            or
+            access_point.code
+            or
+            'Kalxa Access Point'
+        }}
+
+    </h1>
+
+    <div class="code">
+        {{ access_point.code }}
+    </div>
+
+
+    <div class="status-row">
+
+        {% if access_point.active %}
+
+            <span
+                class="
+                    badge
+                    badge-active
+                "
+            >
+                ACTIVE
+            </span>
+
+        {% else %}
+
+            <span
+                class="
+                    badge
+                    badge-inactive
+                "
+            >
+                INACTIVE
+            </span>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         SCANS
+    ====================================================== -->
+
+    <div class="scan-card">
+
+        <div class="scan-label">
+            TOTAL QR SCANS
+        </div>
+
+        <div class="scan-number">
+            {{ total_scans | default(0) }}
+        </div>
+
+        <div class="scan-description">
+            Recorded scans through this Kalxa access point.
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACCESS POINT INFORMATION
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-eyebrow">
+            ACCESS POINT
+        </div>
+
+        <div class="card-title">
+            Network Information
+        </div>
+
+
+        <div class="details">
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    COMMUNITY
+                </div>
+
+                <div class="detail-value">
+                    {{ zone.name }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    QR CODE
+                </div>
+
+                <div class="detail-value">
+                    {{ access_point.code }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    STATUS
+                </div>
+
+                <div class="detail-value">
+
+                    {% if access_point.active %}
+
+                        Active
+
+                    {% else %}
+
+                        Inactive
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    DEFAULT CATEGORY
+                </div>
+
+                <div class="detail-value">
+
+                    {% if access_point.default_category %}
+
+                        {{
+                            access_point.default_category
+                            | replace('_', ' ')
+                            | title
+                        }}
+
+                    {% else %}
+
+                        Community Home
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RECENT SCAN ACTIVITY
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-eyebrow">
+            ACTIVITY
+        </div>
+
+        <div class="card-title">
+            Recent QR Scans
+        </div>
+
+
+        <div class="scan-list">
+
+            {% if recent_scans %}
+
+                {% for scan in recent_scans %}
+
+                    <div class="scan-item">
+
+                        <div class="scan-event">
+
+                            {{
+                                scan.event_type
+                                or
+                                'scan'
+                            }}
+
+                        </div>
+
+                        <div class="scan-id">
+                            Scan #{{ scan.id }}
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+
+            {% else %}
+
+                <div class="empty">
+                    No scans have been recorded
+                    for this access point yet.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SECURITY / SCOPE
+    ====================================================== -->
+
+    <div class="scope-note">
+
+        <strong>
+            Read-only network access:
+        </strong>
+
+        This QR access point belongs to
+        {{ zone.name }}.
+
+        Community Ambassadors can monitor the access
+        point and its scan activity but cannot delete,
+        reassign or modify QR infrastructure.
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
