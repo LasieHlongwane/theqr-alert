@@ -2285,287 +2285,2457 @@ def _populate_content_common_fields(item, listing_level, workflow_notification_e
     item.active = request.form.get("active") == "on"
 
 
-@admin_bp.route("/content/new", methods=["GET", "POST"])
+# ============================================================
+# CENTRAL ADMIN - CREATE CONTENT
+# ============================================================
+
+@admin_bp.route(
+    "/content/new",
+    methods=["GET", "POST"],
+)
 def create_content():
+
     auth = require_admin()
+
     if auth:
         return auth
-    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
-    categories = get_categories(active_only=False)
+
+
+    zones = (
+        Zone.query
+        .filter_by(active=True)
+        .order_by(Zone.name.asc())
+        .all()
+    )
+
+
+    categories = get_categories(
+        active_only=False
+    )
+
 
     if request.method == "POST":
-        zone_id = request.form.get("zone_id", type=int)
-        category = request.form.get("category", "").strip().lower()
-        content_type = request.form.get("content_type", "").strip().lower() or None
-        title = request.form.get("title", "").strip()
-        if not zone_id or not category or not title:
-            flash("Zone, category and title are required.", "error")
-            return _render_content_form(zones, categories, None)
-        zone = db.session.get(Zone, zone_id)
+
+        zone_id = request.form.get(
+            "zone_id",
+            type=int,
+        )
+
+
+        category = (
+            request.form.get(
+                "category",
+                "",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                "",
+            )
+            .strip()
+            .lower()
+            or None
+        )
+
+
+        title = (
+            request.form.get(
+                "title",
+                "",
+            )
+            .strip()
+        )
+
+
+        # ====================================================
+        # BASIC VALIDATION
+        # ====================================================
+
+        if (
+            not zone_id
+            or not category
+            or not title
+        ):
+
+            flash(
+                (
+                    "Zone, category and title "
+                    "are required."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        zone = db.session.get(
+            Zone,
+            zone_id,
+        )
+
+
         if not zone:
-            flash("Selected zone does not exist.", "error")
-            return _render_content_form(zones, categories, None)
-        if not get_category_by_slug(category, active_only=False):
-            flash("Invalid content category.", "error")
-            return _render_content_form(zones, categories, None)
 
-        workflow = get_content_workflow(category, content_type)
-        lifetime_type = workflow["lifetime_type"]
-        workflow_notification_eligible = bool(workflow.get("notification_eligible", False))
-        pricing_model = workflow.get("pricing_model")
+            flash(
+                "Selected zone does not exist.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        if not get_category_by_slug(
+            category,
+            active_only=False,
+        ):
+
+            flash(
+                "Invalid content category.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # ====================================================
+        # CONTENT WORKFLOW
+        # ====================================================
+
+        workflow = get_content_workflow(
+            category,
+            content_type,
+        )
+
+
+        lifetime_type = workflow[
+            "lifetime_type"
+        ]
+
+
+        workflow_notification_eligible = bool(
+            workflow.get(
+                "notification_eligible",
+                False,
+            )
+        )
+
+
+        pricing_model = workflow.get(
+            "pricing_model"
+        )
+
+
+        # ====================================================
+        # DATES
+        # ====================================================
 
         try:
-            dates, error = _validate_and_normalize_content_dates(category, request.form, lifetime_type=lifetime_type)
+
+            dates, error = (
+                _validate_and_normalize_content_dates(
+                    category,
+                    request.form,
+                    lifetime_type=lifetime_type,
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid dates.", "error")
-            return _render_content_form(zones, categories, None)
+
+            flash(
+                "Please enter valid dates.",
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
         if error:
-            flash(error, "error")
-            return _render_content_form(zones, categories, None)
+
+            flash(
+                error,
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # ====================================================
+        # TIMES
+        # ====================================================
 
         try:
-            start_time = parse_optional_time(request.form.get("start_time"))
-            end_time = parse_optional_time(request.form.get("end_time"))
+
+            start_time = parse_optional_time(
+                request.form.get(
+                    "start_time"
+                )
+            )
+
+
+            end_time = parse_optional_time(
+                request.form.get(
+                    "end_time"
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid start and end times.", "error")
-            return _render_content_form(zones, categories, None)
 
-        canonical_category = normalize_category(category)
-        date_error = _validate_effective_campaign_dates(canonical_category, lifetime_type, dates, start_time, end_time)
+            flash(
+                (
+                    "Please enter valid start "
+                    "and end times."
+                ),
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        canonical_category = normalize_category(
+            category
+        )
+
+
+        date_error = (
+            _validate_effective_campaign_dates(
+                canonical_category,
+                lifetime_type,
+                dates,
+                start_time,
+                end_time,
+            )
+        )
+
+
         if date_error:
-            flash(date_error, "error")
-            return _render_content_form(zones, categories, None)
 
-        listing_level = _get_listing_level_from_form("discovery")
-        sponsorship, sponsorship_error = _parse_sponsorship()
+            flash(
+                date_error,
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # ====================================================
+        # LISTING LEVEL
+        # ====================================================
+
+        listing_level = (
+            _get_listing_level_from_form(
+                "discovery"
+            )
+        )
+
+
+        # ====================================================
+        # SPONSORSHIP
+        # ====================================================
+
+        sponsorship, sponsorship_error = (
+            _parse_sponsorship()
+        )
+
+
         if sponsorship_error:
-            flash(sponsorship_error, "error")
-            return _render_content_form(zones, categories, None)
 
-        uploaded_images = _read_uploaded_listing_images()
-        image_error = _validate_image_count(uploaded_images, listing_level)
+            flash(
+                sponsorship_error,
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # ====================================================
+        # IMAGES
+        # ====================================================
+
+        uploaded_images = (
+            _read_uploaded_listing_images()
+        )
+
+
+        image_error = _validate_image_count(
+            uploaded_images,
+            listing_level,
+        )
+
+
         if image_error:
-            flash(image_error, "error")
-            return _render_content_form(zones, categories, None)
+
+            flash(
+                image_error,
+                "error",
+            )
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
         try:
-            uploaded_image_urls = _upload_listing_images(uploaded_images)
+
+            uploaded_image_urls = (
+                _upload_listing_images(
+                    uploaded_images
+                )
+            )
+
         except Exception as error:
-            current_app.logger.exception("Content image upload failed title=%s error=%s", title, error)
-            flash(f"Image upload failed: {error}", "error")
-            return _render_content_form(zones, categories, None)
+
+            current_app.logger.exception(
+                (
+                    "Content image upload failed "
+                    "title=%s error=%s"
+                ),
+                title,
+                error,
+            )
+
+
+            flash(
+                f"Image upload failed: {error}",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # ====================================================
+        # CREATE CONTENT ITEM
+        # ====================================================
 
         item = ContentItem(
+
             zone_id=zone_id,
+
             category=category,
+
             content_type=content_type,
+
             lifetime_type=lifetime_type,
+
             availability_status="available",
+
             title=title,
+
             start_time=start_time,
+
             end_time=end_time,
-            image_url=uploaded_image_urls[0] if len(uploaded_image_urls) >= 1 else None,
-            image_url_2=uploaded_image_urls[1] if listing_level in {"business", "promotion"} and len(uploaded_image_urls) >= 2 else None,
-            image_url_3=uploaded_image_urls[2] if listing_level in {"business", "promotion"} and len(uploaded_image_urls) >= 3 else None,
+
+            image_url=(
+                uploaded_image_urls[0]
+                if len(uploaded_image_urls) >= 1
+                else None
+            ),
+
+            image_url_2=(
+                uploaded_image_urls[1]
+                if (
+                    listing_level
+                    in {
+                        "business",
+                        "promotion",
+                    }
+                    and len(
+                        uploaded_image_urls
+                    ) >= 2
+                )
+                else None
+            ),
+
+            image_url_3=(
+                uploaded_image_urls[2]
+                if (
+                    listing_level
+                    in {
+                        "business",
+                        "promotion",
+                    }
+                    and len(
+                        uploaded_image_urls
+                    ) >= 3
+                )
+                else None
+            ),
+
         )
-        _populate_content_common_fields(item, listing_level, workflow_notification_eligible)
-        _apply_sponsorship(item, sponsorship)
+
+
+        _populate_content_common_fields(
+            item,
+            listing_level,
+            workflow_notification_eligible,
+        )
+
+
+        _apply_sponsorship(
+            item,
+            sponsorship,
+        )
+
+
         for key, value in dates.items():
-            setattr(item, key, value)
+
+            setattr(
+                item,
+                key,
+                value,
+            )
+
+
+        # ====================================================
+        # COMMERCIAL CONFIGURATION
+        # ====================================================
 
         try:
-            distribution_zone_ids = _configure_commercial_content(item, category, content_type)
-        except ValueError as error:
-            db.session.rollback()
-            flash(str(error), "error")
-            return _render_content_form(zones, categories, None)
 
-        if pricing_model == PRICING_MODEL_CAMPAIGN and zone_id not in distribution_zone_ids:
+            distribution_zone_ids = (
+                _configure_commercial_content(
+                    item,
+                    category,
+                    content_type,
+                )
+            )
+
+        except ValueError as error:
+
             db.session.rollback()
-            flash("A campaign must include its home zone as part of its reach.", "error")
-            return _render_content_form(zones, categories, None)
-        if pricing_model == PRICING_MODEL_PRESENCE:
+
+
+            flash(
+                str(error),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        if (
+            pricing_model
+            ==
+            PRICING_MODEL_CAMPAIGN
+            and
+            zone_id
+            not in distribution_zone_ids
+        ):
+
+            db.session.rollback()
+
+
+            flash(
+                (
+                    "A campaign must include its "
+                    "home zone as part of its reach."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        if (
+            pricing_model
+            ==
+            PRICING_MODEL_PRESENCE
+        ):
+
             distribution_zone_ids = []
 
+
+        # ====================================================
+        # SAVE
+        # ====================================================
+
         try:
-            db.session.add(item)
+
+            db.session.add(
+                item
+            )
+
+
             db.session.flush()
-            for distribution_zone_id in distribution_zone_ids:
-                db.session.add(ContentDistributionZone(content_item_id=item.id, zone_id=distribution_zone_id))
+
+
+            for distribution_zone_id in (
+                distribution_zone_ids
+            ):
+
+                db.session.add(
+                    ContentDistributionZone(
+                        content_item_id=item.id,
+                        zone_id=(
+                            distribution_zone_id
+                        ),
+                    )
+                )
+
+
             db.session.commit()
+
+
         except Exception as error:
+
             db.session.rollback()
-            current_app.logger.exception("Failed to create content item title=%s error=%s", title, error)
-            flash("Content could not be published. Please try again.", "error")
-            return _render_content_form(zones, categories, None)
 
-        if item.pricing_model == PRICING_MODEL_CAMPAIGN:
-            flash(f"Campaign published successfully. Reach: {len(distribution_zone_ids)} zone(s). Package price: {format_kalxa_price(item.amount_due)}.", "success")
-        elif item.pricing_model == PRICING_MODEL_PRESENCE:
-            flash(f"Presence listing published successfully. Package price: {format_kalxa_price(item.amount_due)}.", "success")
+
+            current_app.logger.exception(
+                (
+                    "Failed to create content item "
+                    "title=%s error=%s"
+                ),
+                title,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Content could not be published. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                None,
+            )
+
+
+        # ====================================================
+        # SUCCESS MESSAGE
+        # ====================================================
+
+        if (
+            item.pricing_model
+            ==
+            PRICING_MODEL_CAMPAIGN
+        ):
+
+            flash(
+                (
+                    "Campaign published successfully. "
+                    f"Reach: "
+                    f"{len(distribution_zone_ids)} "
+                    "zone(s). "
+                    "Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
+        elif (
+            item.pricing_model
+            ==
+            PRICING_MODEL_PRESENCE
+        ):
+
+            flash(
+                (
+                    "Presence listing published "
+                    "successfully. "
+                    "Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
         else:
-            flash("Content published successfully.", "success")
-        if item.is_sponsored and item.sponsored_duration_days:
-            flash(f"Sponsored Boost configured: {item.sponsored_duration_days} days — {format_kalxa_price(item.sponsorship_amount_due)}. Expires: {item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}.", "success")
-        return redirect(url_for("admin.content_list"))
 
-    return _render_content_form(zones, categories, None)
+            flash(
+                "Content published successfully.",
+                "success",
+            )
 
 
-@admin_bp.route("/content/<int:item_id>/edit", methods=["GET", "POST"])
-def edit_content(item_id):
+        if (
+            item.is_sponsored
+            and
+            item.sponsored_duration_days
+        ):
+
+            flash(
+                (
+                    "Sponsored Boost configured: "
+                    f"{item.sponsored_duration_days} "
+                    "days — "
+                    f"{format_kalxa_price(item.sponsorship_amount_due)}. "
+                    "Expires: "
+                    f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
+                ),
+                "success",
+            )
+
+
+        return redirect(
+            url_for(
+                "admin.content_list"
+            )
+        )
+
+
+    return _render_content_form(
+        zones,
+        categories,
+        None,
+    )
+
+
+# ============================================================
+# CENTRAL ADMIN - EDIT CONTENT
+# ============================================================
+
+@admin_bp.route(
+    "/content/<int:item_id>/edit",
+    methods=["GET", "POST"],
+)
+def edit_content(
+    item_id,
+):
+
     auth = require_admin()
+
     if auth:
         return auth
-    item = ContentItem.query.get_or_404(item_id)
-    zones = Zone.query.filter_by(active=True).order_by(Zone.name.asc()).all()
-    categories = get_categories(active_only=False)
+
+
+    item = ContentItem.query.get_or_404(
+        item_id
+    )
+
+
+    zones = (
+        Zone.query
+        .filter_by(active=True)
+        .order_by(Zone.name.asc())
+        .all()
+    )
+
+
+    categories = get_categories(
+        active_only=False
+    )
+
 
     if request.method == "POST":
-        old_pricing_model = item.pricing_model
-        old_duration_days = item.commercial_duration_days
-        old_payment_status = item.payment_status
-        old_amount_paid = item.amount_paid
-        old_payment_reference = item.payment_reference
-        old_paid_at = item.paid_at
-        old_commercial_starts_at = item.commercial_starts_at
-        old_commercial_expires_at = item.commercial_expires_at
-        old_distribution_zone_ids = {link.zone_id for link in item.distribution_zone_links}
 
-        zone_id = request.form.get("zone_id", type=int)
-        category = request.form.get("category", "").strip().lower()
-        content_type = request.form.get("content_type", "").strip().lower() or None
-        title = request.form.get("title", "").strip()
-        if not zone_id or not category or not title:
-            flash("Zone, category and title are required.", "error")
-            return _render_content_form(zones, categories, item)
-        if not db.session.get(Zone, zone_id):
-            flash("Selected zone does not exist.", "error")
-            return _render_content_form(zones, categories, item)
-        if not get_category_by_slug(category, active_only=False):
-            flash("Invalid content category.", "error")
-            return _render_content_form(zones, categories, item)
+        # ====================================================
+        # PRESERVE EXISTING COMMERCIAL STATE
+        # ====================================================
 
-        workflow = get_content_workflow(category, content_type)
-        lifetime_type = workflow["lifetime_type"]
-        workflow_notification_eligible = bool(workflow.get("notification_eligible", False))
-        pricing_model = workflow.get("pricing_model")
+        old_pricing_model = (
+            item.pricing_model
+        )
+
+
+        old_duration_days = (
+            item.commercial_duration_days
+        )
+
+
+        old_payment_status = (
+            item.payment_status
+        )
+
+
+        old_amount_paid = (
+            item.amount_paid
+        )
+
+
+        old_payment_reference = (
+            item.payment_reference
+        )
+
+
+        old_paid_at = (
+            item.paid_at
+        )
+
+
+        old_commercial_starts_at = (
+            item.commercial_starts_at
+        )
+
+
+        old_commercial_expires_at = (
+            item.commercial_expires_at
+        )
+
+
+        old_distribution_zone_ids = {
+
+            link.zone_id
+
+            for link
+            in item.distribution_zone_links
+
+        }
+
+
+        # ====================================================
+        # FORM VALUES
+        # ====================================================
+
+        zone_id = request.form.get(
+            "zone_id",
+            type=int,
+        )
+
+
+        category = (
+            request.form.get(
+                "category",
+                "",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        content_type = (
+            request.form.get(
+                "content_type",
+                "",
+            )
+            .strip()
+            .lower()
+            or None
+        )
+
+
+        title = (
+            request.form.get(
+                "title",
+                "",
+            )
+            .strip()
+        )
+
+
+        # ====================================================
+        # BASIC VALIDATION
+        # ====================================================
+
+        if (
+            not zone_id
+            or not category
+            or not title
+        ):
+
+            flash(
+                (
+                    "Zone, category and title "
+                    "are required."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        if not db.session.get(
+            Zone,
+            zone_id,
+        ):
+
+            flash(
+                "Selected zone does not exist.",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        if not get_category_by_slug(
+            category,
+            active_only=False,
+        ):
+
+            flash(
+                "Invalid content category.",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # ====================================================
+        # WORKFLOW
+        # ====================================================
+
+        workflow = get_content_workflow(
+            category,
+            content_type,
+        )
+
+
+        lifetime_type = workflow[
+            "lifetime_type"
+        ]
+
+
+        workflow_notification_eligible = bool(
+            workflow.get(
+                "notification_eligible",
+                False,
+            )
+        )
+
+
+        pricing_model = workflow.get(
+            "pricing_model"
+        )
+
+
+        # ====================================================
+        # DATES
+        # ====================================================
 
         try:
-            dates, error = _validate_and_normalize_content_dates(category, request.form, lifetime_type=lifetime_type)
+
+            dates, error = (
+                _validate_and_normalize_content_dates(
+                    category,
+                    request.form,
+                    lifetime_type=lifetime_type,
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid dates.", "error")
-            return _render_content_form(zones, categories, item)
+
+            flash(
+                "Please enter valid dates.",
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
         if error:
-            flash(error, "error")
-            return _render_content_form(zones, categories, item)
+
+            flash(
+                error,
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # ====================================================
+        # TIMES
+        # ====================================================
 
         try:
-            start_time = parse_optional_time(request.form.get("start_time"))
-            end_time = parse_optional_time(request.form.get("end_time"))
+
+            start_time = parse_optional_time(
+                request.form.get(
+                    "start_time"
+                )
+            )
+
+
+            end_time = parse_optional_time(
+                request.form.get(
+                    "end_time"
+                )
+            )
+
         except ValueError:
-            flash("Please enter valid start and end times.", "error")
-            return _render_content_form(zones, categories, item)
 
-        canonical_category = normalize_category(category)
-        date_error = _validate_effective_campaign_dates(canonical_category, lifetime_type, dates, start_time, end_time)
+            flash(
+                (
+                    "Please enter valid start "
+                    "and end times."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        canonical_category = normalize_category(
+            category
+        )
+
+
+        date_error = (
+            _validate_effective_campaign_dates(
+                canonical_category,
+                lifetime_type,
+                dates,
+                start_time,
+                end_time,
+            )
+        )
+
+
         if date_error:
-            flash(date_error, "error")
-            return _render_content_form(zones, categories, item)
 
-        listing_level = _get_listing_level_from_form(item.listing_level or "discovery")
+            flash(
+                date_error,
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # ====================================================
+        # UPDATE CORE FIELDS
+        # ====================================================
+
+        listing_level = (
+            _get_listing_level_from_form(
+                item.listing_level
+                or
+                "discovery"
+            )
+        )
+
+
         item.zone_id = zone_id
+
         item.category = category
+
         item.content_type = content_type
+
         item.lifetime_type = lifetime_type
-        item.availability_status = item.availability_status or "available"
+
+        item.availability_status = (
+            item.availability_status
+            or
+            "available"
+        )
+
         item.title = title
+
         item.start_time = start_time
+
         item.end_time = end_time
-        _populate_content_common_fields(item, listing_level, workflow_notification_eligible)
 
-        sponsorship, sponsorship_error = _parse_sponsorship(item)
+
+        _populate_content_common_fields(
+            item,
+            listing_level,
+            workflow_notification_eligible,
+        )
+
+
+        # ====================================================
+        # SPONSORSHIP
+        # ====================================================
+
+        sponsorship, sponsorship_error = (
+            _parse_sponsorship(
+                item
+            )
+        )
+
+
         if sponsorship_error:
-            flash(sponsorship_error, "error")
-            return _render_content_form(zones, categories, item)
-        _apply_sponsorship(item, sponsorship)
-        for key, value in dates.items():
-            setattr(item, key, value)
 
-        uploaded_images = _read_uploaded_listing_images()
-        image_error = _validate_image_count(uploaded_images, listing_level)
+            flash(
+                sponsorship_error,
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        _apply_sponsorship(
+            item,
+            sponsorship,
+        )
+
+
+        for key, value in dates.items():
+
+            setattr(
+                item,
+                key,
+                value,
+            )
+
+
+        # ====================================================
+        # IMAGES
+        # ====================================================
+
+        uploaded_images = (
+            _read_uploaded_listing_images()
+        )
+
+
+        image_error = _validate_image_count(
+            uploaded_images,
+            listing_level,
+        )
+
+
         if image_error:
-            flash(image_error, "error")
-            return _render_content_form(zones, categories, item)
+
+            flash(
+                image_error,
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
         if uploaded_images:
+
             try:
-                urls = _upload_listing_images(uploaded_images)
+
+                urls = _upload_listing_images(
+                    uploaded_images
+                )
+
             except Exception as error:
+
                 db.session.rollback()
-                current_app.logger.exception("Content image upload failed content_item_id=%s error=%s", item.id, error)
-                flash(f"Image upload failed: {error}", "error")
-                return _render_content_form(zones, categories, item)
-            item.image_url = urls[0] if len(urls) >= 1 else None
-            item.image_url_2 = urls[1] if listing_level in {"business", "promotion"} and len(urls) >= 2 else None
-            item.image_url_3 = urls[2] if listing_level in {"business", "promotion"} and len(urls) >= 3 else None
+
+
+                current_app.logger.exception(
+                    (
+                        "Content image upload failed "
+                        "content_item_id=%s error=%s"
+                    ),
+                    item.id,
+                    error,
+                )
+
+
+                flash(
+                    f"Image upload failed: {error}",
+                    "error",
+                )
+
+
+                return _render_content_form(
+                    zones,
+                    categories,
+                    item,
+                )
+
+
+            item.image_url = (
+                urls[0]
+                if len(urls) >= 1
+                else None
+            )
+
+
+            item.image_url_2 = (
+                urls[1]
+                if (
+                    listing_level
+                    in {
+                        "business",
+                        "promotion",
+                    }
+                    and
+                    len(urls) >= 2
+                )
+                else None
+            )
+
+
+            item.image_url_3 = (
+                urls[2]
+                if (
+                    listing_level
+                    in {
+                        "business",
+                        "promotion",
+                    }
+                    and
+                    len(urls) >= 3
+                )
+                else None
+            )
+
+
         if listing_level == "discovery":
+
             item.image_url_2 = None
+
             item.image_url_3 = None
 
-        try:
-            distribution_zone_ids = _configure_commercial_content(item, category, content_type)
-        except ValueError as error:
-            db.session.rollback()
-            flash(str(error), "error")
-            return _render_content_form(zones, categories, item)
 
-        if pricing_model == PRICING_MODEL_CAMPAIGN and zone_id not in distribution_zone_ids:
+        # ====================================================
+        # COMMERCIAL CONFIGURATION
+        # ====================================================
+
+        try:
+
+            distribution_zone_ids = (
+                _configure_commercial_content(
+                    item,
+                    category,
+                    content_type,
+                )
+            )
+
+        except ValueError as error:
+
             db.session.rollback()
-            flash("A campaign must include its home zone as part of its reach.", "error")
-            return _render_content_form(zones, categories, item)
-        if pricing_model == PRICING_MODEL_PRESENCE:
+
+
+            flash(
+                str(error),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        if (
+            pricing_model
+            ==
+            PRICING_MODEL_CAMPAIGN
+            and
+            zone_id
+            not in distribution_zone_ids
+        ):
+
+            db.session.rollback()
+
+
+            flash(
+                (
+                    "A campaign must include its "
+                    "home zone as part of its reach."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        if (
+            pricing_model
+            ==
+            PRICING_MODEL_PRESENCE
+        ):
+
             distribution_zone_ids = []
 
-        new_distribution_zone_ids = set(distribution_zone_ids)
-        package_changed = (
-            old_pricing_model != item.pricing_model
-            or old_duration_days != item.commercial_duration_days
-            or (item.pricing_model == PRICING_MODEL_CAMPAIGN and old_distribution_zone_ids != new_distribution_zone_ids)
-            or (old_pricing_model == PRICING_MODEL_CAMPAIGN and item.pricing_model != PRICING_MODEL_CAMPAIGN)
+
+        # ====================================================
+        # DETECT PACKAGE CHANGES
+        # ====================================================
+
+        new_distribution_zone_ids = set(
+            distribution_zone_ids
         )
-        if not package_changed and old_payment_status == item.payment_status and item.payment_status in {"paid", "waived"}:
-            item.commercial_starts_at = old_commercial_starts_at
-            item.commercial_expires_at = old_commercial_expires_at
+
+
+        package_changed = (
+
+            old_pricing_model
+            !=
+            item.pricing_model
+
+            or
+
+            old_duration_days
+            !=
+            item.commercial_duration_days
+
+            or
+
+            (
+                item.pricing_model
+                ==
+                PRICING_MODEL_CAMPAIGN
+
+                and
+
+                old_distribution_zone_ids
+                !=
+                new_distribution_zone_ids
+            )
+
+            or
+
+            (
+                old_pricing_model
+                ==
+                PRICING_MODEL_CAMPAIGN
+
+                and
+
+                item.pricing_model
+                !=
+                PRICING_MODEL_CAMPAIGN
+            )
+
+        )
+
+
+        if (
+            not package_changed
+            and
+            old_payment_status
+            ==
+            item.payment_status
+            and
+            item.payment_status
+            in {
+                "paid",
+                "waived",
+            }
+        ):
+
+            item.commercial_starts_at = (
+                old_commercial_starts_at
+            )
+
+
+            item.commercial_expires_at = (
+                old_commercial_expires_at
+            )
+
+
             if item.payment_status == "paid":
-                item.paid_at = old_paid_at
-                item.amount_paid = old_amount_paid
+
+                item.paid_at = (
+                    old_paid_at
+                )
+
+                item.amount_paid = (
+                    old_amount_paid
+                )
+
             else:
+
                 item.paid_at = None
+
                 item.amount_paid = None
-        if not item.payment_reference and old_payment_reference and not package_changed:
-            item.payment_reference = old_payment_reference
+
+
+        if (
+            not item.payment_reference
+            and
+            old_payment_reference
+            and
+            not package_changed
+        ):
+
+            item.payment_reference = (
+                old_payment_reference
+            )
+
+
+        # ====================================================
+        # SAVE
+        # ====================================================
 
         try:
-            ContentDistributionZone.query.filter_by(content_item_id=item.id).delete(synchronize_session=False)
-            for distribution_zone_id in distribution_zone_ids:
-                db.session.add(ContentDistributionZone(content_item_id=item.id, zone_id=distribution_zone_id))
+
+            (
+                ContentDistributionZone.query
+                .filter_by(
+                    content_item_id=item.id
+                )
+                .delete(
+                    synchronize_session=False
+                )
+            )
+
+
+            for distribution_zone_id in (
+                distribution_zone_ids
+            ):
+
+                db.session.add(
+                    ContentDistributionZone(
+                        content_item_id=item.id,
+                        zone_id=(
+                            distribution_zone_id
+                        ),
+                    )
+                )
+
+
             db.session.commit()
+
+
         except Exception as error:
+
             db.session.rollback()
-            current_app.logger.exception("Failed to update content item content_item_id=%s error=%s", item.id, error)
-            flash("Content could not be updated. Please try again.", "error")
-            return _render_content_form(zones, categories, item)
 
-        if item.pricing_model == PRICING_MODEL_CAMPAIGN:
-            flash(f"Campaign updated successfully. Reach: {len(distribution_zone_ids)} zone(s). Package price: {format_kalxa_price(item.amount_due)}.", "success")
-        elif item.pricing_model == PRICING_MODEL_PRESENCE:
-            flash(f"Presence listing updated successfully. Package price: {format_kalxa_price(item.amount_due)}.", "success")
+
+            current_app.logger.exception(
+                (
+                    "Failed to update content item "
+                    "content_item_id=%s error=%s"
+                ),
+                item.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Content could not be updated. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+
+            return _render_content_form(
+                zones,
+                categories,
+                item,
+            )
+
+
+        # ====================================================
+        # SUCCESS
+        # ====================================================
+
+        if (
+            item.pricing_model
+            ==
+            PRICING_MODEL_CAMPAIGN
+        ):
+
+            flash(
+                (
+                    "Campaign updated successfully. "
+                    f"Reach: "
+                    f"{len(distribution_zone_ids)} "
+                    "zone(s). "
+                    "Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
+        elif (
+            item.pricing_model
+            ==
+            PRICING_MODEL_PRESENCE
+        ):
+
+            flash(
+                (
+                    "Presence listing updated "
+                    "successfully. "
+                    "Package price: "
+                    f"{format_kalxa_price(item.amount_due)}."
+                ),
+                "success",
+            )
+
+
         else:
-            flash("Content updated successfully.", "success")
-        if item.is_sponsored and item.sponsored_duration_days:
-            flash(f"Sponsored Boost: {item.sponsored_duration_days} days — {format_kalxa_price(item.sponsorship_amount_due)}. Expires: {item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}.", "success")
-        return redirect(url_for("admin.content_list"))
 
-    return _render_content_form(zones, categories, item)
+            flash(
+                "Content updated successfully.",
+                "success",
+            )
+
+
+        if (
+            item.is_sponsored
+            and
+            item.sponsored_duration_days
+        ):
+
+            flash(
+                (
+                    "Sponsored Boost: "
+                    f"{item.sponsored_duration_days} "
+                    "days — "
+                    f"{format_kalxa_price(item.sponsorship_amount_due)}. "
+                    "Expires: "
+                    f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
+                ),
+                "success",
+            )
+
+
+        return redirect(
+            url_for(
+                "admin.content_list"
+            )
+        )
+
+
+    return _render_content_form(
+        zones,
+        categories,
+        item,
+    )
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - CREATE CONTENT
+#
+# IMPORTANT SECURITY RULES
+#
+# 1. The Ambassador NEVER chooses the home zone.
+# 2. zone_id comes from the authenticated Ambassador.
+# 3. Campaign reach is forced to the Ambassador's zone.
+# 4. Posted zone_id values are ignored.
+# 5. Posted distribution_zone_ids are ignored for authority.
+# 6. Permission is checked on both GET and POST.
+# ============================================================
+
+@admin_bp.route(
+    "/ambassador/content/new",
+    methods=["GET", "POST"],
+)
+@ambassador_required
+@ambassador_content_creation_required
+def ambassador_create_content():
+
+    # ========================================================
+    # AUTHENTICATED AMBASSADOR
+    # ========================================================
+
+    ambassador = get_current_ambassador()
+
+
+    if not ambassador:
+
+        clear_ambassador_session()
+
+        flash(
+            (
+                "Please log in as a "
+                "Community Ambassador."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # VERIFY ACCOUNT
+    # ========================================================
+
+    if not ambassador.active:
+
+        clear_ambassador_session()
+
+        flash(
+            (
+                "Your Community Ambassador "
+                "account is currently inactive."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # VERIFY ASSIGNED ZONE
+    # ========================================================
+
+    zone = ambassador.zone
+
+
+    if (
+        not zone
+        or
+        not zone.active
+    ):
+
+        flash(
+            (
+                "Your assigned Kalxa community "
+                "is currently unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # VERIFY CONTENT PERMISSION
+    # ========================================================
+
+    if not ambassador.can_add_content:
+
+        flash(
+            (
+                "You do not currently have "
+                "permission to add community content."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # SECURITY:
+    #
+    # THIS IS THE ONLY HOME ZONE THE AMBASSADOR MAY USE.
+    # ========================================================
+
+    zone_id = ambassador.zone_id
+
+
+    # ========================================================
+    # TEMPLATE ZONES
+    #
+    # Only one zone is passed to the form.
+    #
+    # Therefore:
+    #
+    # - Home Zone shows only the assigned zone.
+    # - Campaign reach shows only the assigned zone.
+    # ========================================================
+
+    zones = [
+        zone
+    ]
+
+
+    categories = get_categories(
+        active_only=False
+    )
+
+
+    # ========================================================
+    # GET
+    # ========================================================
+
+    if request.method == "GET":
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # POST
+    #
+    # DO NOT READ:
+    #
+    # request.form["zone_id"]
+    #
+    # The browser is not trusted for zone authorization.
+    # ========================================================
+
+    category = (
+        request.form.get(
+            "category",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    content_type = (
+        request.form.get(
+            "content_type",
+            "",
+        )
+        .strip()
+        .lower()
+        or None
+    )
+
+
+    title = (
+        request.form.get(
+            "title",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # BASIC VALIDATION
+    # ========================================================
+
+    if (
+        not category
+        or
+        not title
+    ):
+
+        flash(
+            (
+                "Category and title "
+                "are required."
+            ),
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # REVALIDATE SERVER-SIDE ZONE
+    # ========================================================
+
+    zone = db.session.get(
+        Zone,
+        zone_id,
+    )
+
+
+    if (
+        not zone
+        or
+        not zone.active
+    ):
+
+        flash(
+            (
+                "Your assigned community "
+                "is currently unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # CATEGORY VALIDATION
+    # ========================================================
+
+    if not get_category_by_slug(
+        category,
+        active_only=False,
+    ):
+
+        flash(
+            "Invalid content category.",
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # WORKFLOW
+    # ========================================================
+
+    workflow = get_content_workflow(
+        category,
+        content_type,
+    )
+
+
+    lifetime_type = workflow[
+        "lifetime_type"
+    ]
+
+
+    workflow_notification_eligible = bool(
+        workflow.get(
+            "notification_eligible",
+            False,
+        )
+    )
+
+
+    pricing_model = workflow.get(
+        "pricing_model"
+    )
+
+
+    # ========================================================
+    # DATES
+    # ========================================================
+
+    try:
+
+        dates, error = (
+            _validate_and_normalize_content_dates(
+                category,
+                request.form,
+                lifetime_type=lifetime_type,
+            )
+        )
+
+    except ValueError:
+
+        flash(
+            "Please enter valid dates.",
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    if error:
+
+        flash(
+            error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # TIMES
+    # ========================================================
+
+    try:
+
+        start_time = parse_optional_time(
+            request.form.get(
+                "start_time"
+            )
+        )
+
+
+        end_time = parse_optional_time(
+            request.form.get(
+                "end_time"
+            )
+        )
+
+    except ValueError:
+
+        flash(
+            (
+                "Please enter valid start "
+                "and end times."
+            ),
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    canonical_category = normalize_category(
+        category
+    )
+
+
+    date_error = (
+        _validate_effective_campaign_dates(
+            canonical_category,
+            lifetime_type,
+            dates,
+            start_time,
+            end_time,
+        )
+    )
+
+
+    if date_error:
+
+        flash(
+            date_error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # LISTING LEVEL
+    # ========================================================
+
+    listing_level = (
+        _get_listing_level_from_form(
+            "discovery"
+        )
+    )
+
+
+    # ========================================================
+    # SPONSORSHIP
+    # ========================================================
+
+    sponsorship, sponsorship_error = (
+        _parse_sponsorship()
+    )
+
+
+    if sponsorship_error:
+
+        flash(
+            sponsorship_error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # IMAGES
+    # ========================================================
+
+    uploaded_images = (
+        _read_uploaded_listing_images()
+    )
+
+
+    image_error = _validate_image_count(
+        uploaded_images,
+        listing_level,
+    )
+
+
+    if image_error:
+
+        flash(
+            image_error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    try:
+
+        uploaded_image_urls = (
+            _upload_listing_images(
+                uploaded_images
+            )
+        )
+
+    except Exception as error:
+
+        current_app.logger.exception(
+            (
+                "Ambassador content image upload "
+                "failed ambassador_id=%s "
+                "zone_id=%s "
+                "title=%s error=%s"
+            ),
+            ambassador.id,
+            zone_id,
+            title,
+            error,
+        )
+
+
+        flash(
+            f"Image upload failed: {error}",
+            "error",
+        )
+
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # CREATE CONTENT ITEM
+    #
+    # zone_id is SERVER CONTROLLED.
+    # ========================================================
+
+    item = ContentItem(
+
+        zone_id=zone_id,
+
+        category=category,
+
+        content_type=content_type,
+
+        lifetime_type=lifetime_type,
+
+        availability_status="available",
+
+        title=title,
+
+        start_time=start_time,
+
+        end_time=end_time,
+
+        image_url=(
+            uploaded_image_urls[0]
+            if len(uploaded_image_urls) >= 1
+            else None
+        ),
+
+        image_url_2=(
+            uploaded_image_urls[1]
+            if (
+                listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+                and
+                len(uploaded_image_urls) >= 2
+            )
+            else None
+        ),
+
+        image_url_3=(
+            uploaded_image_urls[2]
+            if (
+                listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+                and
+                len(uploaded_image_urls) >= 3
+            )
+            else None
+        ),
+
+    )
+
+
+    # ========================================================
+    # COMMON CONTENT FIELDS
+    # ========================================================
+
+    _populate_content_common_fields(
+        item,
+        listing_level,
+        workflow_notification_eligible,
+    )
+
+
+    # ========================================================
+    # CRITICAL SECURITY REASSERTION
+    #
+    # Even if a future helper or form field changes zone_id,
+    # the Ambassador's authenticated zone remains authoritative.
+    # ========================================================
+
+    item.zone_id = zone_id
+
+
+    # ========================================================
+    # SPONSORSHIP
+    # ========================================================
+
+    _apply_sponsorship(
+        item,
+        sponsorship,
+    )
+
+
+    # ========================================================
+    # DATES
+    # ========================================================
+
+    for key, value in dates.items():
+
+        setattr(
+            item,
+            key,
+            value,
+        )
+
+
+    # ========================================================
+    # COMMERCIAL CONFIGURATION
+    #
+    # We still use the existing pricing engine so that:
+    #
+    # - duration validation
+    # - pricing model
+    # - amount_due
+    # - payment state
+    # - commercial dates
+    #
+    # continue to use your existing architecture.
+    # ========================================================
+
+    try:
+
+        _configure_commercial_content(
+            item,
+            category,
+            content_type,
+        )
+
+    except ValueError as error:
+
+        db.session.rollback()
+
+
+        flash(
+            str(error),
+            "error",
+        )
+
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # REASSERT HOME ZONE AFTER COMMERCIAL CONFIGURATION
+    # ========================================================
+
+    item.zone_id = zone_id
+
+
+    # ========================================================
+    # FORCE AMBASSADOR CAMPAIGN REACH
+    #
+    # IMPORTANT:
+    #
+    # We deliberately ignore whatever distribution zones
+    # _configure_commercial_content() obtained from the form.
+    #
+    # Ambassador Campaign:
+    #
+    #     assigned zone only
+    #
+    # Presence:
+    #
+    #     no ContentDistributionZone rows
+    # ========================================================
+
+    if (
+        pricing_model
+        ==
+        PRICING_MODEL_CAMPAIGN
+    ):
+
+        distribution_zone_ids = [
+            zone_id
+        ]
+
+
+    elif (
+        pricing_model
+        ==
+        PRICING_MODEL_PRESENCE
+    ):
+
+        distribution_zone_ids = []
+
+
+    else:
+
+        distribution_zone_ids = []
+
+
+    # ========================================================
+    # SECURITY ASSERTION
+    # ========================================================
+
+    if (
+        item.zone_id
+        !=
+        ambassador.zone_id
+    ):
+
+        db.session.rollback()
+
+
+        current_app.logger.error(
+            (
+                "Blocked Ambassador cross-zone "
+                "content creation "
+                "ambassador_id=%s "
+                "assigned_zone_id=%s "
+                "attempted_zone_id=%s"
+            ),
+            ambassador.id,
+            ambassador.zone_id,
+            item.zone_id,
+        )
+
+
+        abort(403)
+
+
+    # ========================================================
+    # SAVE CONTENT
+    # ========================================================
+
+    try:
+
+        db.session.add(
+            item
+        )
+
+
+        db.session.flush()
+
+
+        # ====================================================
+        # CAMPAIGN DISTRIBUTION
+        #
+        # Ambassador can create only one distribution row:
+        #
+        #     their assigned zone
+        # ====================================================
+
+        for distribution_zone_id in (
+            distribution_zone_ids
+        ):
+
+            # ------------------------------------------------
+            # DEFENCE IN DEPTH
+            # ------------------------------------------------
+
+            if (
+                distribution_zone_id
+                !=
+                ambassador.zone_id
+            ):
+
+                current_app.logger.warning(
+                    (
+                        "Blocked invalid Ambassador "
+                        "distribution zone "
+                        "ambassador_id=%s "
+                        "assigned_zone_id=%s "
+                        "distribution_zone_id=%s"
+                    ),
+                    ambassador.id,
+                    ambassador.zone_id,
+                    distribution_zone_id,
+                )
+
+                continue
+
+
+            db.session.add(
+                ContentDistributionZone(
+                    content_item_id=item.id,
+                    zone_id=zone_id,
+                )
+            )
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "Failed to create Ambassador "
+                "content item "
+                "ambassador_id=%s "
+                "zone_id=%s "
+                "title=%s "
+                "error=%s"
+            ),
+            ambassador.id,
+            zone_id,
+            title,
+            error,
+        )
+
+
+        flash(
+            (
+                "Content could not be published. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # AUDIT LOGGING
+    #
+    # This uses application logging only.
+    # It does NOT introduce the Stage 3 audit model.
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Ambassador] "
+            "Content created "
+            "ambassador_id=%s "
+            "ambassador_name=%s "
+            "content_item_id=%s "
+            "zone_id=%s "
+            "category=%s "
+            "content_type=%s "
+            "pricing_model=%s"
+        ),
+        ambassador.id,
+        ambassador.name,
+        item.id,
+        zone_id,
+        category,
+        content_type,
+        item.pricing_model,
+    )
+
+
+    # ========================================================
+    # SUCCESS MESSAGES
+    # ========================================================
+
+    if (
+        item.pricing_model
+        ==
+        PRICING_MODEL_CAMPAIGN
+    ):
+
+        flash(
+            (
+                "Campaign published successfully "
+                f"to {zone.name}. "
+                "Reach: 1 zone. "
+                "Package price: "
+                f"{format_kalxa_price(item.amount_due)}."
+            ),
+            "success",
+        )
+
+
+    elif (
+        item.pricing_model
+        ==
+        PRICING_MODEL_PRESENCE
+    ):
+
+        flash(
+            (
+                "Presence listing published "
+                f"successfully to {zone.name}. "
+                "Package price: "
+                f"{format_kalxa_price(item.amount_due)}."
+            ),
+            "success",
+        )
+
+
+    else:
+
+        flash(
+            (
+                "Community content published "
+                f"successfully to {zone.name}."
+            ),
+            "success",
+        )
+
+
+    if (
+        item.is_sponsored
+        and
+        item.sponsored_duration_days
+        and
+        item.sponsored_expires_at
+    ):
+
+        flash(
+            (
+                "Sponsored Boost configured: "
+                f"{item.sponsored_duration_days} "
+                "days — "
+                f"{format_kalxa_price(item.sponsorship_amount_due)}. "
+                "Expires: "
+                f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
+            ),
+            "success",
+        )
+
+
+    # ========================================================
+    # RETURN TO AMBASSADOR CONTENT
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "admin.ambassador_content"
+        )
+    )
 
 
 @admin_bp.route("/content/<int:item_id>/toggle", methods=["POST"])
