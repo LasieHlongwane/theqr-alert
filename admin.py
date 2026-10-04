@@ -5526,6 +5526,128 @@ def admin_create_community_ambassador():
     )
 
 
+def ambassador_content_creation_required(
+    view_function,
+):
+
+    @wraps(
+        view_function
+    )
+    def wrapped_view(
+        *args,
+        **kwargs,
+    ):
+
+        # ====================================================
+        # AUTHENTICATION
+        # ====================================================
+
+        ambassador = (
+            get_current_ambassador()
+        )
+
+
+        if not ambassador:
+
+            clear_ambassador_session()
+
+            flash(
+                (
+                    "Please log in as a "
+                    "Community Ambassador."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_login"
+                )
+            )
+
+
+        # ====================================================
+        # ACCOUNT STATUS
+        # ====================================================
+
+        if not ambassador.active:
+
+            clear_ambassador_session()
+
+            flash(
+                (
+                    "Your Community Ambassador "
+                    "account is currently inactive."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_login"
+                )
+            )
+
+
+        # ====================================================
+        # COMMUNITY STATUS
+        # ====================================================
+
+        if (
+            not ambassador.zone
+            or not ambassador.zone.active
+        ):
+
+            flash(
+                (
+                    "Your assigned Kalxa community "
+                    "is currently unavailable."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_dashboard"
+                )
+            )
+
+
+        # ====================================================
+        # CONTENT CREATION PERMISSION
+        # ====================================================
+
+        if not ambassador.can_add_content:
+
+            flash(
+                (
+                    "You do not currently have "
+                    "permission to add community content."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_dashboard"
+                )
+            )
+
+
+        # ====================================================
+        # AUTHORIZED
+        # ====================================================
+
+        return view_function(
+            *args,
+            **kwargs,
+        )
+
+
+    return wrapped_view
+
+
+
 
 @admin_bp.route(
     "/ambassador/content/new",
@@ -10145,126 +10267,6 @@ def ambassador_analytics():
 # ============================================================
 # AMBASSADOR CONTENT CREATION PERMISSION
 # ============================================================
-
-def ambassador_content_creation_required(
-    view_function,
-):
-
-    @wraps(
-        view_function
-    )
-    def wrapped_view(
-        *args,
-        **kwargs,
-    ):
-
-        # ====================================================
-        # AUTHENTICATION
-        # ====================================================
-
-        ambassador = (
-            get_current_ambassador()
-        )
-
-
-        if not ambassador:
-
-            clear_ambassador_session()
-
-            flash(
-                (
-                    "Please log in as a "
-                    "Community Ambassador."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin.ambassador_login"
-                )
-            )
-
-
-        # ====================================================
-        # ACCOUNT STATUS
-        # ====================================================
-
-        if not ambassador.active:
-
-            clear_ambassador_session()
-
-            flash(
-                (
-                    "Your Community Ambassador "
-                    "account is currently inactive."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin.ambassador_login"
-                )
-            )
-
-
-        # ====================================================
-        # COMMUNITY STATUS
-        # ====================================================
-
-        if (
-            not ambassador.zone
-            or not ambassador.zone.active
-        ):
-
-            flash(
-                (
-                    "Your assigned Kalxa community "
-                    "is currently unavailable."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin.ambassador_dashboard"
-                )
-            )
-
-
-        # ====================================================
-        # CONTENT CREATION PERMISSION
-        # ====================================================
-
-        if not ambassador.can_add_content:
-
-            flash(
-                (
-                    "You do not currently have "
-                    "permission to add community content."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin.ambassador_dashboard"
-                )
-            )
-
-
-        # ====================================================
-        # AUTHORIZED
-        # ====================================================
-
-        return view_function(
-            *args,
-            **kwargs,
-        )
-
-
-    return wrapped_view
 
 
 # ============================================================
