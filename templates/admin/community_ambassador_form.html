@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        Add Community Ambassador | Kalxa Admin
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           RESET
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        a {
+            color: inherit;
+            text-decoration: none;
+
+            -webkit-tap-highlight-color:
+                transparent;
+        }
+
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+
+        .topbar-inner {
+            width: min(
+                100%,
+                900px
+            );
+
+            margin: 0 auto;
+
+            padding:
+                18px
+                20px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content:
+                space-between;
+
+            gap: 16px;
+        }
+
+
+        .brand {
+            min-width: 0;
+        }
+
+
+        .brand-kicker {
+            margin-bottom: 4px;
+
+            color: #aeb4bc;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            letter-spacing: 1.5px;
+
+            text-transform: uppercase;
+        }
+
+
+        .brand-title {
+            margin: 0;
+
+            font-size: 20px;
+
+            font-weight: 800;
+        }
+
+
+        .back-link {
+            flex: 0 0 auto;
+
+            padding:
+                10px
+                14px;
+
+            border:
+                1px solid
+                #41464e;
+
+            border-radius: 8px;
+
+            color: #ffffff;
+
+            font-size: 13px;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           PAGE WRAPPER
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                900px
+            );
+
+            margin: 0 auto;
+
+            padding:
+                26px
+                20px
+                60px;
+        }
+
+
+        /* =====================================================
+           INTRO
+        ===================================================== */
+
+        .eyebrow {
+            margin-bottom: 8px;
+
+            color: #606770;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            letter-spacing: 1.4px;
+
+            text-transform: uppercase;
+        }
+
+
+        h1 {
+            margin:
+                0
+                0
+                8px;
+
+            font-size:
+                clamp(
+                    28px,
+                    5vw,
+                    42px
+                );
+
+            line-height: 1.05;
+
+            letter-spacing: -1px;
+        }
+
+
+        .intro {
+            max-width: 650px;
+
+            margin:
+                0
+                0
+                26px;
+
+            color: #5c626b;
+
+            font-size: 15px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash-stack {
+            display: grid;
+
+            gap: 10px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .flash {
+            padding:
+                14px
+                16px;
+
+            border:
+                1px solid
+                #cfd3d8;
+
+            border-radius: 9px;
+
+            background: #ffffff;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            line-height: 1.5;
+        }
+
+
+        .flash.success {
+            border-color: #9fc5a9;
+            background: #edf7ef;
+            color: #185c2b;
+        }
+
+
+        .flash.error {
+            border-color: #dfaaaa;
+            background: #fff0f0;
+            color: #8a2020;
+        }
+
+
+        /* =====================================================
+           FORM CARD
+        ===================================================== */
+
+        .form-card {
+            overflow: hidden;
+
+            border:
+                1px solid
+                #cfd3d8;
+
+            border-radius: 12px;
+
+            background: #ffffff;
+
+            box-shadow:
+                0
+                8px
+                30px
+                rgba(
+                    17,
+                    19,
+                    24,
+                    0.06
+                );
+        }
+
+
+        .form-header {
+            padding:
+                20px
+                22px;
+
+            border-bottom:
+                1px solid
+                #e3e5e8;
+
+            background: #f5f6f7;
+        }
+
+
+        .form-header h2 {
+            margin:
+                0
+                0
+                5px;
+
+            font-size: 18px;
+        }
+
+
+        .form-header p {
+            margin: 0;
+
+            color: #6a7078;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        .form-body {
+            padding: 22px;
+        }
+
+
+        /* =====================================================
+           FIELDS
+        ===================================================== */
+
+        .field-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap:
+                20px
+                18px;
+        }
+
+
+        .field {
+            display: grid;
+
+            gap: 8px;
+        }
+
+
+        .field.full {
+            grid-column:
+                1
+                /
+                -1;
+        }
+
+
+        label {
+            color: #30343a;
+
+            font-size: 13px;
+
+            font-weight: 800;
+        }
+
+
+        .required {
+            color: #9e2727;
+        }
+
+
+        input,
+        select {
+            width: 100%;
+
+            min-height: 48px;
+
+            padding:
+                12px
+                13px;
+
+            border:
+                1px solid
+                #c9cdd2;
+
+            border-radius: 8px;
+
+            outline: none;
+
+            background: #ffffff;
+
+            color: #17191d;
+
+            font-size: 15px;
+        }
+
+
+        input:focus,
+        select:focus {
+            border-color: #111318;
+
+            box-shadow:
+                0
+                0
+                0
+                3px
+                rgba(
+                    17,
+                    19,
+                    24,
+                    0.08
+                );
+        }
+
+
+        .field-help {
+            margin: 0;
+
+            color: #777d85;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           COMMUNITY BOX
+        ===================================================== */
+
+        .community-note {
+            margin-top: 22px;
+
+            padding: 16px;
+
+            border:
+                1px solid
+                #dedfe2;
+
+            border-radius: 9px;
+
+            background: #f5f6f7;
+        }
+
+
+        .community-note strong {
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 13px;
+        }
+
+
+        .community-note p {
+            margin: 0;
+
+            color: #646a72;
+
+            font-size: 12px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           ACTIONS
+        ===================================================== */
+
+        .actions {
+            display: flex;
+
+            justify-content:
+                flex-end;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-top: 26px;
+
+            padding-top: 20px;
+
+            border-top:
+                1px solid
+                #e4e6e9;
+        }
+
+
+        .button {
+            min-height: 46px;
+
+            display:
+                inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding:
+                11px
+                18px;
+
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+        }
+
+
+        .button-secondary {
+            border:
+                1px solid
+                #c7cbd0;
+
+            background: #ffffff;
+
+            color: #25282d;
+        }
+
+
+        .button-primary {
+            border:
+                1px solid
+                #111318;
+
+            background: #111318;
+
+            color: #ffffff;
+        }
+
+
+        .button-primary:hover {
+            background: #272b31;
+        }
+
+
+        /* =====================================================
+           SECURITY NOTE
+        ===================================================== */
+
+        .security-note {
+            margin-top: 18px;
+
+            color: #777d85;
+
+            font-size: 12px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 650px
+        ) {
+
+            .topbar-inner {
+                padding:
+                    15px
+                    16px;
+            }
+
+
+            .brand-title {
+                font-size: 17px;
+            }
+
+
+            .back-link {
+                padding:
+                    9px
+                    11px;
+
+                font-size: 12px;
+            }
+
+
+            .page {
+                padding:
+                    22px
+                    14px
+                    45px;
+            }
+
+
+            .field-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .field.full {
+                grid-column: auto;
+            }
+
+
+            .form-body {
+                padding:
+                    18px
+                    16px;
+            }
+
+
+            .actions {
+                flex-direction:
+                    column-reverse;
+
+                align-items:
+                    stretch;
+            }
+
+
+            .button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="topbar-inner">
+
+            <div class="brand">
+
+                <div class="brand-kicker">
+                    Kalxa Administration
+                </div>
+
+                <h2 class="brand-title">
+                    Community Operations
+                </h2>
+
+            </div>
+
+
+            <a
+                href="{{ url_for('admin.analytics') }}"
+                class="back-link"
+            >
+                ← Admin
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         PAGE
+    ====================================================== -->
+
+    <main class="page">
+
+
+        <!-- =================================================
+             INTRO
+        ================================================== -->
+
+        <div class="eyebrow">
+            Community Ambassador
+        </div>
+
+
+        <h1>
+            Add Ambassador
+        </h1>
+
+
+        <p class="intro">
+            Create a Community Ambassador account and assign
+            it to one Kalxa community. The ambassador will
+            manage community operations only within the
+            assigned area.
+        </p>
+
+
+        <!-- =================================================
+             FLASH MESSAGES
+        ================================================== -->
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                <div class="flash-stack">
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="flash {{ category }}"
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- =================================================
+             FORM
+        ================================================== -->
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'admin.admin_create_community_ambassador'
+            ) }}"
+            class="form-card"
+        >
+
+
+            <!-- =============================================
+                 HEADER
+            ============================================== -->
+
+            <div class="form-header">
+
+                <h2>
+                    Ambassador Account
+                </h2>
+
+                <p>
+                    Enter the ambassador's account details
+                    and choose the community they will manage.
+                </p>
+
+            </div>
+
+
+            <!-- =============================================
+                 BODY
+            ============================================== -->
+
+            <div class="form-body">
+
+                <div class="field-grid">
+
+
+                    <!-- =====================================
+                         NAME
+                    ====================================== -->
+
+                    <div class="field">
+
+                        <label for="name">
+                            Full name
+                            <span class="required">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value="{{ request.form.get(
+                                'name',
+                                ''
+                            ) }}"
+                            placeholder="e.g. Thabo Mokoena"
+                            maxlength="120"
+                            autocomplete="name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- =====================================
+                         PHONE
+                    ====================================== -->
+
+                    <div class="field">
+
+                        <label for="phone">
+                            Phone number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            value="{{ request.form.get(
+                                'phone',
+                                ''
+                            ) }}"
+                            placeholder="e.g. 071 234 5678"
+                            autocomplete="tel"
+                        >
+
+                        <p class="field-help">
+                            Optional, but useful for
+                            community operations.
+                        </p>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         EMAIL
+                    ====================================== -->
+
+                    <div class="field">
+
+                        <label for="email">
+                            Email address
+                            <span class="required">*</span>
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ request.form.get(
+                                'email',
+                                ''
+                            ) }}"
+                            placeholder="ambassador@example.com"
+                            autocomplete="email"
+                            required
+                        >
+
+                        <p class="field-help">
+                            This email will be used to
+                            sign in to the Ambassador
+                            Control Centre.
+                        </p>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         PASSWORD
+                    ====================================== -->
+
+                    <div class="field">
+
+                        <label for="password">
+                            Temporary password
+                            <span class="required">*</span>
+                        </label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            minlength="8"
+                            placeholder="Minimum 8 characters"
+                            autocomplete="new-password"
+                            required
+                        >
+
+                        <p class="field-help">
+                            Minimum 8 characters.
+                        </p>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         COMMUNITY
+                    ====================================== -->
+
+                    <div class="field full">
+
+                        <label for="zone_id">
+                            Assigned community
+                            <span class="required">*</span>
+                        </label>
+
+
+                        <select
+                            id="zone_id"
+                            name="zone_id"
+                            required
+                        >
+
+                            <option value="">
+                                Select a community
+                            </option>
+
+
+                            {% for zone in zones %}
+
+                                <option
+                                    value="{{ zone.id }}"
+
+                                    {% if
+                                        request.form.get(
+                                            'zone_id'
+                                        )
+                                        ==
+                                        zone.id|string
+                                    %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ zone.name }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+
+                        <p class="field-help">
+                            Only active Kalxa communities
+                            are available.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================================
+                     COMMUNITY SECURITY
+                ========================================== -->
+
+                <div class="community-note">
+
+                    <strong>
+                        Community boundary
+                    </strong>
+
+                    <p>
+                        The ambassador will only be able to
+                        access submissions, content, QR access
+                        points and analytics belonging to the
+                        community selected above.
+                    </p>
+
+                </div>
+
+
+                <!-- =========================================
+                     ACTIONS
+                ========================================== -->
+
+                <div class="actions">
+
+                    <a
+                        href="{{ url_for(
+                            'admin.analytics'
+                        ) }}"
+                        class="
+                            button
+                            button-secondary
+                        "
+                    >
+                        Cancel
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="
+                            button
+                            button-primary
+                        "
+                    >
+                        Create Ambassador
+                    </button>
+
+                </div>
+
+
+                <!-- =========================================
+                     SECURITY NOTE
+                ========================================== -->
+
+                <div class="security-note">
+                    Community Ambassador accounts are
+                    separate from Kalxa administrator
+                    accounts. Creating an ambassador does
+                    not grant administrator access.
+                </div>
+
+            </div>
+
+        </form>
+
+    </main>
+
+</body>
+
+</html>
