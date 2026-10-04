@@ -8216,6 +8216,658 @@ def admin_toggle_community_ambassador_status(
             "admin.admin_community_ambassadors"
         )
     )
+
+# ============================================================
+# ADMIN - MANAGE COMMUNITY AMBASSADOR
+# ============================================================
+
+@admin_bp.route(
+    "/community-ambassadors/<int:ambassador_id>",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_manage_community_ambassador(
+    ambassador_id,
+):
+
+    # ========================================================
+    # ADMIN AUTHENTICATION
+    # ========================================================
+
+    if not session.get(
+        "lac_admin"
+    ):
+
+        flash(
+            "Please log in as an administrator.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.login"
+            )
+        )
+
+
+    # ========================================================
+    # LOAD AMBASSADOR
+    # ========================================================
+
+    ambassador = db.session.get(
+        CommunityAmbassador,
+        ambassador_id,
+    )
+
+
+    if not ambassador:
+
+        abort(404)
+
+
+    # ========================================================
+    # LOAD ACTIVE COMMUNITIES
+    # ========================================================
+    #
+    # Include the Ambassador's current zone even if that zone
+    # later becomes inactive. This prevents the edit page from
+    # losing visibility of the existing assignment.
+    # ========================================================
+
+    zones = (
+        Zone.query
+        .filter(
+            db.or_(
+                Zone.active.is_(True),
+                Zone.id == ambassador.zone_id,
+            )
+        )
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # GET
+    # ========================================================
+
+    if request.method == "GET":
+
+        return render_template(
+            "admin/community_ambassador_manage.html",
+            ambassador=ambassador,
+            zones=zones,
+        )
+
+
+    # ========================================================
+    # POST - ACTION
+    # ========================================================
+
+    action = (
+        request.form
+        .get(
+            "action",
+            "update_profile",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    # ========================================================
+    # UPDATE PROFILE
+    # ========================================================
+
+    if action == "update_profile":
+
+        name = (
+            request.form
+            .get(
+                "name",
+                "",
+            )
+            .strip()
+        )
+
+
+        email = (
+            request.form
+            .get(
+                "email",
+                "",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        phone = (
+            request.form
+            .get(
+                "phone",
+                "",
+            )
+            .strip()
+        )
+
+
+        zone_id_raw = (
+            request.form
+            .get(
+                "zone_id",
+                "",
+            )
+            .strip()
+        )
+
+
+        # ====================================================
+        # REQUIRED FIELDS
+        # ====================================================
+
+        if not name:
+
+            flash(
+                "Ambassador name is required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        if not email:
+
+            flash(
+                "Ambassador email is required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        # ====================================================
+        # ZONE ID
+        # ====================================================
+
+        try:
+
+            zone_id = int(
+                zone_id_raw
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            flash(
+                "Please select a valid community.",
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        zone = db.session.get(
+            Zone,
+            zone_id,
+        )
+
+
+        if not zone:
+
+            flash(
+                "The selected community does not exist.",
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        # ====================================================
+        # DO NOT ASSIGN A NEW INACTIVE COMMUNITY
+        # ====================================================
+
+        if (
+            not zone.active
+            and zone.id != ambassador.zone_id
+        ):
+
+            flash(
+                (
+                    "The selected community is inactive "
+                    "and cannot receive a new Ambassador "
+                    "assignment."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        # ====================================================
+        # UNIQUE EMAIL
+        # ====================================================
+
+        existing_email = (
+            CommunityAmbassador.query
+            .filter(
+                db.func.lower(
+                    CommunityAmbassador.email
+                )
+                == email,
+                CommunityAmbassador.id
+                != ambassador.id,
+            )
+            .first()
+        )
+
+
+        if existing_email:
+
+            flash(
+                (
+                    "Another Community Ambassador "
+                    "already uses that email address."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        # ====================================================
+        # UNIQUE PHONE
+        # ====================================================
+
+        if phone:
+
+            existing_phone = (
+                CommunityAmbassador.query
+                .filter(
+                    CommunityAmbassador.phone
+                    == phone,
+                    CommunityAmbassador.id
+                    != ambassador.id,
+                )
+                .first()
+            )
+
+
+            if existing_phone:
+
+                flash(
+                    (
+                        "Another Community Ambassador "
+                        "already uses that phone number."
+                    ),
+                    "error",
+                )
+
+                return render_template(
+                    "admin/community_ambassador_manage.html",
+                    ambassador=ambassador,
+                    zones=zones,
+                )
+
+
+        # ====================================================
+        # CAPTURE OLD VALUES FOR LOGGING
+        # ====================================================
+
+        old_name = ambassador.name
+
+        old_email = ambassador.email
+
+        old_phone = ambassador.phone
+
+        old_zone_id = ambassador.zone_id
+
+
+        # ====================================================
+        # UPDATE
+        # ====================================================
+
+        ambassador.name = name
+
+        ambassador.email = email
+
+        ambassador.phone = (
+            phone
+            or None
+        )
+
+        ambassador.zone_id = zone.id
+
+
+        # ====================================================
+        # SAVE
+        # ====================================================
+
+        try:
+
+            db.session.commit()
+
+
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Failed to update Community "
+                    "Ambassador. ambassador_id=%s"
+                ),
+                ambassador.id,
+            )
+
+            flash(
+                (
+                    "The Community Ambassador "
+                    "could not be updated."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/community_ambassador_manage.html",
+                ambassador=ambassador,
+                zones=zones,
+            )
+
+
+        # ====================================================
+        # LOG
+        # ====================================================
+
+        current_app.logger.info(
+            (
+                "[Kalxa Admin] Community Ambassador "
+                "updated ambassador_id=%s "
+                "old_name=%s "
+                "new_name=%s "
+                "old_email=%s "
+                "new_email=%s "
+                "old_phone=%s "
+                "new_phone=%s "
+                "old_zone_id=%s "
+                "new_zone_id=%s"
+            ),
+            ambassador.id,
+            old_name,
+            ambassador.name,
+            old_email,
+            ambassador.email,
+            old_phone,
+            ambassador.phone,
+            old_zone_id,
+            ambassador.zone_id,
+        )
+
+
+        # ====================================================
+        # SUCCESS
+        # ====================================================
+
+        flash(
+            (
+                f"{ambassador.name}'s account "
+                f"has been updated."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.admin_manage_community_ambassador",
+                ambassador_id=ambassador.id,
+            )
+        )
+
+
+    # ========================================================
+    # UNKNOWN ACTION
+    # ========================================================
+
+    abort(400)
+    
+# ============================================================
+# ADMIN - RESET COMMUNITY AMBASSADOR PASSWORD
+# ============================================================
+
+@admin_bp.route(
+    (
+        "/community-ambassadors/"
+        "<int:ambassador_id>/reset-password"
+    ),
+    methods=[
+        "POST",
+    ],
+)
+def admin_reset_community_ambassador_password(
+    ambassador_id,
+):
+
+    # ========================================================
+    # ADMIN AUTHENTICATION
+    # ========================================================
+
+    if not session.get(
+        "lac_admin"
+    ):
+
+        flash(
+            "Please log in as an administrator.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.login"
+            )
+        )
+
+
+    # ========================================================
+    # LOAD AMBASSADOR
+    # ========================================================
+
+    ambassador = db.session.get(
+        CommunityAmbassador,
+        ambassador_id,
+    )
+
+
+    if not ambassador:
+
+        abort(404)
+
+
+    # ========================================================
+    # PASSWORD VALUES
+    # ========================================================
+
+    new_password = (
+        request.form
+        .get(
+            "new_password",
+            "",
+        )
+    )
+
+
+    confirm_password = (
+        request.form
+        .get(
+            "confirm_password",
+            "",
+        )
+    )
+
+
+    # ========================================================
+    # VALIDATION
+    # ========================================================
+
+    if not new_password:
+
+        flash(
+            "Enter a new password.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.admin_manage_community_ambassador",
+                ambassador_id=ambassador.id,
+            )
+        )
+
+
+    if len(new_password) < 8:
+
+        flash(
+            (
+                "The new password must contain "
+                "at least 8 characters."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.admin_manage_community_ambassador",
+                ambassador_id=ambassador.id,
+            )
+        )
+
+
+    if new_password != confirm_password:
+
+        flash(
+            (
+                "The password confirmation "
+                "does not match."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.admin_manage_community_ambassador",
+                ambassador_id=ambassador.id,
+            )
+        )
+
+
+    # ========================================================
+    # UPDATE PASSWORD HASH
+    # ========================================================
+
+    ambassador.set_password(
+        new_password
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Failed to reset Community Ambassador "
+                "password. ambassador_id=%s"
+            ),
+            ambassador.id,
+        )
+
+        flash(
+            (
+                "The Ambassador password "
+                "could not be reset."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.admin_manage_community_ambassador",
+                ambassador_id=ambassador.id,
+            )
+        )
+
+
+    # ========================================================
+    # LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Admin] Community Ambassador "
+            "password reset ambassador_id=%s"
+        ),
+        ambassador.id,
+    )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            f"{ambassador.name}'s password "
+            f"has been reset."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin.admin_manage_community_ambassador",
+            ambassador_id=ambassador.id,
+        )
+    )
 # ============================================================
 # CONTENT PUSH NOTIFICATION HELPER
 # ============================================================
