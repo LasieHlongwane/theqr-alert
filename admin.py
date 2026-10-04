@@ -7083,6 +7083,484 @@ def ambassador_reject_submission(
         )
     )
 
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - CONTENT
+# ============================================================
+
+@app.route(
+    "/ambassador/content",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_content():
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    zone = (
+        ambassador.zone
+    )
+
+
+    # ========================================================
+    # FILTER
+    # ========================================================
+
+    status_filter = (
+        str(
+            request.args.get(
+                "status",
+                "all",
+            )
+            or "all"
+        )
+        .strip()
+        .lower()
+    )
+
+
+    allowed_filters = {
+        "all",
+        "live",
+        "awaiting_payment",
+        "expired",
+        "archived",
+    }
+
+
+    if (
+        status_filter
+        not in allowed_filters
+    ):
+
+        status_filter = (
+            "all"
+        )
+
+
+    # ========================================================
+    # CURRENT TIME
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # BASE QUERY
+    # ========================================================
+    #
+    # SECURITY BOUNDARY:
+    #
+    # The Ambassador may only access ContentItem records
+    # belonging to their assigned zone.
+    # ========================================================
+
+    query = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id
+        )
+    )
+
+
+    # ========================================================
+    # LIVE
+    # ========================================================
+
+    if (
+        status_filter
+        == "live"
+    ):
+
+        query = (
+            query
+            .filter(
+                ContentItem.active.is_(True),
+                ContentItem.archived.is_(False),
+            )
+            .filter(
+                db.or_(
+                    ContentItem.commercial_expires_at.is_(None),
+                    ContentItem.commercial_expires_at > now,
+                )
+            )
+        )
+
+
+    # ========================================================
+    # AWAITING PAYMENT
+    # ========================================================
+
+    elif (
+        status_filter
+        == "awaiting_payment"
+    ):
+
+        query = (
+            query
+            .filter(
+                ContentItem.pricing_model.isnot(None),
+                ContentItem.payment_status == "unpaid",
+                ContentItem.archived.is_(False),
+            )
+        )
+
+
+    # ========================================================
+    # EXPIRED
+    # ========================================================
+
+    elif (
+        status_filter
+        == "expired"
+    ):
+
+        query = (
+            query
+            .filter(
+                ContentItem.archived.is_(False),
+                ContentItem.commercial_expires_at.isnot(None),
+                ContentItem.commercial_expires_at <= now,
+            )
+        )
+
+
+    # ========================================================
+    # ARCHIVED
+    # ========================================================
+
+    elif (
+        status_filter
+        == "archived"
+    ):
+
+        query = (
+            query
+            .filter(
+                ContentItem.archived.is_(True)
+            )
+        )
+
+
+    # ========================================================
+    # CONTENT
+    # ========================================================
+
+    content_items = (
+        query
+        .order_by(
+            ContentItem.created_at.desc()
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # COUNTS
+    # ========================================================
+
+    base_count_query = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id
+        )
+    )
+
+
+    all_count = (
+        base_count_query.count()
+    )
+
+
+    live_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.active.is_(True),
+
+            ContentItem.archived.is_(False),
+        )
+        .filter(
+            db.or_(
+                ContentItem.commercial_expires_at.is_(None),
+                ContentItem.commercial_expires_at > now,
+            )
+        )
+        .count()
+    )
+
+
+    awaiting_payment_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.pricing_model.isnot(None),
+
+            ContentItem.payment_status
+            == "unpaid",
+
+            ContentItem.archived.is_(False),
+        )
+        .count()
+    )
+
+
+    expired_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.archived.is_(False),
+
+            ContentItem.commercial_expires_at.isnot(None),
+
+            ContentItem.commercial_expires_at
+            <= now,
+        )
+        .count()
+    )
+
+
+    archived_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.archived.is_(True),
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/content.html",
+
+        ambassador=ambassador,
+
+        zone=zone,
+
+        content_items=content_items,
+
+        status_filter=status_filter,
+
+        all_count=all_count,
+
+        live_count=live_count,
+
+        awaiting_payment_count=
+            awaiting_payment_count,
+
+        expired_count=expired_count,
+
+        archived_count=archived_count,
+
+        now=now,
+    )
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - CONTENT DETAIL
+# ============================================================
+
+@app.route(
+    "/ambassador/content/<int:content_id>",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_content_detail(
+    content_id,
+):
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    zone = (
+        ambassador.zone
+    )
+
+
+    # ========================================================
+    # ZONE-SCOPED CONTENT LOOKUP
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Do NOT use:
+    #
+    #     ContentItem.query.get_or_404(content_id)
+    #
+    # because that would retrieve content before applying
+    # the Ambassador's community boundary.
+    # ========================================================
+
+    content = (
+        ContentItem.query
+        .filter(
+            ContentItem.id
+            == content_id,
+
+            ContentItem.zone_id
+            == ambassador.zone_id,
+        )
+        .first()
+    )
+
+
+    if not content:
+
+        abort(
+            404
+        )
+
+
+    # ========================================================
+    # DISTRIBUTION ZONES
+    # ========================================================
+
+    distribution_records = (
+        ContentDistributionZone.query
+        .filter(
+            ContentDistributionZone.content_item_id
+            == content.id
+        )
+        .all()
+    )
+
+
+    distribution_zone_ids = [
+        record.zone_id
+        for record in distribution_records
+    ]
+
+
+    distribution_zones = (
+        Zone.query
+        .filter(
+            Zone.id.in_(
+                distribution_zone_ids
+            )
+        )
+        .order_by(
+            Zone.name.asc()
+        )
+        .all()
+        if distribution_zone_ids
+        else []
+    )
+
+
+    # ========================================================
+    # CURRENT TIME
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # OPERATIONAL STATUS
+    # ========================================================
+
+    if content.archived:
+
+        operational_status = (
+            "archived"
+        )
+
+
+    elif (
+        content.pricing_model
+        and
+        content.payment_status
+        == "unpaid"
+    ):
+
+        operational_status = (
+            "awaiting_payment"
+        )
+
+
+    elif (
+        content.commercial_expires_at
+        and
+        content.commercial_expires_at
+        <= now
+    ):
+
+        operational_status = (
+            "expired"
+        )
+
+
+    elif content.active:
+
+        operational_status = (
+            "live"
+        )
+
+
+    else:
+
+        operational_status = (
+            "inactive"
+        )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/content_detail.html",
+
+        ambassador=ambassador,
+
+        zone=zone,
+
+        content=content,
+
+        distribution_zones=
+            distribution_zones,
+
+        operational_status=
+            operational_status,
+
+        now=now,
+    )
+
 def _send_content_push_notification(content, category_record=None):
     existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
     if existing_notification:
