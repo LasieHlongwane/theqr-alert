@@ -3797,7 +3797,7 @@ def ambassador_required(
 # ADMIN - CREATE COMMUNITY AMBASSADOR
 # ============================================================
 
-@app_bp.route(
+@admin_bp.route(
     "/admin/community-ambassadors/new",
     methods=[
         "GET",
@@ -3812,11 +3812,10 @@ def admin_create_community_ambassador():
     #
     # IMPORTANT:
     #
-    # Replace this with the SAME admin authentication check
-    # already used by your existing Kalxa admin routes.
+    # This uses the existing Kalxa administrator session.
     #
-    # Do not allow organizers or future ambassadors to access
-    # this route.
+    # Organizers and Community Ambassadors must not be allowed
+    # to access this route.
     # ========================================================
 
     if not session.get("admin_logged_in"):
@@ -3874,6 +3873,7 @@ def admin_create_community_ambassador():
         .strip()
     )
 
+
     email = (
         request.form
         .get(
@@ -3884,6 +3884,7 @@ def admin_create_community_ambassador():
         .lower()
     )
 
+
     phone = (
         request.form
         .get(
@@ -3893,6 +3894,7 @@ def admin_create_community_ambassador():
         .strip()
     )
 
+
     password = (
         request.form
         .get(
@@ -3900,6 +3902,7 @@ def admin_create_community_ambassador():
             "",
         )
     )
+
 
     zone_id_raw = (
         request.form
@@ -4175,8 +4178,6 @@ def admin_create_community_ambassador():
             "admin_create_community_ambassador"
         )
     )
-
-
 
 # ============================================================
 # COMMUNITY AMBASSADOR - LOGIN
