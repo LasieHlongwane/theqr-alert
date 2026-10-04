@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        Manage {{ ambassador.name }} | Kalxa Admin
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        :root {
+
+            --page-bg:
+                #e3e5e8;
+
+            --surface:
+                #ffffff;
+
+            --surface-soft:
+                #f5f6f7;
+
+            --text:
+                #17191d;
+
+            --text-soft:
+                #5c626b;
+
+            --muted:
+                #7a8088;
+
+            --border:
+                #d2d6db;
+
+            --border-soft:
+                #e5e7ea;
+
+            --black:
+                #111318;
+
+            --green:
+                #24753b;
+
+            --green-bg:
+                #edf7ef;
+
+            --red:
+                #982d2d;
+
+            --red-bg:
+                #fff0f0;
+
+        }
+
+
+        body {
+            margin: 0;
+
+            background:
+                var(--page-bg);
+
+            color:
+                var(--text);
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        a {
+            color: inherit;
+
+            text-decoration: none;
+        }
+
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background:
+                var(--black);
+
+            color:
+                #ffffff;
+        }
+
+
+        .topbar-inner {
+            width:
+                min(
+                    100%,
+                    1000px
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                18px
+                20px;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                18px;
+        }
+
+
+        .brand-kicker {
+            margin-bottom:
+                4px;
+
+            color:
+                #aeb4bc;
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                1.4px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .brand-title {
+            margin: 0;
+
+            font-size:
+                19px;
+        }
+
+
+        .back-link {
+            padding:
+                10px
+                13px;
+
+            border:
+                1px solid
+                #41464e;
+
+            border-radius:
+                8px;
+
+            font-size:
+                12px;
+
+            font-weight:
+                800;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width:
+                min(
+                    100%,
+                    1000px
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                28px
+                20px
+                70px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .eyebrow {
+            margin-bottom:
+                7px;
+
+            color:
+                #656c75;
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                1.3px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .page-header {
+            margin-bottom:
+                22px;
+        }
+
+
+        h1 {
+            margin:
+                0
+                0
+                8px;
+
+            font-size:
+                clamp(
+                    29px,
+                    5vw,
+                    43px
+                );
+
+            line-height:
+                1.05;
+
+            letter-spacing:
+                -1px;
+        }
+
+
+        .intro {
+            max-width:
+                650px;
+
+            margin: 0;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                14px;
+
+            line-height:
+                1.6;
+        }
+
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
+
+        .flash-stack {
+            display:
+                grid;
+
+            gap:
+                10px;
+
+            margin-bottom:
+                18px;
+        }
+
+
+        .flash {
+            padding:
+                14px
+                16px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:
+                9px;
+
+            background:
+                var(--surface);
+
+            font-size:
+                13px;
+
+            font-weight:
+                700;
+        }
+
+
+        .flash.success {
+            border-color:
+                #9fc5a9;
+
+            background:
+                var(--green-bg);
+
+            color:
+                #185c2b;
+        }
+
+
+        .flash.error {
+            border-color:
+                #dfaaaa;
+
+            background:
+                var(--red-bg);
+
+            color:
+                #8a2020;
+        }
+
+
+        /* =====================================================
+           ACCOUNT SUMMARY
+        ===================================================== */
+
+        .summary-card {
+            margin-bottom:
+                18px;
+
+            padding:
+                20px;
+
+            display:
+                flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                flex-start;
+
+            gap:
+                18px;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:
+                11px;
+
+            background:
+                var(--surface);
+        }
+
+
+        .summary-community {
+            margin-bottom:
+                5px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                1.1px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .summary-name {
+            margin:
+                0
+                0
+                5px;
+
+            font-size:
+                22px;
+        }
+
+
+        .summary-email {
+            color:
+                var(--text-soft);
+
+            font-size:
+                13px;
+
+            overflow-wrap:
+                anywhere;
+        }
+
+
+        .status-badge {
+            flex:
+                0 0 auto;
+
+            padding:
+                7px
+                10px;
+
+            border-radius:
+                999px;
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.7px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .status-badge.active {
+            background:
+                var(--green-bg);
+
+            color:
+                var(--green);
+        }
+
+
+        .status-badge.inactive {
+            background:
+                var(--red-bg);
+
+            color:
+                var(--red);
+        }
+
+
+        /* =====================================================
+           LAYOUT
+        ===================================================== */
+
+        .layout {
+            display:
+                grid;
+
+            grid-template-columns:
+                minmax(
+                    0,
+                    1.5fr
+                )
+                minmax(
+                    280px,
+                    0.8fr
+                );
+
+            gap:
+                18px;
+
+            align-items:
+                start;
+        }
+
+
+        .stack {
+            display:
+                grid;
+
+            gap:
+                18px;
+        }
+
+
+        /* =====================================================
+           CARD
+        ===================================================== */
+
+        .card {
+            overflow:
+                hidden;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:
+                11px;
+
+            background:
+                var(--surface);
+        }
+
+
+        .card-header {
+            padding:
+                18px
+                20px;
+
+            border-bottom:
+                1px solid
+                var(--border-soft);
+
+            background:
+                var(--surface-soft);
+        }
+
+
+        .card-title {
+            margin:
+                0
+                0
+                5px;
+
+            font-size:
+                17px;
+        }
+
+
+        .card-description {
+            margin: 0;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                12px;
+
+            line-height:
+                1.5;
+        }
+
+
+        .card-body {
+            padding:
+                20px;
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .field-grid {
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap:
+                18px;
+        }
+
+
+        .field {
+            display:
+                grid;
+
+            gap:
+                7px;
+        }
+
+
+        .field.full {
+            grid-column:
+                1
+                /
+                -1;
+        }
+
+
+        label {
+            color:
+                #34383e;
+
+            font-size:
+                12px;
+
+            font-weight:
+                900;
+        }
+
+
+        input,
+        select {
+            width:
+                100%;
+
+            min-height:
+                47px;
+
+            padding:
+                11px
+                12px;
+
+            border:
+                1px solid
+                #c9cdd2;
+
+            border-radius:
+                8px;
+
+            outline:
+                none;
+
+            background:
+                #ffffff;
+
+            color:
+                var(--text);
+
+            font-size:
+                14px;
+        }
+
+
+        input:focus,
+        select:focus {
+            border-color:
+                var(--black);
+
+            box-shadow:
+                0
+                0
+                0
+                3px
+                rgba(
+                    17,
+                    19,
+                    24,
+                    0.08
+                );
+        }
+
+
+        .field-help {
+            margin: 0;
+
+            color:
+                var(--muted);
+
+            font-size:
+                11px;
+
+            line-height:
+                1.5;
+        }
+
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
+
+        .actions {
+            margin-top:
+                20px;
+
+            padding-top:
+                18px;
+
+            display:
+                flex;
+
+            justify-content:
+                flex-end;
+
+            gap:
+                9px;
+
+            border-top:
+                1px solid
+                var(--border-soft);
+        }
+
+
+        .button {
+            min-height:
+                43px;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                10px
+                15px;
+
+            border-radius:
+                7px;
+
+            cursor:
+                pointer;
+
+            font-size:
+                12px;
+
+            font-weight:
+                900;
+        }
+
+
+        .button-primary {
+            border:
+                1px solid
+                var(--black);
+
+            background:
+                var(--black);
+
+            color:
+                #ffffff;
+        }
+
+
+        .button-secondary {
+            border:
+                1px solid
+                var(--border);
+
+            background:
+                #ffffff;
+
+            color:
+                #34383e;
+        }
+
+
+        .button-danger {
+            width:
+                100%;
+
+            border:
+                1px solid
+                #d6a6a6;
+
+            background:
+                #ffffff;
+
+            color:
+                var(--red);
+        }
+
+
+        .button-success {
+            width:
+                100%;
+
+            border:
+                1px solid
+                #9fc5a9;
+
+            background:
+                #ffffff;
+
+            color:
+                var(--green);
+        }
+
+
+        /* =====================================================
+           INFO
+        ===================================================== */
+
+        .info-list {
+            display:
+                grid;
+
+            gap:
+                15px;
+        }
+
+
+        .info-row {
+            padding-bottom:
+                14px;
+
+            border-bottom:
+                1px solid
+                var(--border-soft);
+        }
+
+
+        .info-row:last-child {
+            padding-bottom:
+                0;
+
+            border-bottom:
+                0;
+        }
+
+
+        .info-label {
+            margin-bottom:
+                4px;
+
+            color:
+                var(--muted);
+
+            font-size:
+                9px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                1px;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .info-value {
+            font-size:
+                13px;
+
+            font-weight:
+                800;
+
+            line-height:
+                1.4;
+        }
+
+
+        /* =====================================================
+           WARNING
+        ===================================================== */
+
+        .warning {
+            margin-bottom:
+                16px;
+
+            padding:
+                13px;
+
+            border:
+                1px solid
+                #e2c9a4;
+
+            border-radius:
+                8px;
+
+            background:
+                #fff8ed;
+
+            color:
+                #75531f;
+
+            font-size:
+                11px;
+
+            line-height:
+                1.55;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 760px
+        ) {
+
+            .topbar-inner {
+                padding:
+                    15px
+                    16px;
+            }
+
+
+            .page {
+                padding:
+                    22px
+                    14px
+                    50px;
+            }
+
+
+            .layout {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .field-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .field.full {
+                grid-column:
+                    auto;
+            }
+
+
+            .actions {
+                flex-direction:
+                    column-reverse;
+            }
+
+
+            .button {
+                width:
+                    100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="topbar-inner">
+
+            <div>
+
+                <div class="brand-kicker">
+                    Kalxa Administration
+                </div>
+
+                <h2 class="brand-title">
+                    Community Operations
+                </h2>
+
+            </div>
+
+
+            <a
+                href="{{ url_for(
+                    'admin.admin_community_ambassadors'
+                ) }}"
+                class="back-link"
+            >
+                ← Ambassadors
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         PAGE
+    ====================================================== -->
+
+    <main class="page">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <section class="page-header">
+
+            <div class="eyebrow">
+                Community Ambassador
+            </div>
+
+            <h1>
+                Manage Ambassador
+            </h1>
+
+            <p class="intro">
+                Update this Ambassador's account,
+                community assignment and access credentials.
+            </p>
+
+        </section>
+
+
+        <!-- =================================================
+             FLASH
+        ================================================== -->
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                <div class="flash-stack">
+
+                    {% for category, message in messages %}
+
+                        <div class="flash {{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- =================================================
+             SUMMARY
+        ================================================== -->
+
+        <section class="summary-card">
+
+            <div>
+
+                <div class="summary-community">
+
+                    {% if ambassador.zone %}
+
+                        {{ ambassador.zone.name }}
+
+                    {% else %}
+
+                        No assigned community
+
+                    {% endif %}
+
+                </div>
+
+
+                <h2 class="summary-name">
+                    {{ ambassador.name }}
+                </h2>
+
+
+                <div class="summary-email">
+                    {{ ambassador.email }}
+                </div>
+
+            </div>
+
+
+            {% if ambassador.active %}
+
+                <span class="status-badge active">
+                    Active
+                </span>
+
+            {% else %}
+
+                <span class="status-badge inactive">
+                    Inactive
+                </span>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- =================================================
+             LAYOUT
+        ================================================== -->
+
+        <div class="layout">
+
+
+            <!-- =============================================
+                 LEFT
+            ============================================== -->
+
+            <div class="stack">
+
+
+                <!-- =========================================
+                     PROFILE
+                ========================================== -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2 class="card-title">
+                            Account & Community
+                        </h2>
+
+                        <p class="card-description">
+                            Edit contact information or move
+                            the Ambassador to another active
+                            Kalxa community.
+                        </p>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.admin_manage_community_ambassador',
+                                ambassador_id=ambassador.id
+                            ) }}"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="update_profile"
+                            >
+
+
+                            <div class="field-grid">
+
+
+                                <div class="field">
+
+                                    <label for="name">
+                                        Full name
+                                    </label>
+
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        value="{{ ambassador.name }}"
+                                        maxlength="120"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <div class="field">
+
+                                    <label for="phone">
+                                        Phone number
+                                    </label>
+
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        value="{{ ambassador.phone or '' }}"
+                                    >
+
+                                </div>
+
+
+                                <div class="field full">
+
+                                    <label for="email">
+                                        Email address
+                                    </label>
+
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value="{{ ambassador.email }}"
+                                        required
+                                    >
+
+                                    <p class="field-help">
+                                        This is the email the
+                                        Ambassador uses to sign in.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="field full">
+
+                                    <label for="zone_id">
+                                        Assigned community
+                                    </label>
+
+                                    <select
+                                        id="zone_id"
+                                        name="zone_id"
+                                        required
+                                    >
+
+                                        {% for zone in zones %}
+
+                                            <option
+                                                value="{{ zone.id }}"
+
+                                                {% if
+                                                    zone.id
+                                                    ==
+                                                    ambassador.zone_id
+                                                %}
+                                                    selected
+                                                {% endif %}
+                                            >
+
+                                                {{ zone.name }}
+
+                                                {% if not zone.active %}
+                                                    — Inactive
+                                                {% endif %}
+
+                                            </option>
+
+                                        {% endfor %}
+
+                                    </select>
+
+
+                                    <p class="field-help">
+                                        Reassigning the Ambassador
+                                        changes the community data
+                                        available in their operational
+                                        dashboard.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="actions">
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin.admin_community_ambassadors'
+                                    ) }}"
+                                    class="
+                                        button
+                                        button-secondary
+                                    "
+                                >
+                                    Cancel
+                                </a>
+
+
+                                <button
+                                    type="submit"
+                                    class="
+                                        button
+                                        button-primary
+                                    "
+                                >
+                                    Save Changes
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     PASSWORD RESET
+                ========================================== -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2 class="card-title">
+                            Reset Password
+                        </h2>
+
+                        <p class="card-description">
+                            Set a new login password for this
+                            Community Ambassador.
+                        </p>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <div class="warning">
+                            Kalxa does not display the
+                            Ambassador's existing password.
+                            Passwords remain hashed. A forgotten
+                            password must be replaced with a new
+                            one.
+                        </div>
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.admin_reset_community_ambassador_password',
+                                ambassador_id=ambassador.id
+                            ) }}"
+                        >
+
+                            <div class="field-grid">
+
+                                <div class="field">
+
+                                    <label for="new_password">
+                                        New password
+                                    </label>
+
+                                    <input
+                                        id="new_password"
+                                        name="new_password"
+                                        type="password"
+                                        minlength="8"
+                                        autocomplete="new-password"
+                                        required
+                                    >
+
+                                </div>
+
+
+                                <div class="field">
+
+                                    <label for="confirm_password">
+                                        Confirm password
+                                    </label>
+
+                                    <input
+                                        id="confirm_password"
+                                        name="confirm_password"
+                                        type="password"
+                                        minlength="8"
+                                        autocomplete="new-password"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="actions">
+
+                                <button
+                                    type="submit"
+                                    class="
+                                        button
+                                        button-primary
+                                    "
+                                    onclick="
+                                        return confirm(
+                                            'Reset the password for {{ ambassador.name|e }}?'
+                                        );
+                                    "
+                                >
+                                    Reset Password
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- =============================================
+                 RIGHT
+            ============================================== -->
+
+            <aside class="stack">
+
+
+                <!-- =========================================
+                     ACCOUNT SUMMARY
+                ========================================== -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2 class="card-title">
+                            Account
+                        </h2>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <div class="info-list">
+
+
+                            <div class="info-row">
+
+                                <div class="info-label">
+                                    Ambassador ID
+                                </div>
+
+                                <div class="info-value">
+                                    {{ ambassador.id }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <div class="info-label">
+                                    Community
+                                </div>
+
+                                <div class="info-value">
+
+                                    {% if ambassador.zone %}
+
+                                        {{ ambassador.zone.name }}
+
+                                    {% else %}
+
+                                        Not assigned
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <div class="info-label">
+                                    Status
+                                </div>
+
+                                <div class="info-value">
+
+                                    {% if ambassador.active %}
+
+                                        Active
+
+                                    {% else %}
+
+                                        Inactive
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <div class="info-label">
+                                    Email
+                                </div>
+
+                                <div class="info-value">
+                                    {{ ambassador.email }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <div class="info-label">
+                                    Phone
+                                </div>
+
+                                <div class="info-value">
+                                    {{ ambassador.phone or "Not provided" }}
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     ACCESS CONTROL
+                ========================================== -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2 class="card-title">
+                            Access Control
+                        </h2>
+
+                        <p class="card-description">
+                            Enable or disable this
+                            Ambassador's operational access.
+                        </p>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <form
+                            method="POST"
+
+                            action="{{ url_for(
+                                'admin.admin_toggle_community_ambassador_status',
+                                ambassador_id=ambassador.id
+                            ) }}"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="status_filter"
+                                value="all"
+                            >
+
+
+                            {% if ambassador.active %}
+
+                                <button
+                                    type="submit"
+
+                                    class="
+                                        button
+                                        button-danger
+                                    "
+
+                                    onclick="
+                                        return confirm(
+                                            'Deactivate {{ ambassador.name|e }}?'
+                                        );
+                                    "
+                                >
+                                    Deactivate Ambassador
+                                </button>
+
+                            {% else %}
+
+                                <button
+                                    type="submit"
+
+                                    class="
+                                        button
+                                        button-success
+                                    "
+                                >
+                                    Activate Ambassador
+                                </button>
+
+                            {% endif %}
+
+                        </form>
+
+                    </div>
+
+                </section>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>
