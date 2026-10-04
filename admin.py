@@ -3877,11 +3877,12 @@ def _publish_pending_submission(
     - approve_all_jobs()
 
     PUBLICATION RULES:
-    - Free content can become active immediately.
-    - Paid commercial content becomes active only when
-      payment_status is "paid" or "waived".
-    - Unpaid, failed or refunded commercial content is
-      created but remains hidden.
+    - Jobs are free and can be approved immediately.
+    - Non-commercial/free content can be approved immediately.
+    - Commercial content MUST have payment confirmed first.
+    - Commercial payment_status must be "paid" or "waived".
+    - Unpaid/failed/refunded commercial submissions cannot
+      enter the publication engine.
     """
 
     # ========================================================
@@ -3897,10 +3898,6 @@ def _publish_pending_submission(
 
     # ========================================================
     # VALIDATE STATUS
-    # ========================================================
-    #
-    # A submission must return to "pending" after requested
-    # corrections before it can enter this publication engine.
     # ========================================================
 
     if (
@@ -4107,10 +4104,12 @@ def _publish_pending_submission(
 
 
     # ========================================================
-    # JOBS / OPPORTUNITIES
+    # JOBS
     # ========================================================
     #
-    # Jobs are always free in the current Kalxa workflow.
+    # Jobs are free.
+    #
+    # They do NOT wait for payment confirmation.
     # ========================================================
 
     if (
@@ -4283,6 +4282,37 @@ def _publish_pending_submission(
                 )
 
 
+            # =================================================
+            # NEW HARD PAYMENT GATE
+            # =================================================
+            #
+            # Commercial content may NOT be published before
+            # Kalxa Admin confirms payment.
+            #
+            # This protects every caller of this helper:
+            #
+            # - Super Admin
+            # - Ambassador
+            # - future moderation routes
+            # =================================================
+
+            if (
+                payment_status
+                not in {
+                    "paid",
+                    "waived",
+                }
+            ):
+
+                raise ValueError(
+                    (
+                        "Payment must be confirmed "
+                        "before this commercial "
+                        "submission can be approved."
+                    )
+                )
+
+
         # ====================================================
         # DISTRIBUTION ZONES
         # ====================================================
@@ -4333,10 +4363,6 @@ def _publish_pending_submission(
                     )
 
 
-            # =================================================
-            # HOME ZONE MUST ALWAYS BE INCLUDED
-            # =================================================
-
             if (
                 submission.zone_id
                 not in
@@ -4348,10 +4374,6 @@ def _publish_pending_submission(
                     submission.zone_id,
                 )
 
-
-            # =================================================
-            # CURRENT CAMPAIGN LIMIT
-            # =================================================
 
             if (
                 len(
@@ -4367,10 +4389,6 @@ def _publish_pending_submission(
                     )
                 )
 
-
-            # =================================================
-            # VALIDATE DISTRIBUTION ZONES
-            # =================================================
 
             valid_zone_ids = {
                 zone_record.id
@@ -4422,13 +4440,6 @@ def _publish_pending_submission(
 
     # ========================================================
     # COMMERCIAL ACTIVATION
-    # ========================================================
-    #
-    # Commercial time starts only after payment has been
-    # confirmed or explicitly waived.
-    #
-    # An unpaid listing must NOT lose package days while
-    # waiting for payment.
     # ========================================================
 
     commercial_starts_at = (
@@ -4498,26 +4509,12 @@ def _publish_pending_submission(
 
 
     # ========================================================
-    # DETERMINE PUBLIC VISIBILITY
+    # VISIBILITY
     # ========================================================
     #
-    # No pricing model:
-    #     Free/non-commercial content -> ACTIVE
-    #
-    # Commercial + paid:
-    #     ACTIVE
-    #
-    # Commercial + waived:
-    #     ACTIVE
-    #
-    # Commercial + unpaid:
-    #     HIDDEN
-    #
-    # Commercial + failed:
-    #     HIDDEN
-    #
-    # Commercial + refunded:
-    #     HIDDEN
+    # Because commercial content cannot reach this point
+    # without paid/waived status, approved commercial
+    # content is always immediately eligible for activation.
     # ========================================================
 
     if not pricing_model:
@@ -4526,53 +4523,29 @@ def _publish_pending_submission(
             True
         )
 
-
-    elif (
-        payment_status
-        in {
-            "paid",
-            "waived",
-        }
-    ):
-
-        content_active = (
-            True
-        )
-
-
     else:
 
         content_active = (
-            False
+            payment_status
+            in {
+                "paid",
+                "waived",
+            }
         )
 
 
     # ========================================================
-    # CREATE PUBLIC CONTENT ITEM
+    # CREATE PUBLIC CONTENT
     # ========================================================
 
     content = (
         ContentItem(
 
-            # =================================================
-            # OWNERSHIP
-            # =================================================
-
             organizer_id=
                 submission.organizer_id,
 
-
-            # =================================================
-            # COMMUNITY
-            # =================================================
-
             zone_id=
                 submission.zone_id,
-
-
-            # =================================================
-            # CLASSIFICATION
-            # =================================================
 
             category=
                 submission.category,
@@ -4588,11 +4561,6 @@ def _publish_pending_submission(
 
             notification_eligible=
                 notification_eligible,
-
-
-            # =================================================
-            # COMMERCIAL
-            # =================================================
 
             pricing_model=
                 pricing_model,
@@ -4618,11 +4586,6 @@ def _publish_pending_submission(
             paid_at=
                 paid_at,
 
-
-            # =================================================
-            # CONTENT
-            # =================================================
-
             title=
                 submission.title,
 
@@ -4641,11 +4604,6 @@ def _publish_pending_submission(
             price=
                 submission.price,
 
-
-            # =================================================
-            # CONTACT
-            # =================================================
-
             contact=
                 submission.contact,
 
@@ -4658,18 +4616,8 @@ def _publish_pending_submission(
             ticket_url=
                 submission.ticket_url,
 
-
-            # =================================================
-            # MEDIA
-            # =================================================
-
             image_url=
                 first_image_url,
-
-
-            # =================================================
-            # DATES
-            # =================================================
 
             publish_from=
                 submission.publish_from,
@@ -4692,11 +4640,6 @@ def _publish_pending_submission(
             end_time=
                 submission.end_time,
 
-
-            # =================================================
-            # LISTING CONTROL
-            # =================================================
-
             listing_level=
                 "discovery",
 
@@ -4718,24 +4661,16 @@ def _publish_pending_submission(
     )
 
 
-    # ========================================================
-    # ADD CONTENT
-    # ========================================================
-
     db.session.add(
         content
     )
 
 
-    # ========================================================
-    # ALLOCATE CONTENT ID
-    # ========================================================
-
     db.session.flush()
 
 
     # ========================================================
-    # DISTRIBUTION ZONES
+    # DISTRIBUTION
     # ========================================================
 
     if (
@@ -4760,7 +4695,7 @@ def _publish_pending_submission(
 
 
     # ========================================================
-    # LINK PUBLISHED CONTENT
+    # LINK CONTENT
     # ========================================================
 
     submission.published_content_id = (
@@ -4769,7 +4704,7 @@ def _publish_pending_submission(
 
 
     # ========================================================
-    # COPY SUBMISSION IMAGES
+    # COPY IMAGES
     # ========================================================
 
     for image in (
@@ -4845,15 +4780,20 @@ def _publish_pending_submission(
 
 
     # ========================================================
-    # RETURN DATA TO CALLING ROUTE
+    # RETURN
     # ========================================================
 
     return {
-        "content": content,
-        "category": category,
-        "canonical_category": canonical_category,
-    }
 
+        "content":
+            content,
+
+        "category":
+            category,
+
+        "canonical_category":
+            canonical_category,
+    }
 # ============================================================
 # PUSH NOTIFICATION AFTER APPROVAL
 # ============================================================
@@ -8476,6 +8416,7 @@ def edit_submission(
 # COMMUNITY AMBASSADOR - APPROVE SUBMISSION
 # ============================================================
 
+
 @admin_bp.route(
     "/ambassador/submissions/<int:submission_id>/approve",
     methods=[
@@ -8487,61 +8428,139 @@ def ambassador_approve_submission(
     submission_id,
 ):
 
-    # ========================================================
-    # CURRENT AMBASSADOR
-    # ========================================================
-
     ambassador = (
         get_current_ambassador()
     )
 
 
+    if not ambassador:
+
+        clear_ambassador_session()
+
+        flash(
+            (
+                "Please log in as a "
+                "Community Ambassador."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_login"
+            )
+        )
+
+
     # ========================================================
-    # ZONE-SCOPED SUBMISSION
+    # FIND SUBMISSION
     # ========================================================
 
     submission = (
-        get_ambassador_submission_or_404(
+        PendingSubmission
+        .query
+        .get_or_404(
             submission_id
         )
     )
 
 
     # ========================================================
-    # CURRENT STATUS
+    # ZONE SECURITY
+    # ========================================================
+    #
+    # An Ambassador may moderate ONLY submissions whose
+    # home zone matches their assigned community.
     # ========================================================
 
-    if submission.status == "approved":
+    if (
+        submission.zone_id
+        != ambassador.zone_id
+    ):
+
+        current_app.logger.warning(
+            (
+                "[Kalxa Ambassador] Blocked cross-zone "
+                "approval ambassador_id=%s "
+                "ambassador_zone_id=%s "
+                "submission_id=%s "
+                "submission_zone_id=%s"
+            ),
+            ambassador.id,
+            ambassador.zone_id,
+            submission.id,
+            submission.zone_id,
+        )
+
+
+        abort(
+            403
+        )
+
+
+    # ========================================================
+    # MUST STILL BE PENDING
+    # ========================================================
+
+    if (
+        submission.status
+        != "pending"
+    ):
 
         flash(
-            "This submission has already been approved.",
+            (
+                "This submission has already "
+                "been reviewed."
+            ),
             "error",
         )
 
         return redirect(
             url_for(
-                "admin.ambassador_submission_detail",
-                submission_id=submission.id,
+                "admin.ambassador_submissions"
             )
         )
 
 
     # ========================================================
-    # ALLOWED SOURCE STATES
+    # CATEGORY
     # ========================================================
 
-    allowed_source_statuses = {
-        "pending",
-        "needs_changes",
-    }
+    canonical_category = (
+        normalize_category(
+            submission.category
+        )
+    )
 
 
-    if submission.status not in allowed_source_statuses:
+    # ========================================================
+    # PAYMENT GATE
+    # ========================================================
+    #
+    # Jobs are free.
+    #
+    # Commercial content requires Super Admin payment
+    # confirmation BEFORE Ambassador approval.
+    # ========================================================
+
+    if (
+        canonical_category
+        != "jobs"
+        and
+        submission.pricing_model
+        and
+        submission.payment_status
+        not in {
+            "paid",
+            "waived",
+        }
+    ):
 
         flash(
             (
-                "This submission cannot be approved "
-                "from its current status."
+                "Can't approve this submission yet. "
+                "Payment is waiting to be confirmed "
+                "by Kalxa Admin."
             ),
             "error",
         )
@@ -8555,100 +8574,69 @@ def ambassador_approve_submission(
 
 
     # ========================================================
-    # PAYMENT SAFETY
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # Community Ambassadors can READ payment status.
-    #
-    # They cannot:
-    #
-    #     mark something paid
-    #     change amount_due
-    #     alter Yoco references
-    #     issue refunds
-    #
-    # For paid/commercial submissions we do not allow
-    # moderation approval while payment is unpaid.
-    #
-    # Free content can continue without payment.
-    # ========================================================
-
-
-    # ========================================================
-    # MODERATION NOTES
-    # ========================================================
-
-    notes = (
-        request.form
-        .get(
-            "notes",
-            "",
-        )
-        .strip()
-    )
-
-
-    # ========================================================
-    # APPROVE
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # At this stage this is MODERATION approval.
-    #
-    # We are deliberately NOT creating ContentItem here until
-    # this route is connected to Kalxa's existing publication
-    # engine.
-    #
-    # This avoids creating a second publication implementation.
-    # ========================================================
-
-    submission.status = "approved"
-
-    submission.reviewed_at = (
-        datetime.utcnow()
-    )
-
-    submission.admin_notes = (
-        notes
-        or (
-            "Approved by Community Ambassador "
-            f"{ambassador.name}."
-        )
-    )
-
-
-    # ========================================================
-    # SAVE
+    # PUBLISH
     # ========================================================
 
     try:
 
+        result = (
+            _publish_pending_submission(
+                submission
+            )
+        )
+
+
+        content = (
+            result[
+                "content"
+            ]
+        )
+
+
+        category = (
+            result[
+                "category"
+            ]
+        )
+
+
+        canonical_category = (
+            result[
+                "canonical_category"
+            ]
+        )
+
+
         db.session.commit()
 
-    except Exception:
+
+    except Exception as exc:
 
         db.session.rollback()
 
+
         current_app.logger.exception(
             (
-                "Community Ambassador failed to "
-                "approve submission_id=%s "
-                "ambassador_id=%s"
+                "[Kalxa Ambassador] "
+                "Approve submission failed "
+                "ambassador_id=%s "
+                "submission_id=%s "
+                "error=%s"
             ),
-            submission.id,
             ambassador.id,
+            submission.id,
+            exc,
         )
+
 
         flash(
             (
-                "The submission could not be "
-                "approved. Please try again."
+                "Unable to approve submission. "
+                f"{exc}"
             ),
             "error",
         )
+
 
         return redirect(
             url_for(
@@ -8656,6 +8644,16 @@ def ambassador_approve_submission(
                 submission_id=submission.id,
             )
         )
+
+
+    # ========================================================
+    # PUSH
+    # ========================================================
+
+    _send_approved_content_push(
+        content,
+        category,
+    )
 
 
     # ========================================================
@@ -8664,15 +8662,16 @@ def ambassador_approve_submission(
 
     current_app.logger.info(
         (
-            "[Kalxa Ambassador Moderation] "
-            "action=approved "
+            "[Kalxa Ambassador] Submission approved "
             "ambassador_id=%s "
-            "zone_id=%s "
-            "submission_id=%s"
+            "submission_id=%s "
+            "content_id=%s "
+            "zone_id=%s"
         ),
         ambassador.id,
-        ambassador.zone_id,
         submission.id,
+        content.id,
+        ambassador.zone_id,
     )
 
 
@@ -8680,23 +8679,35 @@ def ambassador_approve_submission(
     # SUCCESS
     # ========================================================
 
-    flash(
-        (
-            f"{submission.title} has been "
-            "approved for moderation."
-        ),
-        "success",
-    )
+    if (
+        canonical_category
+        == "jobs"
+    ):
+
+        flash(
+            (
+                "Job opportunity approved "
+                "and published."
+            ),
+            "success",
+        )
+
+    else:
+
+        flash(
+            (
+                "Submission approved and "
+                "published successfully."
+            ),
+            "success",
+        )
 
 
     return redirect(
         url_for(
-            "admin.ambassador_submission_detail",
-            submission_id=submission.id,
+            "admin.ambassador_submissions"
         )
     )
-
-
 # ============================================================
 # COMMUNITY AMBASSADOR - REQUEST CHANGES
 # ============================================================
@@ -11669,30 +11680,67 @@ def approve_submission(
     )
 
 
-    # ========================================================
-    # ALREADY REVIEWED
-    # ========================================================
-
     if (
         submission.status
         != "pending"
     ):
 
         flash(
-            "Submission has already been reviewed.",
+            (
+                "Submission has already "
+                "been reviewed."
+            ),
             "error",
         )
 
         return redirect(
             url_for(
-                "admin.submissions"
+                "admin.submissions",
+                status="pending",
             )
         )
 
 
+    canonical_category = (
+        normalize_category(
+            submission.category
+        )
+    )
+
+
     # ========================================================
-    # PUBLISH
+    # PAYMENT GATE
     # ========================================================
+
+    if (
+        canonical_category
+        != "jobs"
+        and
+        submission.pricing_model
+        and
+        submission.payment_status
+        not in {
+            "paid",
+            "waived",
+        }
+    ):
+
+        flash(
+            (
+                "Payment must be confirmed before "
+                "this commercial submission can "
+                "be approved."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
 
     try:
 
@@ -11704,12 +11752,16 @@ def approve_submission(
 
 
         content = (
-            result["content"]
+            result[
+                "content"
+            ]
         )
 
 
         category = (
-            result["category"]
+            result[
+                "category"
+            ]
         )
 
 
@@ -11719,10 +11771,6 @@ def approve_submission(
             ]
         )
 
-
-        # ----------------------------------------------------
-        # Commit the approval before push notifications.
-        # ----------------------------------------------------
 
         db.session.commit()
 
@@ -11759,19 +11807,11 @@ def approve_submission(
         )
 
 
-    # ========================================================
-    # PUSH NOTIFICATION
-    # ========================================================
-
     _send_approved_content_push(
         content,
         category,
     )
 
-
-    # ========================================================
-    # SUCCESS MESSAGE
-    # ========================================================
 
     if (
         canonical_category
@@ -11786,46 +11826,179 @@ def approve_submission(
             "success",
         )
 
-
-    elif (
-        content.pricing_model
-        and
-        content.payment_status
-        == "unpaid"
-    ):
-
-        flash(
-            (
-                "Submission approved, but the listing "
-                "is hidden until payment is confirmed."
-            ),
-            "success",
-        )
-
-
-    elif (
-        content.pricing_model
-        and
-        content.payment_status
-        == "refunded"
-    ):
-
-        flash(
-            (
-                "Submission approved, but the listing "
-                "is hidden because its payment is "
-                "refunded."
-            ),
-            "success",
-        )
-
-
     else:
 
         flash(
-            "Submission approved and published.",
+            (
+                "Submission approved "
+                "and published."
+            ),
             "success",
         )
+
+
+    return redirect(
+        url_for(
+            "admin.submissions",
+            status="pending",
+        )
+    )
+
+
+@admin_bp.route(
+    "/submissions/jobs/approve-all",
+    methods=[
+        "POST",
+    ],
+)
+def approve_all_jobs():
+
+    auth = require_admin()
+
+    if auth:
+        return auth
+
+
+    # ========================================================
+    # NEXT 10 PENDING JOBS
+    # ========================================================
+
+    submissions_to_approve = (
+        PendingSubmission
+        .query
+        .filter(
+            PendingSubmission.status
+            == "pending",
+
+            PendingSubmission.category.in_(
+                [
+                    "jobs",
+                    "opportunities",
+                ]
+            ),
+        )
+        .order_by(
+            PendingSubmission
+            .created_at
+            .asc()
+        )
+        .limit(
+            10
+        )
+        .all()
+    )
+
+
+    if not submissions_to_approve:
+
+        flash(
+            (
+                "There are no pending jobs "
+                "to approve."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
+
+    approved_results = []
+
+
+    try:
+
+        for submission in (
+            submissions_to_approve
+        ):
+
+            result = (
+                _publish_pending_submission(
+                    submission
+                )
+            )
+
+
+            approved_results.append(
+                result
+            )
+
+
+        db.session.commit()
+
+
+    except Exception as exc:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Kalxa] Bulk job approval failed "
+                "error=%s"
+            ),
+            exc,
+        )
+
+
+        flash(
+            (
+                "Bulk job approval failed. "
+                f"{exc}"
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
+            )
+        )
+
+
+    # ========================================================
+    # PUSH AFTER COMMIT
+    # ========================================================
+
+    for result in (
+        approved_results
+    ):
+
+        try:
+
+            _send_approved_content_push(
+                result["content"],
+                result["category"],
+            )
+
+        except Exception as exc:
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa Push] Bulk job "
+                    "notification failed "
+                    "content_id=%s error=%s"
+                ),
+                result["content"].id,
+                exc,
+            )
+
+
+    flash(
+        (
+            f"{len(approved_results)} "
+            "job"
+            f"{'' if len(approved_results) == 1 else 's'} "
+            "approved and published."
+        ),
+        "success",
+    )
 
 
     return redirect(
@@ -11846,10 +12019,6 @@ def confirm_submission_payment(
     submission_id,
 ):
 
-    # ========================================================
-    # ADMIN AUTHENTICATION
-    # ========================================================
-
     auth = require_admin()
 
     if auth:
@@ -11857,11 +12026,12 @@ def confirm_submission_payment(
 
 
     # ========================================================
-    # LOAD SUBMISSION
+    # FIND SUBMISSION
     # ========================================================
 
     submission = (
-        PendingSubmission.query
+        PendingSubmission
+        .query
         .get_or_404(
             submission_id
         )
@@ -11869,18 +12039,22 @@ def confirm_submission_payment(
 
 
     # ========================================================
-    # SUBMISSION MUST ALREADY BE APPROVED
+    # MUST STILL BE PENDING
+    # ========================================================
+    #
+    # Payment confirmation now happens BEFORE moderation.
     # ========================================================
 
     if (
         submission.status
-        != "approved"
+        != "pending"
     ):
 
         flash(
             (
-                "Only approved submissions can "
-                "have payment confirmed."
+                "Payment can only be confirmed "
+                "while the submission is waiting "
+                "for moderation."
             ),
             "error",
         )
@@ -11888,148 +12062,27 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
             )
         )
 
 
     # ========================================================
-    # PUBLISHED CONTENT MUST EXIST
-    # ========================================================
-
-    if not submission.published_content_id:
-
-        flash(
-            (
-                "This submission does not have "
-                "a published content record."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-
-    # ========================================================
-    # LOAD CONTENT ITEM
-    # ========================================================
-
-    content = (
-        db.session.get(
-            ContentItem,
-            submission.published_content_id,
-        )
-    )
-
-
-    if not content:
-
-        flash(
-            (
-                "The published listing could "
-                "not be found."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-
-    # ========================================================
-    # JOBS ARE FREE
+    # MUST BE COMMERCIAL
     # ========================================================
 
     if (
-        normalize_category(
-            content.category
-        )
-        == "jobs"
-    ):
-
-        flash(
-            (
-                "Kalxa Job opportunities are free. "
-                "No payment confirmation is required."
-            ),
-            "info",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-
-    # ========================================================
-    # OWNERSHIP CONSISTENCY
-    # ========================================================
-
-    if (
-        submission.organizer_id
-        and
-        content.organizer_id is None
-    ):
-
-        content.organizer_id = (
-            submission.organizer_id
-        )
-
-
-    elif (
-        submission.organizer_id
-        and
-        content.organizer_id
-        != submission.organizer_id
-    ):
-
-        db.session.rollback()
-
-        flash(
-            (
-                "Payment cannot be confirmed because "
-                "the listing ownership does not match."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="approved",
-            )
-        )
-
-
-    # ========================================================
-    # COMMERCIAL PACKAGE VALIDATION
-    # ========================================================
-
-    if (
-        content.pricing_model
+        submission.pricing_model
         not in {
             PRICING_MODEL_PRESENCE,
             PRICING_MODEL_CAMPAIGN,
         }
     ):
 
-        db.session.rollback()
-
         flash(
             (
-                "This listing does not use a "
-                "Kalxa commercial package."
+                "This submission does not use "
+                "a Kalxa commercial package."
             ),
             "error",
         )
@@ -12037,26 +12090,24 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
             )
         )
 
 
     # ========================================================
-    # PAYMENT ALREADY CONFIRMED
+    # ALREADY PAID
     # ========================================================
 
     if (
-        content.payment_status
+        submission.payment_status
         == "paid"
     ):
-
-        db.session.rollback()
 
         flash(
             (
                 "Payment has already been confirmed "
-                "for this listing."
+                "for this submission."
             ),
             "error",
         )
@@ -12064,26 +12115,24 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
             )
         )
 
 
     # ========================================================
-    # PAYMENT WAIVED
+    # WAIVED
     # ========================================================
 
     if (
-        content.payment_status
+        submission.payment_status
         == "waived"
     ):
 
-        db.session.rollback()
-
         flash(
             (
-                "Payment for this listing has "
-                "been waived."
+                "Payment for this submission "
+                "has already been waived."
             ),
             "error",
         )
@@ -12091,26 +12140,24 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
             )
         )
 
 
     # ========================================================
-    # PAYMENT MUST CURRENTLY BE UNPAID
+    # REFUNDED
     # ========================================================
 
     if (
-        content.payment_status
-        != "unpaid"
+        submission.payment_status
+        == "refunded"
     ):
-
-        db.session.rollback()
 
         flash(
             (
-                "Payment cannot be confirmed "
-                "from its current status."
+                "A refunded payment cannot be "
+                "confirmed as paid."
             ),
             "error",
         )
@@ -12118,27 +12165,23 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
             )
         )
 
 
     # ========================================================
-    # PACKAGE MUST BE COMPLETE
+    # VALIDATE PACKAGE
     # ========================================================
 
     if (
-        not content.commercial_duration_days
-        or
-        content.amount_due is None
+        not submission.commercial_duration_days
     ):
-
-        db.session.rollback()
 
         flash(
             (
-                "This listing has an incomplete "
-                "commercial package."
+                "This submission has no commercial "
+                "package duration."
             ),
             "error",
         )
@@ -12146,119 +12189,51 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
+            )
+        )
+
+
+    if (
+        submission.amount_due
+        is None
+    ):
+
+        flash(
+            (
+                "This submission has no "
+                "amount due."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="pending",
             )
         )
 
 
     # ========================================================
-    # CONFIRM PAYMENT + ACTIVATE LISTING
+    # CONFIRM PAYMENT
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Do NOT create ContentItem here.
+    # Do NOT start commercial duration here.
+    #
+    # The package starts when Ambassador approves and
+    # _publish_pending_submission() creates ContentItem.
     # ========================================================
 
     try:
-
-        # ====================================================
-        # VALIDATE PACKAGE DURATION
-        # ====================================================
-
-        duration_days = int(
-            content.commercial_duration_days
-        )
-
-
-        if (
-            duration_days
-            <= 0
-        ):
-
-            raise ValueError(
-                "Invalid commercial duration."
-            )
-
-
-        # ====================================================
-        # ACTIVATION TIME
-        # ====================================================
-
-        now = (
-            datetime.utcnow()
-        )
-
-
-        # ====================================================
-        # CONTENT PAYMENT
-        # ====================================================
-
-        content.payment_status = (
-            "paid"
-        )
-
-
-        content.amount_paid = (
-            content.amount_due
-        )
-
-
-        content.paid_at = (
-            now
-        )
-
-
-        # ====================================================
-        # COMMERCIAL PERIOD
-        # ========================================================
-        #
-        # The paid package begins NOW.
-        #
-        # This ensures the business does not lose package
-        # days while waiting for moderation/payment.
-        # ====================================================
-
-        content.commercial_starts_at = (
-            now
-        )
-
-
-        content.commercial_expires_at = (
-            now
-            +
-            timedelta(
-                days=
-                    duration_days
-            )
-        )
-
-
-        # ====================================================
-        # ACTIVATE PUBLIC LISTING
-        # ========================================================
-        #
-        # _publish_pending_submission() intentionally creates
-        # unpaid commercial listings with:
-        #
-        #     active = False
-        #
-        # Once payment is confirmed, the listing becomes
-        # publicly available.
-        # ====================================================
-
-        content.active = (
-            True
-        )
-
-
-        # ====================================================
-        # KEEP SUBMISSION PAYMENT STATE IN SYNC
-        # ========================================================
 
         submission.payment_status = (
             "paid"
         )
 
-
-        # ====================================================
-        # COMMIT PAYMENT + ACTIVATION TOGETHER
-        # ========================================================
 
         db.session.commit()
 
@@ -12270,20 +12245,19 @@ def confirm_submission_payment(
 
         current_app.logger.exception(
             (
-                "[Kalxa Payment] "
-                "Unable to confirm payment "
-                "submission_id=%s "
-                "content_id=%s "
-                "error=%s"
+                "[Kalxa] Payment confirmation failed "
+                "submission_id=%s error=%s"
             ),
             submission.id,
-            content.id,
             exc,
         )
 
 
         flash(
-            "Unable to confirm payment.",
+            (
+                "Payment could not be confirmed. "
+                "Please try again."
+            ),
             "error",
         )
 
@@ -12291,81 +12265,31 @@ def confirm_submission_payment(
         return redirect(
             url_for(
                 "admin.submissions",
-                status="approved",
+                status="pending",
             )
         )
 
 
-    # ========================================================
-    # PAYMENT ACTIVATION LOG
-    # ========================================================
-
     current_app.logger.info(
         (
-            "[Kalxa Payment] "
-            "Payment confirmed and listing activated "
+            "[Kalxa Admin] Payment confirmed "
             "submission_id=%s "
-            "content_id=%s "
-            "amount=%s "
-            "duration_days=%s "
-            "expires_at=%s"
+            "tracking_code=%s "
+            "amount_due=%s "
+            "zone_id=%s"
         ),
         submission.id,
-        content.id,
-        content.amount_paid,
-        duration_days,
-        content.commercial_expires_at,
+        submission.tracking_code,
+        submission.amount_due,
+        submission.zone_id,
     )
 
 
-    # ========================================================
-    # PUSH NOTIFICATION
-    # ========================================================
-    #
-    # Payment and activation have already been committed.
-    #
-    # A push notification failure must therefore NOT undo
-    # the successful payment or deactivate the listing.
-    # ========================================================
-
-    if (
-        content.active
-        and
-        content.notification_eligible
-    ):
-
-        try:
-
-            _send_content_push_notification(
-                content
-            )
-
-
-        except Exception as exc:
-
-            current_app.logger.exception(
-                (
-                    "[Kalxa Push] "
-                    "Payment activation notification "
-                    "failed "
-                    "submission_id=%s "
-                    "content_id=%s "
-                    "error=%s"
-                ),
-                submission.id,
-                content.id,
-                exc,
-            )
-
-
-    # ========================================================
-    # SUCCESS
-    # ========================================================
-
     flash(
         (
-            "Payment confirmed. "
-            "The Kalxa listing is now live."
+            "Payment confirmed successfully. "
+            "The Community Ambassador can now "
+            "approve this submission."
         ),
         "success",
     )
@@ -12374,10 +12298,9 @@ def confirm_submission_payment(
     return redirect(
         url_for(
             "admin.submissions",
-            status="approved",
+            status="pending",
         )
     )
-
 
 @admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
 def reject_submission(submission_id):
