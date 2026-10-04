@@ -1527,6 +1527,171 @@
                 </section>
 
 
+
+
+
+        
+                <!-- =========================================
+     AMBASSADOR PERMISSIONS
+========================================== -->
+
+<section class="card">
+
+    <div class="card-header">
+
+        <h2 class="card-title">
+            Ambassador Permissions
+        </h2>
+
+        <p class="card-description">
+            Control what this Ambassador can
+            do inside their assigned community.
+        </p>
+
+    </div>
+
+
+    <div class="card-body">
+
+
+        <!-- =================================
+             ADD CONTENT PERMISSION
+        ================================== -->
+
+        <div class="info-list">
+
+            <div class="info-row">
+
+                <div class="info-label">
+                    Add Community Content
+                </div>
+
+
+                <div class="info-value">
+
+                    {% if ambassador.can_add_content %}
+
+                        Enabled
+
+                    {% else %}
+
+                        Disabled
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <div class="info-label">
+                    Publishing Scope
+                </div>
+
+
+                <div class="info-value">
+
+                    {% if ambassador.zone %}
+
+                        {{ ambassador.zone.name }}
+                        only
+
+                    {% else %}
+
+                        No community assigned
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            style="
+                margin-top: 16px;
+                margin-bottom: 16px;
+                color: #666d75;
+                font-size: 11px;
+                line-height: 1.6;
+            "
+        >
+
+            {% if ambassador.can_add_content %}
+
+                This Ambassador is allowed to create
+                community content. New content is restricted
+                to their assigned Kalxa community.
+
+            {% else %}
+
+                This Ambassador can continue using their
+                existing operational tools, but cannot
+                create new community content.
+
+            {% endif %}
+
+        </div>
+
+
+        <form
+            method="POST"
+
+            action="{{ url_for(
+                'admin.admin_toggle_ambassador_content_permission',
+                ambassador_id=ambassador.id
+            ) }}"
+        >
+
+            {% if ambassador.can_add_content %}
+
+                <button
+                    type="submit"
+
+                    class="
+                        button
+                        button-danger
+                    "
+
+                    onclick="
+                        return confirm(
+                            'Disable content creation for {{ ambassador.name|e }}?'
+                        );
+                    "
+                >
+                    Disable Content Creation
+                </button>
+
+            {% else %}
+
+                <button
+                    type="submit"
+
+                    class="
+                        button
+                        button-success
+                    "
+
+                    onclick="
+                        return confirm(
+                            'Allow {{ ambassador.name|e }} to add content to their assigned community?'
+                        );
+                    "
+                >
+                    Enable Content Creation
+                </button>
+
+            {% endif %}
+
+        </form>
+
+    </div>
+
+</section>
                 <!-- =========================================
                      ACCESS CONTROL
                 ========================================== -->
