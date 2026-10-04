@@ -6186,51 +6186,7 @@ def ambassador_approve_submission(
     # Free content can continue without payment.
     # ========================================================
 
-    amount_due = (
-        submission.amount_due
-        or 0
-    )
-
-
-    try:
-
-        amount_due_value = float(
-            amount_due
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        amount_due_value = 0
-
-
-    requires_payment = (
-        amount_due_value > 0
-    )
-
-
-    if (
-        requires_payment
-        and submission.payment_status != "paid"
-    ):
-
-        flash(
-            (
-                "This submission cannot be approved "
-                "because payment has not been confirmed."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "ambassador_submission_detail",
-                submission_id=submission.id,
-            )
-        )
-
+    
 
     # ========================================================
     # MODERATION NOTES
