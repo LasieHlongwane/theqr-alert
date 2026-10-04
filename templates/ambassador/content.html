@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        Community Content | {{ zone.name }} | Kalxa
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .topbar-inner {
+            width: min(
+                100%,
+                1000px
+            );
+            margin: 0 auto;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .brand {
+            color: #ffffff;
+            font-size: 21px;
+            font-weight: 950;
+            letter-spacing: -0.6px;
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: #d8dadd;
+            font-size: 10px;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                1000px
+            );
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+        }
+
+        .eyebrow {
+            color: #737981;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            margin: 6px 0 0;
+            font-size: 29px;
+            line-height: 1.1;
+        }
+
+        .description {
+            margin: 8px 0 0;
+            max-width: 650px;
+            color: #6f757d;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+
+        /* =====================================================
+           METRICS
+        ===================================================== */
+
+        .metrics {
+            margin-top: 22px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 9px;
+        }
+
+        .metric {
+            padding: 15px;
+            border: 1px solid #d5d8dc;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .metric-label {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+        }
+
+        .metric-number {
+            margin-top: 7px;
+            font-size: 25px;
+            font-weight: 950;
+        }
+
+        .metric-unpaid {
+            background: #fffaf1;
+            border-color: #ead9b7;
+        }
+
+
+        /* =====================================================
+           FILTERS
+        ===================================================== */
+
+        .filters {
+            margin-top: 20px;
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            padding-bottom: 3px;
+            scrollbar-width: none;
+        }
+
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter {
+            flex: 0 0 auto;
+            padding: 8px 11px;
+            border: 1px solid #cfd3d7;
+            border-radius: 999px;
+            background: #f5f6f7;
+            color: #565c63;
+            font-size: 9px;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .filter-active {
+            border-color: #111318;
+            background: #111318;
+            color: #ffffff;
+        }
+
+
+        /* =====================================================
+           CONTENT LIST
+        ===================================================== */
+
+        .content-list {
+            margin-top: 17px;
+            overflow: hidden;
+            border: 1px solid #d5d8dc;
+            border-radius: 15px;
+            background: #ffffff;
+        }
+
+        .content-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 17px;
+            border-bottom: 1px solid #eceef0;
+            color: #17191d;
+            text-decoration: none;
+        }
+
+        .content-item:last-child {
+            border-bottom: 0;
+        }
+
+        .content-item:hover {
+            background: #fafafa;
+        }
+
+        .content-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .content-category {
+            color: #888d94;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+        }
+
+        .content-title {
+            margin-top: 5px;
+            overflow: hidden;
+            font-size: 13px;
+            font-weight: 900;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .content-meta {
+            margin-top: 7px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            color: #858a91;
+            font-size: 9px;
+        }
+
+        .dot {
+            color: #b2b6bb;
+        }
+
+        .arrow {
+            flex: 0 0 auto;
+            color: #6e747b;
+            font-size: 19px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           BADGES
+        ===================================================== */
+
+        .badge {
+            display: inline-flex;
+            padding: 4px 7px;
+            border-radius: 999px;
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .badge-live {
+            background: #e3f2e7;
+            color: #28633b;
+        }
+
+        .badge-unpaid {
+            background: #fff0ce;
+            color: #765a19;
+        }
+
+        .badge-expired {
+            background: #eceef0;
+            color: #60666d;
+        }
+
+        .badge-archived {
+            background: #e3e4e6;
+            color: #53585e;
+        }
+
+        .badge-inactive {
+            background: #f1e3e3;
+            color: #7c3c3c;
+        }
+
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        .empty {
+            padding: 36px 20px;
+            text-align: center;
+        }
+
+        .empty-title {
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .empty-description {
+            margin-top: 7px;
+            color: #7d838a;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           SCOPE NOTE
+        ===================================================== */
+
+        .scope-note {
+            margin-top: 17px;
+            padding: 14px;
+            border-radius: 11px;
+            background: #eef0f2;
+            color: #6f757d;
+            font-size: 10px;
+            line-height: 1.55;
+        }
+
+        .scope-note strong {
+            color: #34383d;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 700px
+        ) {
+
+            .metrics {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+            }
+
+        }
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .page {
+                padding:
+                    24px
+                    14px
+                    50px;
+            }
+
+            .topbar-inner {
+                padding: 14px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<div class="topbar">
+
+    <div class="topbar-inner">
+
+        <a
+            href="{{ url_for(
+                'ambassador_dashboard'
+            ) }}"
+            class="brand"
+        >
+            KALXA
+        </a>
+
+        <a
+            href="{{ url_for(
+                'ambassador_dashboard'
+            ) }}"
+            class="back-link"
+        >
+            ← Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
+<div class="page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="eyebrow">
+        COMMUNITY OPERATIONS
+    </div>
+
+    <h1>
+        Community Content
+    </h1>
+
+    <p class="description">
+
+        View the listings and opportunities currently
+        managed within
+        <strong>{{ zone.name }}</strong>.
+
+    </p>
+
+
+    <!-- =====================================================
+         METRICS
+    ====================================================== -->
+
+    <div class="metrics">
+
+
+        <div class="metric">
+
+            <div class="metric-label">
+                ALL CONTENT
+            </div>
+
+            <div class="metric-number">
+                {{ all_count | default(0) }}
+            </div>
+
+        </div>
+
+
+        <div class="metric">
+
+            <div class="metric-label">
+                LIVE
+            </div>
+
+            <div class="metric-number">
+                {{ live_count | default(0) }}
+            </div>
+
+        </div>
+
+
+        <div
+            class="
+                metric
+                metric-unpaid
+            "
+        >
+
+            <div class="metric-label">
+                AWAITING PAYMENT
+            </div>
+
+            <div class="metric-number">
+                {{
+                    awaiting_payment_count
+                    | default(0)
+                }}
+            </div>
+
+        </div>
+
+
+        <div class="metric">
+
+            <div class="metric-label">
+                EXPIRED
+            </div>
+
+            <div class="metric-number">
+                {{ expired_count | default(0) }}
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTERS
+    ====================================================== -->
+
+    <div class="filters">
+
+        <a
+            href="{{ url_for(
+                'ambassador_content',
+                status='all'
+            ) }}"
+            class="
+                filter
+                {% if status_filter == 'all' %}
+                    filter-active
+                {% endif %}
+            "
+        >
+            All
+            {{ all_count }}
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'ambassador_content',
+                status='live'
+            ) }}"
+            class="
+                filter
+                {% if status_filter == 'live' %}
+                    filter-active
+                {% endif %}
+            "
+        >
+            Live
+            {{ live_count }}
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'ambassador_content',
+                status='awaiting_payment'
+            ) }}"
+            class="
+                filter
+                {% if status_filter == 'awaiting_payment' %}
+                    filter-active
+                {% endif %}
+            "
+        >
+            Awaiting Payment
+            {{ awaiting_payment_count }}
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'ambassador_content',
+                status='expired'
+            ) }}"
+            class="
+                filter
+                {% if status_filter == 'expired' %}
+                    filter-active
+                {% endif %}
+            "
+        >
+            Expired
+            {{ expired_count }}
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'ambassador_content',
+                status='archived'
+            ) }}"
+            class="
+                filter
+                {% if status_filter == 'archived' %}
+                    filter-active
+                {% endif %}
+            "
+        >
+            Archived
+            {{ archived_count }}
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
+
+    <div class="content-list">
+
+        {% if content_items %}
+
+            {% for content in content_items %}
+
+                <a
+                    href="{{ url_for(
+                        'ambassador_content_detail',
+                        content_id=content.id
+                    ) }}"
+                    class="content-item"
+                >
+
+                    <div class="content-main">
+
+                        <div class="content-category">
+                            {{
+                                content.category
+                                or
+                                'General'
+                            }}
+                        </div>
+
+
+                        <div class="content-title">
+
+                            {{
+                                content.business_name
+                                or
+                                content.title
+                                or
+                                'Untitled Content'
+                            }}
+
+                        </div>
+
+
+                        <div class="content-meta">
+
+
+                            <!-- =============================
+                                 STATUS
+                            ============================== -->
+
+                            {% if content.archived %}
+
+                                <span
+                                    class="
+                                        badge
+                                        badge-archived
+                                    "
+                                >
+                                    Archived
+                                </span>
+
+
+                            {% elif
+                                content.pricing_model
+                                and
+                                content.payment_status
+                                == 'unpaid'
+                            %}
+
+                                <span
+                                    class="
+                                        badge
+                                        badge-unpaid
+                                    "
+                                >
+                                    Awaiting Payment
+                                </span>
+
+
+                            {% elif
+                                content.commercial_expires_at
+                                and
+                                content.commercial_expires_at
+                                <= now
+                            %}
+
+                                <span
+                                    class="
+                                        badge
+                                        badge-expired
+                                    "
+                                >
+                                    Expired
+                                </span>
+
+
+                            {% elif content.active %}
+
+                                <span
+                                    class="
+                                        badge
+                                        badge-live
+                                    "
+                                >
+                                    Live
+                                </span>
+
+
+                            {% else %}
+
+                                <span
+                                    class="
+                                        badge
+                                        badge-inactive
+                                    "
+                                >
+                                    Inactive
+                                </span>
+
+                            {% endif %}
+
+
+                            <!-- =============================
+                                 PAYMENT
+                            ============================== -->
+
+                            {% if content.pricing_model %}
+
+                                <span class="dot">
+                                    •
+                                </span>
+
+                                <span>
+                                    {{
+                                        content.payment_status
+                                        or
+                                        'unpaid'
+                                    }}
+                                </span>
+
+                            {% else %}
+
+                                <span class="dot">
+                                    •
+                                </span>
+
+                                <span>
+                                    Free
+                                </span>
+
+                            {% endif %}
+
+
+                            <!-- =============================
+                                 EXPIRY
+                            ============================== -->
+
+                            {% if content.commercial_expires_at %}
+
+                                <span class="dot">
+                                    •
+                                </span>
+
+                                <span>
+                                    Expires
+                                    {{
+                                        content.commercial_expires_at
+                                        .strftime(
+                                            '%d %b %Y'
+                                        )
+                                    }}
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="arrow">
+                        →
+                    </div>
+
+                </a>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <div class="empty">
+
+                <div class="empty-title">
+                    No content found
+                </div>
+
+                <div class="empty-description">
+
+                    There is currently no content matching
+                    this filter in {{ zone.name }}.
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         SCOPE
+    ====================================================== -->
+
+    <div class="scope-note">
+
+        <strong>
+            Read-only community view:
+        </strong>
+
+        You can inspect content belonging to
+        {{ zone.name }}.
+
+        Payment confirmation, refunds, pricing and other
+        financial controls remain managed centrally
+        by Kalxa.
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
