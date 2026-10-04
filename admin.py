@@ -6082,6 +6082,691 @@ def edit_submission(
         )
     )
 
+
+# ============================================================
+# COMMUNITY AMBASSADOR - APPROVE SUBMISSION
+# ============================================================
+
+@app.route(
+    "/ambassador/submissions/<int:submission_id>/approve",
+    methods=[
+        "POST",
+    ],
+)
+@ambassador_required
+def ambassador_approve_submission(
+    submission_id,
+):
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    # ========================================================
+    # ZONE-SCOPED SUBMISSION
+    # ========================================================
+
+    submission = (
+        get_ambassador_submission_or_404(
+            submission_id
+        )
+    )
+
+
+    # ========================================================
+    # CURRENT STATUS
+    # ========================================================
+
+    if submission.status == "approved":
+
+        flash(
+            "This submission has already been approved.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # ALLOWED SOURCE STATES
+    # ========================================================
+
+    allowed_source_statuses = {
+        "pending",
+        "needs_changes",
+    }
+
+
+    if submission.status not in allowed_source_statuses:
+
+        flash(
+            (
+                "This submission cannot be approved "
+                "from its current status."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # PAYMENT SAFETY
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Community Ambassadors can READ payment status.
+    #
+    # They cannot:
+    #
+    #     mark something paid
+    #     change amount_due
+    #     alter Yoco references
+    #     issue refunds
+    #
+    # For paid/commercial submissions we do not allow
+    # moderation approval while payment is unpaid.
+    #
+    # Free content can continue without payment.
+    # ========================================================
+
+    amount_due = (
+        submission.amount_due
+        or 0
+    )
+
+
+    try:
+
+        amount_due_value = float(
+            amount_due
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        amount_due_value = 0
+
+
+    requires_payment = (
+        amount_due_value > 0
+    )
+
+
+    if (
+        requires_payment
+        and submission.payment_status != "paid"
+    ):
+
+        flash(
+            (
+                "This submission cannot be approved "
+                "because payment has not been confirmed."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # MODERATION NOTES
+    # ========================================================
+
+    notes = (
+        request.form
+        .get(
+            "notes",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # APPROVE
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # At this stage this is MODERATION approval.
+    #
+    # We are deliberately NOT creating ContentItem here until
+    # this route is connected to Kalxa's existing publication
+    # engine.
+    #
+    # This avoids creating a second publication implementation.
+    # ========================================================
+
+    submission.status = "approved"
+
+    submission.reviewed_at = (
+        datetime.utcnow()
+    )
+
+    submission.admin_notes = (
+        notes
+        or (
+            "Approved by Community Ambassador "
+            f"{ambassador.name}."
+        )
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Community Ambassador failed to "
+                "approve submission_id=%s "
+                "ambassador_id=%s"
+            ),
+            submission.id,
+            ambassador.id,
+        )
+
+        flash(
+            (
+                "The submission could not be "
+                "approved. Please try again."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Ambassador Moderation] "
+            "action=approved "
+            "ambassador_id=%s "
+            "zone_id=%s "
+            "submission_id=%s"
+        ),
+        ambassador.id,
+        ambassador.zone_id,
+        submission.id,
+    )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            f"{submission.title} has been "
+            "approved for moderation."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "ambassador_submission_detail",
+            submission_id=submission.id,
+        )
+    )
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - REQUEST CHANGES
+# ============================================================
+
+@app.route(
+    "/ambassador/submissions/<int:submission_id>/request-changes",
+    methods=[
+        "POST",
+    ],
+)
+@ambassador_required
+def ambassador_request_changes(
+    submission_id,
+):
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    # ========================================================
+    # ZONE-SCOPED SUBMISSION
+    # ========================================================
+
+    submission = (
+        get_ambassador_submission_or_404(
+            submission_id
+        )
+    )
+
+
+    # ========================================================
+    # ALLOWED SOURCE STATES
+    # ========================================================
+
+    allowed_source_statuses = {
+        "pending",
+        "needs_changes",
+    }
+
+
+    if submission.status not in allowed_source_statuses:
+
+        flash(
+            (
+                "Changes cannot be requested "
+                "from this submission's current status."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # NOTES
+    # ========================================================
+
+    notes = (
+        request.form
+        .get(
+            "notes",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # REQUIRE REASON
+    # ========================================================
+
+    if not notes:
+
+        flash(
+            (
+                "Please explain what needs to be "
+                "changed before requesting changes."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    if len(notes) > 2000:
+
+        flash(
+            (
+                "Moderation notes cannot exceed "
+                "2000 characters."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # UPDATE
+    # ========================================================
+
+    submission.status = (
+        "needs_changes"
+    )
+
+    submission.admin_notes = notes
+
+    submission.reviewed_at = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Community Ambassador failed to "
+                "request changes "
+                "submission_id=%s "
+                "ambassador_id=%s"
+            ),
+            submission.id,
+            ambassador.id,
+        )
+
+        flash(
+            (
+                "The moderation decision could not "
+                "be saved. Please try again."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Ambassador Moderation] "
+            "action=needs_changes "
+            "ambassador_id=%s "
+            "zone_id=%s "
+            "submission_id=%s"
+        ),
+        ambassador.id,
+        ambassador.zone_id,
+        submission.id,
+    )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            "Changes have been requested for "
+            f"{submission.title}."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "ambassador_submission_detail",
+            submission_id=submission.id,
+        )
+    )
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - REJECT SUBMISSION
+# ============================================================
+
+@app.route(
+    "/ambassador/submissions/<int:submission_id>/reject",
+    methods=[
+        "POST",
+    ],
+)
+@ambassador_required
+def ambassador_reject_submission(
+    submission_id,
+):
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    # ========================================================
+    # ZONE-SCOPED SUBMISSION
+    # ========================================================
+
+    submission = (
+        get_ambassador_submission_or_404(
+            submission_id
+        )
+    )
+
+
+    # ========================================================
+    # ALLOWED SOURCE STATES
+    # ========================================================
+
+    allowed_source_statuses = {
+        "pending",
+        "needs_changes",
+    }
+
+
+    if submission.status not in allowed_source_statuses:
+
+        flash(
+            (
+                "This submission cannot be rejected "
+                "from its current status."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # REJECTION REASON
+    # ========================================================
+
+    notes = (
+        request.form
+        .get(
+            "notes",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not notes:
+
+        flash(
+            (
+                "Please provide a reason before "
+                "rejecting this submission."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    if len(notes) > 2000:
+
+        flash(
+            (
+                "Moderation notes cannot exceed "
+                "2000 characters."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # REJECT
+    # ========================================================
+
+    submission.status = "rejected"
+
+    submission.admin_notes = notes
+
+    submission.reviewed_at = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Community Ambassador failed to "
+                "reject submission_id=%s "
+                "ambassador_id=%s"
+            ),
+            submission.id,
+            ambassador.id,
+        )
+
+        flash(
+            (
+                "The moderation decision could not "
+                "be saved. Please try again."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "ambassador_submission_detail",
+                submission_id=submission.id,
+            )
+        )
+
+
+    # ========================================================
+    # LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Ambassador Moderation] "
+            "action=rejected "
+            "ambassador_id=%s "
+            "zone_id=%s "
+            "submission_id=%s"
+        ),
+        ambassador.id,
+        ambassador.zone_id,
+        submission.id,
+    )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            f"{submission.title} has been rejected."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "ambassador_submission_detail",
+            submission_id=submission.id,
+        )
+    )
+
 def _send_content_push_notification(content, category_record=None):
     existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
     if existing_notification:
