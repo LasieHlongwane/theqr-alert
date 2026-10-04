@@ -3,6 +3,7 @@ import os
 from datetime import date, datetime, timedelta
 
 import qrcode
+from functools import wraps
 from flask import (
     Blueprint,
     current_app,
