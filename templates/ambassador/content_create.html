@@ -83,8 +83,15 @@
             color: inherit;
 
             text-decoration: none;
+
+            -webkit-tap-highlight-color:
+                transparent;
         }
 
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
 
         .topbar {
             background:
@@ -175,6 +182,16 @@
         }
 
 
+        .back-link:hover {
+            background:
+                #24272c;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
         .page {
             width:
                 min(
@@ -251,6 +268,10 @@
         }
 
 
+        /* =====================================================
+           PERMISSION CARD
+        ===================================================== */
+
         .permission-card {
             padding:
                 22px;
@@ -313,6 +334,10 @@
         }
 
 
+        /* =====================================================
+           COMMUNITY SCOPE
+        ===================================================== */
+
         .scope-card {
             margin-top:
                 16px;
@@ -362,6 +387,10 @@
         }
 
 
+        /* =====================================================
+           CONTENT PUBLISHING
+        ===================================================== */
+
         .next-card {
             margin-top:
                 16px;
@@ -393,7 +422,8 @@
 
 
         .next-text {
-            margin: 0;
+            margin:
+                0;
 
             color:
                 var(--text-soft);
@@ -405,6 +435,86 @@
                 1.6;
         }
 
+
+        /* =====================================================
+           CONTENT FORM BUTTON
+        ===================================================== */
+
+        .content-form-actions {
+            margin-top:
+                18px;
+        }
+
+
+        .content-form-button {
+            min-height:
+                46px;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                10px;
+
+            padding:
+                12px
+                18px;
+
+            border:
+                1px solid
+                var(--black);
+
+            border-radius:
+                9px;
+
+            background:
+                var(--black);
+
+            color:
+                #ffffff;
+
+            font-size:
+                12px;
+
+            font-weight:
+                900;
+
+            transition:
+                background 0.12s ease,
+                transform 0.12s ease;
+        }
+
+
+        .content-form-button:hover {
+            background:
+                #292c31;
+        }
+
+
+        .content-form-button:active {
+            transform:
+                scale(0.98);
+        }
+
+
+        .content-form-button-arrow {
+            font-size:
+                16px;
+
+            line-height:
+                1;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
         @media (
             max-width: 650px
@@ -424,6 +534,12 @@
                     50px;
             }
 
+
+            .content-form-button {
+                width:
+                    100%;
+            }
+
         }
 
     </style>
@@ -433,6 +549,10 @@
 
 <body>
 
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
 
     <header class="topbar">
 
@@ -465,6 +585,10 @@
     </header>
 
 
+    <!-- =====================================================
+         PAGE
+    ====================================================== -->
+
     <main class="page">
 
 
@@ -483,6 +607,10 @@
             assigned Kalxa community.
         </p>
 
+
+        <!-- =================================================
+             PUBLISHING PERMISSION
+        ================================================== -->
 
         <section class="permission-card">
 
@@ -507,6 +635,10 @@
         </section>
 
 
+        <!-- =================================================
+             PUBLISHING COMMUNITY
+        ================================================== -->
+
         <section class="scope-card">
 
             <div class="scope-label">
@@ -521,6 +653,10 @@
         </section>
 
 
+        <!-- =================================================
+             CONTENT PUBLISHING
+        ================================================== -->
+
         <section class="next-card">
 
             <h2 class="next-title">
@@ -529,12 +665,37 @@
 
 
             <p class="next-text">
-                Your account permission is working.
-                The next step connects this page to
-                Kalxa's existing content publishing
-                engine so new content is automatically
-                assigned to {{ zone.name }}.
+                Create useful local content for
+                {{ zone.name }}.
+                Your assigned community is controlled
+                by your Community Ambassador account.
             </p>
+
+
+            <!-- =============================================
+                 CONTINUE TO CONTENT FORM
+            ============================================== -->
+
+            <div class="content-form-actions">
+
+                <a
+                    href="{{ url_for(
+                        'admin.content_form'
+                    ) }}"
+                    class="content-form-button"
+                >
+
+                    <span>
+                        Continue to Content Form
+                    </span>
+
+                    <span class="content-form-button-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </div>
 
         </section>
 
