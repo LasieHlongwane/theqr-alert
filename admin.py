@@ -3870,7 +3870,7 @@ def ambassador_required(
 
             return redirect(
                 url_for(
-                    "ambassador_login"
+                    "admin.ambassador_login"
                 )
             )
 
