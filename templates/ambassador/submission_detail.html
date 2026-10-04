@@ -583,7 +583,7 @@
     <a
         class="back-link"
         href="{{ url_for(
-            'ambassador_submissions'
+            'admin.ambassador_submissions'
         ) }}"
     >
         ← Submissions
@@ -1070,7 +1070,7 @@
                     <form
                         method="POST"
                         action="{{ url_for(
-                            'ambassador_approve_submission',
+                            'admin.ambassador_approve_submission',
                             submission_id=submission.id
                         ) }}"
                     >
@@ -1122,7 +1122,7 @@
                     <form
                         method="POST"
                         action="{{ url_for(
-                            'ambassador_request_changes',
+                            'admin.ambassador_request_changes',
                             submission_id=submission.id
                         ) }}"
                     >
@@ -1172,7 +1172,7 @@
                     <form
                         method="POST"
                         action="{{ url_for(
-                            'ambassador_reject_submission',
+                            'admin.ambassador_reject_submission',
                             submission_id=submission.id
                         ) }}"
                     >
