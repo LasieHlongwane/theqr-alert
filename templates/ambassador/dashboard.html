@@ -800,7 +800,7 @@
         <form
             method="POST"
             action="{{ url_for(
-                'ambassador_logout'
+                'admin.ambassador_logout'
             ) }}"
         >
 
@@ -960,7 +960,7 @@
 
             <a
                 href="{{ url_for(
-                    'ambassador_submissions'
+                    'admin.ambassador_submissions'
                 ) }}"
                 class="section-link"
             >
@@ -979,7 +979,7 @@
 
             <a
                 href="{{ url_for(
-                    'ambassador_submissions',
+                    'admin.ambassador_submissions',
                     status='pending'
                 ) }}"
                 class="
@@ -1014,7 +1014,7 @@
 
             <a
                 href="{{ url_for(
-                    'ambassador_submissions',
+                    'admin.ambassador_submissions',
                     status='needs_changes'
                 ) }}"
                 class="
@@ -1199,7 +1199,7 @@
 
             <a
                 href="{{ url_for(
-                    'ambassador_submissions'
+                    'admin.ambassador_submissions'
                 ) }}"
                 class="section-link"
             >
@@ -1217,7 +1217,7 @@
 
                     <a
                         href="{{ url_for(
-                            'ambassador_submission_detail',
+                            'admin.ambassador_submission_detail',
                             submission_id=submission.id
                         ) }}"
                         class="recent-item"
@@ -1411,7 +1411,7 @@
 
           <a
             href="{{ url_for(
-             'ambassador_submissions'
+             'admin.ambassador_submissions'
             ) }}"
             class="operations-button"
           >
@@ -1429,7 +1429,7 @@
 
           <a
             href="{{ url_for(
-             'ambassador_content'
+             'admin.ambassador_content'
             ) }}"
             class="
              operations-button
@@ -1450,7 +1450,7 @@
 
           <a
             href="{{ url_for(
-             'ambassador_access_points'
+             'admin.ambassador_access_points'
             ) }}"
             class="
              operations-button
@@ -1471,7 +1471,7 @@
 
           <a
             href="{{ url_for(
-             'ambassador_analytics'
+             'admin.ambassador_analytics'
             ) }}"
             class="
               operations-button
