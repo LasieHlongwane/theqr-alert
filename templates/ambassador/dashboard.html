@@ -619,8 +619,17 @@
             line-height: 1.55;
         }
 
+
+        /* =====================================================
+           COMMUNITY OPERATION ACTIONS
+        ===================================================== */
+
         .operations-actions {
             margin-top: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .operations-button {
@@ -635,10 +644,32 @@
             text-decoration: none;
             font-size: 10px;
             font-weight: 900;
+            transition:
+                transform 0.12s ease,
+                background 0.12s ease;
+        }
+
+        .operations-button:hover {
+            background: #25282d;
         }
 
         .operations-button:active {
             transform: scale(0.97);
+        }
+
+
+        /* =====================================================
+           COMMUNITY CONTENT BUTTON
+        ===================================================== */
+
+        .operations-button-secondary {
+            border: 1px solid #cfd3d7;
+            background: #ffffff;
+            color: #25282c;
+        }
+
+        .operations-button-secondary:hover {
+            background: #eef0f2;
         }
 
 
@@ -717,6 +748,11 @@
 
             .community-operations {
                 padding: 17px;
+            }
+
+            .operations-actions {
+                flex-direction: column;
+                align-items: stretch;
             }
 
             .operations-button {
@@ -1343,29 +1379,35 @@
     <div class="community-operations">
 
         <div class="operations-eyebrow">
-            LOCAL MODERATION
+            LOCAL OPERATIONS
         </div>
 
         <div class="operations-title">
-            Community Submissions
+            Manage Your Community
         </div>
 
         <div class="operations-description">
 
-            Review content submitted for
+            Review new submissions and monitor content
+            currently operating within
             <strong>{{ zone.name }}</strong>.
 
-            Your moderation area is automatically
+            Your operational area is automatically
             restricted to your assigned community.
 
         </div>
 
 
         <!-- =================================================
-             ACTION
+             ACTIONS
         ================================================== -->
 
         <div class="operations-actions">
+
+
+            <!-- =============================================
+                 REVIEW SUBMISSIONS
+            ============================================== -->
 
             <a
                 href="{{ url_for(
@@ -1379,6 +1421,28 @@
                     →
                 </span>
             </a>
+
+
+            <!-- =============================================
+                 COMMUNITY CONTENT
+            ============================================== -->
+
+            <a
+                href="{{ url_for(
+                    'ambassador_content'
+                ) }}"
+                class="
+                    operations-button
+                    operations-button-secondary
+                "
+            >
+                Community Content
+
+                <span>
+                    →
+                </span>
+            </a>
+
 
         </div>
 
@@ -1397,12 +1461,15 @@
             and reject submissions belonging to
             {{ zone.name }}.
 
-            Payment status is visible for operational
-            awareness only.
+            You can also view published community content,
+            listing status, package duration, distribution
+            and payment state.
 
-            Pricing, payment confirmation, refunds and
-            other financial controls remain managed
-            centrally by Kalxa.
+            Payment information is read-only.
+
+            Pricing, payment confirmation, payment waivers,
+            refunds and other financial controls remain
+            managed centrally by Kalxa.
 
         </div>
 
