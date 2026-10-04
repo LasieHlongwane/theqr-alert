@@ -868,20 +868,109 @@ def _build_business_analytics(item, analytics_range):
     }
 
 
-@admin_bp.route("/login", methods=["GET", "POST"])
+@admin_bp.route(
+    "/login",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
 def login():
-    if request.method == "POST":
-        password = request.form.get("password", "")
-        correct_password = os.environ.get("LAC_ADMIN_PASSWORD")
-        if not correct_password:
-            flash("Admin password is not configured.", "error")
-            return render_template("admin/login.html")
-        if password == correct_password:
-            session["lac_admin"] = True
-            return redirect(url_for("admin.analytics"))
-        flash("Incorrect password.", "error")
-    return render_template("admin/login.html")
 
+    # ========================================================
+    # ALREADY LOGGED IN
+    # ========================================================
+
+    if session.get(
+        "lac_admin"
+    ):
+
+        return redirect(
+            url_for(
+                "admin.analytics"
+            )
+        )
+
+
+    # ========================================================
+    # POST
+    # ========================================================
+
+    if request.method == "POST":
+
+        password = (
+            request.form
+            .get(
+                "password",
+                "",
+            )
+        )
+
+
+        correct_password = (
+            os.environ.get(
+                "LAC_ADMIN_PASSWORD"
+            )
+        )
+
+
+        # ====================================================
+        # CONFIGURATION CHECK
+        # ====================================================
+
+        if not correct_password:
+
+            flash(
+                "Admin password is not configured.",
+                "error",
+            )
+
+            return render_template(
+                "admin/login.html"
+            )
+
+
+        # ====================================================
+        # AUTHENTICATION
+        # ====================================================
+
+        if password == correct_password:
+
+            session[
+                "lac_admin"
+            ] = True
+
+
+            flash(
+                "Administrator login successful.",
+                "success",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin.analytics"
+                )
+            )
+
+
+        # ====================================================
+        # INVALID PASSWORD
+        # ====================================================
+
+        flash(
+            "Incorrect password.",
+            "error",
+        )
+
+
+    # ========================================================
+    # GET / FAILED POST
+    # ========================================================
+
+    return render_template(
+        "admin/login.html"
+    )
 
 @admin_bp.route("/logout")
 def logout():
@@ -3797,9 +3886,8 @@ def ambassador_required(
 # ============================================================
 # ADMIN - CREATE COMMUNITY AMBASSADOR
 # ============================================================
-
 @admin_bp.route(
-    "/admin/community-ambassadors/new",
+    "/community-ambassadors/new",
     methods=[
         "GET",
         "POST",
@@ -3813,13 +3901,17 @@ def admin_create_community_ambassador():
     #
     # IMPORTANT:
     #
-    # This uses the existing Kalxa administrator session.
+    # Kalxa's existing administrator authentication uses:
     #
-    # Organizers and Community Ambassadors must not be allowed
+    #     session["lac_admin"] = True
+    #
+    # Community Ambassadors and organizers must not be able
     # to access this route.
     # ========================================================
 
-    if not session.get("admin_logged_in"):
+    if not session.get(
+        "lac_admin"
+    ):
 
         flash(
             "Please log in as an administrator.",
@@ -3828,7 +3920,7 @@ def admin_create_community_ambassador():
 
         return redirect(
             url_for(
-                "admin_login"
+                "admin.login"
             )
         )
 
@@ -4161,6 +4253,24 @@ def admin_create_community_ambassador():
 
 
     # ========================================================
+    # LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Admin] "
+            "Community Ambassador created "
+            "ambassador_id=%s "
+            "zone_id=%s "
+            "email=%s"
+        ),
+        ambassador.id,
+        ambassador.zone_id,
+        ambassador.email,
+    )
+
+
+    # ========================================================
     # SUCCESS
     # ========================================================
 
@@ -4176,7 +4286,7 @@ def admin_create_community_ambassador():
 
     return redirect(
         url_for(
-            "admin_create_community_ambassador"
+            "admin.admin_create_community_ambassador"
         )
     )
 
@@ -4186,7 +4296,6 @@ def admin_create_community_ambassador():
 # ============================================================
 # COMMUNITY AMBASSADOR - LOGIN
 # ============================================================
-
 @admin_bp.route(
     "/ambassador/login",
     methods=[
@@ -4387,6 +4496,7 @@ def ambassador_login():
             "admin.ambassador_dashboard"
         )
     )
+
 
 
 # ============================================================
