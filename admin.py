@@ -3801,941 +3801,6 @@ def edit_content(
 # 6. Permission is checked on both GET and POST.
 # ============================================================
 
-@admin_bp.route(
-    "/ambassador/content/new",
-    methods=["GET", "POST"],
-)
-@ambassador_required
-@ambassador_content_creation_required
-def ambassador_create_content():
-
-    # ========================================================
-    # AUTHENTICATED AMBASSADOR
-    # ========================================================
-
-    ambassador = get_current_ambassador()
-
-
-    if not ambassador:
-
-        clear_ambassador_session()
-
-        flash(
-            (
-                "Please log in as a "
-                "Community Ambassador."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.ambassador_login"
-            )
-        )
-
-
-    # ========================================================
-    # VERIFY ACCOUNT
-    # ========================================================
-
-    if not ambassador.active:
-
-        clear_ambassador_session()
-
-        flash(
-            (
-                "Your Community Ambassador "
-                "account is currently inactive."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.ambassador_login"
-            )
-        )
-
-
-    # ========================================================
-    # VERIFY ASSIGNED ZONE
-    # ========================================================
-
-    zone = ambassador.zone
-
-
-    if (
-        not zone
-        or
-        not zone.active
-    ):
-
-        flash(
-            (
-                "Your assigned Kalxa community "
-                "is currently unavailable."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.ambassador_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # VERIFY CONTENT PERMISSION
-    # ========================================================
-
-    if not ambassador.can_add_content:
-
-        flash(
-            (
-                "You do not currently have "
-                "permission to add community content."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.ambassador_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # SECURITY:
-    #
-    # THIS IS THE ONLY HOME ZONE THE AMBASSADOR MAY USE.
-    # ========================================================
-
-    zone_id = ambassador.zone_id
-
-
-    # ========================================================
-    # TEMPLATE ZONES
-    #
-    # Only one zone is passed to the form.
-    #
-    # Therefore:
-    #
-    # - Home Zone shows only the assigned zone.
-    # - Campaign reach shows only the assigned zone.
-    # ========================================================
-
-    zones = [
-        zone
-    ]
-
-
-    categories = get_categories(
-        active_only=False
-    )
-
-
-    # ========================================================
-    # GET
-    # ========================================================
-
-    if request.method == "GET":
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # POST
-    #
-    # DO NOT READ:
-    #
-    # request.form["zone_id"]
-    #
-    # The browser is not trusted for zone authorization.
-    # ========================================================
-
-    category = (
-        request.form.get(
-            "category",
-            "",
-        )
-        .strip()
-        .lower()
-    )
-
-
-    content_type = (
-        request.form.get(
-            "content_type",
-            "",
-        )
-        .strip()
-        .lower()
-        or None
-    )
-
-
-    title = (
-        request.form.get(
-            "title",
-            "",
-        )
-        .strip()
-    )
-
-
-    # ========================================================
-    # BASIC VALIDATION
-    # ========================================================
-
-    if (
-        not category
-        or
-        not title
-    ):
-
-        flash(
-            (
-                "Category and title "
-                "are required."
-            ),
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # REVALIDATE SERVER-SIDE ZONE
-    # ========================================================
-
-    zone = db.session.get(
-        Zone,
-        zone_id,
-    )
-
-
-    if (
-        not zone
-        or
-        not zone.active
-    ):
-
-        flash(
-            (
-                "Your assigned community "
-                "is currently unavailable."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin.ambassador_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # CATEGORY VALIDATION
-    # ========================================================
-
-    if not get_category_by_slug(
-        category,
-        active_only=False,
-    ):
-
-        flash(
-            "Invalid content category.",
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # WORKFLOW
-    # ========================================================
-
-    workflow = get_content_workflow(
-        category,
-        content_type,
-    )
-
-
-    lifetime_type = workflow[
-        "lifetime_type"
-    ]
-
-
-    workflow_notification_eligible = bool(
-        workflow.get(
-            "notification_eligible",
-            False,
-        )
-    )
-
-
-    pricing_model = workflow.get(
-        "pricing_model"
-    )
-
-
-    # ========================================================
-    # DATES
-    # ========================================================
-
-    try:
-
-        dates, error = (
-            _validate_and_normalize_content_dates(
-                category,
-                request.form,
-                lifetime_type=lifetime_type,
-            )
-        )
-
-    except ValueError:
-
-        flash(
-            "Please enter valid dates.",
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    if error:
-
-        flash(
-            error,
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # TIMES
-    # ========================================================
-
-    try:
-
-        start_time = parse_optional_time(
-            request.form.get(
-                "start_time"
-            )
-        )
-
-
-        end_time = parse_optional_time(
-            request.form.get(
-                "end_time"
-            )
-        )
-
-    except ValueError:
-
-        flash(
-            (
-                "Please enter valid start "
-                "and end times."
-            ),
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    canonical_category = normalize_category(
-        category
-    )
-
-
-    date_error = (
-        _validate_effective_campaign_dates(
-            canonical_category,
-            lifetime_type,
-            dates,
-            start_time,
-            end_time,
-        )
-    )
-
-
-    if date_error:
-
-        flash(
-            date_error,
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # LISTING LEVEL
-    # ========================================================
-
-    listing_level = (
-        _get_listing_level_from_form(
-            "discovery"
-        )
-    )
-
-
-    # ========================================================
-    # SPONSORSHIP
-    # ========================================================
-
-    sponsorship, sponsorship_error = (
-        _parse_sponsorship()
-    )
-
-
-    if sponsorship_error:
-
-        flash(
-            sponsorship_error,
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # IMAGES
-    # ========================================================
-
-    uploaded_images = (
-        _read_uploaded_listing_images()
-    )
-
-
-    image_error = _validate_image_count(
-        uploaded_images,
-        listing_level,
-    )
-
-
-    if image_error:
-
-        flash(
-            image_error,
-            "error",
-        )
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    try:
-
-        uploaded_image_urls = (
-            _upload_listing_images(
-                uploaded_images
-            )
-        )
-
-    except Exception as error:
-
-        current_app.logger.exception(
-            (
-                "Ambassador content image upload "
-                "failed ambassador_id=%s "
-                "zone_id=%s "
-                "title=%s error=%s"
-            ),
-            ambassador.id,
-            zone_id,
-            title,
-            error,
-        )
-
-
-        flash(
-            f"Image upload failed: {error}",
-            "error",
-        )
-
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # CREATE CONTENT ITEM
-    #
-    # zone_id is SERVER CONTROLLED.
-    # ========================================================
-
-    item = ContentItem(
-
-        zone_id=zone_id,
-
-        category=category,
-
-        content_type=content_type,
-
-        lifetime_type=lifetime_type,
-
-        availability_status="available",
-
-        title=title,
-
-        start_time=start_time,
-
-        end_time=end_time,
-
-        image_url=(
-            uploaded_image_urls[0]
-            if len(uploaded_image_urls) >= 1
-            else None
-        ),
-
-        image_url_2=(
-            uploaded_image_urls[1]
-            if (
-                listing_level
-                in {
-                    "business",
-                    "promotion",
-                }
-                and
-                len(uploaded_image_urls) >= 2
-            )
-            else None
-        ),
-
-        image_url_3=(
-            uploaded_image_urls[2]
-            if (
-                listing_level
-                in {
-                    "business",
-                    "promotion",
-                }
-                and
-                len(uploaded_image_urls) >= 3
-            )
-            else None
-        ),
-
-    )
-
-
-    # ========================================================
-    # COMMON CONTENT FIELDS
-    # ========================================================
-
-    _populate_content_common_fields(
-        item,
-        listing_level,
-        workflow_notification_eligible,
-    )
-
-
-    # ========================================================
-    # CRITICAL SECURITY REASSERTION
-    #
-    # Even if a future helper or form field changes zone_id,
-    # the Ambassador's authenticated zone remains authoritative.
-    # ========================================================
-
-    item.zone_id = zone_id
-
-
-    # ========================================================
-    # SPONSORSHIP
-    # ========================================================
-
-    _apply_sponsorship(
-        item,
-        sponsorship,
-    )
-
-
-    # ========================================================
-    # DATES
-    # ========================================================
-
-    for key, value in dates.items():
-
-        setattr(
-            item,
-            key,
-            value,
-        )
-
-
-    # ========================================================
-    # COMMERCIAL CONFIGURATION
-    #
-    # We still use the existing pricing engine so that:
-    #
-    # - duration validation
-    # - pricing model
-    # - amount_due
-    # - payment state
-    # - commercial dates
-    #
-    # continue to use your existing architecture.
-    # ========================================================
-
-    try:
-
-        _configure_commercial_content(
-            item,
-            category,
-            content_type,
-        )
-
-    except ValueError as error:
-
-        db.session.rollback()
-
-
-        flash(
-            str(error),
-            "error",
-        )
-
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # REASSERT HOME ZONE AFTER COMMERCIAL CONFIGURATION
-    # ========================================================
-
-    item.zone_id = zone_id
-
-
-    # ========================================================
-    # FORCE AMBASSADOR CAMPAIGN REACH
-    #
-    # IMPORTANT:
-    #
-    # We deliberately ignore whatever distribution zones
-    # _configure_commercial_content() obtained from the form.
-    #
-    # Ambassador Campaign:
-    #
-    #     assigned zone only
-    #
-    # Presence:
-    #
-    #     no ContentDistributionZone rows
-    # ========================================================
-
-    if (
-        pricing_model
-        ==
-        PRICING_MODEL_CAMPAIGN
-    ):
-
-        distribution_zone_ids = [
-            zone_id
-        ]
-
-
-    elif (
-        pricing_model
-        ==
-        PRICING_MODEL_PRESENCE
-    ):
-
-        distribution_zone_ids = []
-
-
-    else:
-
-        distribution_zone_ids = []
-
-
-    # ========================================================
-    # SECURITY ASSERTION
-    # ========================================================
-
-    if (
-        item.zone_id
-        !=
-        ambassador.zone_id
-    ):
-
-        db.session.rollback()
-
-
-        current_app.logger.error(
-            (
-                "Blocked Ambassador cross-zone "
-                "content creation "
-                "ambassador_id=%s "
-                "assigned_zone_id=%s "
-                "attempted_zone_id=%s"
-            ),
-            ambassador.id,
-            ambassador.zone_id,
-            item.zone_id,
-        )
-
-
-        abort(403)
-
-
-    # ========================================================
-    # SAVE CONTENT
-    # ========================================================
-
-    try:
-
-        db.session.add(
-            item
-        )
-
-
-        db.session.flush()
-
-
-        # ====================================================
-        # CAMPAIGN DISTRIBUTION
-        #
-        # Ambassador can create only one distribution row:
-        #
-        #     their assigned zone
-        # ====================================================
-
-        for distribution_zone_id in (
-            distribution_zone_ids
-        ):
-
-            # ------------------------------------------------
-            # DEFENCE IN DEPTH
-            # ------------------------------------------------
-
-            if (
-                distribution_zone_id
-                !=
-                ambassador.zone_id
-            ):
-
-                current_app.logger.warning(
-                    (
-                        "Blocked invalid Ambassador "
-                        "distribution zone "
-                        "ambassador_id=%s "
-                        "assigned_zone_id=%s "
-                        "distribution_zone_id=%s"
-                    ),
-                    ambassador.id,
-                    ambassador.zone_id,
-                    distribution_zone_id,
-                )
-
-                continue
-
-
-            db.session.add(
-                ContentDistributionZone(
-                    content_item_id=item.id,
-                    zone_id=zone_id,
-                )
-            )
-
-
-        db.session.commit()
-
-
-    except Exception as error:
-
-        db.session.rollback()
-
-
-        current_app.logger.exception(
-            (
-                "Failed to create Ambassador "
-                "content item "
-                "ambassador_id=%s "
-                "zone_id=%s "
-                "title=%s "
-                "error=%s"
-            ),
-            ambassador.id,
-            zone_id,
-            title,
-            error,
-        )
-
-
-        flash(
-            (
-                "Content could not be published. "
-                "Please try again."
-            ),
-            "error",
-        )
-
-
-        return _render_content_form(
-            zones,
-            categories,
-            None,
-        )
-
-
-    # ========================================================
-    # AUDIT LOGGING
-    #
-    # This uses application logging only.
-    # It does NOT introduce the Stage 3 audit model.
-    # ========================================================
-
-    current_app.logger.info(
-        (
-            "[Kalxa Ambassador] "
-            "Content created "
-            "ambassador_id=%s "
-            "ambassador_name=%s "
-            "content_item_id=%s "
-            "zone_id=%s "
-            "category=%s "
-            "content_type=%s "
-            "pricing_model=%s"
-        ),
-        ambassador.id,
-        ambassador.name,
-        item.id,
-        zone_id,
-        category,
-        content_type,
-        item.pricing_model,
-    )
-
-
-    # ========================================================
-    # SUCCESS MESSAGES
-    # ========================================================
-
-    if (
-        item.pricing_model
-        ==
-        PRICING_MODEL_CAMPAIGN
-    ):
-
-        flash(
-            (
-                "Campaign published successfully "
-                f"to {zone.name}. "
-                "Reach: 1 zone. "
-                "Package price: "
-                f"{format_kalxa_price(item.amount_due)}."
-            ),
-            "success",
-        )
-
-
-    elif (
-        item.pricing_model
-        ==
-        PRICING_MODEL_PRESENCE
-    ):
-
-        flash(
-            (
-                "Presence listing published "
-                f"successfully to {zone.name}. "
-                "Package price: "
-                f"{format_kalxa_price(item.amount_due)}."
-            ),
-            "success",
-        )
-
-
-    else:
-
-        flash(
-            (
-                "Community content published "
-                f"successfully to {zone.name}."
-            ),
-            "success",
-        )
-
-
-    if (
-        item.is_sponsored
-        and
-        item.sponsored_duration_days
-        and
-        item.sponsored_expires_at
-    ):
-
-        flash(
-            (
-                "Sponsored Boost configured: "
-                f"{item.sponsored_duration_days} "
-                "days — "
-                f"{format_kalxa_price(item.sponsorship_amount_due)}. "
-                "Expires: "
-                f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
-            ),
-            "success",
-        )
-
-
-    # ========================================================
-    # RETURN TO AMBASSADOR CONTENT
-    # ========================================================
-
-    return redirect(
-        url_for(
-            "admin.ambassador_content"
-        )
-    )
 
 
 @admin_bp.route("/content/<int:item_id>/toggle", methods=["POST"])
@@ -6457,6 +5522,944 @@ def admin_create_community_ambassador():
     return redirect(
         url_for(
             "admin.admin_create_community_ambassador"
+        )
+    )
+
+
+
+@admin_bp.route(
+    "/ambassador/content/new",
+    methods=["GET", "POST"],
+)
+@ambassador_required
+@ambassador_content_creation_required
+def ambassador_create_content():
+
+    # ========================================================
+    # AUTHENTICATED AMBASSADOR
+    # ========================================================
+
+    ambassador = get_current_ambassador()
+
+
+    if not ambassador:
+
+        clear_ambassador_session()
+
+        flash(
+            (
+                "Please log in as a "
+                "Community Ambassador."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # VERIFY ACCOUNT
+    # ========================================================
+
+    if not ambassador.active:
+
+        clear_ambassador_session()
+
+        flash(
+            (
+                "Your Community Ambassador "
+                "account is currently inactive."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_login"
+            )
+        )
+
+
+    # ========================================================
+    # VERIFY ASSIGNED ZONE
+    # ========================================================
+
+    zone = ambassador.zone
+
+
+    if (
+        not zone
+        or
+        not zone.active
+    ):
+
+        flash(
+            (
+                "Your assigned Kalxa community "
+                "is currently unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # VERIFY CONTENT PERMISSION
+    # ========================================================
+
+    if not ambassador.can_add_content:
+
+        flash(
+            (
+                "You do not currently have "
+                "permission to add community content."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # SECURITY:
+    #
+    # THIS IS THE ONLY HOME ZONE THE AMBASSADOR MAY USE.
+    # ========================================================
+
+    zone_id = ambassador.zone_id
+
+
+    # ========================================================
+    # TEMPLATE ZONES
+    #
+    # Only one zone is passed to the form.
+    #
+    # Therefore:
+    #
+    # - Home Zone shows only the assigned zone.
+    # - Campaign reach shows only the assigned zone.
+    # ========================================================
+
+    zones = [
+        zone
+    ]
+
+
+    categories = get_categories(
+        active_only=False
+    )
+
+
+    # ========================================================
+    # GET
+    # ========================================================
+
+    if request.method == "GET":
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # POST
+    #
+    # DO NOT READ:
+    #
+    # request.form["zone_id"]
+    #
+    # The browser is not trusted for zone authorization.
+    # ========================================================
+
+    category = (
+        request.form.get(
+            "category",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    content_type = (
+        request.form.get(
+            "content_type",
+            "",
+        )
+        .strip()
+        .lower()
+        or None
+    )
+
+
+    title = (
+        request.form.get(
+            "title",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # BASIC VALIDATION
+    # ========================================================
+
+    if (
+        not category
+        or
+        not title
+    ):
+
+        flash(
+            (
+                "Category and title "
+                "are required."
+            ),
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # REVALIDATE SERVER-SIDE ZONE
+    # ========================================================
+
+    zone = db.session.get(
+        Zone,
+        zone_id,
+    )
+
+
+    if (
+        not zone
+        or
+        not zone.active
+    ):
+
+        flash(
+            (
+                "Your assigned community "
+                "is currently unavailable."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.ambassador_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # CATEGORY VALIDATION
+    # ========================================================
+
+    if not get_category_by_slug(
+        category,
+        active_only=False,
+    ):
+
+        flash(
+            "Invalid content category.",
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # WORKFLOW
+    # ========================================================
+
+    workflow = get_content_workflow(
+        category,
+        content_type,
+    )
+
+
+    lifetime_type = workflow[
+        "lifetime_type"
+    ]
+
+
+    workflow_notification_eligible = bool(
+        workflow.get(
+            "notification_eligible",
+            False,
+        )
+    )
+
+
+    pricing_model = workflow.get(
+        "pricing_model"
+    )
+
+
+    # ========================================================
+    # DATES
+    # ========================================================
+
+    try:
+
+        dates, error = (
+            _validate_and_normalize_content_dates(
+                category,
+                request.form,
+                lifetime_type=lifetime_type,
+            )
+        )
+
+    except ValueError:
+
+        flash(
+            "Please enter valid dates.",
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    if error:
+
+        flash(
+            error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # TIMES
+    # ========================================================
+
+    try:
+
+        start_time = parse_optional_time(
+            request.form.get(
+                "start_time"
+            )
+        )
+
+
+        end_time = parse_optional_time(
+            request.form.get(
+                "end_time"
+            )
+        )
+
+    except ValueError:
+
+        flash(
+            (
+                "Please enter valid start "
+                "and end times."
+            ),
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    canonical_category = normalize_category(
+        category
+    )
+
+
+    date_error = (
+        _validate_effective_campaign_dates(
+            canonical_category,
+            lifetime_type,
+            dates,
+            start_time,
+            end_time,
+        )
+    )
+
+
+    if date_error:
+
+        flash(
+            date_error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # LISTING LEVEL
+    # ========================================================
+
+    listing_level = (
+        _get_listing_level_from_form(
+            "discovery"
+        )
+    )
+
+
+    # ========================================================
+    # SPONSORSHIP
+    # ========================================================
+
+    sponsorship, sponsorship_error = (
+        _parse_sponsorship()
+    )
+
+
+    if sponsorship_error:
+
+        flash(
+            sponsorship_error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # IMAGES
+    # ========================================================
+
+    uploaded_images = (
+        _read_uploaded_listing_images()
+    )
+
+
+    image_error = _validate_image_count(
+        uploaded_images,
+        listing_level,
+    )
+
+
+    if image_error:
+
+        flash(
+            image_error,
+            "error",
+        )
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    try:
+
+        uploaded_image_urls = (
+            _upload_listing_images(
+                uploaded_images
+            )
+        )
+
+    except Exception as error:
+
+        current_app.logger.exception(
+            (
+                "Ambassador content image upload "
+                "failed ambassador_id=%s "
+                "zone_id=%s "
+                "title=%s error=%s"
+            ),
+            ambassador.id,
+            zone_id,
+            title,
+            error,
+        )
+
+
+        flash(
+            f"Image upload failed: {error}",
+            "error",
+        )
+
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # CREATE CONTENT ITEM
+    #
+    # zone_id is SERVER CONTROLLED.
+    # ========================================================
+
+    item = ContentItem(
+
+        zone_id=zone_id,
+
+        category=category,
+
+        content_type=content_type,
+
+        lifetime_type=lifetime_type,
+
+        availability_status="available",
+
+        title=title,
+
+        start_time=start_time,
+
+        end_time=end_time,
+
+        image_url=(
+            uploaded_image_urls[0]
+            if len(uploaded_image_urls) >= 1
+            else None
+        ),
+
+        image_url_2=(
+            uploaded_image_urls[1]
+            if (
+                listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+                and
+                len(uploaded_image_urls) >= 2
+            )
+            else None
+        ),
+
+        image_url_3=(
+            uploaded_image_urls[2]
+            if (
+                listing_level
+                in {
+                    "business",
+                    "promotion",
+                }
+                and
+                len(uploaded_image_urls) >= 3
+            )
+            else None
+        ),
+
+    )
+
+
+    # ========================================================
+    # COMMON CONTENT FIELDS
+    # ========================================================
+
+    _populate_content_common_fields(
+        item,
+        listing_level,
+        workflow_notification_eligible,
+    )
+
+
+    # ========================================================
+    # CRITICAL SECURITY REASSERTION
+    #
+    # Even if a future helper or form field changes zone_id,
+    # the Ambassador's authenticated zone remains authoritative.
+    # ========================================================
+
+    item.zone_id = zone_id
+
+
+    # ========================================================
+    # SPONSORSHIP
+    # ========================================================
+
+    _apply_sponsorship(
+        item,
+        sponsorship,
+    )
+
+
+    # ========================================================
+    # DATES
+    # ========================================================
+
+    for key, value in dates.items():
+
+        setattr(
+            item,
+            key,
+            value,
+        )
+
+
+    # ========================================================
+    # COMMERCIAL CONFIGURATION
+    #
+    # We still use the existing pricing engine so that:
+    #
+    # - duration validation
+    # - pricing model
+    # - amount_due
+    # - payment state
+    # - commercial dates
+    #
+    # continue to use your existing architecture.
+    # ========================================================
+
+    try:
+
+        _configure_commercial_content(
+            item,
+            category,
+            content_type,
+        )
+
+    except ValueError as error:
+
+        db.session.rollback()
+
+
+        flash(
+            str(error),
+            "error",
+        )
+
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # REASSERT HOME ZONE AFTER COMMERCIAL CONFIGURATION
+    # ========================================================
+
+    item.zone_id = zone_id
+
+
+    # ========================================================
+    # FORCE AMBASSADOR CAMPAIGN REACH
+    #
+    # IMPORTANT:
+    #
+    # We deliberately ignore whatever distribution zones
+    # _configure_commercial_content() obtained from the form.
+    #
+    # Ambassador Campaign:
+    #
+    #     assigned zone only
+    #
+    # Presence:
+    #
+    #     no ContentDistributionZone rows
+    # ========================================================
+
+    if (
+        pricing_model
+        ==
+        PRICING_MODEL_CAMPAIGN
+    ):
+
+        distribution_zone_ids = [
+            zone_id
+        ]
+
+
+    elif (
+        pricing_model
+        ==
+        PRICING_MODEL_PRESENCE
+    ):
+
+        distribution_zone_ids = []
+
+
+    else:
+
+        distribution_zone_ids = []
+
+
+    # ========================================================
+    # SECURITY ASSERTION
+    # ========================================================
+
+    if (
+        item.zone_id
+        !=
+        ambassador.zone_id
+    ):
+
+        db.session.rollback()
+
+
+        current_app.logger.error(
+            (
+                "Blocked Ambassador cross-zone "
+                "content creation "
+                "ambassador_id=%s "
+                "assigned_zone_id=%s "
+                "attempted_zone_id=%s"
+            ),
+            ambassador.id,
+            ambassador.zone_id,
+            item.zone_id,
+        )
+
+
+        abort(403)
+
+
+    # ========================================================
+    # SAVE CONTENT
+    # ========================================================
+
+    try:
+
+        db.session.add(
+            item
+        )
+
+
+        db.session.flush()
+
+
+        # ====================================================
+        # CAMPAIGN DISTRIBUTION
+        #
+        # Ambassador can create only one distribution row:
+        #
+        #     their assigned zone
+        # ====================================================
+
+        for distribution_zone_id in (
+            distribution_zone_ids
+        ):
+
+            # ------------------------------------------------
+            # DEFENCE IN DEPTH
+            # ------------------------------------------------
+
+            if (
+                distribution_zone_id
+                !=
+                ambassador.zone_id
+            ):
+
+                current_app.logger.warning(
+                    (
+                        "Blocked invalid Ambassador "
+                        "distribution zone "
+                        "ambassador_id=%s "
+                        "assigned_zone_id=%s "
+                        "distribution_zone_id=%s"
+                    ),
+                    ambassador.id,
+                    ambassador.zone_id,
+                    distribution_zone_id,
+                )
+
+                continue
+
+
+            db.session.add(
+                ContentDistributionZone(
+                    content_item_id=item.id,
+                    zone_id=zone_id,
+                )
+            )
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "Failed to create Ambassador "
+                "content item "
+                "ambassador_id=%s "
+                "zone_id=%s "
+                "title=%s "
+                "error=%s"
+            ),
+            ambassador.id,
+            zone_id,
+            title,
+            error,
+        )
+
+
+        flash(
+            (
+                "Content could not be published. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+
+        return _render_content_form(
+            zones,
+            categories,
+            None,
+        )
+
+
+    # ========================================================
+    # AUDIT LOGGING
+    #
+    # This uses application logging only.
+    # It does NOT introduce the Stage 3 audit model.
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Ambassador] "
+            "Content created "
+            "ambassador_id=%s "
+            "ambassador_name=%s "
+            "content_item_id=%s "
+            "zone_id=%s "
+            "category=%s "
+            "content_type=%s "
+            "pricing_model=%s"
+        ),
+        ambassador.id,
+        ambassador.name,
+        item.id,
+        zone_id,
+        category,
+        content_type,
+        item.pricing_model,
+    )
+
+
+    # ========================================================
+    # SUCCESS MESSAGES
+    # ========================================================
+
+    if (
+        item.pricing_model
+        ==
+        PRICING_MODEL_CAMPAIGN
+    ):
+
+        flash(
+            (
+                "Campaign published successfully "
+                f"to {zone.name}. "
+                "Reach: 1 zone. "
+                "Package price: "
+                f"{format_kalxa_price(item.amount_due)}."
+            ),
+            "success",
+        )
+
+
+    elif (
+        item.pricing_model
+        ==
+        PRICING_MODEL_PRESENCE
+    ):
+
+        flash(
+            (
+                "Presence listing published "
+                f"successfully to {zone.name}. "
+                "Package price: "
+                f"{format_kalxa_price(item.amount_due)}."
+            ),
+            "success",
+        )
+
+
+    else:
+
+        flash(
+            (
+                "Community content published "
+                f"successfully to {zone.name}."
+            ),
+            "success",
+        )
+
+
+    if (
+        item.is_sponsored
+        and
+        item.sponsored_duration_days
+        and
+        item.sponsored_expires_at
+    ):
+
+        flash(
+            (
+                "Sponsored Boost configured: "
+                f"{item.sponsored_duration_days} "
+                "days — "
+                f"{format_kalxa_price(item.sponsorship_amount_due)}. "
+                "Expires: "
+                f"{item.sponsored_expires_at.strftime('%d %b %Y %H:%M')}."
+            ),
+            "success",
+        )
+
+
+    # ========================================================
+    # RETURN TO AMBASSADOR CONTENT
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "admin.ambassador_content"
         )
     )
 
@@ -10268,49 +10271,6 @@ def ambassador_content_creation_required(
 # AMBASSADOR - ADD COMMUNITY CONTENT
 # ============================================================
 
-@admin_bp.route(
-    "/ambassador/content/new",
-    methods=[
-        "GET",
-    ],
-)
-@ambassador_required
-@ambassador_content_creation_required
-def ambassador_create_content():
-
-    # ========================================================
-    # CURRENT AMBASSADOR
-    # ========================================================
-
-    ambassador = (
-        get_current_ambassador()
-    )
-
-
-    if not ambassador:
-
-        abort(403)
-
-
-    # ========================================================
-    # IMPORTANT
-    # ========================================================
-    #
-    # The Ambassador does NOT select a Zone.
-    #
-    # Their CommunityAmbassador.zone_id is the authoritative
-    # zone for all content they create.
-    #
-    # ========================================================
-
-    zone = ambassador.zone
-
-
-    return render_template(
-        "ambassador/content_create.html",
-        ambassador=ambassador,
-        zone=zone,
-    )
 
 # ============================================================
 # ADMIN - COMMUNITY AMBASSADORS
