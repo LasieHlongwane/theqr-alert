@@ -4391,6 +4391,10 @@ def ambassador_login():
 # COMMUNITY AMBASSADOR - DASHBOARD
 # ============================================================
 
+# ============================================================
+# COMMUNITY AMBASSADOR - DASHBOARD
+# ============================================================
+
 @app.route(
     "/ambassador",
     methods=[
@@ -4409,11 +4413,141 @@ def ambassador_dashboard():
     )
 
 
+    zone = (
+        ambassador.zone
+    )
+
+
     # ========================================================
-    # ASSIGNED COMMUNITY
+    # PENDING REVIEWS
     # ========================================================
 
-    zone = ambassador.zone
+    pending_count = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id,
+
+            PendingSubmission.status
+            == "pending",
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # NEEDS CHANGES
+    # ========================================================
+
+    needs_changes_count = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id,
+
+            PendingSubmission.status
+            == "needs_changes",
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # APPROVED
+    # ========================================================
+
+    approved_count = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id,
+
+            PendingSubmission.status
+            == "approved",
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # REJECTED
+    # ========================================================
+
+    rejected_count = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id,
+
+            PendingSubmission.status
+            == "rejected",
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # LIVE CONTENT
+    # ========================================================
+
+    live_content_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.active.is_(True),
+
+            ContentItem.archived.is_(False),
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # UNPAID COMMERCIAL LISTINGS
+    # ========================================================
+    #
+    # Ambassadors may SEE this information.
+    #
+    # They cannot modify payment state.
+    # ========================================================
+
+    unpaid_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.pricing_model.isnot(None),
+
+            ContentItem.payment_status
+            == "unpaid",
+
+            ContentItem.archived.is_(False),
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # RECENT SUBMISSIONS
+    # ========================================================
+
+    recent_submissions = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id
+        )
+        .order_by(
+            PendingSubmission.created_at.desc()
+        )
+        .limit(
+            5
+        )
+        .all()
+    )
 
 
     # ========================================================
@@ -4422,10 +4556,31 @@ def ambassador_dashboard():
 
     return render_template(
         "ambassador/dashboard.html",
-        ambassador=ambassador,
-        zone=zone,
-    )
 
+        ambassador=ambassador,
+
+        zone=zone,
+
+        pending_count=pending_count,
+
+        needs_changes_count=
+            needs_changes_count,
+
+        approved_count=
+            approved_count,
+
+        rejected_count=
+            rejected_count,
+
+        live_content_count=
+            live_content_count,
+
+        unpaid_count=
+            unpaid_count,
+
+        recent_submissions=
+            recent_submissions,
+    )
 # ============================================================
 # COMMUNITY AMBASSADOR - DASHBOARD
 # ============================================================
