@@ -554,7 +554,7 @@
 
         <a
             href="{{ url_for(
-                'ambassador_access_points',
+                'admin.ambassador_access_points',
                 status='all'
             ) }}"
             class="
@@ -570,7 +570,7 @@
 
         <a
             href="{{ url_for(
-                'ambassador_access_points',
+                'admin.ambassador_access_points',
                 status='active'
             ) }}"
             class="
@@ -586,7 +586,7 @@
 
         <a
             href="{{ url_for(
-                'ambassador_access_points',
+                'admin.ambassador_access_points',
                 status='inactive'
             ) }}"
             class="
@@ -614,7 +614,7 @@
 
                 <a
                     href="{{ url_for(
-                        'ambassador_access_point_detail',
+                        'admin.ambassador_access_point_detail',
                         access_point_id=access_point.id
                     ) }}"
                     class="access-point"
