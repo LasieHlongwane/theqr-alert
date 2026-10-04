@@ -61,6 +61,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 14px;
         }
 
         .brand {
@@ -100,6 +101,33 @@
             text-decoration: none;
             font-size: 11px;
             font-weight: 850;
+        }
+
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash {
+            margin-bottom: 16px;
+            padding: 12px 13px;
+            border: 1px solid #ccd0d4;
+            border-radius: 10px;
+            background: #ffffff;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .flash-success {
+            border-color: #9fc8ad;
+            background: #f5fff8;
+            color: #245d37;
+        }
+
+        .flash-error {
+            border-color: #daa8a8;
+            background: #fff7f7;
+            color: #7d3030;
         }
 
 
@@ -178,6 +206,7 @@
             margin-top: 5px;
             font-size: 11px;
             font-weight: 800;
+            line-height: 1.45;
             word-break: break-word;
         }
 
@@ -188,9 +217,11 @@
 
         .image {
             width: 100%;
+            max-height: 500px;
             margin-top: 18px;
             border-radius: 13px;
             display: block;
+            object-fit: cover;
         }
 
 
@@ -218,6 +249,22 @@
             font-weight: 950;
         }
 
+        .payment-paid {
+            color: #277044;
+        }
+
+        .payment-unpaid {
+            color: #8a6220;
+        }
+
+        .payment-failed {
+            color: #8a3030;
+        }
+
+        .payment-refunded {
+            color: #5f6570;
+        }
+
         .finance-note {
             margin-top: 7px;
             color: #777d85;
@@ -227,19 +274,181 @@
 
 
         /* =====================================================
-           MODERATION PLACEHOLDER
+           MODERATION
         ===================================================== */
 
         .moderation {
             margin-top: 18px;
             padding: 18px;
-            border:
-                1px dashed
-                #bfc4c9;
+            border: 1px solid #d9dce0;
             border-radius: 13px;
-            color: #717780;
+            background: #f7f8f9;
+        }
+
+        .moderation-label {
+            color: #858b92;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.9px;
+        }
+
+        .moderation-title {
+            margin-top: 5px;
+            color: #17191d;
+            font-size: 17px;
+            font-weight: 950;
+        }
+
+        .current-status {
+            margin-top: 10px;
+            color: #666d75;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           EXISTING MODERATION NOTES
+        ===================================================== */
+
+        .existing-notes {
+            margin-top: 14px;
+            padding: 13px;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        .existing-notes-label {
+            color: #858b92;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+        }
+
+        .existing-notes-text {
+            margin-top: 6px;
+            color: #4f555c;
+            font-size: 11px;
+            line-height: 1.55;
+            white-space: pre-line;
+        }
+
+
+        /* =====================================================
+           MODERATION ACTION
+        ===================================================== */
+
+        .moderation-action {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 11px;
+            background: #ffffff;
+        }
+
+        .action-title {
+            color: #17191d;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .action-description {
+            margin-top: 5px;
+            color: #747a82;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .moderation-action textarea {
+            width: 100%;
+            min-height: 90px;
+            margin-top: 12px;
+            padding: 11px;
+            resize: vertical;
+            border: 1px solid #d4d8dc;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            font-size: 11px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        .moderation-action textarea:focus {
+            border-color: #111318;
+        }
+
+
+        /* =====================================================
+           MODERATION BUTTONS
+        ===================================================== */
+
+        .moderation-button {
+            width: 100%;
+            margin-top: 9px;
+            padding: 12px 14px;
+            border: 0;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 900;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .approve-button {
+            background: #1f6b3a;
+            color: #ffffff;
+        }
+
+        .changes-button {
+            background: #283f68;
+            color: #ffffff;
+        }
+
+        .reject-button {
+            background: #8a3030;
+            color: #ffffff;
+        }
+
+        .moderation-button:active {
+            transform: scale(0.99);
+        }
+
+
+        /* =====================================================
+           REVIEW COMPLETE
+        ===================================================== */
+
+        .review-complete {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #666d75;
             font-size: 11px;
             line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           SECURITY / SCOPE NOTE
+        ===================================================== */
+
+        .scope-note {
+            margin-top: 15px;
+            padding: 13px;
+            border-radius: 10px;
+            background: #eceef0;
+            color: #737981;
+            font-size: 9px;
+            line-height: 1.55;
+        }
+
+        .scope-note strong {
+            color: #3d4248;
         }
 
 
@@ -255,6 +464,18 @@
                 grid-template-columns: 1fr;
             }
 
+            .card {
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .moderation {
+                padding: 15px;
+            }
+
         }
 
     </style>
@@ -264,6 +485,10 @@
 
 <body>
 
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
 
 <div class="topbar">
 
@@ -282,8 +507,16 @@
 </div>
 
 
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
 <div class="page">
 
+
+    <!-- =====================================================
+         BACK
+    ====================================================== -->
 
     <a
         class="back-link"
@@ -294,6 +527,38 @@
         ← Submissions
     </a>
 
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="
+                        flash
+                        flash-{{ category }}
+                    "
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         SUBMISSION CARD
+    ====================================================== -->
 
     <div class="card">
 
@@ -342,6 +607,10 @@
         <div class="details">
 
 
+            <!-- =============================================
+                 COMMUNITY
+            ============================================== -->
+
             <div class="detail">
 
                 <div class="detail-label">
@@ -355,6 +624,10 @@
             </div>
 
 
+            <!-- =============================================
+                 CATEGORY
+            ============================================== -->
+
             <div class="detail">
 
                 <div class="detail-label">
@@ -362,27 +635,58 @@
                 </div>
 
                 <div class="detail-value">
-                    {{ submission.category }}
+
+                    {% if submission.category %}
+
+                        {{ submission.category.replace(
+                            '_',
+                            ' '
+                        ).title() }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
                 </div>
 
             </div>
 
+
+            <!-- =============================================
+                 MODERATION STATUS
+            ============================================== -->
 
             <div class="detail">
 
                 <div class="detail-label">
-                    STATUS
+                    MODERATION STATUS
                 </div>
 
                 <div class="detail-value">
-                    {{ submission.status.replace(
-                        '_',
-                        ' '
-                    ).title() }}
+
+                    {% if submission.status %}
+
+                        {{ submission.status.replace(
+                            '_',
+                            ' '
+                        ).title() }}
+
+                    {% else %}
+
+                        Pending
+
+                    {% endif %}
+
                 </div>
 
             </div>
 
+
+            <!-- =============================================
+                 TRACKING CODE
+            ============================================== -->
 
             <div class="detail">
 
@@ -396,6 +700,10 @@
 
             </div>
 
+
+            <!-- =============================================
+                 BUSINESS
+            ============================================== -->
 
             {% if submission.business_name %}
 
@@ -414,6 +722,10 @@
             {% endif %}
 
 
+            <!-- =============================================
+                 VENUE
+            ============================================== -->
+
             {% if submission.venue %}
 
                 <div class="detail">
@@ -431,6 +743,10 @@
             {% endif %}
 
 
+            <!-- =============================================
+                 SUBMITTED BY
+            ============================================== -->
+
             <div class="detail">
 
                 <div class="detail-label">
@@ -438,11 +754,25 @@
                 </div>
 
                 <div class="detail-value">
-                    {{ submission.submitter_name }}
+
+                    {% if submission.submitter_name %}
+
+                        {{ submission.submitter_name }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
                 </div>
 
             </div>
 
+
+            <!-- =============================================
+                 CONTACT
+            ============================================== -->
 
             {% if submission.submitter_phone %}
 
@@ -454,6 +784,56 @@
 
                     <div class="detail-value">
                         {{ submission.submitter_phone }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 CREATED
+            ============================================== -->
+
+            {% if submission.created_at %}
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        SUBMITTED
+                    </div>
+
+                    <div class="detail-value">
+
+                        {{ submission.created_at.strftime(
+                            "%d %b %Y %H:%M"
+                        ) }}
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 REVIEWED
+            ============================================== -->
+
+            {% if submission.reviewed_at %}
+
+                <div class="detail">
+
+                    <div class="detail-label">
+                        LAST REVIEWED
+                    </div>
+
+                    <div class="detail-value">
+
+                        {{ submission.reviewed_at.strftime(
+                            "%d %b %Y %H:%M"
+                        ) }}
+
                     </div>
 
                 </div>
@@ -474,14 +854,45 @@
                 PAYMENT STATUS
             </div>
 
-            <div class="payment-status">
-                {{ submission.payment_status.upper() }}
+
+            {% set payment_status =
+                submission.payment_status
+                or 'unpaid'
+            %}
+
+
+            <div
+                class="
+                    payment-status
+
+                    {% if payment_status == 'paid' %}
+                        payment-paid
+
+                    {% elif payment_status == 'failed' %}
+                        payment-failed
+
+                    {% elif payment_status == 'refunded' %}
+                        payment-refunded
+
+                    {% else %}
+                        payment-unpaid
+                    {% endif %}
+                "
+            >
+
+                {{ payment_status.upper() }}
+
             </div>
 
+
             <div class="finance-note">
+
                 Payment information is read-only for
-                Community Ambassadors. Financial controls
-                remain with Kalxa.
+                Community Ambassadors.
+
+                Financial controls remain managed
+                centrally by Kalxa.
+
             </div>
 
         </div>
@@ -493,15 +904,301 @@
 
         <div class="moderation">
 
-            <strong>
-                Moderation controls
-            </strong>
 
-            <br><br>
+            <!-- =============================================
+                 HEADER
+            ============================================== -->
 
-            Approve, reject and request-changes controls
-            will be connected here after the zone security
-            boundary has been verified.
+            <div class="moderation-label">
+                COMMUNITY MODERATION
+            </div>
+
+            <div class="moderation-title">
+                Review Decision
+            </div>
+
+
+            <!-- =============================================
+                 CURRENT STATUS
+            ============================================== -->
+
+            <div class="current-status">
+
+                Current status:
+
+                <strong>
+
+                    {% if submission.status %}
+
+                        {{ submission.status.replace(
+                            '_',
+                            ' '
+                        ).title() }}
+
+                    {% else %}
+
+                        Pending
+
+                    {% endif %}
+
+                </strong>
+
+            </div>
+
+
+            <!-- =============================================
+                 EXISTING NOTES
+            ============================================== -->
+
+            {% if submission.admin_notes %}
+
+                <div class="existing-notes">
+
+                    <div class="existing-notes-label">
+                        MODERATION NOTES
+                    </div>
+
+                    <div class="existing-notes-text">
+                        {{ submission.admin_notes }}
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 ACTIVE MODERATION
+            ============================================== -->
+
+            {% if submission.status in [
+                'pending',
+                'needs_changes'
+            ] %}
+
+
+                <!-- =========================================
+                     APPROVE
+                ========================================== -->
+
+                <div class="moderation-action">
+
+                    <div class="action-title">
+                        Approve
+                    </div>
+
+                    <div class="action-description">
+
+                        Confirm that this submission is
+                        suitable for {{ zone.name }}.
+
+                        Payment-controlled listings must
+                        already have confirmed payment
+                        before approval.
+
+                    </div>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'ambassador_approve_submission',
+                            submission_id=submission.id
+                        ) }}"
+                    >
+
+                        <textarea
+                            name="notes"
+                            maxlength="2000"
+                            placeholder="Optional approval note"
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                            class="
+                                moderation-button
+                                approve-button
+                            "
+                        >
+                            Approve Submission
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- =========================================
+                     REQUEST CHANGES
+                ========================================== -->
+
+                <div class="moderation-action">
+
+                    <div class="action-title">
+                        Request Changes
+                    </div>
+
+                    <div class="action-description">
+
+                        Explain what the business or
+                        organizer should correct before
+                        this submission can be approved.
+
+                    </div>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'ambassador_request_changes',
+                            submission_id=submission.id
+                        ) }}"
+                    >
+
+                        <textarea
+                            name="notes"
+                            maxlength="2000"
+                            placeholder="What needs to be changed?"
+                            required
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                            class="
+                                moderation-button
+                                changes-button
+                            "
+                        >
+                            Request Changes
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- =========================================
+                     REJECT
+                ========================================== -->
+
+                <div class="moderation-action">
+
+                    <div class="action-title">
+                        Reject
+                    </div>
+
+                    <div class="action-description">
+
+                        Reject content that should not
+                        appear on Kalxa.
+
+                        A rejection reason is required.
+
+                    </div>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'ambassador_reject_submission',
+                            submission_id=submission.id
+                        ) }}"
+                    >
+
+                        <textarea
+                            name="notes"
+                            maxlength="2000"
+                            placeholder="Reason for rejection"
+                            required
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                            class="
+                                moderation-button
+                                reject-button
+                            "
+                        >
+                            Reject Submission
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+            {% else %}
+
+
+                <!-- =========================================
+                     REVIEW COMPLETE
+                ========================================== -->
+
+                <div class="review-complete">
+
+                    This submission has already been
+                    reviewed.
+
+                    <br><br>
+
+                    Current status:
+
+                    <strong>
+
+                        {% if submission.status %}
+
+                            {{ submission.status.replace(
+                                '_',
+                                ' '
+                            ).title() }}
+
+                        {% else %}
+
+                            Pending
+
+                        {% endif %}
+
+                    </strong>
+
+
+                    {% if submission.published_content_id %}
+
+                        <br><br>
+
+                        Published content ID:
+
+                        <strong>
+                            {{ submission.published_content_id }}
+                        </strong>
+
+                    {% endif %}
+
+                </div>
+
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 COMMUNITY SCOPE
+            ============================================== -->
+
+            <div class="scope-note">
+
+                <strong>
+                    Community scope:
+                </strong>
+
+                This moderation screen is restricted to
+                submissions belonging to
+                {{ zone.name }}.
+
+                Community Ambassadors cannot change
+                payment status, pricing or financial
+                records.
+
+            </div>
+
 
         </div>
 
@@ -510,6 +1207,7 @@
 
 
 </div>
+
 
 </body>
 
