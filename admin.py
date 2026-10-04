@@ -7561,6 +7561,384 @@ def ambassador_content_detail(
         now=now,
     )
 
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - QR ACCESS POINTS
+# ============================================================
+
+@app.route(
+    "/ambassador/access-points",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_access_points():
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    zone = (
+        ambassador.zone
+    )
+
+
+    # ========================================================
+    # FILTER
+    # ========================================================
+
+    status_filter = (
+        str(
+            request.args.get(
+                "status",
+                "all",
+            )
+            or "all"
+        )
+        .strip()
+        .lower()
+    )
+
+
+    allowed_filters = {
+        "all",
+        "active",
+        "inactive",
+    }
+
+
+    if (
+        status_filter
+        not in allowed_filters
+    ):
+
+        status_filter = (
+            "all"
+        )
+
+
+    # ========================================================
+    # BASE QUERY
+    # ========================================================
+    #
+    # SECURITY BOUNDARY:
+    #
+    # Ambassadors may only retrieve access points belonging
+    # to their assigned community.
+    # ========================================================
+
+    query = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.zone_id
+            == ambassador.zone_id
+        )
+    )
+
+
+    # ========================================================
+    # STATUS FILTER
+    # ========================================================
+
+    if (
+        status_filter
+        == "active"
+    ):
+
+        query = (
+            query
+            .filter(
+                AccessPoint.active.is_(True)
+            )
+        )
+
+
+    elif (
+        status_filter
+        == "inactive"
+    ):
+
+        query = (
+            query
+            .filter(
+                AccessPoint.active.is_(False)
+            )
+        )
+
+
+    # ========================================================
+    # ACCESS POINTS
+    # ========================================================
+
+    access_points = (
+        query
+        .order_by(
+            AccessPoint.id.desc()
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # COUNTS
+    # ========================================================
+
+    all_count = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.zone_id
+            == ambassador.zone_id
+        )
+        .count()
+    )
+
+
+    active_count = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.zone_id
+            == ambassador.zone_id,
+
+            AccessPoint.active.is_(True),
+        )
+        .count()
+    )
+
+
+    inactive_count = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.zone_id
+            == ambassador.zone_id,
+
+            AccessPoint.active.is_(False),
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # ACCESS POINT IDS
+    # ========================================================
+
+    zone_access_point_ids = [
+        access_point.id
+        for access_point in (
+            AccessPoint.query
+            .filter(
+                AccessPoint.zone_id
+                == ambassador.zone_id
+            )
+            .all()
+        )
+    ]
+
+
+    # ========================================================
+    # TOTAL QR SCANS
+    # ========================================================
+
+    total_scans = (
+        QRScan.query
+        .filter(
+            QRScan.access_point_id.in_(
+                zone_access_point_ids
+            )
+        )
+        .count()
+        if zone_access_point_ids
+        else 0
+    )
+
+
+    # ========================================================
+    # SCAN COUNTS PER ACCESS POINT
+    # ========================================================
+
+    scan_counts = {}
+
+
+    if zone_access_point_ids:
+
+        scan_rows = (
+            db.session.query(
+                QRScan.access_point_id,
+                db.func.count(
+                    QRScan.id
+                ),
+            )
+            .filter(
+                QRScan.access_point_id.in_(
+                    zone_access_point_ids
+                )
+            )
+            .group_by(
+                QRScan.access_point_id
+            )
+            .all()
+        )
+
+
+        scan_counts = {
+            access_point_id: scan_count
+            for (
+                access_point_id,
+                scan_count,
+            )
+            in scan_rows
+        }
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/access_points.html",
+
+        ambassador=ambassador,
+
+        zone=zone,
+
+        access_points=access_points,
+
+        status_filter=status_filter,
+
+        all_count=all_count,
+
+        active_count=active_count,
+
+        inactive_count=inactive_count,
+
+        total_scans=total_scans,
+
+        scan_counts=scan_counts,
+    )
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - QR ACCESS POINT DETAIL
+# ============================================================
+
+@app.route(
+    "/ambassador/access-points/<int:access_point_id>",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_access_point_detail(
+    access_point_id,
+):
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    zone = (
+        ambassador.zone
+    )
+
+
+    # ========================================================
+    # ZONE-SCOPED ACCESS POINT
+    # ========================================================
+    #
+    # SECURITY:
+    #
+    # Never use:
+    #
+    # AccessPoint.query.get_or_404(access_point_id)
+    #
+    # inside Ambassador routes.
+    #
+    # The zone restriction must be part of the query.
+    # ========================================================
+
+    access_point = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.id
+            == access_point_id,
+
+            AccessPoint.zone_id
+            == ambassador.zone_id,
+        )
+        .first()
+    )
+
+
+    if not access_point:
+
+        abort(
+            404
+        )
+
+
+    # ========================================================
+    # TOTAL SCANS
+    # ========================================================
+
+    total_scans = (
+        QRScan.query
+        .filter(
+            QRScan.access_point_id
+            == access_point.id
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # RECENT SCANS
+    # ========================================================
+
+    recent_scans = (
+        QRScan.query
+        .filter(
+            QRScan.access_point_id
+            == access_point.id
+        )
+        .order_by(
+            QRScan.id.desc()
+        )
+        .limit(
+            20
+        )
+        .all()
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/access_point_detail.html",
+
+        ambassador=ambassador,
+
+        zone=zone,
+
+        access_point=access_point,
+
+        total_scans=total_scans,
+
+        recent_scans=recent_scans,
+    )
+
 def _send_content_push_notification(content, category_record=None):
     existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
     if existing_notification:
