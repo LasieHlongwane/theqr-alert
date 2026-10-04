@@ -6067,8 +6067,11 @@ def edit_submission(
 # ============================================================
 # COMMUNITY AMBASSADOR - APPROVE SUBMISSION
 # ============================================================
+# ============================================================
+# COMMUNITY AMBASSADOR - APPROVE SUBMISSION
+# ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/submissions/<int:submission_id>/approve",
     methods=[
         "POST",
@@ -6112,7 +6115,7 @@ def ambassador_approve_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6140,7 +6143,7 @@ def ambassador_approve_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6167,7 +6170,6 @@ def ambassador_approve_submission(
     # Free content can continue without payment.
     # ========================================================
 
-    
 
     # ========================================================
     # MODERATION NOTES
@@ -6221,7 +6223,6 @@ def ambassador_approve_submission(
 
         db.session.commit()
 
-
     except Exception:
 
         db.session.rollback()
@@ -6246,7 +6247,7 @@ def ambassador_approve_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6285,7 +6286,7 @@ def ambassador_approve_submission(
 
     return redirect(
         url_for(
-            "ambassador_submission_detail",
+            "admin.ambassador_submission_detail",
             submission_id=submission.id,
         )
     )
@@ -6295,7 +6296,7 @@ def ambassador_approve_submission(
 # COMMUNITY AMBASSADOR - REQUEST CHANGES
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/submissions/<int:submission_id>/request-changes",
     methods=[
         "POST",
@@ -6348,7 +6349,7 @@ def ambassador_request_changes(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6384,7 +6385,7 @@ def ambassador_request_changes(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6402,7 +6403,7 @@ def ambassador_request_changes(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6431,7 +6432,6 @@ def ambassador_request_changes(
 
         db.session.commit()
 
-
     except Exception:
 
         db.session.rollback()
@@ -6457,7 +6457,7 @@ def ambassador_request_changes(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6496,7 +6496,7 @@ def ambassador_request_changes(
 
     return redirect(
         url_for(
-            "ambassador_submission_detail",
+            "admin.ambassador_submission_detail",
             submission_id=submission.id,
         )
     )
@@ -6506,7 +6506,7 @@ def ambassador_request_changes(
 # COMMUNITY AMBASSADOR - REJECT SUBMISSION
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/submissions/<int:submission_id>/reject",
     methods=[
         "POST",
@@ -6559,7 +6559,7 @@ def ambassador_reject_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6591,7 +6591,7 @@ def ambassador_reject_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6609,7 +6609,7 @@ def ambassador_reject_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6636,7 +6636,6 @@ def ambassador_reject_submission(
 
         db.session.commit()
 
-
     except Exception:
 
         db.session.rollback()
@@ -6661,7 +6660,7 @@ def ambassador_reject_submission(
 
         return redirect(
             url_for(
-                "ambassador_submission_detail",
+                "admin.ambassador_submission_detail",
                 submission_id=submission.id,
             )
         )
@@ -6699,18 +6698,17 @@ def ambassador_reject_submission(
 
     return redirect(
         url_for(
-            "ambassador_submission_detail",
+            "admin.ambassador_submission_detail",
             submission_id=submission.id,
         )
     )
-
 
 
 # ============================================================
 # COMMUNITY AMBASSADOR - CONTENT
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/content",
     methods=[
         "GET",
@@ -6726,7 +6724,6 @@ def ambassador_content():
     ambassador = (
         get_current_ambassador()
     )
-
 
     zone = (
         ambassador.zone
@@ -6780,12 +6777,6 @@ def ambassador_content():
 
     # ========================================================
     # BASE QUERY
-    # ========================================================
-    #
-    # SECURITY BOUNDARY:
-    #
-    # The Ambassador may only access ContentItem records
-    # belonging to their assigned zone.
     # ========================================================
 
     query = (
@@ -7007,7 +6998,7 @@ def ambassador_content():
 # COMMUNITY AMBASSADOR - CONTENT DETAIL
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/content/<int:content_id>",
     methods=[
         "GET",
@@ -7026,7 +7017,6 @@ def ambassador_content_detail(
         get_current_ambassador()
     )
 
-
     zone = (
         ambassador.zone
     )
@@ -7034,16 +7024,6 @@ def ambassador_content_detail(
 
     # ========================================================
     # ZONE-SCOPED CONTENT LOOKUP
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # Do NOT use:
-    #
-    #     ContentItem.query.get_or_404(content_id)
-    #
-    # because that would retrieve content before applying
-    # the Ambassador's community boundary.
     # ========================================================
 
     content = (
@@ -7121,7 +7101,6 @@ def ambassador_content_detail(
             "archived"
         )
 
-
     elif (
         content.pricing_model
         and
@@ -7132,7 +7111,6 @@ def ambassador_content_detail(
         operational_status = (
             "awaiting_payment"
         )
-
 
     elif (
         content.commercial_expires_at
@@ -7145,13 +7123,11 @@ def ambassador_content_detail(
             "expired"
         )
 
-
     elif content.active:
 
         operational_status = (
             "live"
         )
-
 
     else:
 
@@ -7183,12 +7159,11 @@ def ambassador_content_detail(
     )
 
 
-
 # ============================================================
 # COMMUNITY AMBASSADOR - QR ACCESS POINTS
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/access-points",
     methods=[
         "GET",
@@ -7204,7 +7179,6 @@ def ambassador_access_points():
     ambassador = (
         get_current_ambassador()
     )
-
 
     zone = (
         ambassador.zone
@@ -7248,12 +7222,6 @@ def ambassador_access_points():
     # ========================================================
     # BASE QUERY
     # ========================================================
-    #
-    # SECURITY BOUNDARY:
-    #
-    # Ambassadors may only retrieve access points belonging
-    # to their assigned community.
-    # ========================================================
 
     query = (
         AccessPoint.query
@@ -7279,7 +7247,6 @@ def ambassador_access_points():
                 AccessPoint.active.is_(True)
             )
         )
-
 
     elif (
         status_filter
@@ -7448,7 +7415,7 @@ def ambassador_access_points():
 # COMMUNITY AMBASSADOR - QR ACCESS POINT DETAIL
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/access-points/<int:access_point_id>",
     methods=[
         "GET",
@@ -7467,7 +7434,6 @@ def ambassador_access_point_detail(
         get_current_ambassador()
     )
 
-
     zone = (
         ambassador.zone
     )
@@ -7475,17 +7441,6 @@ def ambassador_access_point_detail(
 
     # ========================================================
     # ZONE-SCOPED ACCESS POINT
-    # ========================================================
-    #
-    # SECURITY:
-    #
-    # Never use:
-    #
-    # AccessPoint.query.get_or_404(access_point_id)
-    #
-    # inside Ambassador routes.
-    #
-    # The zone restriction must be part of the query.
     # ========================================================
 
     access_point = (
@@ -7561,12 +7516,11 @@ def ambassador_access_point_detail(
     )
 
 
-
 # ============================================================
 # COMMUNITY AMBASSADOR - COMMUNITY ANALYTICS
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/analytics",
     methods=[
         "GET",
@@ -7583,7 +7537,6 @@ def ambassador_analytics():
         get_current_ambassador()
     )
 
-
     zone = (
         ambassador.zone
     )
@@ -7591,12 +7544,6 @@ def ambassador_analytics():
 
     # ========================================================
     # ACCESS POINTS
-    # ========================================================
-    #
-    # SECURITY BOUNDARY:
-    #
-    # Analytics must only be built from access points
-    # belonging to the Ambassador's assigned community.
     # ========================================================
 
     access_points = (
@@ -7763,15 +7710,6 @@ def ambassador_analytics():
     # ========================================================
     # CATEGORY ACTIVITY FROM QR ENTRY POINTS
     # ========================================================
-    #
-    # This currently measures scans through access points
-    # configured to open directly into a category.
-    #
-    # This is NOT yet the same as measuring every category
-    # click inside Kalxa.
-    #
-    # EngagementEvent will later give us that deeper layer.
-    # ========================================================
 
     category_scan_counts = {}
 
@@ -7782,11 +7720,9 @@ def ambassador_analytics():
             item["access_point"]
         )
 
-
         scan_count = (
             item["scan_count"]
         )
-
 
         category_slug = (
             str(
@@ -7855,10 +7791,6 @@ def ambassador_analytics():
     # ========================================================
     # MAX SCAN VALUE
     # ========================================================
-    #
-    # Used to calculate simple percentage bars in the
-    # template without requiring a chart library.
-    # ========================================================
 
     max_access_point_scans = max(
         [
@@ -7925,6 +7857,248 @@ def ambassador_analytics():
         max_category_scans=
             max_category_scans,
     )
+
+
+# ============================================================
+# CONTENT PUSH NOTIFICATION HELPER
+# ============================================================
+
+def _send_content_push_notification(
+    content,
+    category_record=None,
+):
+
+    existing_notification = (
+        PushNotification.query
+        .filter_by(
+            content_item_id=content.id
+        )
+        .first()
+    )
+
+
+    if existing_notification:
+
+        return existing_notification
+
+
+    zone = db.session.get(
+        Zone,
+        content.zone_id,
+    )
+
+
+    if not zone:
+
+        return None
+
+
+    canonical_category = (
+        normalize_category(
+            content.category
+        )
+    )
+
+
+    if canonical_category == "jobs":
+
+        category_label = (
+            "Job Opportunity"
+        )
+
+    elif category_record:
+
+        category_label = (
+            category_record.name
+        )
+
+    else:
+
+        category_label = (
+            content.category
+            .replace(
+                "-",
+                " ",
+            )
+            .replace(
+                "_",
+                " ",
+            )
+            .title()
+        )
+
+
+    notification_title = (
+        f"New {category_label} in {zone.name}"
+    )
+
+    notification_body = (
+        content.title
+    )
+
+    notification_url = (
+        f"/listing/{content.id}"
+    )
+
+
+    push_record = PushNotification(
+        content_item_id=content.id,
+        zone_id=content.zone_id,
+        title=notification_title,
+        body=notification_body,
+        target_url=notification_url,
+        status="pending",
+        total_subscribers=0,
+        sent_count=0,
+        failed_count=0,
+        attempts=0,
+    )
+
+
+    db.session.add(
+        push_record
+    )
+
+    db.session.commit()
+
+
+    push_record.attempts = (
+        push_record.attempts
+        or 0
+    ) + 1
+
+
+    result = (
+        send_zone_push_notification(
+            zone_id=content.zone_id,
+            category=content.category,
+            title=notification_title,
+            body=notification_body,
+            url=notification_url,
+            tag=f"content-{content.id}",
+        )
+    )
+
+
+    if not isinstance(
+        result,
+        dict,
+    ):
+
+        result = {}
+
+
+    total = int(
+        result.get(
+            "total",
+            0,
+        )
+        or 0
+    )
+
+
+    sent = int(
+        result.get(
+            "sent",
+            0,
+        )
+        or 0
+    )
+
+
+    failed = int(
+        result.get(
+            "failed",
+            0,
+        )
+        or 0
+    )
+
+
+    push_record.total_subscribers = (
+        total
+    )
+
+    push_record.sent_count = (
+        sent
+    )
+
+    push_record.failed_count = (
+        failed
+    )
+
+
+    if (
+        sent > 0
+        and failed == 0
+    ):
+
+        push_record.status = (
+            "sent"
+        )
+
+        push_record.sent_at = (
+            datetime.utcnow()
+        )
+
+        push_record.last_error = (
+            None
+        )
+
+
+    elif (
+        sent > 0
+        and failed > 0
+    ):
+
+        push_record.status = (
+            "partial_failure"
+        )
+
+        push_record.sent_at = (
+            datetime.utcnow()
+        )
+
+        push_record.last_error = (
+            f"{failed} subscriber delivery failures."
+        )
+
+
+    elif total == 0:
+
+        push_record.status = (
+            "no_subscribers"
+        )
+
+        push_record.sent_at = (
+            None
+        )
+
+        push_record.last_error = (
+            "No active subscribers were found "
+            "for this zone and category."
+        )
+
+
+    else:
+
+        push_record.status = (
+            "failed"
+        )
+
+        push_record.sent_at = (
+            None
+        )
+
+        push_record.last_error = (
+            "Push delivery failed for all subscribers."
+        )
+
+
+    db.session.commit()
+
+
+    return push_record
 
 def _send_content_push_notification(content, category_record=None):
     existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
