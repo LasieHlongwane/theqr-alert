@@ -278,6 +278,11 @@
             line-height: 1.5;
         }
 
+
+        /* =====================================================
+           PAYMENT
+        ===================================================== */
+
         .payment {
             margin-top: 10px;
             font-size: 9px;
@@ -288,8 +293,82 @@
             color: #277044;
         }
 
+        .payment-waived {
+            color: #277044;
+        }
+
         .payment-unpaid {
             color: #8a6220;
+        }
+
+        .payment-failed {
+            color: #9a3434;
+        }
+
+        .payment-refunded {
+            color: #9a3434;
+        }
+
+
+        /* =====================================================
+           MODERATION AVAILABILITY
+        ===================================================== */
+
+        .moderation-state {
+            margin-top: 12px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .moderation-ready {
+            border:
+                1px solid
+                rgba(
+                    39,
+                    112,
+                    68,
+                    0.18
+                );
+            background: #edf7f0;
+            color: #24613a;
+        }
+
+        .moderation-locked {
+            border:
+                1px solid
+                rgba(
+                    138,
+                    98,
+                    32,
+                    0.18
+                );
+            background: #fff7e6;
+            color: #76540c;
+        }
+
+        .moderation-complete {
+            border:
+                1px solid
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
+            background: #f2f3f4;
+            color: #676d74;
+        }
+
+        .moderation-state-title {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 9px;
+            font-weight: 950;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
         }
 
 
@@ -368,6 +447,9 @@
     <p class="intro">
         Review content submitted for
         {{ zone.name }}.
+
+        Commercial submissions can only be moderated
+        after payment has been confirmed by Kalxa Admin.
     </p>
 
 
@@ -431,6 +513,27 @@
         <div class="submission-list">
 
             {% for submission in submissions %}
+
+
+                <!-- =========================================
+                     MODERATION GATE
+
+                     Free content:
+                         Ready immediately.
+
+                     Commercial content:
+                         Ready only after payment is
+                         PAID or WAIVED.
+                ========================================== -->
+
+                {% set moderation_unlocked =
+                    not submission.pricing_model
+                    or submission.payment_status in [
+                        'paid',
+                        'waived'
+                    ]
+                %}
+
 
                 <a
                     class="submission-card"
@@ -497,6 +600,154 @@
 
                     </div>
 
+
+                    <!-- =====================================
+                         PENDING MODERATION STATE
+                    ====================================== -->
+
+                    {% if submission.status == "pending" %}
+
+
+                        <!-- =============================
+                             PAYMENT CLEARED / FREE
+                        ============================== -->
+
+                        {% if moderation_unlocked %}
+
+                            <div
+                                class="
+                                    moderation-state
+                                    moderation-ready
+                                "
+                            >
+
+                                <span class="moderation-state-title">
+                                    ✓ Ready for review
+                                </span>
+
+                                {% if submission.pricing_model %}
+
+                                    Payment has been confirmed
+                                    by Kalxa Admin.
+
+                                    Open this submission to
+                                    approve, request changes
+                                    or reject it.
+
+                                {% else %}
+
+                                    This is free content and
+                                    does not require payment
+                                    confirmation.
+
+                                    Open this submission to
+                                    review it.
+
+                                {% endif %}
+
+                            </div>
+
+
+                        <!-- =============================
+                             PAYMENT NOT CLEARED
+                        ============================== -->
+
+                        {% else %}
+
+                            <div
+                                class="
+                                    moderation-state
+                                    moderation-locked
+                                "
+                            >
+
+                                <span class="moderation-state-title">
+                                    🔒 Moderation locked
+                                </span>
+
+                                Payment is waiting to be
+                                confirmed by Kalxa Admin.
+
+                                You can view the submission,
+                                but moderation controls are
+                                not yet available.
+
+                            </div>
+
+                        {% endif %}
+
+
+                    <!-- =====================================
+                         NEEDS CHANGES
+                    ====================================== -->
+
+                    {% elif submission.status == "needs_changes" %}
+
+                        <div
+                            class="
+                                moderation-state
+                                moderation-complete
+                            "
+                        >
+
+                            <span class="moderation-state-title">
+                                Changes requested
+                            </span>
+
+                            Waiting for the submitter to
+                            make the requested corrections
+                            and resubmit the content.
+
+                        </div>
+
+
+                    <!-- =====================================
+                         APPROVED
+                    ====================================== -->
+
+                    {% elif submission.status == "approved" %}
+
+                        <div
+                            class="
+                                moderation-state
+                                moderation-ready
+                            "
+                        >
+
+                            <span class="moderation-state-title">
+                                ✓ Moderation complete
+                            </span>
+
+                            This submission has been
+                            approved.
+
+                        </div>
+
+
+                    <!-- =====================================
+                         REJECTED
+                    ====================================== -->
+
+                    {% elif submission.status == "rejected" %}
+
+                        <div
+                            class="
+                                moderation-state
+                                moderation-complete
+                            "
+                        >
+
+                            <span class="moderation-state-title">
+                                Moderation complete
+                            </span>
+
+                            This submission has been
+                            rejected.
+
+                        </div>
+
+                    {% endif %}
+
                 </a>
 
             {% endfor %}
@@ -506,11 +757,22 @@
     {% else %}
 
         <div class="empty">
-            No {{ selected_status.replace(
-                '_',
-                ' '
-            ) }} submissions for
-            {{ zone.name }}.
+
+            {% if selected_status == "all" %}
+
+                No submissions for
+                {{ zone.name }}.
+
+            {% else %}
+
+                No {{ selected_status.replace(
+                    '_',
+                    ' '
+                ) }} submissions for
+                {{ zone.name }}.
+
+            {% endif %}
+
         </div>
 
     {% endif %}
