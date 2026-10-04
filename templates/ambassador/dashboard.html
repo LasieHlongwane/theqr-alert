@@ -41,6 +41,10 @@
                 sans-serif;
         }
 
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
 
         /* =====================================================
            TOP BAR
@@ -157,6 +161,11 @@
             background: #fff7f7;
         }
 
+        .flash-info {
+            border-color: #aebfd1;
+            background: #f5f9ff;
+        }
+
 
         /* =====================================================
            COMMUNITY CARD
@@ -250,15 +259,341 @@
 
 
         /* =====================================================
+           SECTION
+        ===================================================== */
+
+        .section {
+            margin-top: 26px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .section-eyebrow {
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.9px;
+        }
+
+        .section-title {
+            margin-top: 5px;
+            font-size: 18px;
+            font-weight: 950;
+        }
+
+        .section-link {
+            color: #34383d;
+            font-size: 10px;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           ATTENTION GRID
+        ===================================================== */
+
+        .attention-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 12px;
+        }
+
+        .attention-card {
+            position: relative;
+            display: block;
+            min-height: 145px;
+            padding: 19px;
+            border: 1px solid #d8dbdf;
+            border-radius: 15px;
+            background: #ffffff;
+            color: #17191d;
+            text-decoration: none;
+            transition:
+                transform 0.12s ease,
+                box-shadow 0.12s ease;
+        }
+
+        .attention-card:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 8px 22px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
+        }
+
+        .attention-card:active {
+            transform: scale(0.985);
+        }
+
+        .attention-card-primary {
+            border-color: #bbbfc5;
+        }
+
+        .attention-card-changes {
+            background: #fffaf1;
+            border-color: #ead9b7;
+        }
+
+        .attention-label {
+            color: #737981;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .attention-number {
+            margin-top: 11px;
+            font-size: 38px;
+            line-height: 1;
+            font-weight: 950;
+            letter-spacing: -1.5px;
+        }
+
+        .attention-description {
+            margin-top: 9px;
+            color: #71777f;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
+        .attention-arrow {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            color: #777d85;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           COMMUNITY METRICS
+        ===================================================== */
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 10px;
+        }
+
+        .metric-card {
+            min-height: 115px;
+            padding: 16px;
+            border: 1px solid #d9dce0;
+            border-radius: 13px;
+            background: #ffffff;
+        }
+
+        .metric-card-unpaid {
+            background: #fffaf1;
+            border-color: #ead9b7;
+        }
+
+        .metric-label {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .metric-number {
+            margin-top: 10px;
+            font-size: 28px;
+            line-height: 1;
+            font-weight: 950;
+        }
+
+        .metric-description {
+            margin-top: 8px;
+            color: #7b8189;
+            font-size: 9px;
+            line-height: 1.4;
+        }
+
+        .read-only-badge {
+            display: inline-flex;
+            margin-top: 8px;
+            padding: 4px 6px;
+            border-radius: 999px;
+            background: #f2e4c7;
+            color: #725820;
+            font-size: 7px;
+            font-weight: 950;
+            letter-spacing: 0.5px;
+        }
+
+
+        /* =====================================================
+           RECENT SUBMISSIONS
+        ===================================================== */
+
+        .recent-list {
+            overflow: hidden;
+            border: 1px solid #d8dbdf;
+            border-radius: 15px;
+            background: #ffffff;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 16px 17px;
+            border-bottom: 1px solid #eceef0;
+            color: #17191d;
+            text-decoration: none;
+        }
+
+        .recent-item:last-child {
+            border-bottom: 0;
+        }
+
+        .recent-item:hover {
+            background: #fafafa;
+        }
+
+        .recent-item:active {
+            background: #f3f4f5;
+        }
+
+        .recent-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .recent-title {
+            overflow: hidden;
+            color: #202328;
+            font-size: 12px;
+            font-weight: 900;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .recent-meta {
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            color: #81868d;
+            font-size: 9px;
+            line-height: 1.4;
+        }
+
+        .recent-category {
+            font-weight: 800;
+            text-transform: capitalize;
+        }
+
+        .recent-dot {
+            color: #b0b4b9;
+        }
+
+        .recent-arrow {
+            flex: 0 0 auto;
+            color: #737981;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           STATUS BADGES
+        ===================================================== */
+
+        .submission-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 7px;
+            border-radius: 999px;
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .submission-status-pending {
+            background: #fff0ce;
+            color: #765a19;
+        }
+
+        .submission-status-needs_changes {
+            background: #f7e6c7;
+            color: #79561d;
+        }
+
+        .submission-status-approved {
+            background: #e3f2e7;
+            color: #28633b;
+        }
+
+        .submission-status-rejected {
+            background: #f6dddd;
+            color: #823838;
+        }
+
+        .submission-status-default {
+            background: #eceef0;
+            color: #646a71;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty-state {
+            padding: 26px 18px;
+            text-align: center;
+        }
+
+        .empty-title {
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .empty-description {
+            margin-top: 6px;
+            color: #858a91;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
            COMMUNITY OPERATIONS
         ===================================================== */
 
         .community-operations {
-            margin-top: 18px;
+            margin-top: 26px;
             padding: 20px;
-            border:
-                1px solid
-                #d8dbdf;
+            border: 1px solid #d8dbdf;
             border-radius: 14px;
             background: #f7f8f9;
         }
@@ -300,7 +635,6 @@
             text-decoration: none;
             font-size: 10px;
             font-weight: 900;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .operations-button:active {
@@ -332,10 +666,44 @@
         ===================================================== */
 
         @media (
+            max-width: 700px
+        ) {
+
+            .metrics-grid {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+            }
+
+        }
+
+
+        @media (
             max-width: 600px
         ) {
 
+            .page {
+                padding:
+                    24px
+                    14px
+                    50px;
+            }
+
+            .topbar-inner {
+                padding:
+                    14px;
+            }
+
             .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .attention-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -353,6 +721,21 @@
 
             .operations-button {
                 width: 100%;
+            }
+
+            .section-header {
+                align-items: center;
+            }
+
+        }
+
+
+        @media (
+            max-width: 380px
+        ) {
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
             }
 
         }
@@ -420,7 +803,8 @@
 
     <p class="welcome">
         Welcome, {{ ambassador.name }}.
-        This is your assigned Kalxa community.
+        Here is what is happening in your assigned
+        Kalxa community.
     </p>
 
 
@@ -453,15 +837,10 @@
 
 
     <!-- =====================================================
-         COMMUNITY
+         COMMUNITY IDENTITY
     ====================================================== -->
 
     <div class="community-card">
-
-
-        <!-- =================================================
-             COMMUNITY IDENTITY
-        ================================================== -->
 
         <div class="community-label">
             ASSIGNED COMMUNITY
@@ -519,74 +898,513 @@
 
         </div>
 
+    </div>
 
-        <!-- =================================================
-             COMMUNITY OPERATIONS
-        ================================================== -->
 
-        <div class="community-operations">
+    <!-- =====================================================
+         NEEDS ATTENTION
+    ====================================================== -->
 
-            <div class="operations-eyebrow">
-                LOCAL MODERATION
-            </div>
+    <div class="section">
 
-            <div class="operations-title">
-                Community Submissions
-            </div>
+        <div class="section-header">
 
-            <div class="operations-description">
+            <div>
 
-                Review content submitted for
-                <strong>{{ zone.name }}</strong>.
+                <div class="section-eyebrow">
+                    NEEDS ATTENTION
+                </div>
 
-                Your moderation area is automatically
-                restricted to your assigned community.
+                <div class="section-title">
+                    Moderation Queue
+                </div>
 
             </div>
+
+
+            <a
+                href="{{ url_for(
+                    'ambassador_submissions'
+                ) }}"
+                class="section-link"
+            >
+                View all →
+            </a>
+
+        </div>
+
+
+        <div class="attention-grid">
 
 
             <!-- =============================================
-                 ACTIONS
+                 PENDING
             ============================================== -->
 
-            <div class="operations-actions">
+            <a
+                href="{{ url_for(
+                    'ambassador_submissions',
+                    status='pending'
+                ) }}"
+                class="
+                    attention-card
+                    attention-card-primary
+                "
+            >
 
-                <a
-                    href="{{ url_for(
-                        'ambassador_submissions'
-                    ) }}"
-                    class="operations-button"
-                >
-                    Review Submissions
-                    <span>
-                        →
-                    </span>
-                </a>
+                <div class="attention-arrow">
+                    →
+                </div>
 
-            </div>
+                <div class="attention-label">
+                    PENDING REVIEWS
+                </div>
+
+                <div class="attention-number">
+                    {{ pending_count | default(0) }}
+                </div>
+
+                <div class="attention-description">
+                    New submissions waiting for your
+                    moderation decision.
+                </div>
+
+            </a>
 
 
             <!-- =============================================
-                 SCOPE
+                 NEEDS CHANGES
             ============================================== -->
 
-            <div class="scope-note">
+            <a
+                href="{{ url_for(
+                    'ambassador_submissions',
+                    status='needs_changes'
+                ) }}"
+                class="
+                    attention-card
+                    attention-card-changes
+                "
+            >
 
-                <strong>
-                    Community scope:
-                </strong>
+                <div class="attention-arrow">
+                    →
+                </div>
 
-                You can only access submissions belonging
-                to {{ zone.name }}.
+                <div class="attention-label">
+                    NEEDS CHANGES
+                </div>
 
-                Payment information is visible for review,
-                but financial controls remain managed
-                centrally by Kalxa.
+                <div class="attention-number">
+                    {{ needs_changes_count | default(0) }}
+                </div>
+
+                <div class="attention-description">
+                    Submissions returned to the owner
+                    for corrections before resubmission.
+                </div>
+
+            </a>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         COMMUNITY OVERVIEW
+    ====================================================== -->
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-eyebrow">
+                    COMMUNITY
+                </div>
+
+                <div class="section-title">
+                    Operations Overview
+                </div>
 
             </div>
 
         </div>
 
+
+        <div class="metrics-grid">
+
+
+            <!-- =============================================
+                 LIVE CONTENT
+            ============================================== -->
+
+            <div class="metric-card">
+
+                <div class="metric-label">
+                    LIVE CONTENT
+                </div>
+
+                <div class="metric-number">
+                    {{ live_content_count | default(0) }}
+                </div>
+
+                <div class="metric-description">
+                    Active content currently live
+                    in {{ zone.name }}.
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 UNPAID
+            ============================================== -->
+
+            <div
+                class="
+                    metric-card
+                    metric-card-unpaid
+                "
+            >
+
+                <div class="metric-label">
+                    UNPAID LISTINGS
+                </div>
+
+                <div class="metric-number">
+                    {{ unpaid_count | default(0) }}
+                </div>
+
+                <div class="metric-description">
+                    Approved commercial listings
+                    still awaiting payment.
+                </div>
+
+                <div class="read-only-badge">
+                    READ ONLY
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 APPROVED
+            ============================================== -->
+
+            <div class="metric-card">
+
+                <div class="metric-label">
+                    APPROVED
+                </div>
+
+                <div class="metric-number">
+                    {{ approved_count | default(0) }}
+                </div>
+
+                <div class="metric-description">
+                    Community submissions approved
+                    through moderation.
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 REJECTED
+            ============================================== -->
+
+            <div class="metric-card">
+
+                <div class="metric-label">
+                    REJECTED
+                </div>
+
+                <div class="metric-number">
+                    {{ rejected_count | default(0) }}
+                </div>
+
+                <div class="metric-description">
+                    Submissions that did not meet
+                    publishing requirements.
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RECENT SUBMISSIONS
+    ====================================================== -->
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-eyebrow">
+                    RECENT ACTIVITY
+                </div>
+
+                <div class="section-title">
+                    Recent Submissions
+                </div>
+
+            </div>
+
+
+            <a
+                href="{{ url_for(
+                    'ambassador_submissions'
+                ) }}"
+                class="section-link"
+            >
+                All submissions →
+            </a>
+
+        </div>
+
+
+        <div class="recent-list">
+
+            {% if recent_submissions %}
+
+                {% for submission in recent_submissions %}
+
+                    <a
+                        href="{{ url_for(
+                            'ambassador_submission_detail',
+                            submission_id=submission.id
+                        ) }}"
+                        class="recent-item"
+                    >
+
+                        <div class="recent-main">
+
+                            <div class="recent-title">
+
+                                {{
+                                    submission.business_name
+                                    or
+                                    submission.title
+                                    or
+                                    'Untitled Submission'
+                                }}
+
+                            </div>
+
+
+                            <div class="recent-meta">
+
+                                <span class="recent-category">
+                                    {{
+                                        submission.category
+                                        or
+                                        'General'
+                                    }}
+                                </span>
+
+
+                                <span class="recent-dot">
+                                    •
+                                </span>
+
+
+                                {% if submission.status == 'pending' %}
+
+                                    <span
+                                        class="
+                                            submission-status
+                                            submission-status-pending
+                                        "
+                                    >
+                                        Pending
+                                    </span>
+
+
+                                {% elif submission.status == 'needs_changes' %}
+
+                                    <span
+                                        class="
+                                            submission-status
+                                            submission-status-needs_changes
+                                        "
+                                    >
+                                        Needs Changes
+                                    </span>
+
+
+                                {% elif submission.status == 'approved' %}
+
+                                    <span
+                                        class="
+                                            submission-status
+                                            submission-status-approved
+                                        "
+                                    >
+                                        Approved
+                                    </span>
+
+
+                                {% elif submission.status == 'rejected' %}
+
+                                    <span
+                                        class="
+                                            submission-status
+                                            submission-status-rejected
+                                        "
+                                    >
+                                        Rejected
+                                    </span>
+
+
+                                {% else %}
+
+                                    <span
+                                        class="
+                                            submission-status
+                                            submission-status-default
+                                        "
+                                    >
+                                        {{
+                                            submission.status
+                                            or
+                                            'Unknown'
+                                        }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                {% if submission.created_at %}
+
+                                    <span class="recent-dot">
+                                        •
+                                    </span>
+
+                                    <span>
+                                        {{
+                                            submission.created_at.strftime(
+                                                '%d %b %Y'
+                                            )
+                                        }}
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="recent-arrow">
+                            →
+                        </div>
+
+                    </a>
+
+                {% endfor %}
+
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-title">
+                        No submissions yet
+                    </div>
+
+                    <div class="empty-description">
+                        New submissions for
+                        {{ zone.name }} will appear here.
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         COMMUNITY OPERATIONS
+    ====================================================== -->
+
+    <div class="community-operations">
+
+        <div class="operations-eyebrow">
+            LOCAL MODERATION
+        </div>
+
+        <div class="operations-title">
+            Community Submissions
+        </div>
+
+        <div class="operations-description">
+
+            Review content submitted for
+            <strong>{{ zone.name }}</strong>.
+
+            Your moderation area is automatically
+            restricted to your assigned community.
+
+        </div>
+
+
+        <!-- =================================================
+             ACTION
+        ================================================== -->
+
+        <div class="operations-actions">
+
+            <a
+                href="{{ url_for(
+                    'ambassador_submissions'
+                ) }}"
+                class="operations-button"
+            >
+                Review Submissions
+
+                <span>
+                    →
+                </span>
+            </a>
+
+        </div>
+
+
+        <!-- =================================================
+             SCOPE
+        ================================================== -->
+
+        <div class="scope-note">
+
+            <strong>
+                Community scope:
+            </strong>
+
+            You can review, approve, request corrections
+            and reject submissions belonging to
+            {{ zone.name }}.
+
+            Payment status is visible for operational
+            awareness only.
+
+            Pricing, payment confirmation, refunds and
+            other financial controls remain managed
+            centrally by Kalxa.
+
+        </div>
 
     </div>
 
