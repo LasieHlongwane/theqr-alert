@@ -604,7 +604,16 @@ class CommunityAmbassador(db.Model):
         default=True,
         index=True,
     )
+        
+# ========================================================
+# CONTENT CREATION PERMISSION
+# ========================================================
 
+    can_add_content = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
 
     # ========================================================
     # TIMESTAMPS
