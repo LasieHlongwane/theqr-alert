@@ -3797,7 +3797,7 @@ def ambassador_required(
 # ADMIN - CREATE COMMUNITY AMBASSADOR
 # ============================================================
 
-@app.route(
+@app_bp.route(
     "/admin/community-ambassadors/new",
     methods=[
         "GET",
