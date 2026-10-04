@@ -7970,6 +7970,179 @@ def ambassador_analytics():
 
 
 # ============================================================
+# AMBASSADOR CONTENT CREATION PERMISSION
+# ============================================================
+
+def ambassador_content_creation_required(
+    view_function,
+):
+
+    @wraps(
+        view_function
+    )
+    def wrapped_view(
+        *args,
+        **kwargs,
+    ):
+
+        # ====================================================
+        # AUTHENTICATION
+        # ====================================================
+
+        ambassador = (
+            get_current_ambassador()
+        )
+
+
+        if not ambassador:
+
+            clear_ambassador_session()
+
+            flash(
+                (
+                    "Please log in as a "
+                    "Community Ambassador."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_login"
+                )
+            )
+
+
+        # ====================================================
+        # ACCOUNT STATUS
+        # ====================================================
+
+        if not ambassador.active:
+
+            clear_ambassador_session()
+
+            flash(
+                (
+                    "Your Community Ambassador "
+                    "account is currently inactive."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_login"
+                )
+            )
+
+
+        # ====================================================
+        # COMMUNITY STATUS
+        # ====================================================
+
+        if (
+            not ambassador.zone
+            or not ambassador.zone.active
+        ):
+
+            flash(
+                (
+                    "Your assigned Kalxa community "
+                    "is currently unavailable."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_dashboard"
+                )
+            )
+
+
+        # ====================================================
+        # CONTENT CREATION PERMISSION
+        # ====================================================
+
+        if not ambassador.can_add_content:
+
+            flash(
+                (
+                    "You do not currently have "
+                    "permission to add community content."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin.ambassador_dashboard"
+                )
+            )
+
+
+        # ====================================================
+        # AUTHORIZED
+        # ====================================================
+
+        return view_function(
+            *args,
+            **kwargs,
+        )
+
+
+    return wrapped_view
+
+
+# ============================================================
+# AMBASSADOR - ADD COMMUNITY CONTENT
+# ============================================================
+
+@admin_bp.route(
+    "/ambassador/content/new",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+@ambassador_content_creation_required
+def ambassador_create_content():
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    if not ambassador:
+
+        abort(403)
+
+
+    # ========================================================
+    # IMPORTANT
+    # ========================================================
+    #
+    # The Ambassador does NOT select a Zone.
+    #
+    # Their CommunityAmbassador.zone_id is the authoritative
+    # zone for all content they create.
+    #
+    # ========================================================
+
+    zone = ambassador.zone
+
+
+    return render_template(
+        "ambassador/content_create.html",
+        ambassador=ambassador,
+        zone=zone,
+    )
+
+# ============================================================
 # ADMIN - COMMUNITY AMBASSADORS
 # ============================================================
 
@@ -8217,6 +8390,162 @@ def admin_toggle_community_ambassador_status(
         )
     )
 
+
+# ============================================================
+# ADMIN - TOGGLE AMBASSADOR CONTENT CREATION PERMISSION
+# ============================================================
+
+@admin_bp.route(
+    (
+        "/community-ambassadors/"
+        "<int:ambassador_id>/toggle-content-permission"
+    ),
+    methods=[
+        "POST",
+    ],
+)
+def admin_toggle_ambassador_content_permission(
+    ambassador_id,
+):
+
+    # ========================================================
+    # ADMIN AUTHENTICATION
+    # ========================================================
+
+    if not session.get(
+        "lac_admin"
+    ):
+
+        flash(
+            "Please log in as an administrator.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.login"
+            )
+        )
+
+
+    # ========================================================
+    # LOAD AMBASSADOR
+    # ========================================================
+
+    ambassador = db.session.get(
+        CommunityAmbassador,
+        ambassador_id,
+    )
+
+
+    if not ambassador:
+
+        abort(404)
+
+
+    # ========================================================
+    # TOGGLE PERMISSION
+    # ========================================================
+
+    ambassador.can_add_content = (
+        not bool(
+            ambassador.can_add_content
+        )
+    )
+
+
+    # ========================================================
+    # SAVE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Failed to change Ambassador "
+                "content permission. "
+                "ambassador_id=%s"
+            ),
+            ambassador.id,
+        )
+
+        flash(
+            (
+                "The Ambassador content permission "
+                "could not be changed."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.admin_manage_community_ambassador",
+                ambassador_id=ambassador.id,
+            )
+        )
+
+
+    # ========================================================
+    # LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Admin] Ambassador content "
+            "permission changed "
+            "ambassador_id=%s "
+            "zone_id=%s "
+            "can_add_content=%s"
+        ),
+        ambassador.id,
+        ambassador.zone_id,
+        ambassador.can_add_content,
+    )
+
+
+    # ========================================================
+    # SUCCESS MESSAGE
+    # ========================================================
+
+    if ambassador.can_add_content:
+
+        flash(
+            (
+                f"{ambassador.name} can now add "
+                f"content to "
+                f"{ambassador.zone.name}."
+            ),
+            "success",
+        )
+
+    else:
+
+        flash(
+            (
+                f"{ambassador.name} can no longer "
+                f"add community content."
+            ),
+            "success",
+        )
+
+
+    # ========================================================
+    # RETURN TO MANAGE PAGE
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "admin.admin_manage_community_ambassador",
+            ambassador_id=ambassador.id,
+        )
+    )
 # ============================================================
 # ADMIN - MANAGE COMMUNITY AMBASSADOR
 # ============================================================
