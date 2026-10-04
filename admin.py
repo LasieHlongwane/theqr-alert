@@ -7194,77 +7194,547 @@ def approve_submission(
     )
 
 
-@admin_bp.route("/submissions/<int:submission_id>/confirm-payment", methods=["POST"])
-def confirm_submission_payment(submission_id):
+@admin_bp.route(
+    "/submissions/<int:submission_id>/confirm-payment",
+    methods=[
+        "POST",
+    ],
+)
+def confirm_submission_payment(
+    submission_id,
+):
+
+    # ========================================================
+    # ADMIN AUTHENTICATION
+    # ========================================================
+
     auth = require_admin()
+
     if auth:
         return auth
 
-    submission = PendingSubmission.query.get_or_404(submission_id)
-    if submission.status != "approved":
-        flash("Only approved submissions can have payment confirmed.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
+
+    # ========================================================
+    # LOAD SUBMISSION
+    # ========================================================
+
+    submission = (
+        PendingSubmission.query
+        .get_or_404(
+            submission_id
+        )
+    )
+
+
+    # ========================================================
+    # SUBMISSION MUST ALREADY BE APPROVED
+    # ========================================================
+
+    if (
+        submission.status
+        != "approved"
+    ):
+
+        flash(
+            (
+                "Only approved submissions can "
+                "have payment confirmed."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # PUBLISHED CONTENT MUST EXIST
+    # ========================================================
+
     if not submission.published_content_id:
-        flash("This submission does not have a published content record.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
 
-    content = db.session.get(ContentItem, submission.published_content_id)
+        flash(
+            (
+                "This submission does not have "
+                "a published content record."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # LOAD CONTENT ITEM
+    # ========================================================
+
+    content = (
+        db.session.get(
+            ContentItem,
+            submission.published_content_id,
+        )
+    )
+
+
     if not content:
-        flash("The published listing could not be found.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
-    if normalize_category(content.category) == "jobs":
-        flash("Kalxa Job opportunities are free. No payment confirmation is required.", "info")
-        return redirect(url_for("admin.submissions", status="approved"))
 
-    if submission.organizer_id and content.organizer_id is None:
-        content.organizer_id = submission.organizer_id
-    elif submission.organizer_id and content.organizer_id != submission.organizer_id:
-        flash("Payment cannot be confirmed because the listing ownership does not match.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
+        flash(
+            (
+                "The published listing could "
+                "not be found."
+            ),
+            "error",
+        )
 
-    if content.pricing_model not in {PRICING_MODEL_PRESENCE, PRICING_MODEL_CAMPAIGN}:
-        flash("This listing does not use a Kalxa commercial package.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
-    if content.payment_status == "paid":
-        flash("Payment has already been confirmed for this listing.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
-    if content.payment_status == "waived":
-        flash("Payment for this listing has been waived.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
-    if content.payment_status != "unpaid":
-        flash("Payment cannot be confirmed from its current status.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
-    if not content.commercial_duration_days or content.amount_due is None:
-        flash("This listing has an incomplete commercial package.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # JOBS ARE FREE
+    # ========================================================
+
+    if (
+        normalize_category(
+            content.category
+        )
+        == "jobs"
+    ):
+
+        flash(
+            (
+                "Kalxa Job opportunities are free. "
+                "No payment confirmation is required."
+            ),
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # OWNERSHIP CONSISTENCY
+    # ========================================================
+
+    if (
+        submission.organizer_id
+        and
+        content.organizer_id is None
+    ):
+
+        content.organizer_id = (
+            submission.organizer_id
+        )
+
+
+    elif (
+        submission.organizer_id
+        and
+        content.organizer_id
+        != submission.organizer_id
+    ):
+
+        db.session.rollback()
+
+        flash(
+            (
+                "Payment cannot be confirmed because "
+                "the listing ownership does not match."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # COMMERCIAL PACKAGE VALIDATION
+    # ========================================================
+
+    if (
+        content.pricing_model
+        not in {
+            PRICING_MODEL_PRESENCE,
+            PRICING_MODEL_CAMPAIGN,
+        }
+    ):
+
+        db.session.rollback()
+
+        flash(
+            (
+                "This listing does not use a "
+                "Kalxa commercial package."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # PAYMENT ALREADY CONFIRMED
+    # ========================================================
+
+    if (
+        content.payment_status
+        == "paid"
+    ):
+
+        db.session.rollback()
+
+        flash(
+            (
+                "Payment has already been confirmed "
+                "for this listing."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # PAYMENT WAIVED
+    # ========================================================
+
+    if (
+        content.payment_status
+        == "waived"
+    ):
+
+        db.session.rollback()
+
+        flash(
+            (
+                "Payment for this listing has "
+                "been waived."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # PAYMENT MUST CURRENTLY BE UNPAID
+    # ========================================================
+
+    if (
+        content.payment_status
+        != "unpaid"
+    ):
+
+        db.session.rollback()
+
+        flash(
+            (
+                "Payment cannot be confirmed "
+                "from its current status."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # PACKAGE MUST BE COMPLETE
+    # ========================================================
+
+    if (
+        not content.commercial_duration_days
+        or
+        content.amount_due is None
+    ):
+
+        db.session.rollback()
+
+        flash(
+            (
+                "This listing has an incomplete "
+                "commercial package."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # CONFIRM PAYMENT + ACTIVATE LISTING
+    # ========================================================
 
     try:
-        duration_days = int(content.commercial_duration_days)
-        if duration_days <= 0:
-            raise ValueError("Invalid commercial duration.")
-        now = datetime.utcnow()
-        content.payment_status = "paid"
-        content.amount_paid = content.amount_due
-        content.paid_at = now
-        content.commercial_starts_at = now
-        content.commercial_expires_at = now + timedelta(days=duration_days)
-        submission.payment_status = "paid"
+
+        # ====================================================
+        # VALIDATE PACKAGE DURATION
+        # ====================================================
+
+        duration_days = int(
+            content.commercial_duration_days
+        )
+
+
+        if (
+            duration_days
+            <= 0
+        ):
+
+            raise ValueError(
+                "Invalid commercial duration."
+            )
+
+
+        # ====================================================
+        # ACTIVATION TIME
+        # ====================================================
+
+        now = (
+            datetime.utcnow()
+        )
+
+
+        # ====================================================
+        # CONTENT PAYMENT
+        # ====================================================
+
+        content.payment_status = (
+            "paid"
+        )
+
+
+        content.amount_paid = (
+            content.amount_due
+        )
+
+
+        content.paid_at = (
+            now
+        )
+
+
+        # ====================================================
+        # COMMERCIAL PERIOD
+        # ========================================================
+        #
+        # The paid package begins NOW.
+        #
+        # This ensures the business does not lose package
+        # days while waiting for moderation/payment.
+        # ====================================================
+
+        content.commercial_starts_at = (
+            now
+        )
+
+
+        content.commercial_expires_at = (
+            now
+            +
+            timedelta(
+                days=
+                    duration_days
+            )
+        )
+
+
+        # ====================================================
+        # ACTIVATE PUBLIC LISTING
+        # ========================================================
+        #
+        # _publish_pending_submission() intentionally creates
+        # unpaid commercial listings with:
+        #
+        #     active = False
+        #
+        # Once payment is confirmed, the listing becomes
+        # publicly available.
+        # ====================================================
+
+        content.active = (
+            True
+        )
+
+
+        # ====================================================
+        # KEEP SUBMISSION PAYMENT STATE IN SYNC
+        # ========================================================
+
+        submission.payment_status = (
+            "paid"
+        )
+
+
+        # ====================================================
+        # COMMIT PAYMENT + ACTIVATION TOGETHER
+        # ========================================================
+
         db.session.commit()
+
+
     except Exception as exc:
+
         db.session.rollback()
-        current_app.logger.exception("[Kalxa Payment] Unable to confirm payment submission_id=%s content_id=%s error=%s", submission.id, content.id, exc)
-        flash("Unable to confirm payment.", "error")
-        return redirect(url_for("admin.submissions", status="approved"))
 
-    if content.active and content.notification_eligible:
+
+        current_app.logger.exception(
+            (
+                "[Kalxa Payment] "
+                "Unable to confirm payment "
+                "submission_id=%s "
+                "content_id=%s "
+                "error=%s"
+            ),
+            submission.id,
+            content.id,
+            exc,
+        )
+
+
+        flash(
+            "Unable to confirm payment.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin.submissions",
+                status="approved",
+            )
+        )
+
+
+    # ========================================================
+    # PAYMENT ACTIVATION LOG
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Kalxa Payment] "
+            "Payment confirmed and listing activated "
+            "submission_id=%s "
+            "content_id=%s "
+            "amount=%s "
+            "duration_days=%s "
+            "expires_at=%s"
+        ),
+        submission.id,
+        content.id,
+        content.amount_paid,
+        duration_days,
+        content.commercial_expires_at,
+    )
+
+
+    # ========================================================
+    # PUSH NOTIFICATION
+    # ========================================================
+    #
+    # Payment and activation have already been committed.
+    #
+    # A push notification failure must therefore NOT undo
+    # the successful payment or deactivate the listing.
+    # ========================================================
+
+    if (
+        content.active
+        and
+        content.notification_eligible
+    ):
+
         try:
-            _send_content_push_notification(content)
-        except Exception as exc:
-            db.session.rollback()
-            current_app.logger.exception("[Kalxa Push] Payment activation notification failed submission_id=%s content_id=%s error=%s", submission.id, content.id, exc)
 
-    flash("Payment confirmed. The Kalxa listing is now live.", "success")
-    return redirect(url_for("admin.submissions", status="approved"))
+            _send_content_push_notification(
+                content
+            )
+
+
+        except Exception as exc:
+
+            current_app.logger.exception(
+                (
+                    "[Kalxa Push] "
+                    "Payment activation notification "
+                    "failed "
+                    "submission_id=%s "
+                    "content_id=%s "
+                    "error=%s"
+                ),
+                submission.id,
+                content.id,
+                exc,
+            )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            "Payment confirmed. "
+            "The Kalxa listing is now live."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin.submissions",
+            status="approved",
+        )
+    )
 
 
 @admin_bp.route("/submissions/<int:submission_id>/reject", methods=["POST"])
