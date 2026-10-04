@@ -130,6 +130,12 @@
             color: #7d3030;
         }
 
+        .flash-info {
+            border-color: #aabbd1;
+            background: #f5f8fc;
+            color: #36516f;
+        }
+
 
         /* =====================================================
            CARD
@@ -255,6 +261,10 @@
 
         .payment-unpaid {
             color: #8a6220;
+        }
+
+        .payment-waived {
+            color: #277044;
         }
 
         .payment-failed {
@@ -419,6 +429,32 @@
 
 
         /* =====================================================
+           WAITING FOR CHANGES
+        ===================================================== */
+
+        .changes-pending {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #c9d3e0;
+            border-radius: 10px;
+            background: #f5f8fc;
+        }
+
+        .changes-pending-title {
+            color: #324e70;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .changes-pending-text {
+            margin-top: 6px;
+            color: #66788d;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
            REVIEW COMPLETE
         ===================================================== */
 
@@ -430,6 +466,32 @@
             color: #666d75;
             font-size: 11px;
             line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           PUBLICATION STATUS
+        ===================================================== */
+
+        .publication-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #edf6f0;
+        }
+
+        .publication-label {
+            color: #56705f;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+        }
+
+        .publication-value {
+            margin-top: 5px;
+            color: #28543a;
+            font-size: 11px;
+            font-weight: 900;
         }
 
 
@@ -868,6 +930,9 @@
                     {% if payment_status == 'paid' %}
                         payment-paid
 
+                    {% elif payment_status == 'waived' %}
+                        payment-waived
+
                     {% elif payment_status == 'failed' %}
                         payment-failed
 
@@ -968,13 +1033,10 @@
 
 
             <!-- =============================================
-                 ACTIVE MODERATION
+                 PENDING - ACTIVE MODERATION
             ============================================== -->
 
-            {% if submission.status in [
-                'pending',
-                'needs_changes'
-            ] %}
+            {% if submission.status == 'pending' %}
 
 
                 <!-- =========================================
@@ -984,7 +1046,7 @@
                 <div class="moderation-action">
 
                     <div class="action-title">
-                        Approve
+                        Approve & Publish
                     </div>
 
                     <div class="action-description">
@@ -992,10 +1054,16 @@
                         Confirm that this submission is
                         suitable for {{ zone.name }}.
 
+                        Approval creates the Kalxa content
+                        record using the same publication
+                        process used by the central Kalxa
+                        administration.
+
                         Commercial listings can be approved
-                        before payment. Kalxa will keep unpaid
-                        listings hidden until payment is
-                        confirmed.
+                        before payment. Unpaid commercial
+                        listings remain hidden until payment
+                        is confirmed by Kalxa.
+
                     </div>
 
 
@@ -1020,7 +1088,7 @@
                                 approve-button
                             "
                         >
-                            Approve Submission
+                            Approve & Publish
                         </button>
 
                     </form>
@@ -1043,6 +1111,10 @@
                         Explain what the business or
                         organizer should correct before
                         this submission can be approved.
+
+                        The submission will move to
+                        Needs Changes and must be
+                        resubmitted before approval.
 
                     </div>
 
@@ -1127,12 +1199,40 @@
                 </div>
 
 
+            <!-- =============================================
+                 NEEDS CHANGES
+            ============================================== -->
+
+            {% elif submission.status == 'needs_changes' %}
+
+
+                <div class="changes-pending">
+
+                    <div class="changes-pending-title">
+                        Waiting for changes
+                    </div>
+
+                    <div class="changes-pending-text">
+
+                        Changes have been requested for this
+                        submission.
+
+                        The business or organizer must make
+                        the required corrections and
+                        resubmit the listing before it can
+                        be reviewed again.
+
+                    </div>
+
+                </div>
+
+
+            <!-- =============================================
+                 REVIEW COMPLETE
+            ============================================== -->
+
             {% else %}
 
-
-                <!-- =========================================
-                     REVIEW COMPLETE
-                ========================================== -->
 
                 <div class="review-complete">
 
@@ -1160,20 +1260,31 @@
 
                     </strong>
 
-
-                    {% if submission.published_content_id %}
-
-                        <br><br>
-
-                        Published content ID:
-
-                        <strong>
-                            {{ submission.published_content_id }}
-                        </strong>
-
-                    {% endif %}
-
                 </div>
+
+
+                <!-- =========================================
+                     PUBLISHED CONTENT
+                ========================================== -->
+
+                {% if submission.published_content_id %}
+
+                    <div class="publication-box">
+
+                        <div class="publication-label">
+                            PUBLISHED CONTENT
+                        </div>
+
+                        <div class="publication-value">
+
+                            Content ID:
+                            {{ submission.published_content_id }}
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
 
 
             {% endif %}
@@ -1193,8 +1304,12 @@
                 submissions belonging to
                 {{ zone.name }}.
 
-                Community Ambassadors cannot change
-                payment status, pricing or financial
+                Community Ambassadors can approve local
+                content, request corrections or reject
+                submissions.
+
+                They cannot change payment status,
+                pricing, refunds or other financial
                 records.
 
             </div>
