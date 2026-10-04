@@ -7939,6 +7939,372 @@ def ambassador_access_point_detail(
         recent_scans=recent_scans,
     )
 
+
+
+# ============================================================
+# COMMUNITY AMBASSADOR - COMMUNITY ANALYTICS
+# ============================================================
+
+@app.route(
+    "/ambassador/analytics",
+    methods=[
+        "GET",
+    ],
+)
+@ambassador_required
+def ambassador_analytics():
+
+    # ========================================================
+    # CURRENT AMBASSADOR
+    # ========================================================
+
+    ambassador = (
+        get_current_ambassador()
+    )
+
+
+    zone = (
+        ambassador.zone
+    )
+
+
+    # ========================================================
+    # ACCESS POINTS
+    # ========================================================
+    #
+    # SECURITY BOUNDARY:
+    #
+    # Analytics must only be built from access points
+    # belonging to the Ambassador's assigned community.
+    # ========================================================
+
+    access_points = (
+        AccessPoint.query
+        .filter(
+            AccessPoint.zone_id
+            == ambassador.zone_id
+        )
+        .order_by(
+            AccessPoint.id.asc()
+        )
+        .all()
+    )
+
+
+    access_point_ids = [
+        access_point.id
+        for access_point in access_points
+    ]
+
+
+    # ========================================================
+    # TOTAL QR SCANS
+    # ========================================================
+
+    total_scans = (
+        QRScan.query
+        .filter(
+            QRScan.access_point_id.in_(
+                access_point_ids
+            )
+        )
+        .count()
+        if access_point_ids
+        else 0
+    )
+
+
+    # ========================================================
+    # ACTIVE ACCESS POINTS
+    # ========================================================
+
+    active_access_points = sum(
+        1
+        for access_point in access_points
+        if access_point.active
+    )
+
+
+    # ========================================================
+    # LIVE COMMUNITY CONTENT
+    # ========================================================
+
+    live_content_count = (
+        ContentItem.query
+        .filter(
+            ContentItem.zone_id
+            == ambassador.zone_id,
+
+            ContentItem.active.is_(True),
+
+            ContentItem.archived.is_(False),
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # TOTAL COMMUNITY SUBMISSIONS
+    # ========================================================
+
+    total_submissions = (
+        PendingSubmission.query
+        .filter(
+            PendingSubmission.zone_id
+            == ambassador.zone_id
+        )
+        .count()
+    )
+
+
+    # ========================================================
+    # QR SCANS BY ACCESS POINT
+    # ========================================================
+
+    scan_counts = {}
+
+
+    if access_point_ids:
+
+        scan_rows = (
+            db.session.query(
+                QRScan.access_point_id,
+
+                db.func.count(
+                    QRScan.id
+                ).label(
+                    "scan_count"
+                ),
+            )
+            .filter(
+                QRScan.access_point_id.in_(
+                    access_point_ids
+                )
+            )
+            .group_by(
+                QRScan.access_point_id
+            )
+            .all()
+        )
+
+
+        scan_counts = {
+            access_point_id: scan_count
+            for (
+                access_point_id,
+                scan_count,
+            )
+            in scan_rows
+        }
+
+
+    # ========================================================
+    # ACCESS POINT PERFORMANCE
+    # ========================================================
+
+    access_point_performance = []
+
+
+    for access_point in access_points:
+
+        access_point_performance.append(
+            {
+                "access_point":
+                    access_point,
+
+                "scan_count":
+                    scan_counts.get(
+                        access_point.id,
+                        0,
+                    ),
+            }
+        )
+
+
+    access_point_performance.sort(
+        key=lambda item:
+            item["scan_count"],
+        reverse=True,
+    )
+
+
+    # ========================================================
+    # TOP ACCESS POINT
+    # ========================================================
+
+    top_access_point = (
+        access_point_performance[0]
+        if access_point_performance
+        else None
+    )
+
+
+    # ========================================================
+    # CATEGORY ACTIVITY FROM QR ENTRY POINTS
+    # ========================================================
+    #
+    # This currently measures scans through access points
+    # configured to open directly into a category.
+    #
+    # This is NOT yet the same as measuring every category
+    # click inside Kalxa.
+    #
+    # EngagementEvent will later give us that deeper layer.
+    # ========================================================
+
+    category_scan_counts = {}
+
+
+    for item in access_point_performance:
+
+        access_point = (
+            item["access_point"]
+        )
+
+
+        scan_count = (
+            item["scan_count"]
+        )
+
+
+        category_slug = (
+            str(
+                access_point.default_category
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+
+
+        if not category_slug:
+
+            category_slug = (
+                "community-home"
+            )
+
+
+        category_scan_counts[
+            category_slug
+        ] = (
+            category_scan_counts.get(
+                category_slug,
+                0,
+            )
+            +
+            scan_count
+        )
+
+
+    category_performance = [
+        {
+            "category":
+                category_slug,
+
+            "scan_count":
+                scan_count,
+        }
+
+        for (
+            category_slug,
+            scan_count,
+        )
+        in category_scan_counts.items()
+    ]
+
+
+    category_performance.sort(
+        key=lambda item:
+            item["scan_count"],
+        reverse=True,
+    )
+
+
+    # ========================================================
+    # TOP CATEGORY
+    # ========================================================
+
+    top_category = (
+        category_performance[0]
+        if category_performance
+        else None
+    )
+
+
+    # ========================================================
+    # MAX SCAN VALUE
+    # ========================================================
+    #
+    # Used to calculate simple percentage bars in the
+    # template without requiring a chart library.
+    # ========================================================
+
+    max_access_point_scans = max(
+        [
+            item["scan_count"]
+            for item
+            in access_point_performance
+        ],
+        default=0,
+    )
+
+
+    max_category_scans = max(
+        [
+            item["scan_count"]
+            for item
+            in category_performance
+        ],
+        default=0,
+    )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
+    return render_template(
+        "ambassador/analytics.html",
+
+        ambassador=ambassador,
+
+        zone=zone,
+
+        total_scans=total_scans,
+
+        total_access_points=
+            len(
+                access_points
+            ),
+
+        active_access_points=
+            active_access_points,
+
+        live_content_count=
+            live_content_count,
+
+        total_submissions=
+            total_submissions,
+
+        access_point_performance=
+            access_point_performance,
+
+        category_performance=
+            category_performance,
+
+        top_access_point=
+            top_access_point,
+
+        top_category=
+            top_category,
+
+        max_access_point_scans=
+            max_access_point_scans,
+
+        max_category_scans=
+            max_category_scans,
+    )
+
 def _send_content_push_notification(content, category_record=None):
     existing_notification = PushNotification.query.filter_by(content_item_id=content.id).first()
     if existing_notification:
