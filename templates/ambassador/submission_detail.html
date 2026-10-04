@@ -284,6 +284,46 @@
 
 
         /* =====================================================
+           PAYMENT / MODERATION LOCK
+        ===================================================== */
+
+        .moderation-locked {
+            margin-top: 15px;
+            padding: 16px;
+            border: 1px solid #e0c68f;
+            border-radius: 11px;
+            background: #fff8e9;
+        }
+
+        .moderation-locked-title {
+            color: #76540c;
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .moderation-locked-text {
+            margin-top: 7px;
+            color: #806a3e;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .moderation-locked-status {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 10px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: #f2e1b9;
+            color: #76540c;
+            font-size: 8px;
+            font-weight: 950;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+
+        /* =====================================================
            MODERATION
         ===================================================== */
 
@@ -626,6 +666,25 @@
 
 
         <!-- =================================================
+             PAYMENT / MODERATION STATE
+        ================================================== -->
+
+        {% set payment_status =
+            submission.payment_status
+            or 'unpaid'
+        %}
+
+
+        {% set moderation_unlocked =
+            not submission.pricing_model
+            or payment_status in [
+                'paid',
+                'waived'
+            ]
+        %}
+
+
+        <!-- =================================================
              HEADER
         ================================================== -->
 
@@ -917,12 +976,6 @@
             </div>
 
 
-            {% set payment_status =
-                submission.payment_status
-                or 'unpaid'
-            %}
-
-
             <div
                 class="
                     payment-status
@@ -1033,170 +1086,249 @@
 
 
             <!-- =============================================
-                 PENDING - ACTIVE MODERATION
+                 PENDING
             ============================================== -->
 
             {% if submission.status == 'pending' %}
 
 
                 <!-- =========================================
-                     APPROVE
+                     COMMERCIAL + PAYMENT NOT CONFIRMED
+
+                     IMPORTANT:
+                     No approve, request changes or reject
+                     forms are rendered in this state.
                 ========================================== -->
 
-                <div class="moderation-action">
+                {% if not moderation_unlocked %}
 
-                    <div class="action-title">
-                        Approve & Publish
+                    <div class="moderation-locked">
+
+                        <div class="moderation-locked-title">
+                            🔒 Community moderation locked
+                        </div>
+
+                        <div class="moderation-locked-text">
+
+                            This commercial submission cannot
+                            be moderated yet.
+
+                            <br><br>
+
+                            Payment is waiting to be confirmed
+                            by Kalxa Admin.
+
+                            Once Kalxa Admin confirms the
+                            payment, the community moderation
+                            controls will become available
+                            automatically.
+
+                            <br><br>
+
+                            Until then, this submission is
+                            available for review only.
+
+                        </div>
+
+
+                        <div class="moderation-locked-status">
+
+                            {% if payment_status == 'failed' %}
+
+                                Payment failed
+
+                            {% elif payment_status == 'refunded' %}
+
+                                Payment refunded
+
+                            {% else %}
+
+                                Waiting for payment confirmation
+
+                            {% endif %}
+
+                        </div>
+
                     </div>
 
-                    <div class="action-description">
 
-                        Confirm that this submission is
-                        suitable for {{ zone.name }}.
+                <!-- =========================================
+                     PAYMENT CLEARED / FREE CONTENT
+                ========================================== -->
 
-                        Approval creates the Kalxa content
-                        record using the same publication
-                        process used by the central Kalxa
-                        administration.
-
-                        Commercial listings can be approved
-                        before payment. Unpaid commercial
-                        listings remain hidden until payment
-                        is confirmed by Kalxa.
-
-                    </div>
+                {% else %}
 
 
-                    <form
-                        method="POST"
-                        action="{{ url_for(
-                            'admin.ambassador_approve_submission',
-                            submission_id=submission.id
-                        ) }}"
-                    >
+                    <!-- =====================================
+                         APPROVE
+                    ====================================== -->
 
-                        <textarea
-                            name="notes"
-                            maxlength="2000"
-                            placeholder="Optional approval note"
-                        ></textarea>
+                    <div class="moderation-action">
 
-                        <button
-                            type="submit"
-                            class="
-                                moderation-button
-                                approve-button
-                            "
-                        >
+                        <div class="action-title">
                             Approve & Publish
-                        </button>
+                        </div>
 
-                    </form>
+                        <div class="action-description">
 
-                </div>
+                            Confirm that this submission is
+                            suitable for {{ zone.name }}.
+
+                            Approval creates the Kalxa content
+                            record using the same publication
+                            process used by the central Kalxa
+                            administration.
+
+                            {% if submission.pricing_model %}
+
+                                Payment has been confirmed by
+                                Kalxa Admin, so this commercial
+                                submission is now available for
+                                community approval.
+
+                            {% else %}
+
+                                This submission does not require
+                                commercial payment confirmation.
+
+                            {% endif %}
+
+                        </div>
 
 
-                <!-- =========================================
-                     REQUEST CHANGES
-                ========================================== -->
-
-                <div class="moderation-action">
-
-                    <div class="action-title">
-                        Request Changes
-                    </div>
-
-                    <div class="action-description">
-
-                        Explain what the business or
-                        organizer should correct before
-                        this submission can be approved.
-
-                        The submission will move to
-                        Needs Changes and must be
-                        resubmitted before approval.
-
-                    </div>
-
-
-                    <form
-                        method="POST"
-                        action="{{ url_for(
-                            'admin.ambassador_request_changes',
-                            submission_id=submission.id
-                        ) }}"
-                    >
-
-                        <textarea
-                            name="notes"
-                            maxlength="2000"
-                            placeholder="What needs to be changed?"
-                            required
-                        ></textarea>
-
-                        <button
-                            type="submit"
-                            class="
-                                moderation-button
-                                changes-button
-                            "
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.ambassador_approve_submission',
+                                submission_id=submission.id
+                            ) }}"
                         >
+
+                            <textarea
+                                name="notes"
+                                maxlength="2000"
+                                placeholder="Optional approval note"
+                            ></textarea>
+
+                            <button
+                                type="submit"
+                                class="
+                                    moderation-button
+                                    approve-button
+                                "
+                            >
+                                Approve & Publish
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         REQUEST CHANGES
+                    ====================================== -->
+
+                    <div class="moderation-action">
+
+                        <div class="action-title">
                             Request Changes
-                        </button>
+                        </div>
 
-                    </form>
+                        <div class="action-description">
 
-                </div>
+                            Explain what the business or
+                            organizer should correct before
+                            this submission can be approved.
 
+                            The submission will move to
+                            Needs Changes and must be
+                            resubmitted before approval.
 
-                <!-- =========================================
-                     REJECT
-                ========================================== -->
-
-                <div class="moderation-action">
-
-                    <div class="action-title">
-                        Reject
-                    </div>
-
-                    <div class="action-description">
-
-                        Reject content that should not
-                        appear on Kalxa.
-
-                        A rejection reason is required.
-
-                    </div>
+                        </div>
 
 
-                    <form
-                        method="POST"
-                        action="{{ url_for(
-                            'admin.ambassador_reject_submission',
-                            submission_id=submission.id
-                        ) }}"
-                    >
-
-                        <textarea
-                            name="notes"
-                            maxlength="2000"
-                            placeholder="Reason for rejection"
-                            required
-                        ></textarea>
-
-                        <button
-                            type="submit"
-                            class="
-                                moderation-button
-                                reject-button
-                            "
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.ambassador_request_changes',
+                                submission_id=submission.id
+                            ) }}"
                         >
-                            Reject Submission
-                        </button>
 
-                    </form>
+                            <textarea
+                                name="notes"
+                                maxlength="2000"
+                                placeholder="What needs to be changed?"
+                                required
+                            ></textarea>
 
-                </div>
+                            <button
+                                type="submit"
+                                class="
+                                    moderation-button
+                                    changes-button
+                                "
+                            >
+                                Request Changes
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         REJECT
+                    ====================================== -->
+
+                    <div class="moderation-action">
+
+                        <div class="action-title">
+                            Reject
+                        </div>
+
+                        <div class="action-description">
+
+                            Reject content that should not
+                            appear on Kalxa.
+
+                            A rejection reason is required.
+
+                        </div>
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin.ambassador_reject_submission',
+                                submission_id=submission.id
+                            ) }}"
+                        >
+
+                            <textarea
+                                name="notes"
+                                maxlength="2000"
+                                placeholder="Reason for rejection"
+                                required
+                            ></textarea>
+
+                            <button
+                                type="submit"
+                                class="
+                                    moderation-button
+                                    reject-button
+                                "
+                            >
+                                Reject Submission
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                {% endif %}
 
 
             <!-- =============================================
@@ -1304,9 +1436,10 @@
                 submissions belonging to
                 {{ zone.name }}.
 
-                Community Ambassadors can approve local
-                content, request corrections or reject
-                submissions.
+                Community Ambassadors can moderate local
+                content only after any required commercial
+                payment has been confirmed centrally by
+                Kalxa.
 
                 They cannot change payment status,
                 pricing, refunds or other financial
