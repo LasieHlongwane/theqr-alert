@@ -2548,11 +2548,34 @@ def _publish_pending_submission(
 
     Used by:
     - approve_submission()
+    - ambassador_approve_submission()
     - approve_all_jobs()
+
+    PUBLICATION RULES:
+    - Free content can become active immediately.
+    - Paid commercial content becomes active only when
+      payment_status is "paid" or "waived".
+    - Unpaid, failed or refunded commercial content is
+      created but remains hidden.
     """
 
     # ========================================================
+    # VALIDATE SUBMISSION
+    # ========================================================
+
+    if not submission:
+
+        raise ValueError(
+            "Submission does not exist."
+        )
+
+
+    # ========================================================
     # VALIDATE STATUS
+    # ========================================================
+    #
+    # A submission must return to "pending" after requested
+    # corrections before it can enter this publication engine.
     # ========================================================
 
     if (
@@ -2561,7 +2584,26 @@ def _publish_pending_submission(
     ):
 
         raise ValueError(
-            "Submission has already been reviewed."
+            (
+                "Submission is not awaiting "
+                "moderation."
+            )
+        )
+
+
+    # ========================================================
+    # PREVENT DUPLICATE PUBLICATION
+    # ========================================================
+
+    if (
+        submission.published_content_id
+    ):
+
+        raise ValueError(
+            (
+                "Submission already has a "
+                "published content record."
+            )
         )
 
 
@@ -2581,6 +2623,16 @@ def _publish_pending_submission(
 
         raise ValueError(
             "The submission zone no longer exists."
+        )
+
+
+    if not zone.active:
+
+        raise ValueError(
+            (
+                "The submission community is "
+                "currently inactive."
+            )
         )
 
 
@@ -2732,6 +2784,9 @@ def _publish_pending_submission(
     # ========================================================
     # JOBS / OPPORTUNITIES
     # ========================================================
+    #
+    # Jobs are always free in the current Kalxa workflow.
+    # ========================================================
 
     if (
         canonical_category
@@ -2776,7 +2831,7 @@ def _publish_pending_submission(
 
 
     # ========================================================
-    # COMMERCIAL CONTENT
+    # NON-JOB CONTENT
     # ========================================================
 
     else:
@@ -2808,6 +2863,10 @@ def _publish_pending_submission(
         )
 
 
+        # ====================================================
+        # PAYMENT STATUS VALIDATION
+        # ====================================================
+
         if (
             payment_status
             not in
@@ -2816,8 +2875,14 @@ def _publish_pending_submission(
 
             payment_status = (
                 "unpaid"
+                if pricing_model
+                else "waived"
             )
 
+
+        # ====================================================
+        # COMMERCIAL PACKAGE VALIDATION
+        # ====================================================
 
         if pricing_model:
 
@@ -2868,6 +2933,19 @@ def _publish_pending_submission(
 
 
             if (
+                commercial_duration_days
+                <= 0
+            ):
+
+                raise ValueError(
+                    (
+                        "Commercial submission has "
+                        "an invalid package duration."
+                    )
+                )
+
+
+            if (
                 amount_due
                 is None
             ):
@@ -2879,6 +2957,10 @@ def _publish_pending_submission(
                     )
                 )
 
+
+        # ====================================================
+        # DISTRIBUTION ZONES
+        # ====================================================
 
         distribution_zone_ids = (
             []
@@ -2926,6 +3008,10 @@ def _publish_pending_submission(
                     )
 
 
+            # =================================================
+            # HOME ZONE MUST ALWAYS BE INCLUDED
+            # =================================================
+
             if (
                 submission.zone_id
                 not in
@@ -2937,6 +3023,10 @@ def _publish_pending_submission(
                     submission.zone_id,
                 )
 
+
+            # =================================================
+            # CURRENT CAMPAIGN LIMIT
+            # =================================================
 
             if (
                 len(
@@ -2952,6 +3042,10 @@ def _publish_pending_submission(
                     )
                 )
 
+
+            # =================================================
+            # VALIDATE DISTRIBUTION ZONES
+            # =================================================
 
             valid_zone_ids = {
                 zone_record.id
@@ -3003,6 +3097,13 @@ def _publish_pending_submission(
 
     # ========================================================
     # COMMERCIAL ACTIVATION
+    # ========================================================
+    #
+    # Commercial time starts only after payment has been
+    # confirmed or explicitly waived.
+    #
+    # An unpaid listing must NOT lose package days while
+    # waiting for payment.
     # ========================================================
 
     commercial_starts_at = (
@@ -3072,17 +3173,81 @@ def _publish_pending_submission(
 
 
     # ========================================================
+    # DETERMINE PUBLIC VISIBILITY
+    # ========================================================
+    #
+    # No pricing model:
+    #     Free/non-commercial content -> ACTIVE
+    #
+    # Commercial + paid:
+    #     ACTIVE
+    #
+    # Commercial + waived:
+    #     ACTIVE
+    #
+    # Commercial + unpaid:
+    #     HIDDEN
+    #
+    # Commercial + failed:
+    #     HIDDEN
+    #
+    # Commercial + refunded:
+    #     HIDDEN
+    # ========================================================
+
+    if not pricing_model:
+
+        content_active = (
+            True
+        )
+
+
+    elif (
+        payment_status
+        in {
+            "paid",
+            "waived",
+        }
+    ):
+
+        content_active = (
+            True
+        )
+
+
+    else:
+
+        content_active = (
+            False
+        )
+
+
+    # ========================================================
     # CREATE PUBLIC CONTENT ITEM
     # ========================================================
 
     content = (
         ContentItem(
 
+            # =================================================
+            # OWNERSHIP
+            # =================================================
+
             organizer_id=
                 submission.organizer_id,
 
+
+            # =================================================
+            # COMMUNITY
+            # =================================================
+
             zone_id=
                 submission.zone_id,
+
+
+            # =================================================
+            # CLASSIFICATION
+            # =================================================
 
             category=
                 submission.category,
@@ -3098,6 +3263,11 @@ def _publish_pending_submission(
 
             notification_eligible=
                 notification_eligible,
+
+
+            # =================================================
+            # COMMERCIAL
+            # =================================================
 
             pricing_model=
                 pricing_model,
@@ -3123,6 +3293,11 @@ def _publish_pending_submission(
             paid_at=
                 paid_at,
 
+
+            # =================================================
+            # CONTENT
+            # =================================================
+
             title=
                 submission.title,
 
@@ -3141,6 +3316,11 @@ def _publish_pending_submission(
             price=
                 submission.price,
 
+
+            # =================================================
+            # CONTACT
+            # =================================================
+
             contact=
                 submission.contact,
 
@@ -3153,8 +3333,18 @@ def _publish_pending_submission(
             ticket_url=
                 submission.ticket_url,
 
+
+            # =================================================
+            # MEDIA
+            # =================================================
+
             image_url=
                 first_image_url,
+
+
+            # =================================================
+            # DATES
+            # =================================================
 
             publish_from=
                 submission.publish_from,
@@ -3177,6 +3367,11 @@ def _publish_pending_submission(
             end_time=
                 submission.end_time,
 
+
+            # =================================================
+            # LISTING CONTROL
+            # =================================================
+
             listing_level=
                 "discovery",
 
@@ -3190,7 +3385,7 @@ def _publish_pending_submission(
                 False,
 
             active=
-                True,
+                content_active,
 
             archived=
                 False,
@@ -3198,10 +3393,18 @@ def _publish_pending_submission(
     )
 
 
+    # ========================================================
+    # ADD CONTENT
+    # ========================================================
+
     db.session.add(
         content
     )
 
+
+    # ========================================================
+    # ALLOCATE CONTENT ID
+    # ========================================================
 
     db.session.flush()
 
@@ -3248,21 +3451,24 @@ def _publish_pending_submission(
         submission_images
     ):
 
-        if image.image_url:
+        if not image.image_url:
 
-            db.session.add(
-                ContentImage(
+            continue
 
-                    content_item_id=
-                        content.id,
 
-                    image_url=
-                        image.image_url,
+        db.session.add(
+            ContentImage(
 
-                    display_order=
-                        image.display_order,
-                )
+                content_item_id=
+                    content.id,
+
+                image_url=
+                    image.image_url,
+
+                display_order=
+                    image.display_order,
             )
+        )
 
 
     # ========================================================
@@ -3322,7 +3528,6 @@ def _publish_pending_submission(
         "category": category,
         "canonical_category": canonical_category,
     }
-
 
 # ============================================================
 # PUSH NOTIFICATION AFTER APPROVAL
