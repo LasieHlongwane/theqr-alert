@@ -798,6 +798,9 @@
             display:
                 flex;
 
+            align-items:
+                center;
+
             justify-content:
                 flex-end;
 
@@ -847,6 +850,31 @@
 
             font-weight:
                 800;
+
+            line-height:
+                1;
+        }
+
+
+        .manage-button {
+            border:
+                1px solid
+                var(--black);
+
+            background:
+                var(--black);
+
+            color:
+                #ffffff;
+        }
+
+
+        .manage-button:hover {
+            background:
+                #292c31;
+
+            border-color:
+                #292c31;
         }
 
 
@@ -1069,6 +1097,13 @@
                 padding:
                     13px
                     16px;
+
+                display:
+                    grid;
+
+                grid-template-columns:
+                    1fr
+                    1fr;
             }
 
 
@@ -1104,6 +1139,12 @@
 
                 font-size:
                     11px;
+            }
+
+
+            .ambassador-actions {
+                grid-template-columns:
+                    1fr;
             }
 
         }
@@ -1489,6 +1530,29 @@
                         ================================== -->
 
                         <div class="ambassador-actions">
+
+
+                            <!-- =============================
+                                 MANAGE
+                            ============================== -->
+
+                            <a
+                                href="{{ url_for(
+                                    'admin.admin_manage_community_ambassador',
+                                    ambassador_id=ambassador.id
+                                ) }}"
+                                class="
+                                    action-button
+                                    manage-button
+                                "
+                            >
+                                Manage
+                            </a>
+
+
+                            <!-- =============================
+                                 STATUS
+                            ============================== -->
 
                             <form
                                 method="POST"
