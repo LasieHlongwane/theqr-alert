@@ -346,7 +346,7 @@
     <a
         class="back-link"
         href="{{ url_for(
-            'ambassador_dashboard'
+            'admin.ambassador_dashboard'
         ) }}"
     >
         ← Dashboard
@@ -404,7 +404,7 @@
 
             <a
                 href="{{ url_for(
-                    'ambassador_submissions',
+                    'admin.ambassador_submissions',
                     status=value
                 ) }}"
                 class="
@@ -435,7 +435,7 @@
                 <a
                     class="submission-card"
                     href="{{ url_for(
-                        'ambassador_submission_detail',
+                        'admin.ambassador_submission_detail',
                         submission_id=submission.id
                     ) }}"
                 >
