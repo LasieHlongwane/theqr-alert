@@ -16,98 +16,32 @@
 >
 
 <title>
-    Community Ambassadors | Kalxa Admin
+    {{ zone.name }} | Kalxa Community Operations
 </title>
 
 
 <style>
 
     /* =====================================================
-       RESET
+       GLOBAL
     ===================================================== */
 
     * {
         box-sizing: border-box;
     }
 
-
-    :root {
-
-        --page-bg:
-            #e3e5e8;
-
-        --surface:
-            #ffffff;
-
-        --surface-soft:
-            #f5f6f7;
-
-        --surface-muted:
-            #eceef1;
-
-        --text:
-            #17191d;
-
-        --text-soft:
-            #555c65;
-
-        --muted:
-            #777e87;
-
-        --border:
-            #d2d6db;
-
-        --border-soft:
-            #e5e7ea;
-
-        --black:
-            #111318;
-
-        --green:
-            #24753b;
-
-        --green-bg:
-            #edf7ef;
-
-        --red:
-            #9a3030;
-
-        --red-bg:
-            #fff0f0;
-
-    }
-
-
     body {
         margin: 0;
-
-        background:
-            var(--page-bg);
-
-        color:
-            var(--text);
-
+        background: #e3e5e8;
+        color: #17191d;
         font-family:
             Arial,
             Helvetica,
             sans-serif;
     }
 
-
     a {
-        color: inherit;
-
-        text-decoration: none;
-
-        -webkit-tap-highlight-color:
-            transparent;
-    }
-
-
-    button,
-    input,
-    select {
-        font: inherit;
+        -webkit-tap-highlight-color: transparent;
     }
 
 
@@ -116,98 +50,49 @@
     ===================================================== */
 
     .topbar {
-        background:
-            var(--black);
-
-        color:
-            #ffffff;
+        background: #111318;
+        color: #ffffff;
     }
-
 
     .topbar-inner {
-        width:
-            min(
-                100%,
-                1100px
-            );
-
-        margin:
-            0 auto;
-
-        padding:
-            18px
-            20px;
-
-        display:
-            flex;
-
-        align-items:
-            center;
-
-        justify-content:
-            space-between;
-
-        gap:
-            18px;
+        width: min(
+            100%,
+            1000px
+        );
+        margin: 0 auto;
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
     }
 
-
-    .brand-kicker {
-        margin-bottom:
-            4px;
-
-        color:
-            #aeb4bc;
-
-        font-size:
-            11px;
-
-        font-weight:
-            800;
-
-        letter-spacing:
-            1.5px;
-
-        text-transform:
-            uppercase;
+    .brand {
+        font-size: 21px;
+        font-weight: 950;
+        letter-spacing: -0.6px;
     }
 
-
-    .brand-title {
-        margin:
-            0;
-
-        font-size:
-            20px;
-
-        font-weight:
-            800;
-    }
-
-
-    .admin-link {
-        flex:
-            0 0 auto;
-
-        padding:
-            10px
-            14px;
-
+    .logout-button {
         border:
             1px solid
-            #41464e;
+            rgba(
+                255,
+                255,
+                255,
+                0.22
+            );
+        border-radius: 9px;
+        padding: 8px 11px;
+        background: transparent;
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 800;
+    }
 
-        border-radius:
-            8px;
-
-        color:
-            #ffffff;
-
-        font-size:
-            13px;
-
-        font-weight:
-            800;
+    .logout-button:active {
+        transform: scale(0.97);
     }
 
 
@@ -216,518 +101,294 @@
     ===================================================== */
 
     .page {
-        width:
-            min(
-                100%,
-                1100px
-            );
-
-        margin:
-            0 auto;
-
-        padding:
-            28px
-            20px
-            70px;
+        width: min(
+            100%,
+            1000px
+        );
+        margin: 0 auto;
+        padding: 28px 18px 60px;
     }
 
 
     /* =====================================================
-       PAGE HEADER
+       HEADER
     ===================================================== */
-
-    .page-header {
-        display:
-            flex;
-
-        align-items:
-            flex-end;
-
-        justify-content:
-            space-between;
-
-        gap:
-            24px;
-
-        margin-bottom:
-            25px;
-    }
-
-
-    .page-heading {
-        min-width:
-            0;
-    }
-
 
     .eyebrow {
-        margin-bottom:
-            7px;
-
-        color:
-            #646b74;
-
-        font-size:
-            11px;
-
-        font-weight:
-            800;
-
-        letter-spacing:
-            1.4px;
-
-        text-transform:
-            uppercase;
+        margin-bottom: 6px;
+        color: #6f757d;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 1.2px;
     }
-
 
     h1 {
-        margin:
-            0
-            0
-            8px;
-
-        font-size:
-            clamp(
-                30px,
-                5vw,
-                46px
-            );
-
-        line-height:
-            1.02;
-
-        letter-spacing:
-            -1.4px;
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.1;
     }
 
-
-    .intro {
-        max-width:
-            680px;
-
-        margin:
-            0;
-
-        color:
-            var(--text-soft);
-
-        font-size:
-            14px;
-
-        line-height:
-            1.6;
-    }
-
-
-    .add-button {
-        min-height:
-            46px;
-
-        flex:
-            0 0 auto;
-
-        display:
-            inline-flex;
-
-        align-items:
-            center;
-
-        justify-content:
-            center;
-
-        padding:
-            12px
-            18px;
-
-        border-radius:
-            8px;
-
-        background:
-            var(--black);
-
-        color:
-            #ffffff;
-
-        font-size:
-            14px;
-
-        font-weight:
-            800;
+    .welcome {
+        margin: 9px 0 0;
+        color: #686e76;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
 
     /* =====================================================
-       FLASH MESSAGES
+       FLASH
     ===================================================== */
-
-    .flash-stack {
-        display:
-            grid;
-
-        gap:
-            10px;
-
-        margin-bottom:
-            20px;
-    }
-
 
     .flash {
-        padding:
-            14px
-            16px;
-
-        border:
-            1px solid
-            var(--border);
-
-        border-radius:
-            9px;
-
-        background:
-            var(--surface);
-
-        font-size:
-            14px;
-
-        font-weight:
-            700;
+        margin-top: 18px;
+        padding: 12px 13px;
+        border: 1px solid #ccd0d4;
+        border-radius: 10px;
+        background: #ffffff;
+        font-size: 12px;
+        line-height: 1.5;
     }
 
-
-    .flash.success {
-        border-color:
-            #9fc5a9;
-
-        background:
-            var(--green-bg);
-
-        color:
-            #185c2b;
+    .flash-success {
+        border-color: #9fc8ad;
+        background: #f5fff8;
     }
 
+    .flash-error {
+        border-color: #daa8a8;
+        background: #fff7f7;
+    }
 
-    .flash.error {
-        border-color:
-            #dfaaaa;
-
-        background:
-            var(--red-bg);
-
-        color:
-            #8a2020;
+    .flash-info {
+        border-color: #aebfd1;
+        background: #f5f9ff;
     }
 
 
     /* =====================================================
-       SCORECARDS
+       COMMUNITY CARD
     ===================================================== */
 
-    .score-grid {
-        display:
-            grid;
+    .community-card {
+        margin-top: 24px;
+        padding: 22px;
+        border:
+            1px solid
+            rgba(
+                0,
+                0,
+                0,
+                0.07
+            );
+        border-radius: 17px;
+        background: #ffffff;
+        box-shadow:
+            0 10px 30px
+            rgba(
+                0,
+                0,
+                0,
+                0.05
+            );
+    }
 
+    .community-label {
+        color: #777d85;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 1px;
+    }
+
+    .community-name {
+        margin-top: 6px;
+        font-size: 25px;
+        font-weight: 950;
+    }
+
+    .status {
+        display: inline-flex;
+        margin-top: 12px;
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: #e7f4eb;
+        color: #24613a;
+        font-size: 9px;
+        font-weight: 900;
+    }
+
+
+    /* =====================================================
+       ACCOUNT INFORMATION
+    ===================================================== */
+
+    .info-grid {
+        margin-top: 16px;
+        display: grid;
         grid-template-columns:
             repeat(
-                3,
+                2,
                 minmax(
                     0,
                     1fr
                 )
             );
-
-        gap:
-            12px;
-
-        margin-bottom:
-            20px;
+        gap: 10px;
     }
 
-
-    .score-card {
-        padding:
-            18px;
-
-        border:
-            1px solid
-            var(--border);
-
-        border-radius:
-            10px;
-
-        background:
-            var(--surface);
+    .info-card {
+        padding: 15px;
+        border-radius: 12px;
+        background: #f4f5f6;
     }
 
-
-    .score-label {
-        margin-bottom:
-            8px;
-
-        color:
-            var(--muted);
-
-        font-size:
-            10px;
-
-        font-weight:
-            800;
-
-        letter-spacing:
-            1.2px;
-
-        text-transform:
-            uppercase;
+    .info-label {
+        color: #858a91;
+        font-size: 9px;
+        font-weight: 850;
+        letter-spacing: 0.7px;
     }
 
-
-    .score-value {
-        font-size:
-            30px;
-
-        font-weight:
-            900;
-
-        line-height:
-            1;
+    .info-value {
+        margin-top: 5px;
+        font-size: 12px;
+        font-weight: 800;
+        word-break: break-word;
     }
 
 
     /* =====================================================
-       FILTERS
+       SECTION
     ===================================================== */
 
-    .filters {
-        display:
-            flex;
-
-        flex-wrap:
-            wrap;
-
-        gap:
-            8px;
-
-        margin-bottom:
-            20px;
+    .section {
+        margin-top: 26px;
     }
 
-
-    .filter {
-        display:
-            inline-flex;
-
-        align-items:
-            center;
-
-        gap:
-            7px;
-
-        padding:
-            10px
-            13px;
-
-        border:
-            1px solid
-            var(--border);
-
-        border-radius:
-            999px;
-
-        background:
-            var(--surface);
-
-        color:
-            #454b53;
-
-        font-size:
-            12px;
-
-        font-weight:
-            800;
+    .section-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
     }
 
-
-    .filter.active {
-        border-color:
-            var(--black);
-
-        background:
-            var(--black);
-
-        color:
-            #ffffff;
+    .section-eyebrow {
+        color: #858a91;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.9px;
     }
 
+    .section-title {
+        margin-top: 5px;
+        font-size: 18px;
+        font-weight: 950;
+    }
 
-    .filter-count {
-        opacity:
-            0.7;
+    .section-link {
+        color: #34383d;
+        font-size: 10px;
+        font-weight: 900;
+        text-decoration: none;
     }
 
 
     /* =====================================================
-       AMBASSADOR LIST
+       ATTENTION GRID
     ===================================================== */
 
-    .ambassador-list {
-        display:
-            grid;
-
-        gap:
-            14px;
+    .attention-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+        gap: 12px;
     }
 
-
-    .ambassador-card {
-        overflow:
-            hidden;
-
-        border:
-            1px solid
-            var(--border);
-
-        border-radius:
-            11px;
-
-        background:
-            var(--surface);
+    .attention-card {
+        position: relative;
+        display: block;
+        min-height: 145px;
+        padding: 19px;
+        border: 1px solid #d8dbdf;
+        border-radius: 15px;
+        background: #ffffff;
+        color: #17191d;
+        text-decoration: none;
+        transition:
+            transform 0.12s ease,
+            box-shadow 0.12s ease;
     }
 
-
-    .ambassador-card-top {
-        padding:
-            18px
-            20px;
-
-        display:
-            flex;
-
-        align-items:
-            flex-start;
-
-        justify-content:
-            space-between;
-
-        gap:
-            18px;
-
-        border-bottom:
-            1px solid
-            var(--border-soft);
+    .attention-card:hover {
+        transform: translateY(-1px);
+        box-shadow:
+            0 8px 22px
+            rgba(
+                0,
+                0,
+                0,
+                0.05
+            );
     }
 
-
-    .ambassador-identity {
-        min-width:
-            0;
+    .attention-card:active {
+        transform: scale(0.985);
     }
 
-
-    .community-label {
-        margin-bottom:
-            6px;
-
-        color:
-            var(--muted);
-
-        font-size:
-            10px;
-
-        font-weight:
-            800;
-
-        letter-spacing:
-            1.2px;
-
-        text-transform:
-            uppercase;
+    .attention-card-primary {
+        border-color: #bbbfc5;
     }
 
-
-    .ambassador-name {
-        margin:
-            0
-            0
-            5px;
-
-        font-size:
-            20px;
-
-        font-weight:
-            900;
+    .attention-card-changes {
+        background: #fffaf1;
+        border-color: #ead9b7;
     }
 
-
-    .ambassador-email {
-        color:
-            var(--text-soft);
-
-        font-size:
-            13px;
-
-        overflow-wrap:
-            anywhere;
+    .attention-label {
+        color: #737981;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
     }
 
-
-    .status-badge {
-        flex:
-            0 0 auto;
-
-        display:
-            inline-flex;
-
-        align-items:
-            center;
-
-        padding:
-            7px
-            10px;
-
-        border-radius:
-            999px;
-
-        font-size:
-            10px;
-
-        font-weight:
-            900;
-
-        letter-spacing:
-            0.7px;
-
-        text-transform:
-            uppercase;
+    .attention-number {
+        margin-top: 11px;
+        font-size: 38px;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: -1.5px;
     }
 
-
-    .status-badge.active {
-        background:
-            var(--green-bg);
-
-        color:
-            var(--green);
+    .attention-description {
+        margin-top: 9px;
+        color: #71777f;
+        font-size: 10px;
+        line-height: 1.45;
     }
 
-
-    .status-badge.inactive {
-        background:
-            var(--red-bg);
-
-        color:
-            var(--red);
+    .attention-arrow {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        color: #777d85;
+        font-size: 18px;
+        font-weight: 900;
     }
 
 
     /* =====================================================
-       DETAILS
+       COMMUNITY METRICS
     ===================================================== */
 
-    .ambassador-details {
-        display:
-            grid;
-
+    .metrics-grid {
+        display: grid;
         grid-template-columns:
             repeat(
                 4,
@@ -736,182 +397,169 @@
                     1fr
                 )
             );
-
-        gap:
-            18px;
-
-        padding:
-            18px
-            20px;
+        gap: 10px;
     }
 
-
-    .detail-label {
-        margin-bottom:
-            5px;
-
-        color:
-            var(--muted);
-
-        font-size:
-            10px;
-
-        font-weight:
-            800;
-
-        letter-spacing:
-            1px;
-
-        text-transform:
-            uppercase;
+    .metric-card {
+        min-height: 115px;
+        padding: 16px;
+        border: 1px solid #d9dce0;
+        border-radius: 13px;
+        background: #ffffff;
     }
 
-
-    .detail-value {
-        color:
-            #30343a;
-
-        font-size:
-            14px;
-
-        font-weight:
-            700;
-
-        line-height:
-            1.4;
-
-        overflow-wrap:
-            anywhere;
+    .metric-card-unpaid {
+        background: #fffaf1;
+        border-color: #ead9b7;
     }
 
-
-    .permission-enabled {
-        color:
-            var(--green);
+    .metric-label {
+        color: #858a91;
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
     }
 
+    .metric-number {
+        margin-top: 10px;
+        font-size: 28px;
+        line-height: 1;
+        font-weight: 950;
+    }
 
-    .permission-disabled {
-        color:
-            var(--muted);
+    .metric-description {
+        margin-top: 8px;
+        color: #7b8189;
+        font-size: 9px;
+        line-height: 1.4;
+    }
+
+    .read-only-badge {
+        display: inline-flex;
+        margin-top: 8px;
+        padding: 4px 6px;
+        border-radius: 999px;
+        background: #f2e4c7;
+        color: #725820;
+        font-size: 7px;
+        font-weight: 950;
+        letter-spacing: 0.5px;
     }
 
 
     /* =====================================================
-       ACTIONS
+       RECENT SUBMISSIONS
     ===================================================== */
 
-    .ambassador-actions {
-        padding:
-            14px
-            20px;
+    .recent-list {
+        overflow: hidden;
+        border: 1px solid #d8dbdf;
+        border-radius: 15px;
+        background: #ffffff;
+    }
 
-        display:
-            flex;
+    .recent-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 16px 17px;
+        border-bottom: 1px solid #eceef0;
+        color: #17191d;
+        text-decoration: none;
+    }
 
-        align-items:
-            center;
+    .recent-item:last-child {
+        border-bottom: 0;
+    }
 
-        justify-content:
-            flex-end;
+    .recent-item:hover {
+        background: #fafafa;
+    }
 
-        gap:
-            10px;
+    .recent-item:active {
+        background: #f3f4f5;
+    }
 
-        border-top:
-            1px solid
-            var(--border-soft);
+    .recent-main {
+        min-width: 0;
+        flex: 1;
+    }
 
-        background:
-            var(--surface-soft);
+    .recent-title {
+        overflow: hidden;
+        color: #202328;
+        font-size: 12px;
+        font-weight: 900;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .recent-meta {
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        color: #81868d;
+        font-size: 9px;
+        line-height: 1.4;
+    }
+
+    .recent-category {
+        font-weight: 800;
+        text-transform: capitalize;
+    }
+
+    .recent-dot {
+        color: #b0b4b9;
+    }
+
+    .recent-arrow {
+        flex: 0 0 auto;
+        color: #737981;
+        font-size: 18px;
+        font-weight: 900;
     }
 
 
-    .status-form {
-        margin:
-            0;
+    /* =====================================================
+       STATUS BADGES
+    ===================================================== */
+
+    .submission-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 7px;
+        border-radius: 999px;
+        font-size: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
     }
 
-
-    .action-button {
-        min-height:
-            40px;
-
-        display:
-            inline-flex;
-
-        align-items:
-            center;
-
-        justify-content:
-            center;
-
-        padding:
-            9px
-            14px;
-
-        border-radius:
-            7px;
-
-        cursor:
-            pointer;
-
-        font-size:
-            12px;
-
-        font-weight:
-            800;
-
-        line-height:
-            1;
+    .submission-status-pending {
+        background: #fff0ce;
+        color: #765a19;
     }
 
-
-    .manage-button {
-        border:
-            1px solid
-            var(--black);
-
-        background:
-            var(--black);
-
-        color:
-            #ffffff;
+    .submission-status-needs_changes {
+        background: #f7e6c7;
+        color: #79561d;
     }
 
-
-    .manage-button:hover {
-        background:
-            #292c31;
-
-        border-color:
-            #292c31;
+    .submission-status-approved {
+        background: #e3f2e7;
+        color: #28633b;
     }
 
-
-    .deactivate-button {
-        border:
-            1px solid
-            #d6a6a6;
-
-        background:
-            #ffffff;
-
-        color:
-            var(--red);
+    .submission-status-rejected {
+        background: #f6dddd;
+        color: #823838;
     }
 
-
-    .activate-button {
-        border:
-            1px solid
-            #9fc5a9;
-
-        background:
-            #ffffff;
-
-        color:
-            var(--green);
+    .submission-status-default {
+        background: #eceef0;
+        color: #646a71;
     }
 
 
@@ -920,97 +568,141 @@
     ===================================================== */
 
     .empty-state {
-        padding:
-            50px
-            24px;
-
-        border:
-            1px solid
-            var(--border);
-
-        border-radius:
-            11px;
-
-        background:
-            var(--surface);
-
-        text-align:
-            center;
+        padding: 26px 18px;
+        text-align: center;
     }
-
 
     .empty-title {
-        margin-bottom:
-            7px;
-
-        font-size:
-            18px;
-
-        font-weight:
-            900;
+        font-size: 12px;
+        font-weight: 900;
     }
 
-
-    .empty-text {
-        max-width:
-            480px;
-
-        margin:
-            0 auto
-            18px;
-
-        color:
-            var(--text-soft);
-
-        font-size:
-            13px;
-
-        line-height:
-            1.6;
+    .empty-description {
+        margin-top: 6px;
+        color: #858a91;
+        font-size: 10px;
+        line-height: 1.5;
     }
 
 
     /* =====================================================
-       SECURITY NOTE
+       COMMUNITY OPERATIONS
     ===================================================== */
 
-    .security-note {
-        margin-top:
-            20px;
+    .community-operations {
+        margin-top: 26px;
+        padding: 20px;
+        border: 1px solid #d8dbdf;
+        border-radius: 14px;
+        background: #f7f8f9;
+    }
 
-        padding:
-            15px
-            17px;
+    .operations-eyebrow {
+        color: #858a91;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+    }
 
-        border:
-            1px solid
-            #d4d7db;
+    .operations-title {
+        margin-top: 6px;
+        color: #17191d;
+        font-size: 16px;
+        font-weight: 900;
+    }
 
-        border-radius:
-            9px;
-
-        color:
-            #666d75;
-
-        background:
-            rgba(
-                255,
-                255,
-                255,
-                0.55
-            );
-
-        font-size:
-            12px;
-
-        line-height:
-            1.6;
+    .operations-description {
+        margin-top: 7px;
+        color: #747a82;
+        font-size: 11px;
+        line-height: 1.55;
     }
 
 
-    .security-note strong {
-        color:
-            #30343a;
+    /* =====================================================
+       COMMUNITY OPERATION ACTIONS
+    ===================================================== */
+
+    .operations-actions {
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .operations-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 11px 15px;
+        border-radius: 10px;
+        background: #111318;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 10px;
+        font-weight: 900;
+        transition:
+            transform 0.12s ease,
+            background 0.12s ease;
+    }
+
+    .operations-button:hover {
+        background: #25282d;
+    }
+
+    .operations-button:active {
+        transform: scale(0.97);
+    }
+
+
+    /* =====================================================
+       COMMUNITY CONTENT BUTTON
+    ===================================================== */
+
+    .operations-button-secondary {
+        border: 1px solid #cfd3d7;
+        background: #ffffff;
+        color: #25282c;
+    }
+
+    .operations-button-secondary:hover {
+        background: #eef0f2;
+    }
+
+
+    /* =====================================================
+       ADD CONTENT BUTTON
+    ===================================================== */
+
+    .operations-button-add {
+        border: 1px solid #111318;
+        background: #111318;
+        color: #ffffff;
+    }
+
+    .operations-button-add:hover {
+        background: #25282d;
+    }
+
+
+    /* =====================================================
+       SECURITY / SCOPE NOTE
+    ===================================================== */
+
+    .scope-note {
+        margin-top: 14px;
+        padding: 13px 14px;
+        border-radius: 11px;
+        background: #eef0f2;
+        color: #6f757d;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .scope-note strong {
+        color: #34383d;
     }
 
 
@@ -1022,140 +714,78 @@
         max-width: 700px
     ) {
 
-        .topbar-inner {
-            padding:
-                15px
-                16px;
-        }
-
-
-        .brand-title {
-            font-size:
-                17px;
-        }
-
-
-        .page {
-            padding:
-                22px
-                14px
-                50px;
-        }
-
-
-        .page-header {
-            align-items:
-                stretch;
-
-            flex-direction:
-                column;
-        }
-
-
-        .add-button {
-            width:
-                100%;
-        }
-
-
-        .score-grid {
+        .metrics-grid {
             grid-template-columns:
                 repeat(
-                    3,
+                    2,
                     minmax(
                         0,
                         1fr
                     )
                 );
-
-            gap:
-                7px;
-        }
-
-
-        .score-card {
-            padding:
-                14px
-                11px;
-        }
-
-
-        .score-value {
-            font-size:
-                24px;
-        }
-
-
-        .ambassador-card-top {
-            padding:
-                16px;
-        }
-
-
-        .ambassador-details {
-            grid-template-columns:
-                1fr;
-
-            gap:
-                14px;
-
-            padding:
-                16px;
-        }
-
-
-        .ambassador-actions {
-            padding:
-                13px
-                16px;
-
-            display:
-                grid;
-
-            grid-template-columns:
-                1fr
-                1fr;
-        }
-
-
-        .status-form,
-        .action-button {
-            width:
-                100%;
         }
 
     }
 
 
     @media (
-        max-width: 420px
+        max-width: 600px
     ) {
 
-        .score-label {
-            font-size:
-                9px;
-        }
-
-
-        .score-value {
-            font-size:
-                21px;
-        }
-
-
-        .admin-link {
+        .page {
             padding:
-                8px
-                10px;
-
-            font-size:
-                11px;
+                24px
+                14px
+                50px;
         }
 
+        .topbar-inner {
+            padding:
+                14px;
+        }
 
-        .ambassador-actions {
-            grid-template-columns:
-                1fr;
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .attention-grid {
+            grid-template-columns: 1fr;
+        }
+
+        h1 {
+            font-size: 26px;
+        }
+
+        .community-card {
+            padding: 18px;
+        }
+
+        .community-operations {
+            padding: 17px;
+        }
+
+        .operations-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .operations-button {
+            width: 100%;
+        }
+
+        .section-header {
+            align-items: center;
+        }
+
+    }
+
+
+    @media (
+        max-width: 380px
+    ) {
+
+        .metrics-grid {
+            grid-template-columns: 1fr;
         }
 
     }
@@ -1167,583 +797,744 @@
 <body>
 
 
-<!-- =====================================================
+<!-- =========================================================
      TOP BAR
-====================================================== -->
+========================================================= -->
 
-<header class="topbar">
+<div class="topbar">
 
     <div class="topbar-inner">
 
-        <div>
+        <div class="brand">
+            KALXA
+        </div>
 
-            <div class="brand-kicker">
-                Kalxa Administration
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'admin.ambassador_logout'
+            ) }}"
+        >
+
+            <button
+                class="logout-button"
+                type="submit"
+            >
+                Log Out
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
+<div class="page">
+
+
+<!-- =====================================================
+     HEADER
+====================================================== -->
+
+<div class="eyebrow">
+    COMMUNITY OPERATIONS
+</div>
+
+<h1>
+    {{ zone.name }}
+</h1>
+
+<p class="welcome">
+    Welcome, {{ ambassador.name }}.
+    Here is what is happening in your assigned
+    Kalxa community.
+</p>
+
+
+<!-- =====================================================
+     FLASH MESSAGES
+====================================================== -->
+
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div
+                class="
+                    flash
+                    flash-{{ category }}
+                "
+            >
+                {{ message }}
             </div>
 
-            <h2 class="brand-title">
-                Community Operations
-            </h2>
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+
+
+<!-- =====================================================
+     COMMUNITY IDENTITY
+====================================================== -->
+
+<div class="community-card">
+
+    <div class="community-label">
+        ASSIGNED COMMUNITY
+    </div>
+
+    <div class="community-name">
+        {{ zone.name }}
+    </div>
+
+    <div class="status">
+        ACTIVE COMMUNITY AMBASSADOR
+    </div>
+
+
+    <!-- =================================================
+         ACCOUNT INFORMATION
+    ================================================== -->
+
+    <div class="info-grid">
+
+
+        <div class="info-card">
+
+            <div class="info-label">
+                AMBASSADOR
+            </div>
+
+            <div class="info-value">
+                {{ ambassador.name }}
+            </div>
+
+        </div>
+
+
+        <div class="info-card">
+
+            <div class="info-label">
+                EMAIL
+            </div>
+
+            <div class="info-value">
+                {{ ambassador.email }}
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     NEEDS ATTENTION
+====================================================== -->
+
+<div class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="section-eyebrow">
+                NEEDS ATTENTION
+            </div>
+
+            <div class="section-title">
+                Moderation Queue
+            </div>
 
         </div>
 
 
         <a
             href="{{ url_for(
-                'admin.analytics'
+                'admin.ambassador_submissions'
             ) }}"
-            class="admin-link"
+            class="section-link"
         >
-            ← Admin
+            View all →
         </a>
 
     </div>
 
-</header>
+
+    <div class="attention-grid">
+
+
+        <a
+            href="{{ url_for(
+                'admin.ambassador_submissions',
+                status='pending'
+            ) }}"
+            class="
+                attention-card
+                attention-card-primary
+            "
+        >
+
+            <div class="attention-arrow">
+                →
+            </div>
+
+            <div class="attention-label">
+                PENDING REVIEWS
+            </div>
+
+            <div class="attention-number">
+                {{ pending_count | default(0) }}
+            </div>
+
+            <div class="attention-description">
+                New submissions waiting for your
+                moderation decision.
+            </div>
+
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'admin.ambassador_submissions',
+                status='needs_changes'
+            ) }}"
+            class="
+                attention-card
+                attention-card-changes
+            "
+        >
+
+            <div class="attention-arrow">
+                →
+            </div>
+
+            <div class="attention-label">
+                NEEDS CHANGES
+            </div>
+
+            <div class="attention-number">
+                {{ needs_changes_count | default(0) }}
+            </div>
+
+            <div class="attention-description">
+                Submissions returned to the owner
+                for corrections before resubmission.
+            </div>
+
+        </a>
+
+
+    </div>
+
+</div>
 
 
 <!-- =====================================================
-     PAGE
+     COMMUNITY OVERVIEW
 ====================================================== -->
 
-<main class="page">
+<div class="section">
 
+    <div class="section-header">
 
-    <!-- =================================================
-         HEADER
-    ================================================== -->
+        <div>
 
-    <section class="page-header">
-
-        <div class="page-heading">
-
-            <div class="eyebrow">
-                Community Operations
+            <div class="section-eyebrow">
+                COMMUNITY
             </div>
 
-            <h1>
-                Community Ambassadors
-            </h1>
+            <div class="section-title">
+                Operations Overview
+            </div>
 
-            <p class="intro">
-                Manage the people responsible for
-                operating individual Kalxa communities.
-                Each Ambassador is restricted to their
-                assigned community.
-            </p>
+        </div>
+
+    </div>
+
+
+    <div class="metrics-grid">
+
+
+        <div class="metric-card">
+
+            <div class="metric-label">
+                LIVE CONTENT
+            </div>
+
+            <div class="metric-number">
+                {{ live_content_count | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Active content currently live
+                in {{ zone.name }}.
+            </div>
+
+        </div>
+
+
+        <div
+            class="
+                metric-card
+                metric-card-unpaid
+            "
+        >
+
+            <div class="metric-label">
+                UNPAID LISTINGS
+            </div>
+
+            <div class="metric-number">
+                {{ unpaid_count | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Approved commercial listings
+                still awaiting payment.
+            </div>
+
+            <div class="read-only-badge">
+                READ ONLY
+            </div>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <div class="metric-label">
+                APPROVED
+            </div>
+
+            <div class="metric-number">
+                {{ approved_count | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Community submissions approved
+                through moderation.
+            </div>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <div class="metric-label">
+                REJECTED
+            </div>
+
+            <div class="metric-number">
+                {{ rejected_count | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Submissions that did not meet
+                publishing requirements.
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     RECENT SUBMISSIONS
+====================================================== -->
+
+<div class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="section-eyebrow">
+                RECENT ACTIVITY
+            </div>
+
+            <div class="section-title">
+                Recent Submissions
+            </div>
 
         </div>
 
 
         <a
             href="{{ url_for(
-                'admin.admin_create_community_ambassador'
+                'admin.ambassador_submissions'
             ) }}"
-            class="add-button"
+            class="section-link"
         >
-            + Add Ambassador
+            All submissions →
         </a>
 
-    </section>
+    </div>
 
 
-    <!-- =================================================
-         FLASH MESSAGES
-    ================================================== -->
+    <div class="recent-list">
 
-    {% with messages = get_flashed_messages(
-        with_categories=true
-    ) %}
+        {% if recent_submissions %}
 
-        {% if messages %}
+            {% for submission in recent_submissions %}
 
-            <div class="flash-stack">
+                <a
+                    href="{{ url_for(
+                        'admin.ambassador_submission_detail',
+                        submission_id=submission.id
+                    ) }}"
+                    class="recent-item"
+                >
 
-                {% for category, message in messages %}
+                    <div class="recent-main">
 
-                    <div
-                        class="flash {{ category }}"
-                    >
-                        {{ message }}
+                        <div class="recent-title">
+
+                            {{
+                                submission.business_name
+                                or
+                                submission.title
+                                or
+                                'Untitled Submission'
+                            }}
+
+                        </div>
+
+
+                        <div class="recent-meta">
+
+                            <span class="recent-category">
+                                {{
+                                    submission.category
+                                    or
+                                    'General'
+                                }}
+                            </span>
+
+
+                            <span class="recent-dot">
+                                •
+                            </span>
+
+
+                            {% if submission.status == 'pending' %}
+
+                                <span
+                                    class="
+                                        submission-status
+                                        submission-status-pending
+                                    "
+                                >
+                                    Pending
+                                </span>
+
+
+                            {% elif submission.status == 'needs_changes' %}
+
+                                <span
+                                    class="
+                                        submission-status
+                                        submission-status-needs_changes
+                                    "
+                                >
+                                    Needs Changes
+                                </span>
+
+
+                            {% elif submission.status == 'approved' %}
+
+                                <span
+                                    class="
+                                        submission-status
+                                        submission-status-approved
+                                    "
+                                >
+                                    Approved
+                                </span>
+
+
+                            {% elif submission.status == 'rejected' %}
+
+                                <span
+                                    class="
+                                        submission-status
+                                        submission-status-rejected
+                                    "
+                                >
+                                    Rejected
+                                </span>
+
+
+                            {% else %}
+
+                                <span
+                                    class="
+                                        submission-status
+                                        submission-status-default
+                                    "
+                                >
+                                    {{
+                                        submission.status
+                                        or
+                                        'Unknown'
+                                    }}
+                                </span>
+
+                            {% endif %}
+
+
+                            {% if submission.created_at %}
+
+                                <span class="recent-dot">
+                                    •
+                                </span>
+
+                                <span>
+                                    {{
+                                        submission.created_at.strftime(
+                                            '%d %b %Y'
+                                        )
+                                    }}
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
                     </div>
 
-                {% endfor %}
+
+                    <div class="recent-arrow">
+                        →
+                    </div>
+
+                </a>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <div class="empty-title">
+                    No submissions yet
+                </div>
+
+                <div class="empty-description">
+                    New submissions for
+                    {{ zone.name }} will appear here.
+                </div>
 
             </div>
 
         {% endif %}
 
-    {% endwith %}
+    </div>
 
+</div>
 
-    <!-- =================================================
-         SCORECARDS
-    ================================================== -->
 
-    <section class="score-grid">
+<!-- =====================================================
+     COMMUNITY OPERATIONS
+====================================================== -->
 
-        <div class="score-card">
+<div class="community-operations">
 
-            <div class="score-label">
-                Total
-            </div>
+    <div class="operations-eyebrow">
+        LOCAL OPERATIONS
+    </div>
 
-            <div class="score-value">
-                {{ total_count }}
-            </div>
+    <div class="operations-title">
+        Manage Your Community
+    </div>
 
-        </div>
+    <div class="operations-description">
 
+        Review new submissions and monitor content
+        currently operating within
+        <strong>{{ zone.name }}</strong>.
 
-        <div class="score-card">
-
-            <div class="score-label">
-                Active
-            </div>
-
-            <div class="score-value">
-                {{ active_count }}
-            </div>
-
-        </div>
-
-
-        <div class="score-card">
-
-            <div class="score-label">
-                Inactive
-            </div>
-
-            <div class="score-value">
-                {{ inactive_count }}
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- =================================================
-         FILTERS
-    ================================================== -->
-
-    <nav class="filters">
-
-        <a
-            href="{{ url_for(
-                'admin.admin_community_ambassadors',
-                status='all'
-            ) }}"
-            class="
-                filter
-                {% if status_filter == 'all' %}
-                    active
-                {% endif %}
-            "
-        >
-            All
-
-            <span class="filter-count">
-                {{ total_count }}
-            </span>
-        </a>
-
-
-        <a
-            href="{{ url_for(
-                'admin.admin_community_ambassadors',
-                status='active'
-            ) }}"
-            class="
-                filter
-                {% if status_filter == 'active' %}
-                    active
-                {% endif %}
-            "
-        >
-            Active
-
-            <span class="filter-count">
-                {{ active_count }}
-            </span>
-        </a>
-
-
-        <a
-            href="{{ url_for(
-                'admin.admin_community_ambassadors',
-                status='inactive'
-            ) }}"
-            class="
-                filter
-                {% if status_filter == 'inactive' %}
-                    active
-                {% endif %}
-            "
-        >
-            Inactive
-
-            <span class="filter-count">
-                {{ inactive_count }}
-            </span>
-        </a>
-
-    </nav>
-
-
-    <!-- =================================================
-         AMBASSADOR LIST
-    ================================================== -->
-
-    {% if ambassadors %}
-
-        <section class="ambassador-list">
-
-            {% for ambassador in ambassadors %}
-
-                <article class="ambassador-card">
-
-
-                    <!-- =================================
-                         IDENTITY
-                    ================================== -->
-
-                    <div class="ambassador-card-top">
-
-                        <div class="ambassador-identity">
-
-                            <div class="community-label">
-
-                                {% if ambassador.zone %}
-
-                                    {{ ambassador.zone.name }}
-
-                                {% else %}
-
-                                    No assigned community
-
-                                {% endif %}
-
-                            </div>
-
-
-                            <h2 class="ambassador-name">
-                                {{ ambassador.name }}
-                            </h2>
-
-
-                            <div class="ambassador-email">
-                                {{ ambassador.email }}
-                            </div>
-
-                        </div>
-
-
-                        {% if ambassador.active %}
-
-                            <span
-                                class="
-                                    status-badge
-                                    active
-                                "
-                            >
-                                Active
-                            </span>
-
-                        {% else %}
-
-                            <span
-                                class="
-                                    status-badge
-                                    inactive
-                                "
-                            >
-                                Inactive
-                            </span>
-
-                        {% endif %}
-
-                    </div>
-
-
-                    <!-- =================================
-                         DETAILS
-                    ================================== -->
-
-                    <div class="ambassador-details">
-
-
-                        <div>
-
-                            <div class="detail-label">
-                                Community
-                            </div>
-
-                            <div class="detail-value">
-
-                                {% if ambassador.zone %}
-
-                                    {{ ambassador.zone.name }}
-
-                                {% else %}
-
-                                    —
-
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="detail-label">
-                                Email
-                            </div>
-
-                            <div class="detail-value">
-                                {{ ambassador.email }}
-                            </div>
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="detail-label">
-                                Phone
-                            </div>
-
-                            <div class="detail-value">
-
-                                {% if ambassador.phone %}
-
-                                    {{ ambassador.phone }}
-
-                                {% else %}
-
-                                    Not provided
-
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- =============================
-                             ADD CONTENT PERMISSION
-                        ============================== -->
-
-                        <div>
-
-                            <div class="detail-label">
-                                Add Content
-                            </div>
-
-                            <div
-                                class="
-                                    detail-value
-                                    {% if ambassador.can_add_content %}
-                                        permission-enabled
-                                    {% else %}
-                                        permission-disabled
-                                    {% endif %}
-                                "
-                            >
-
-                                {% if ambassador.can_add_content %}
-
-                                    Enabled
-
-                                {% else %}
-
-                                    Disabled
-
-                                {% endif %}
-
-                            </div>
-
-                        </div>
-
-
-                    </div>
-
-
-                    <!-- =================================
-                         ACTIONS
-                    ================================== -->
-
-                    <div class="ambassador-actions">
-
-
-                        <!-- =============================
-                             MANAGE
-                        ============================== -->
-
-                        <a
-                            href="{{ url_for(
-                                'admin.admin_manage_community_ambassador',
-                                ambassador_id=ambassador.id
-                            ) }}"
-                            class="
-                                action-button
-                                manage-button
-                            "
-                        >
-                            Manage
-                        </a>
-
-
-                        <!-- =============================
-                             STATUS
-                        ============================== -->
-
-                        <form
-                            method="POST"
-
-                            action="{{ url_for(
-                                'admin.admin_toggle_community_ambassador_status',
-                                ambassador_id=ambassador.id
-                            ) }}"
-
-                            class="status-form"
-                        >
-
-                            <input
-                                type="hidden"
-                                name="status_filter"
-                                value="{{ status_filter }}"
-                            >
-
-
-                            {% if ambassador.active %}
-
-                                <button
-                                    type="submit"
-
-                                    class="
-                                        action-button
-                                        deactivate-button
-                                    "
-
-                                    onclick="
-                                        return confirm(
-                                            'Deactivate {{ ambassador.name|e }}?'
-                                        );
-                                    "
-                                >
-                                    Deactivate
-                                </button>
-
-                            {% else %}
-
-                                <button
-                                    type="submit"
-
-                                    class="
-                                        action-button
-                                        activate-button
-                                    "
-                                >
-                                    Activate
-                                </button>
-
-                            {% endif %}
-
-                        </form>
-
-                    </div>
-
-                </article>
-
-            {% endfor %}
-
-        </section>
-
-
-    {% else %}
-
-        <!-- =============================================
-             EMPTY STATE
-        ============================================== -->
-
-        <section class="empty-state">
-
-            <div class="empty-title">
-
-                {% if status_filter == "active" %}
-
-                    No active Ambassadors
-
-                {% elif status_filter == "inactive" %}
-
-                    No inactive Ambassadors
-
-                {% else %}
-
-                    No Community Ambassadors yet
-
-                {% endif %}
-
-            </div>
-
-
-            <p class="empty-text">
-
-                {% if status_filter == "all" %}
-
-                    Create your first Community Ambassador
-                    and assign them to a Kalxa community.
-
-                {% else %}
-
-                    There are currently no Community
-                    Ambassadors matching this status.
-
-                {% endif %}
-
-            </p>
-
-
-            {% if status_filter == "all" %}
-
-                <a
-                    href="{{ url_for(
-                        'admin.admin_create_community_ambassador'
-                    ) }}"
-                    class="add-button"
-                >
-                    + Add Ambassador
-                </a>
-
-            {% endif %}
-
-        </section>
-
-    {% endif %}
-
-
-    <!-- =================================================
-         SECURITY NOTE
-    ================================================== -->
-
-    <div class="security-note">
-
-        <strong>
-            Access control:
-        </strong>
-
-        Community Ambassadors have operational access
-        only to their assigned Kalxa community.
-        Deactivating an Ambassador prevents that account
-        from continuing to access Community Ambassador
-        operations after authentication is revalidated.
+        Your operational area is automatically
+        restricted to your assigned community.
 
     </div>
 
-</main>
+
+    <!-- =================================================
+         ACTIONS
+    ================================================== -->
+
+    <div class="operations-actions">
+
+
+        <!-- =============================================
+             ADD COMMUNITY CONTENT
+        ============================================== -->
+
+        {% if current_ambassador
+              and current_ambassador.can_add_content %}
+
+            <a
+                href="{{ url_for(
+                    'admin.ambassador_create_content'
+                ) }}"
+                class="
+                    operations-button
+                    operations-button-add
+                "
+            >
+                <span>
+                    +
+                </span>
+
+                Add Community Content
+            </a>
+
+        {% endif %}
+
+
+        <!-- =============================================
+             REVIEW SUBMISSIONS
+        ============================================== -->
+
+        <a
+            href="{{ url_for(
+                'admin.ambassador_submissions'
+            ) }}"
+            class="operations-button"
+        >
+            Review Submissions
+
+            <span>
+                →
+            </span>
+        </a>
+
+
+        <!-- =============================================
+             COMMUNITY CONTENT
+        ============================================== -->
+
+        <a
+            href="{{ url_for(
+                'admin.ambassador_content'
+            ) }}"
+            class="
+                operations-button
+                operations-button-secondary
+            "
+        >
+            Community Content
+
+            <span>
+                →
+            </span>
+        </a>
+
+
+        <!-- =============================================
+             QR NETWORK
+        ============================================== -->
+
+        <a
+            href="{{ url_for(
+                'admin.ambassador_access_points'
+            ) }}"
+            class="
+                operations-button
+                operations-button-secondary
+            "
+        >
+            QR Network
+
+            <span>
+                →
+            </span>
+        </a>
+
+
+        <!-- =============================================
+             COMMUNITY ANALYTICS
+        ============================================== -->
+
+        <a
+            href="{{ url_for(
+                'admin.ambassador_analytics'
+            ) }}"
+            class="
+                operations-button
+                operations-button-secondary
+            "
+        >
+            Community Analytics
+
+            <span>
+                →
+            </span>
+        </a>
+
+
+    </div>
+
+
+    <!-- =================================================
+         SCOPE
+    ================================================== -->
+
+    <div class="scope-note">
+
+        <strong>
+            Community scope:
+        </strong>
+
+        You can review, approve, request corrections
+        and reject submissions belonging to
+        {{ zone.name }}.
+
+        {% if current_ambassador
+              and current_ambassador.can_add_content %}
+
+            You are also authorised to add new
+            community content directly for
+            {{ zone.name }}.
+
+        {% endif %}
+
+        You can also view published community content,
+        listing status, package duration, distribution
+        and payment state.
+
+        Payment information is read-only.
+
+        Pricing, payment confirmation, payment waivers,
+        refunds and other financial controls remain
+        managed centrally by Kalxa.
+
+    </div>
+
+</div>
+
+
+</div>
 
 </body>
 
