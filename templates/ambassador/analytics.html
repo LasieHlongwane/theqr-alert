@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        Community Analytics | {{ zone.name }} | Kalxa
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .topbar-inner {
+            width: min(
+                100%,
+                1000px
+            );
+            margin: 0 auto;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .brand {
+            color: #ffffff;
+            font-size: 21px;
+            font-weight: 950;
+            letter-spacing: -0.6px;
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: #d8dadd;
+            font-size: 10px;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                1000px
+            );
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .eyebrow {
+            color: #737981;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            margin: 6px 0 0;
+            font-size: 29px;
+            line-height: 1.1;
+        }
+
+        .description {
+            margin: 8px 0 0;
+            max-width: 680px;
+            color: #6f757d;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+
+        /* =====================================================
+           METRICS
+        ===================================================== */
+
+        .metrics-grid {
+            margin-top: 22px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 10px;
+        }
+
+        .metric-card {
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid #d7dade;
+            border-radius: 13px;
+            background: #ffffff;
+        }
+
+        .metric-card-primary {
+            border-color: #111318;
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .metric-label {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .metric-card-primary
+        .metric-label {
+            color: #aeb3b9;
+        }
+
+        .metric-number {
+            margin-top: 10px;
+            font-size: 29px;
+            line-height: 1;
+            font-weight: 950;
+        }
+
+        .metric-description {
+            margin-top: 8px;
+            color: #7c8289;
+            font-size: 9px;
+            line-height: 1.45;
+        }
+
+        .metric-card-primary
+        .metric-description {
+            color: #b8bcc1;
+        }
+
+
+        /* =====================================================
+           SECTION
+        ===================================================== */
+
+        .section {
+            margin-top: 27px;
+        }
+
+        .section-eyebrow {
+            color: #858a91;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.9px;
+        }
+
+        .section-title {
+            margin-top: 5px;
+            font-size: 18px;
+            font-weight: 950;
+        }
+
+        .section-description {
+            margin-top: 6px;
+            max-width: 680px;
+            color: #777d85;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           INSIGHT CARDS
+        ===================================================== */
+
+        .insights-grid {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 11px;
+        }
+
+        .insight-card {
+            padding: 19px;
+            border: 1px solid #d7dade;
+            border-radius: 14px;
+            background: #ffffff;
+        }
+
+        .insight-label {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .insight-value {
+            margin-top: 8px;
+            color: #202328;
+            font-size: 17px;
+            font-weight: 950;
+            line-height: 1.25;
+        }
+
+        .insight-meta {
+            margin-top: 7px;
+            color: #7b8189;
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           PERFORMANCE CARD
+        ===================================================== */
+
+        .performance-card {
+            margin-top: 12px;
+            overflow: hidden;
+            border: 1px solid #d7dade;
+            border-radius: 15px;
+            background: #ffffff;
+        }
+
+        .performance-item {
+            padding: 16px 17px;
+            border-bottom: 1px solid #eceef0;
+        }
+
+        .performance-item:last-child {
+            border-bottom: 0;
+        }
+
+        .performance-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .performance-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .performance-name {
+            overflow: hidden;
+            color: #202328;
+            font-size: 11px;
+            font-weight: 900;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .performance-meta {
+            margin-top: 4px;
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+        .performance-number {
+            flex: 0 0 auto;
+            color: #202328;
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+
+        /* =====================================================
+           BAR
+        ===================================================== */
+
+        .bar-track {
+            height: 7px;
+            margin-top: 11px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #eceef0;
+        }
+
+        .bar-fill {
+            height: 100%;
+            min-width: 0;
+            border-radius: 999px;
+            background: #202328;
+        }
+
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        .empty {
+            padding: 32px 20px;
+            text-align: center;
+        }
+
+        .empty-title {
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .empty-description {
+            margin-top: 6px;
+            color: #858a91;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           PRIVACY
+        ===================================================== */
+
+        .privacy-note {
+            margin-top: 27px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #eef0f2;
+            color: #686e76;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .privacy-note strong {
+            color: #30343a;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 700px
+        ) {
+
+            .metrics-grid {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+            }
+
+        }
+
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .page {
+                padding:
+                    24px
+                    14px
+                    50px;
+            }
+
+            .topbar-inner {
+                padding: 14px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width: 380px
+        ) {
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<div class="topbar">
+
+    <div class="topbar-inner">
+
+        <a
+            href="{{ url_for(
+                'ambassador_dashboard'
+            ) }}"
+            class="brand"
+        >
+            KALXA
+        </a>
+
+        <a
+            href="{{ url_for(
+                'ambassador_dashboard'
+            ) }}"
+            class="back-link"
+        >
+            ← Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
+<div class="page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="eyebrow">
+        COMMUNITY INTELLIGENCE
+    </div>
+
+    <h1>
+        {{ zone.name }} Analytics
+    </h1>
+
+    <p class="description">
+
+        Understand how people are entering and using
+        the Kalxa network across your community.
+
+    </p>
+
+
+    <!-- =====================================================
+         COMMUNITY METRICS
+    ====================================================== -->
+
+    <div class="metrics-grid">
+
+
+        <!-- =============================================
+             QR SCANS
+        ============================================== -->
+
+        <div
+            class="
+                metric-card
+                metric-card-primary
+            "
+        >
+
+            <div class="metric-label">
+                QR SCANS
+            </div>
+
+            <div class="metric-number">
+                {{ total_scans | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Recorded entries into Kalxa through
+                community QR access points.
+            </div>
+
+        </div>
+
+
+        <!-- =============================================
+             ACCESS POINTS
+        ============================================== -->
+
+        <div class="metric-card">
+
+            <div class="metric-label">
+                QR LOCATIONS
+            </div>
+
+            <div class="metric-number">
+                {{ total_access_points | default(0) }}
+            </div>
+
+            <div class="metric-description">
+
+                {{ active_access_points | default(0) }}
+                currently active.
+
+            </div>
+
+        </div>
+
+
+        <!-- =============================================
+             LIVE CONTENT
+        ============================================== -->
+
+        <div class="metric-card">
+
+            <div class="metric-label">
+                LIVE CONTENT
+            </div>
+
+            <div class="metric-number">
+                {{ live_content_count | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Active community listings currently
+                available through Kalxa.
+            </div>
+
+        </div>
+
+
+        <!-- =============================================
+             SUBMISSIONS
+        ============================================== -->
+
+        <div class="metric-card">
+
+            <div class="metric-label">
+                SUBMISSIONS
+            </div>
+
+            <div class="metric-number">
+                {{ total_submissions | default(0) }}
+            </div>
+
+            <div class="metric-description">
+                Total submissions recorded for
+                {{ zone.name }}.
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         COMMUNITY SIGNALS
+    ====================================================== -->
+
+    <div class="section">
+
+        <div class="section-eyebrow">
+            COMMUNITY SIGNALS
+        </div>
+
+        <div class="section-title">
+            What Is Getting Attention?
+        </div>
+
+        <div class="section-description">
+
+            These signals currently use QR entry activity.
+            More detailed content interactions will be added
+            from Kalxa engagement events.
+
+        </div>
+
+
+        <div class="insights-grid">
+
+
+            <!-- =============================================
+                 TOP ACCESS POINT
+            ============================================== -->
+
+            <div class="insight-card">
+
+                <div class="insight-label">
+                    TOP QR LOCATION
+                </div>
+
+
+                {% if top_access_point %}
+
+                    <div class="insight-value">
+
+                        {{
+                            top_access_point.access_point.name
+                            or
+                            top_access_point.access_point.code
+                            or
+                            'Kalxa Access Point'
+                        }}
+
+                    </div>
+
+                    <div class="insight-meta">
+
+                        {{
+                            top_access_point.scan_count
+                        }}
+
+                        scans
+
+                    </div>
+
+                {% else %}
+
+                    <div class="insight-value">
+                        No activity yet
+                    </div>
+
+                    <div class="insight-meta">
+                        QR activity will appear here.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- =============================================
+                 TOP CATEGORY
+            ============================================== -->
+
+            <div class="insight-card">
+
+                <div class="insight-label">
+                    TOP QR ENTRY CATEGORY
+                </div>
+
+
+                {% if top_category %}
+
+                    <div class="insight-value">
+
+                        {{
+                            top_category.category
+                            | replace('-', ' ')
+                            | replace('_', ' ')
+                            | title
+                        }}
+
+                    </div>
+
+                    <div class="insight-meta">
+
+                        {{
+                            top_category.scan_count
+                        }}
+
+                        scans
+
+                    </div>
+
+                {% else %}
+
+                    <div class="insight-value">
+                        No activity yet
+                    </div>
+
+                    <div class="insight-meta">
+                        Category activity will appear here.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         QR LOCATION PERFORMANCE
+    ====================================================== -->
+
+    <div class="section">
+
+        <div class="section-eyebrow">
+            QR NETWORK
+        </div>
+
+        <div class="section-title">
+            Access Point Performance
+        </div>
+
+        <div class="section-description">
+            See which physical Kalxa access points are
+            generating the most entries into the network.
+        </div>
+
+
+        <div class="performance-card">
+
+            {% if access_point_performance %}
+
+                {% for item in access_point_performance %}
+
+                    <div class="performance-item">
+
+                        <div class="performance-top">
+
+                            <div class="performance-main">
+
+                                <div class="performance-name">
+
+                                    {{
+                                        item.access_point.name
+                                        or
+                                        item.access_point.code
+                                        or
+                                        'Kalxa Access Point'
+                                    }}
+
+                                </div>
+
+                                <div class="performance-meta">
+
+                                    {{
+                                        item.access_point.code
+                                        or
+                                        'QR access point'
+                                    }}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="performance-number">
+
+                                {{
+                                    item.scan_count
+                                }}
+
+                                scans
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="bar-track">
+
+                            <div
+                                class="bar-fill"
+                                style="
+                                    width:
+                                    {% if max_access_point_scans %}
+                                        {{
+                                            (
+                                                item.scan_count
+                                                /
+                                                max_access_point_scans
+                                                *
+                                                100
+                                            )
+                                            | round(
+                                                1
+                                            )
+                                        }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                    ;
+                                "
+                            >
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+
+            {% else %}
+
+                <div class="empty">
+
+                    <div class="empty-title">
+                        No QR access points yet
+                    </div>
+
+                    <div class="empty-description">
+                        Access point performance will
+                        appear once the community QR
+                        network is active.
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CATEGORY ACTIVITY
+    ====================================================== -->
+
+    <div class="section">
+
+        <div class="section-eyebrow">
+            INTEREST SIGNALS
+        </div>
+
+        <div class="section-title">
+            QR Entry Categories
+        </div>
+
+        <div class="section-description">
+
+            This measures scans from QR access points
+            configured to open a specific category.
+
+            It does not yet represent every category
+            selection made inside Kalxa.
+
+        </div>
+
+
+        <div class="performance-card">
+
+            {% if category_performance %}
+
+                {% for item in category_performance %}
+
+                    <div class="performance-item">
+
+                        <div class="performance-top">
+
+                            <div class="performance-main">
+
+                                <div class="performance-name">
+
+                                    {{
+                                        item.category
+                                        | replace('-', ' ')
+                                        | replace('_', ' ')
+                                        | title
+                                    }}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="performance-number">
+
+                                {{
+                                    item.scan_count
+                                }}
+
+                                scans
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="bar-track">
+
+                            <div
+                                class="bar-fill"
+                                style="
+                                    width:
+                                    {% if max_category_scans %}
+                                        {{
+                                            (
+                                                item.scan_count
+                                                /
+                                                max_category_scans
+                                                *
+                                                100
+                                            )
+                                            | round(
+                                                1
+                                            )
+                                        }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                    ;
+                                "
+                            >
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+
+            {% else %}
+
+                <div class="empty">
+
+                    <div class="empty-title">
+                        No category signals yet
+                    </div>
+
+                    <div class="empty-description">
+                        Category signals will appear as
+                        people scan community QR points.
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PRIVACY
+    ====================================================== -->
+
+    <div class="privacy-note">
+
+        <strong>
+            Community intelligence, not individual tracking.
+        </strong>
+
+        This dashboard reports aggregated Kalxa activity
+        for {{ zone.name }}.
+
+        Its purpose is to help Community Ambassadors
+        understand how the local network is performing,
+        not to identify individual visitors.
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
