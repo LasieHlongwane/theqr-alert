@@ -4182,8 +4182,11 @@ def admin_create_community_ambassador():
 # ============================================================
 # COMMUNITY AMBASSADOR - LOGIN
 # ============================================================
+# ============================================================
+# COMMUNITY AMBASSADOR - LOGIN
+# ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/login",
     methods=[
         "GET",
@@ -4202,7 +4205,7 @@ def ambassador_login():
 
         return redirect(
             url_for(
-                "ambassador_dashboard"
+                "admin.ambassador_dashboard"
             )
         )
 
@@ -4231,6 +4234,7 @@ def ambassador_login():
         .strip()
         .lower()
     )
+
 
     password = (
         request.form
@@ -4345,21 +4349,18 @@ def ambassador_login():
     # CREATE AMBASSADOR SESSION
     # ========================================================
 
-    #
-    # Clear any old Ambassador session values before
-    # creating the new authenticated session.
-    #
-
-    
     clear_ambassador_session()
-         
+
+
     session[
         "ambassador_id"
     ] = ambassador.id
 
+
     session[
         "ambassador_zone_id"
     ] = ambassador.zone_id
+
 
     session[
         "ambassador_name"
@@ -4382,21 +4383,16 @@ def ambassador_login():
 
     return redirect(
         url_for(
-            "ambassador_dashboard"
+            "admin.ambassador_dashboard"
         )
     )
 
 
-
 # ============================================================
 # COMMUNITY AMBASSADOR - DASHBOARD
 # ============================================================
 
-# ============================================================
-# COMMUNITY AMBASSADOR - DASHBOARD
-# ============================================================
-
-@app.route(
+@admin_bp.route(
     "/ambassador",
     methods=[
         "GET",
@@ -4508,11 +4504,6 @@ def ambassador_dashboard():
     # ========================================================
     # UNPAID COMMERCIAL LISTINGS
     # ========================================================
-    #
-    # Ambassadors may SEE this information.
-    #
-    # They cannot modify payment state.
-    # ========================================================
 
     unpaid_count = (
         ContentItem.query
@@ -4582,14 +4573,13 @@ def ambassador_dashboard():
         recent_submissions=
             recent_submissions,
     )
-# ============================================================
-# COMMUNITY AMBASSADOR - DASHBOARD
-# ============================================================
+
+
 # ============================================================
 # COMMUNITY AMBASSADOR - LOGOUT
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/logout",
     methods=[
         "POST",
@@ -4616,15 +4606,16 @@ def ambassador_logout():
 
     return redirect(
         url_for(
-            "ambassador_login"
+            "admin.ambassador_login"
         )
     )
 
 
+# ============================================================
+# COMMUNITY AMBASSADOR - TEMPLATE CONTEXT
+# ============================================================
 
-
-
-@app.context_processor
+@admin_bp.app_context_processor
 def inject_current_ambassador():
 
     ambassador = None
@@ -4640,9 +4631,9 @@ def inject_current_ambassador():
 
 
     return {
-        "current_ambassador": ambassador,
+        "current_ambassador":
+            ambassador,
     }
-
 
 
 # ============================================================
@@ -4652,6 +4643,7 @@ def inject_current_ambassador():
 def get_ambassador_submission_or_404(
     submission_id,
 ):
+
     """
     Load a PendingSubmission only when it belongs to the
     currently authenticated Community Ambassador's zone.
@@ -4706,393 +4698,13 @@ def get_ambassador_submission_or_404(
 
 
     return submission
-# IMPORTANT:
-# The endpoint/function name remains approve_all_jobs so your
-# current submissions.html url_for("admin.approve_all_jobs")
-# continues working without a BuildError.
-# ============================================================
-
-@admin_bp.route(
-    "/submissions/jobs/approve-all",
-    methods=[
-        "POST",
-    ],
-)
-def approve_all_jobs():
-
-    auth = require_admin()
-
-    if auth:
-        return auth
-
-
-    # ========================================================
-    # LOAD ONLY THE NEXT 10 PENDING JOBS
-    # ========================================================
-
-    pending_jobs = (
-        PendingSubmission
-        .query
-        .filter(
-            PendingSubmission.status
-            == "pending",
-
-            PendingSubmission.category.in_(
-                [
-                    "jobs",
-                    "opportunities",
-                ]
-            ),
-        )
-        .order_by(
-            PendingSubmission.created_at.asc(),
-            PendingSubmission.id.asc(),
-        )
-        .limit(
-            10
-        )
-        .all()
-    )
-
-
-    # ========================================================
-    # NOTHING TO APPROVE
-    # ========================================================
-
-    if not pending_jobs:
-
-        flash(
-            "There are no pending jobs to approve.",
-            "info",
-        )
-
-        return redirect(
-            url_for(
-                "admin.submissions",
-                status="pending",
-            )
-        )
-
-
-    # ========================================================
-    # COUNTERS
-    # ========================================================
-
-    approved_count = (
-        0
-    )
-
-
-    failed_count = (
-        0
-    )
-
-
-    failed_jobs = (
-        []
-    )
-
-
-    approved_contents = (
-        []
-    )
-
-
-    # ========================================================
-    # PROCESS MAXIMUM OF 10
-    # ========================================================
-
-    for submission in pending_jobs:
-
-        submission_id = (
-            submission.id
-        )
-
-
-        submission_title = (
-            submission.title
-            or
-            f"Submission #{submission_id}"
-        )
-
-
-        try:
-
-            # ------------------------------------------------
-            # Use shared publishing logic.
-            # ------------------------------------------------
-
-            result = (
-                _publish_pending_submission(
-                    submission
-                )
-            )
-
-
-            content = (
-                result["content"]
-            )
-
-
-            category = (
-                result["category"]
-            )
-
-
-            # ------------------------------------------------
-            # Commit EACH job independently.
-            #
-            # Therefore:
-            # - Job #1 succeeds independently.
-            # - Job #2 may fail without undoing #1.
-            # - The remaining jobs continue processing.
-            # ------------------------------------------------
-
-            db.session.commit()
-
-
-            approved_count += (
-                1
-            )
-
-
-            approved_contents.append(
-                (
-                    content.id,
-                    category.slug
-                    if hasattr(
-                        category,
-                        "slug",
-                    )
-                    else submission.category,
-                )
-            )
-
-
-            current_app.logger.info(
-                (
-                    "[KALXA BULK JOB APPROVAL] "
-                    "Approved submission #%s: %s"
-                ),
-                submission_id,
-                submission_title,
-            )
-
-
-        except Exception as exc:
-
-            db.session.rollback()
-
-
-            failed_count += (
-                1
-            )
-
-
-            failed_jobs.append(
-                (
-                    submission_id,
-                    submission_title,
-                    str(
-                        exc
-                    ),
-                )
-            )
-
-
-            current_app.logger.exception(
-                (
-                    "[KALXA BULK JOB APPROVAL ERROR] "
-                    "Submission #%s: %s | error=%s"
-                ),
-                submission_id,
-                submission_title,
-                exc,
-            )
-
-
-    # ========================================================
-    # SEND PUSH NOTIFICATIONS AFTER DATABASE WORK
-    #
-    # We deliberately do this after the 10 approval transactions
-    # so a notification failure cannot mark a job as failed.
-    # ========================================================
-
-    for (
-        content_id,
-        category_slug,
-    ) in approved_contents:
-
-        try:
-
-            content = (
-                db.session.get(
-                    ContentItem,
-                    content_id,
-                )
-            )
-
-
-            if not content:
-
-                continue
-
-
-            category_record = (
-                get_category_by_slug(
-                    category_slug
-                )
-            )
-
-
-            if not category_record:
-
-                category_record = (
-                    get_category_by_slug(
-                        content.category
-                    )
-                )
-
-
-            if category_record:
-
-                _send_approved_content_push(
-                    content,
-                    category_record,
-                )
-
-
-        except Exception as exc:
-
-            current_app.logger.exception(
-                (
-                    "[KALXA BULK PUSH WARNING] "
-                    "Content #%s push failed: %s"
-                ),
-                content_id,
-                exc,
-            )
-
-
-    # ========================================================
-    # COUNT REMAINING JOBS
-    # ========================================================
-
-    remaining_count = (
-        PendingSubmission
-        .query
-        .filter(
-            PendingSubmission.status
-            == "pending",
-
-            PendingSubmission.category.in_(
-                [
-                    "jobs",
-                    "opportunities",
-                ]
-            ),
-        )
-        .count()
-    )
-
-
-    # ========================================================
-    # RESULT MESSAGE
-    # ========================================================
-
-    if (
-        approved_count > 0
-        and
-        failed_count == 0
-    ):
-
-        flash(
-            (
-                f"✓ {approved_count} "
-                f"{'job was' if approved_count == 1 else 'jobs were'} "
-                "approved successfully. "
-                f"{remaining_count} "
-                f"{'job remains' if remaining_count == 1 else 'jobs remain'} "
-                "pending."
-            ),
-            "success",
-        )
-
-
-    elif (
-        approved_count > 0
-        and
-        failed_count > 0
-    ):
-
-        flash(
-            (
-                f"{approved_count} "
-                f"{'job was' if approved_count == 1 else 'jobs were'} "
-                "approved. "
-                f"{failed_count} "
-                f"{'job failed' if failed_count == 1 else 'jobs failed'}. "
-                f"{remaining_count} "
-                f"{'job remains' if remaining_count == 1 else 'jobs remain'} "
-                "pending."
-            ),
-            "warning",
-        )
-
-
-    else:
-
-        flash(
-            (
-                f"0 jobs approved. "
-                f"{failed_count} "
-                f"{'job failed' if failed_count == 1 else 'jobs failed'}. "
-                "Check the Render logs for the exact error."
-            ),
-            "danger",
-        )
-
-
-    # ========================================================
-    # LOG FAILURES
-    # ========================================================
-
-    if failed_jobs:
-
-        for (
-            failed_submission_id,
-            failed_submission_title,
-            failed_error,
-        ) in failed_jobs:
-
-            current_app.logger.error(
-                (
-                    "[KALXA BULK JOB FAILED] "
-                    "#%s | %s | %s"
-                ),
-                failed_submission_id,
-                failed_submission_title,
-                failed_error,
-            )
-
-
-    # ========================================================
-    # RETURN TO PENDING
-    # ========================================================
-
-    return redirect(
-        url_for(
-            "admin.submissions",
-            status="pending",
-        )
-    )
 
 
 # ============================================================
 # COMMUNITY AMBASSADOR - SUBMISSIONS
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/submissions",
     methods=[
         "GET",
@@ -5200,20 +4812,24 @@ def ambassador_submissions():
 
     return render_template(
         "ambassador/submissions.html",
+
         ambassador=ambassador,
+
         zone=ambassador.zone,
+
         submissions=submissions,
+
         selected_status=status,
+
         pending_count=pending_count,
     )
-
 
 
 # ============================================================
 # COMMUNITY AMBASSADOR - SUBMISSION DETAIL
 # ============================================================
 
-@app.route(
+@admin_bp.route(
     "/ambassador/submissions/<int:submission_id>",
     methods=[
         "GET",
@@ -5250,8 +4866,11 @@ def ambassador_submission_detail(
 
     return render_template(
         "ambassador/submission_detail.html",
+
         ambassador=ambassador,
+
         zone=ambassador.zone,
+
         submission=submission,
     )
 # ============================================================
