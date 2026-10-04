@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111318"
+    >
+
+    <title>
+        {{
+            content.business_name
+            or
+            content.title
+            or
+            'Community Content'
+        }}
+        | Kalxa
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #e3e5e8;
+            color: #17191d;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+            background: #111318;
+            color: #ffffff;
+        }
+
+        .topbar-inner {
+            width: min(
+                100%,
+                900px
+            );
+            margin: 0 auto;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .brand {
+            color: #ffffff;
+            font-size: 21px;
+            font-weight: 950;
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: #d8dadd;
+            font-size: 10px;
+            font-weight: 850;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page {
+            width: min(
+                100%,
+                900px
+            );
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+        }
+
+        .eyebrow {
+            color: #777d85;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 7px 0 0;
+            font-size: 28px;
+            line-height: 1.15;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status-row {
+            margin-top: 13px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 6px 9px;
+            border-radius: 999px;
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .badge-live {
+            background: #e3f2e7;
+            color: #28633b;
+        }
+
+        .badge-awaiting_payment {
+            background: #fff0ce;
+            color: #765a19;
+        }
+
+        .badge-expired {
+            background: #eceef0;
+            color: #60666d;
+        }
+
+        .badge-archived {
+            background: #e3e4e6;
+            color: #53585e;
+        }
+
+        .badge-inactive {
+            background: #f1e3e3;
+            color: #7c3c3c;
+        }
+
+
+        /* =====================================================
+           CARD
+        ===================================================== */
+
+        .card {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #d7dade;
+            border-radius: 15px;
+            background: #ffffff;
+        }
+
+        .card-eyebrow {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+        }
+
+        .card-title {
+            margin-top: 5px;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           DETAILS
+        ===================================================== */
+
+        .details {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 10px;
+        }
+
+        .detail {
+            padding: 13px;
+            border-radius: 10px;
+            background: #f4f5f6;
+        }
+
+        .detail-label {
+            color: #858a91;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.6px;
+        }
+
+        .detail-value {
+            margin-top: 5px;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           DESCRIPTION
+        ===================================================== */
+
+        .description {
+            margin-top: 14px;
+            color: #60666d;
+            font-size: 11px;
+            line-height: 1.65;
+            white-space: pre-wrap;
+        }
+
+
+        /* =====================================================
+           DISTRIBUTION
+        ===================================================== */
+
+        .zones {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .zone-pill {
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: #eef0f2;
+            color: #4e545a;
+            font-size: 9px;
+            font-weight: 850;
+        }
+
+
+        /* =====================================================
+           FINANCE NOTE
+        ===================================================== */
+
+        .finance-note {
+            margin-top: 14px;
+            padding: 13px;
+            border-radius: 10px;
+            background: #fff8e9;
+            color: #6f5a2b;
+            font-size: 10px;
+            line-height: 1.55;
+        }
+
+        .finance-note strong {
+            color: #584315;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 600px
+        ) {
+
+            .page {
+                padding:
+                    24px
+                    14px
+                    50px;
+            }
+
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<div class="topbar">
+
+    <div class="topbar-inner">
+
+        <a
+            href="{{ url_for(
+                'ambassador_dashboard'
+            ) }}"
+            class="brand"
+        >
+            KALXA
+        </a>
+
+        <a
+            href="{{ url_for(
+                'ambassador_content'
+            ) }}"
+            class="back-link"
+        >
+            ← Community Content
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PAGE
+========================================================= -->
+
+<div class="page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="eyebrow">
+        {{
+            content.category
+            or
+            'Community Content'
+        }}
+    </div>
+
+    <h1>
+
+        {{
+            content.business_name
+            or
+            content.title
+            or
+            'Untitled Content'
+        }}
+
+    </h1>
+
+
+    <!-- =====================================================
+         STATUS
+    ====================================================== -->
+
+    <div class="status-row">
+
+        <span
+            class="
+                badge
+                badge-{{ operational_status }}
+            "
+        >
+
+            {% if operational_status == 'awaiting_payment' %}
+
+                Awaiting Payment
+
+            {% else %}
+
+                {{
+                    operational_status
+                    | replace('_', ' ')
+                }}
+
+            {% endif %}
+
+        </span>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONTENT INFORMATION
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-eyebrow">
+            LISTING
+        </div>
+
+        <div class="card-title">
+            Content Information
+        </div>
+
+
+        <div class="details">
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    COMMUNITY
+                </div>
+
+                <div class="detail-value">
+                    {{ zone.name }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    CATEGORY
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.category
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    TITLE
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.title
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    BUSINESS
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.business_name
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    VENUE
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.venue
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    AVAILABILITY
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.availability_status
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        {% if content.description %}
+
+            <div class="description">
+                {{ content.description }}
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         COMMERCIAL INFORMATION
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-eyebrow">
+            COMMERCIAL
+        </div>
+
+        <div class="card-title">
+            Package & Payment
+        </div>
+
+
+        <div class="details">
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    PRICING MODEL
+                </div>
+
+                <div class="detail-value">
+
+                    {% if content.pricing_model %}
+
+                        {{
+                            content.pricing_model
+                            | replace('_', ' ')
+                            | title
+                        }}
+
+                    {% else %}
+
+                        Free
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    PAYMENT STATUS
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.payment_status
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    DURATION
+                </div>
+
+                <div class="detail-value">
+
+                    {% if content.commercial_duration_days %}
+
+                        {{
+                            content.commercial_duration_days
+                        }}
+                        days
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    AMOUNT DUE
+                </div>
+
+                <div class="detail-value">
+
+                    {% if content.amount_due is not none %}
+
+                        R{{ '%.2f' | format(
+                            content.amount_due
+                        ) }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    STARTS
+                </div>
+
+                <div class="detail-value">
+
+                    {% if content.commercial_starts_at %}
+
+                        {{
+                            content.commercial_starts_at
+                            .strftime(
+                                '%d %b %Y'
+                            )
+                        }}
+
+                    {% else %}
+
+                        Not started
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    EXPIRES
+                </div>
+
+                <div class="detail-value">
+
+                    {% if content.commercial_expires_at %}
+
+                        {{
+                            content.commercial_expires_at
+                            .strftime(
+                                '%d %b %Y'
+                            )
+                        }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="finance-note">
+
+            <strong>
+                Financial controls are read-only.
+            </strong>
+
+            Community Ambassadors can view payment
+            information but cannot confirm payments,
+            waive fees, change pricing or issue refunds.
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         DISTRIBUTION
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-eyebrow">
+            DISTRIBUTION
+        </div>
+
+        <div class="card-title">
+            Community Reach
+        </div>
+
+
+        <div class="zones">
+
+            <div class="zone-pill">
+                {{ zone.name }}
+            </div>
+
+
+            {% for distribution_zone in distribution_zones %}
+
+                {% if distribution_zone.id != zone.id %}
+
+                    <div class="zone-pill">
+                        {{ distribution_zone.name }}
+                    </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONTACT
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-eyebrow">
+            CONTACT
+        </div>
+
+        <div class="card-title">
+            Listing Contact
+        </div>
+
+
+        <div class="details">
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    CONTACT
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.contact
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    WHATSAPP
+                </div>
+
+                <div class="detail-value">
+                    {{
+                        content.whatsapp_number
+                        or
+                        '—'
+                    }}
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
