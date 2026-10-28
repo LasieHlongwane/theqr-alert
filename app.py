@@ -9175,24 +9175,8 @@ def get_active_content(zone_id, category_slug):
     return items
 
 
-@app.route(
-"/api/public/stats",
-methods=["GET", "OPTIONS"],
-)
+@app.route("/api/public/stats",methods=["GET", "OPTIONS"],)
 def api_public_stats():
-"""
-Return public statistics for the KALXA homepage.
-
-Categories:
-    Count unique active consumer-facing categories.
-
-Opportunities:
-    Count unique active content items visible across
-    all active Discovery zones, using get_active_content().
-
-CORS:
-    Allow the KALXA main website to fetch statistics.
-"""
 
 # --------------------------------------------------------
 # CORS CONFIGURATION
