@@ -9175,6 +9175,128 @@ def get_active_content(zone_id, category_slug):
     return items
 
 
+@app.route(
+    "/api/public/stats",
+    methods=["GET"],
+)
+def api_public_stats():
+    """
+    Return public statistics for the KALXA homepage.
+
+    Categories:
+        Count unique active consumer-facing categories.
+
+    Opportunities:
+        Count unique active content items visible across
+        all active Discovery zones, using get_active_content().
+    """
+
+    # --------------------------------------------------------
+    # ACTIVE CATEGORIES
+    # --------------------------------------------------------
+
+    active_categories = (
+        Category.query
+        .filter(
+            Category.active.is_(True)
+        )
+        .order_by(
+            Category.display_order.asc(),
+            Category.id.asc(),
+        )
+        .all()
+    )
+
+    # Normalize category names so aliases such as
+    # "job" and "jobs" do not inflate the category count.
+    unique_category_keys = set()
+
+    for category in active_categories:
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        if canonical_key:
+            unique_category_keys.add(
+                canonical_key
+            )
+
+    services_and_categories = len(
+        unique_category_keys
+    )
+
+    # --------------------------------------------------------
+    # ACTIVE ZONES
+    # --------------------------------------------------------
+
+    active_zones = (
+        Zone.query
+        .filter(
+            Zone.active.is_(True)
+        )
+        .order_by(
+            Zone.id.asc()
+        )
+        .all()
+    )
+
+    # --------------------------------------------------------
+    # UNIQUE VISIBLE OPPORTUNITIES
+    # --------------------------------------------------------
+
+    unique_opportunity_ids = set()
+
+    for zone in active_zones:
+        for category_key in unique_category_keys:
+            try:
+                active_items = get_active_content(
+                    zone_id=zone.id,
+                    category_slug=category_key,
+                )
+
+            except Exception:
+                app.logger.exception(
+                    "Failed to count Discovery opportunities "
+                    "for zone_id=%s category=%s",
+                    zone.id,
+                    category_key,
+                )
+
+                # Do not silently report an incomplete
+                # count as a successful result.
+                return jsonify({
+                    "error": (
+                        "Unable to calculate Discovery "
+                        "statistics."
+                    )
+                }), 500
+
+            for item in active_items:
+                unique_opportunity_ids.add(
+                    item.id
+                )
+
+    local_opportunities = len(
+        unique_opportunity_ids
+    )
+
+    # --------------------------------------------------------
+    # PUBLIC JSON RESPONSE
+    # --------------------------------------------------------
+
+    response = jsonify({
+        "services_and_categories":
+            services_and_categories,
+
+        "local_opportunities":
+            local_opportunities,
+    })
+
+    response.headers["Cache-Control"] = (
+        "public, max-age=60"
+    )
+
+    return response
 # ============================================================
 # QR ACCESS
 # ============================================================
