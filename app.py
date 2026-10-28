@@ -9174,160 +9174,175 @@ def get_active_content(zone_id, category_slug):
     items.sort(key=campaign_sort_key)
     return items
 
-
-@app.route("/api/public/stats",methods=["GET", "OPTIONS"],)
+@app.route(
+    "/api/public/stats",
+    methods=["GET", "OPTIONS"],
+)
 def api_public_stats():
+    """
+    Return public statistics for the KALXA homepage.
 
-# --------------------------------------------------------
-# CORS CONFIGURATION
-# --------------------------------------------------------
+    Categories:
+        Count unique active consumer-facing categories.
 
-allowed_origins = {
-    "https://about.kalxa.co.za",
-}
+    Opportunities:
+        Count unique active content items visible across
+        all active Discovery zones, using get_active_content().
 
-origin = request.headers.get("Origin", "")
+    CORS:
+        Allow the KALXA main website to fetch statistics.
+    """
 
-response_headers = {
-    "Vary": "Origin",
-}
+    # --------------------------------------------------------
+    # CORS CONFIGURATION
+    # --------------------------------------------------------
 
-if origin in allowed_origins:
-    response_headers["Access-Control-Allow-Origin"] = origin
-    response_headers["Access-Control-Allow-Methods"] = (
-        "GET, OPTIONS"
+    allowed_origins = {
+        "https://about.kalxa.co.za",
+    }
+
+    origin = request.headers.get("Origin", "")
+
+    response_headers = {
+        "Vary": "Origin",
+    }
+
+    if origin in allowed_origins:
+        response_headers["Access-Control-Allow-Origin"] = origin
+        response_headers["Access-Control-Allow-Methods"] = (
+            "GET, OPTIONS"
+        )
+        response_headers["Access-Control-Allow-Headers"] = (
+            "Content-Type, Accept"
+        )
+
+    # Handle browser preflight requests.
+    if request.method == "OPTIONS":
+        response = app.make_response(("", 204))
+
+        for header, value in response_headers.items():
+            response.headers[header] = value
+
+        response.headers["Access-Control-Max-Age"] = "600"
+
+        return response
+
+    # --------------------------------------------------------
+    # ACTIVE CATEGORIES
+    # --------------------------------------------------------
+
+    active_categories = (
+        Category.query
+        .filter(
+            Category.active.is_(True)
+        )
+        .order_by(
+            Category.display_order.asc(),
+            Category.id.asc(),
+        )
+        .all()
     )
-    response_headers["Access-Control-Allow-Headers"] = (
-        "Content-Type, Accept"
+
+    # Normalize category names so aliases such as
+    # "job" and "jobs" do not inflate the category count.
+    unique_category_keys = set()
+
+    for category in active_categories:
+        canonical_key = normalize_category(
+            category.slug
+        )
+
+        if canonical_key:
+            unique_category_keys.add(
+                canonical_key
+            )
+
+    services_and_categories = len(
+        unique_category_keys
     )
 
-# Handle browser preflight requests.
-if request.method == "OPTIONS":
-    response = app.make_response(("", 204))
+    # --------------------------------------------------------
+    # ACTIVE ZONES
+    # --------------------------------------------------------
+
+    active_zones = (
+        Zone.query
+        .filter(
+            Zone.active.is_(True)
+        )
+        .order_by(
+            Zone.id.asc()
+        )
+        .all()
+    )
+
+    # --------------------------------------------------------
+    # UNIQUE VISIBLE OPPORTUNITIES
+    # --------------------------------------------------------
+
+    unique_opportunity_ids = set()
+
+    for zone in active_zones:
+        for category_key in unique_category_keys:
+            try:
+                active_items = get_active_content(
+                    zone_id=zone.id,
+                    category_slug=category_key,
+                )
+
+            except Exception:
+                app.logger.exception(
+                    "Failed to count Discovery opportunities "
+                    "for zone_id=%s category=%s",
+                    zone.id,
+                    category_key,
+                )
+
+                response = jsonify({
+                    "error": (
+                        "Unable to calculate Discovery "
+                        "statistics."
+                    )
+                })
+
+                response.status_code = 500
+
+                for header, value in response_headers.items():
+                    response.headers[header] = value
+
+                response.headers["Cache-Control"] = "no-store"
+
+                return response
+
+            for item in active_items:
+                unique_opportunity_ids.add(
+                    item.id
+                )
+
+    local_opportunities = len(
+        unique_opportunity_ids
+    )
+
+    # --------------------------------------------------------
+    # PUBLIC JSON RESPONSE
+    # --------------------------------------------------------
+
+    response = jsonify({
+        "services_and_categories":
+            services_and_categories,
+
+        "local_opportunities":
+            local_opportunities,
+    })
 
     for header, value in response_headers.items():
         response.headers[header] = value
 
-    response.headers["Access-Control-Max-Age"] = "600"
+    response.headers["Cache-Control"] = (
+        "public, max-age=60"
+    )
 
     return response
-
-# --------------------------------------------------------
-# ACTIVE CATEGORIES
-# --------------------------------------------------------
-
-active_categories = (
-    Category.query
-    .filter(
-        Category.active.is_(True)
-    )
-    .order_by(
-        Category.display_order.asc(),
-        Category.id.asc(),
-    )
-    .all()
-)
-
-# Normalize category names so aliases such as
-# "job" and "jobs" do not inflate the category count.
-unique_category_keys = set()
-
-for category in active_categories:
-    canonical_key = normalize_category(
-        category.slug
-    )
-
-    if canonical_key:
-        unique_category_keys.add(
-            canonical_key
-        )
-
-services_and_categories = len(
-    unique_category_keys
-)
-
-# --------------------------------------------------------
-# ACTIVE ZONES
-# --------------------------------------------------------
-
-active_zones = (
-    Zone.query
-    .filter(
-        Zone.active.is_(True)
-    )
-    .order_by(
-        Zone.id.asc()
-    )
-    .all()
-)
-
-# --------------------------------------------------------
-# UNIQUE VISIBLE OPPORTUNITIES
-# --------------------------------------------------------
-
-unique_opportunity_ids = set()
-
-for zone in active_zones:
-    for category_key in unique_category_keys:
-        try:
-            active_items = get_active_content(
-                zone_id=zone.id,
-                category_slug=category_key,
-            )
-
-        except Exception:
-            app.logger.exception(
-                "Failed to count Discovery opportunities "
-                "for zone_id=%s category=%s",
-                zone.id,
-                category_key,
-            )
-
-            response = jsonify({
-                "error": (
-                    "Unable to calculate Discovery "
-                    "statistics."
-                )
-            })
-
-            response.status_code = 500
-
-            for header, value in response_headers.items():
-                response.headers[header] = value
-
-            response.headers["Cache-Control"] = "no-store"
-
-            return response
-
-        for item in active_items:
-            unique_opportunity_ids.add(
-                item.id
-            )
-
-local_opportunities = len(
-    unique_opportunity_ids
-)
-
-# --------------------------------------------------------
-# PUBLIC JSON RESPONSE
-# --------------------------------------------------------
-
-response = jsonify({
-    "services_and_categories":
-        services_and_categories,
-
-    "local_opportunities":
-        local_opportunities,
-})
-
-for header, value in response_headers.items():
-    response.headers[header] = value
-
-response.headers["Cache-Control"] = (
-    "public, max-age=60"
-)
-
-return response
 # ============================================================
 # QR ACCESS
 # ============================================================
