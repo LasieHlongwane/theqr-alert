@@ -7,7 +7,7 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1.0"
     >
 
     <meta
@@ -91,1219 +91,860 @@
 
 
     <!-- =========================================
-         CATEGORY PAGE LOCAL CSS
+         MODERN CATEGORY PAGE LOCAL CSS
     ========================================== -->
 
     <style>
 
-        /* =========================================================
-           LISTING LEVEL VISUALS
-        ========================================================= */
+        /* =========================================
+           GLOBAL RESETS & MODERN TYPOGRAPHY
+        ========================================== */
 
-        .public-listing-card {
-            position: relative;
+        :root {
+            --kalxa-bg: #0b0c0e;
+            --kalxa-card-bg: #f5f1e8;
+            --kalxa-card-dark: #16181c;
+            --kalxa-accent: #fff4df;
+            --kalxa-border: rgba(255, 255, 255, 0.12);
+            --kalxa-border-light: rgba(63, 67, 72, 0.12);
+            --kalxa-text-muted: rgba(255, 255, 255, 0.60);
         }
 
 
-        /* =========================================================
-           SPONSORED LISTING
-        ========================================================= */
-
-        .public-listing-card.is-sponsored {
-
-            border-color:
-                rgba(255, 244, 223, 0.20);
-
-            box-shadow:
-                0 10px 30px
-                rgba(0, 0, 0, 0.18);
-        }
-
-
-        .sponsored-badge {
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-
-            padding: 6px 10px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.40);
-
-            border-radius: 999px;
-
-            background: #fff4df;
-
-            color: #111316;
-
-            font-size: 9px;
-            font-weight: 950;
-            line-height: 1;
-
-            letter-spacing: 0.8px;
-
-            text-transform: uppercase;
-
-            white-space: nowrap;
-        }
-
-
-        .sponsored-badge::before {
-
-            content: "◆";
-
-            font-size: 6px;
-
-            opacity: 0.85;
-        }
-
-
-        .listing-level-badge {
-
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-
-            padding: 6px 9px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.09);
-
-            border-radius: 999px;
-
-            background:
-                rgba(255, 255, 255, 0.055);
-
-            color: #c6c9ce;
-
-            font-size: 9px;
-            font-weight: 900;
-            line-height: 1;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-
-        .listing-level-badge.business {
-
-            color: #fff4df;
-
-            border-color:
-                rgba(255, 244, 223, 0.14);
-
-            background:
-                rgba(255, 244, 223, 0.065);
-        }
-
-
-        .verified-business-badge {
-
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-
-            padding: 6px 9px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.16);
-
-            border-radius: 999px;
-
-            background:
-                rgba(255, 244, 223, 0.08);
-
-            color: #fff4df;
-
-            font-size: 9px;
-            font-weight: 900;
-            line-height: 1;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-
-        /* =========================================================
-           BUSINESS NAME + VERIFIED MARK
-        ========================================================= */
-
-        .business-name-with-status {
-
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 7px;
-        }
-
-
-        .business-inline-verified {
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            width: 17px;
-            height: 17px;
-
-            flex: 0 0 17px;
-
-            border-radius: 50%;
-
-            background:
-                rgba(255, 244, 223, 0.10);
-
-            color: #fff4df;
-
-            font-size: 10px;
-            font-weight: 900;
-        }
-
-
-        /* =========================================================
-           KALXA CAMPAIGN STATE
-        ========================================================= */
-
-        .lac-campaign-state {
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            width: fit-content;
-
-            margin-top: 8px;
-
-            padding: 6px 10px;
-
-            border-radius: 999px;
-
-            font-size: 10px;
-            font-weight: 900;
-
-            line-height: 1;
-
-            letter-spacing: 0.5px;
-
-            text-transform: uppercase;
-
-            white-space: nowrap;
-        }
-
-
-        .campaign-countdown,
-        .campaign-tomorrow,
-        .campaign-today,
-        .campaign-active {
-
-            background: #fff4df;
-            color: #111316;
-        }
-
-
-        .campaign-tonight,
-        .campaign-ending,
-        .campaign-ending-soon {
-
-            background: #111316;
-            color: #fff4df;
-        }
-
-
-        .campaign-live {
-
-            background: #d92d20;
-            color: #ffffff;
-        }
-
-
-        .campaign-ended {
-
-            background: #e8e8e8;
-            color: #666666;
-        }
-
-
-        .campaign-undated {
-            display: none;
-        }
-
-
-        /* =========================================================
-           REMINDER PANEL
-        ========================================================= */
-
-        .kalxa-reminder-wrap {
-
-            margin-top: 14px;
-
-            padding: 14px;
-
-            box-sizing: border-box;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.10);
-
-            border-radius: 14px;
-
-            background:
-                rgba(255, 255, 255, 0.035);
-        }
-
-
-        .kalxa-reminder-header {
-
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-
-            margin-bottom: 11px;
-        }
-
-
-        .kalxa-reminder-title {
-
-            color: #fff4df;
-
-            font-size: 12px;
-            font-weight: 900;
-        }
-
-
-        .kalxa-reminder-subtitle {
-
-            color:
-                rgba(255, 255, 255, 0.50);
-
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-
-        .kalxa-reminder-options {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(
-                    3,
-                    minmax(0, 1fr)
-                );
-
-            gap: 7px;
-
-            margin-bottom: 10px;
-        }
-
-
-        .kalxa-reminder-options[hidden] {
-            display: none;
-        }
-
-
-        .kalxa-reminder-option {
-
-            min-height: 36px;
-
-            padding: 8px 6px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-
-            border-radius: 10px;
-
-            background:
-                rgba(255, 255, 255, 0.04);
-
-            color:
-                rgba(255, 255, 255, 0.68);
-
-            font-size: 10px;
-            font-weight: 800;
-
-            cursor: pointer;
-        }
-
-
-        .kalxa-reminder-option.is-selected {
-
-            background: #fff4df;
-
-            color: #252525;
-
-            border-color: #fff4df;
-        }
-
-
-        .kalxa-remind-btn {
-
+        /* =========================================
+           PAGE LAYOUT ENHANCEMENTS
+        ========================================== */
+
+        .access-container {
             width: 100%;
-            min-height: 44px;
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-
-            padding: 11px 14px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.35);
-
-            border-radius: 11px;
-
-            background: #fff4df;
-
-            color: #111316;
-
-            font-size: 11px;
-            font-weight: 900;
-
-            cursor: pointer;
-        }
-
-
-        .kalxa-remind-btn[hidden] {
-            display: none;
-        }
-
-
-        .kalxa-remind-btn.is-saving {
-            opacity: 0.60;
-        }
-
-
-        .kalxa-reminder-saved {
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 12px;
-
-            padding: 11px 12px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.10);
-
-            border-radius: 11px;
-
-            background:
-                rgba(255, 244, 223, 0.08);
-        }
-
-
-        .kalxa-reminder-saved[hidden] {
-            display: none;
-        }
-
-
-        .kalxa-reminder-saved strong {
-
-            display: block;
-
-            color: #fff4df;
-
-            font-size: 11px;
-            font-weight: 900;
-        }
-
-
-        .kalxa-reminder-saved-detail {
-
-            display: block;
-
-            margin-top: 3px;
-
-            color:
-                rgba(255, 255, 255, 0.55);
-
-            font-size: 9px;
-            font-weight: 600;
-        }
-
-
-        .kalxa-reminder-cancel {
-
-            flex-shrink: 0;
-
-            padding: 7px 9px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-
-            border-radius: 9px;
-
-            background:
-                transparent;
-
-            color:
-                rgba(255, 255, 255, 0.65);
-
-            font-size: 9px;
-            font-weight: 800;
-
-            cursor: pointer;
-        }
-
-
-        /* =========================================================
-           SPECIAL OFFER
-        ========================================================= */
-
-        .listing-card-offer {
-
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-
-            margin: 14px 0 4px;
-
-            padding: 12px 14px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.13);
-
-            border-radius: 13px;
-
-            background:
-                rgba(255, 244, 223, 0.055);
-        }
-
-
-        .listing-card-offer-icon {
-
-            flex-shrink: 0;
-            font-size: 16px;
-        }
-
-
-        .listing-card-offer-content {
-            min-width: 0;
-        }
-
-
-        .listing-card-offer-label {
-
-            display: block;
-
-            margin-bottom: 4px;
-
-            color:
-                rgba(255, 244, 223, 0.62);
-
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.7px;
-            text-transform: uppercase;
-        }
-
-
-        .listing-card-offer-value {
-
-            display: block;
-
-            color: #fff4df;
-
-            font-size: 12px;
-            font-weight: 750;
-            line-height: 1.45;
-        }
-
-
-        .listing-hours-card {
-            grid-column: 1 / -1;
-        }
-
-
-        /* =========================================================
-           DATE DISPLAY
-        ========================================================= */
-
-        .listing-date-strip {
-
-            display: flex;
-            align-items: center;
-            gap: 11px;
-
-            margin: 14px 0 4px;
-
-            padding: 12px 14px;
-
+            max-width: 680px;
+            margin: 0 auto;
+            padding-left: 16px;
+            padding-right: 16px;
             box-sizing: border-box;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.09);
-
-            border-radius: 13px;
-
-            background:
-                rgba(255, 255, 255, 0.055);
         }
 
-
-        .listing-date-strip-icon {
-
-            width: 34px;
-            height: 34px;
-
-            flex: 0 0 34px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            border-radius: 10px;
-
-            background:
-                rgba(255, 255, 255, 0.08);
-
-            font-size: 16px;
-        }
-
-
-        .listing-date-strip-content {
-
-            min-width: 0;
-            flex: 1;
-
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-
-        .listing-date-strip-label {
-
-            color:
-                rgba(255, 255, 255, 0.45);
-
-            font-size: 9px;
-            font-weight: 800;
-            line-height: 1.2;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }
-
-
-        .listing-date-strip-value {
-
-            color: #f4f4f4;
-
-            font-size: 13px;
-            font-weight: 750;
-            line-height: 1.35;
-        }
-
-
-        /* =========================================================
-           JOB COMMUNITY SUBMIT
-        ========================================================= */
-
-        .jobs-community-submit {
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-
-            margin-top: 18px;
-
-            padding: 15px 16px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.16);
-
-            border-radius: 15px;
-
-            background:
-                rgba(255, 244, 223, 0.07);
-        }
-
-
-        .jobs-community-submit-copy {
-
-            min-width: 0;
-
-            display: flex;
-            flex-direction: column;
-        }
-
-
-        .jobs-community-submit-eyebrow {
-
-            margin-bottom: 3px;
-
-            color:
-                rgba(255, 244, 223, 0.58);
-
-            font-size: 8px;
-            font-weight: 950;
-
-            letter-spacing: .12em;
-
-            text-transform: uppercase;
-        }
-
-
-        .jobs-community-submit-copy strong {
-
-            color: #fff4df;
-
-            font-size: 12px;
-            font-weight: 950;
-        }
-
-
-        .jobs-community-submit-copy > span:last-child {
-
-            margin-top: 2px;
-
-            color:
-                rgba(255, 255, 255, 0.53);
-
-            font-size: 9px;
-        }
-
-
-        .jobs-community-submit-button {
-
-            flex: 0 0 auto;
-
-            min-height: 40px;
-
+        .location-label {
             display: inline-flex;
-
             align-items: center;
-            justify-content: center;
+            gap: 7px;
+            margin-bottom: 20px;
+            padding: 8px 14px;
+            border: 1px solid var(--kalxa-border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 12px;
+            font-weight: 750;
+            backdrop-filter: blur(8px);
+        }
 
-            padding: 8px 12px;
 
-            background: #fff4df;
+        /* =========================================
+           CATEGORY PAGE HERO
+        ========================================== */
 
-            color: #17191d;
+        .category-page-hero {
+            position: relative;
+            margin-bottom: 28px;
+            padding: 24px 20px;
+            border-radius: 22px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1px solid var(--kalxa-border);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+        }
 
-            border-radius: 10px;
-
-            font-size: 10px;
-            font-weight: 950;
-
+        .category-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 16px;
+            color: var(--kalxa-text-muted);
             text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+            transition: color 0.2s ease;
         }
 
-
-        /* =========================================================
-           FILTERS
-        ========================================================= */
-
-        .job-region-filter-section {
-
-            margin:
-                16px 0
-                20px;
-
-            padding:
-                15px 16px;
-
-            border:
-                1px solid
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.10
-                );
-
-            border-radius:
-                16px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.025
-                );
+        .category-back-link:hover {
+            color: var(--kalxa-accent);
         }
 
-
-        .job-region-filter-heading {
-
+        .category-page-title-row {
             display: flex;
-
-            flex-direction: column;
-
-            gap: 3px;
-
+            align-items: center;
+            gap: 16px;
             margin-bottom: 12px;
         }
 
+        .category-page-icon {
+            width: 52px;
+            height: 52px;
+            flex: 0 0 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: var(--kalxa-accent);
+            color: #17191d;
+            font-size: 26px;
+            box-shadow: 0 6px 20px rgba(255, 244, 223, 0.2);
+        }
 
-        .job-region-filter-heading strong {
-
-            color: #fff4df;
-
-            font-size: 12px;
-
+        .access-eyebrow {
+            margin: 0 0 4px;
+            color: rgba(255, 244, 223, 0.65);
+            font-size: 9px;
             font-weight: 900;
+            letter-spacing: 1.25px;
+            text-transform: uppercase;
+        }
+
+        .category-page-hero h1 {
+            margin: 0;
+            color: #ffffff;
+            font-size: clamp(24px, 6vw, 32px);
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        .category-page-intro {
+            margin: 10px 0 0;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.5;
         }
 
 
-        .job-region-filter-heading span {
+        /* =========================================
+           MODERN SEARCH BAR
+        ========================================== */
 
-            color:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.48
-                );
+        .category-search {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--kalxa-border);
+            border-radius: 16px;
+            padding: 4px 14px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
 
-            font-size: 9px;
+        .category-search:focus-within {
+            border-color: rgba(255, 244, 223, 0.4);
+            background: rgba(255, 255, 255, 0.07);
+        }
 
+        .category-search-icon {
+            font-size: 16px;
+            margin-right: 10px;
+            opacity: 0.7;
+        }
+
+        .category-search input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 13px;
             font-weight: 600;
+            padding: 10px 0;
+        }
 
+        .category-search input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .category-search-clear {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .category-search-result-count {
+            margin-bottom: 18px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 10px;
+            font-weight: 700;
+            padding-left: 4px;
+        }
+
+
+        /* =========================================
+           LISTING CARDS (MODERNIZED REFINEMENT)
+        ========================================== */
+
+        .public-listing-card {
+            position: relative;
+            margin-bottom: 22px;
+            padding: 20px;
+            border-radius: 22px;
+            background: var(--kalxa-card-bg);
+            color: #3f4348;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .public-listing-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+        }
+
+        .public-listing-card.is-sponsored {
+            background: linear-gradient(145deg, #fcf8f0, #f0ebd9);
+            border: 1px solid rgba(217, 130, 32, 0.35);
+        }
+
+        .sponsored-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #25282c;
+            color: #fff4df;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .verified-business-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(41, 151, 93, 0.12);
+            color: #1b7a43;
+            border: 1px solid rgba(41, 151, 93, 0.25);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .listing-badge-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .listing-main-info h2 {
+            margin: 0 0 6px;
+            color: #22252a;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .business-name-with-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(63, 67, 72, 0.65);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .listing-description {
+            margin: 10px 0 0;
+            color: rgba(63, 67, 72, 0.78);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           GALLERY & IMAGES
+        ========================================== */
+
+        .content-gallery {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .content-gallery.single-gallery {
+            grid-template-columns: 1fr;
+            height: 190px;
+        }
+
+        .content-gallery.two-gallery {
+            grid-template-columns: repeat(2, 1fr);
+            height: 160px;
+        }
+
+        .gallery-image-button {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: none;
+            background: #e2dccf;
+            cursor: pointer;
+            overflow: hidden;
+            border-radius: 14px;
+        }
+
+        .gallery-image-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-image-button:hover img {
+            transform: scale(1.03);
+        }
+
+
+        /* =========================================
+           DATE STRIP & DETAILS
+        ========================================== */
+
+        .listing-date-strip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 14px 0;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .listing-date-strip-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #ffffff;
+            font-size: 15px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .listing-date-strip-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .listing-date-strip-label {
+            color: rgba(63, 67, 72, 0.5);
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .listing-date-strip-value {
+            color: #292c30;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .listing-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin: 14px 0;
+        }
+
+        .listing-detail-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .listing-detail-icon {
+            font-size: 16px;
+        }
+
+        .listing-detail-label {
+            display: block;
+            color: rgba(63, 67, 72, 0.5);
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .listing-detail-card strong {
+            color: #292c30;
+            font-size: 11px;
+            font-weight: 850;
+        }
+
+
+        /* =========================================
+           SPECIAL OFFER BOX
+        ========================================== */
+
+        .listing-card-offer {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 14px 0;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(217, 130, 32, 0.08);
+            border: 1px solid rgba(217, 130, 32, 0.2);
+        }
+
+        .listing-card-offer-label {
+            display: block;
+            margin-bottom: 2px;
+            color: #b56c0a;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .listing-card-offer-value {
+            color: #292c30;
+            font-size: 12px;
+            font-weight: 800;
             line-height: 1.4;
         }
 
 
-        .job-region-filters {
+        /* =========================================
+           ACTION BUTTONS
+        ========================================== */
 
-            display: flex;
-
-            align-items: center;
-
-            gap: 8px;
-
-            overflow-x: auto;
-
-            padding-bottom: 3px;
-
-            scrollbar-width: none;
-
-            -webkit-overflow-scrolling: touch;
+        .listing-card-primary-action {
+            margin-top: 16px;
         }
 
+        .listing-details-button {
+            width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 12px;
+            background: #292c30;
+            color: #fff4df;
+            font-size: 11px;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        .listing-details-button:active {
+            transform: scale(0.98);
+        }
+
+        .listing-contact {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.07);
+        }
+
+        .listing-contact-heading {
+            margin-bottom: 10px;
+        }
+
+        .listing-contact-eyebrow {
+            color: rgba(63, 67, 72, 0.5);
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+        }
+
+        .listing-contact-heading strong {
+            color: #292c30;
+            font-size: 11px;
+            font-weight: 850;
+        }
+
+        .listing-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 8px;
+        }
+
+        .listing-action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 8px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #292c30;
+            font-size: 10px;
+            font-weight: 850;
+            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        .listing-action-button:active {
+            transform: scale(0.97);
+        }
+
+        .call-button {
+            background: #eef8f2;
+            color: #1b7a43;
+            border-color: rgba(27, 122, 67, 0.2);
+        }
+
+        .whatsapp-button {
+            background: #f0f7ff;
+            color: #0b69bc;
+            border-color: rgba(11, 105, 188, 0.2);
+        }
+
+        .ticket-button {
+            background: #fff8eb;
+            color: #b56c0a;
+            border-color: rgba(181, 108, 10, 0.2);
+        }
+
+
+        /* =========================================
+           FILTERS & CHIPS
+        ========================================== */
+
+        .job-region-filter-section {
+            margin: 16px 0 20px;
+            padding: 16px;
+            border: 1px solid var(--kalxa-border);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(6px);
+        }
+
+        .job-region-filter-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-bottom: 12px;
+        }
+
+        .job-region-filter-heading strong {
+            color: var(--kalxa-accent);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .job-region-filter-heading span {
+            color: var(--kalxa-text-muted);
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .job-region-filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 3px;
+            scrollbar-width: none;
+        }
 
         .job-region-filters::-webkit-scrollbar {
             display: none;
         }
 
-
         .job-region-filter {
-
             flex: 0 0 auto;
-
             min-height: 36px;
-
             display: inline-flex;
-
             align-items: center;
-
             justify-content: center;
-
-            padding: 8px 12px;
-
-            border:
-                1px solid
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.13
-                );
-
+            padding: 8px 14px;
+            border: 1px solid rgba(255, 244, 223, 0.15);
             border-radius: 999px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.04
-                );
-
-            color:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.68
-                );
-
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 10px;
-
             font-weight: 850;
-
             white-space: nowrap;
-
             cursor: pointer;
+            transition: all 0.2s ease;
         }
-
 
         .job-region-filter.active {
-
-            border-color: #fff4df;
-
-            background: #fff4df;
-
+            border-color: var(--kalxa-accent);
+            background: var(--kalxa-accent);
             color: #17191d;
+            box-shadow: 0 4px 12px rgba(255, 244, 223, 0.2);
         }
 
 
-        /* =========================================================
-           JOB REGION BADGE
-        ========================================================= */
+        /* =========================================
+           COMMUNITY JOB SUBMIT BANNER
+        ========================================== */
 
-        .job-region-card-row {
-
+        .jobs-community-submit {
             display: flex;
-
             align-items: center;
-
-            flex-wrap: wrap;
-
-            gap: 7px;
-
-            margin:
-                10px 0
-                4px;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+            padding: 16px 18px;
+            border: 1px solid rgba(255, 244, 223, 0.2);
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(255, 244, 223, 0.08), rgba(255, 244, 223, 0.03));
         }
 
+        .jobs-community-submit-copy {
+            display: flex;
+            flex-direction: column;
+        }
 
-        .job-region-card-label {
-
-            color:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.45
-                );
-
-            font-size: 9px;
-
-            font-weight: 800;
-
-            letter-spacing: 0.5px;
-
+        .jobs-community-submit-eyebrow {
+            margin-bottom: 3px;
+            color: rgba(255, 244, 223, 0.7);
+            font-size: 8px;
+            font-weight: 950;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
         }
 
-
-        .job-region-card-badge {
-
-            display: inline-flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            padding: 6px 10px;
-
-            border:
-                1px solid
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.17
-                );
-
-            border-radius: 999px;
-
-            background:
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.075
-                );
-
+        .jobs-community-submit-copy strong {
             color: #fff4df;
-
-            font-size: 9px;
-
+            font-size: 13px;
             font-weight: 900;
+        }
 
-            line-height: 1;
+        .jobs-community-submit-copy span {
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px;
+        }
 
-            letter-spacing: 0.65px;
-
-            text-transform: uppercase;
+        .jobs-community-submit-button {
+            flex: 0 0 auto;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            background: var(--kalxa-accent);
+            color: #17191d;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 950;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(255, 244, 223, 0.15);
         }
 
 
-        /* =========================================================
-           FILTER EMPTY
-        ========================================================= */
+        /* =========================================
+           EMPTY STATE
+        ========================================== */
+
+        .lac-empty-state {
+            width: 100%;
+            max-width: 480px;
+            margin: 32px auto 50px;
+            padding: 36px 24px;
+            box-sizing: border-box;
+            text-align: center;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            border-radius: 24px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+        }
+
+        .lac-empty-icon-wrap {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f1e8;
+            border-radius: 50%;
+            font-size: 34px;
+        }
+
+        .lac-empty-eyebrow {
+            margin-bottom: 6px;
+            color: rgba(63, 67, 72, 0.5);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .lac-empty-title {
+            margin: 0 auto 10px;
+            color: #3f4348;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .lac-empty-message {
+            margin: 0 auto 22px;
+            color: rgba(63, 67, 72, 0.7);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .lac-empty-primary {
+            width: 100%;
+            max-width: 260px;
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            background: #292c30 !important;
+            border-radius: 12px;
+            color: #fff4df !important;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .lac-empty-secondary {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 8px 12px;
+            color: #292c30;
+            background: #f0ecdf;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .lac-empty-explore {
+            display: inline-block;
+            margin-top: 20px;
+            color: rgba(63, 67, 72, 0.6);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        /* =========================================
+           IMAGE MODAL & NOTIFICATIONS
+        ========================================== */
+
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .image-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .image-modal img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 16px;
+            object-fit: contain;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: #ffffff;
+            font-size: 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .job-filter-empty {
-
             display: none;
-
-            margin: 22px 0;
-
+            margin: 24px 0;
             padding: 28px 20px;
-
             text-align: center;
-
-            border:
-                1px solid
-                rgba(
-                    255,
-                    244,
-                    223,
-                    0.10
-                );
-
+            border: 1px solid var(--kalxa-border);
             border-radius: 18px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.025
-                );
+            background: rgba(255, 255, 255, 0.02);
         }
-
 
         .job-filter-empty.show {
             display: block;
         }
 
-
         .job-filter-empty strong {
-
             display: block;
-
             margin-bottom: 6px;
-
-            color: #fff4df;
-
+            color: var(--kalxa-accent);
             font-size: 14px;
         }
 
-
         .job-filter-empty span {
-
-            color:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.50
-                );
-
+            color: var(--kalxa-text-muted);
             font-size: 11px;
-
-            line-height: 1.5;
-        }
-
-
-        /* =========================================================
-           EMPTY STATE
-        ========================================================= */
-
-        .lac-empty-state {
-
-            width: 100%;
-            max-width: 460px;
-
-            margin: 32px auto 50px;
-
-            padding: 34px 24px;
-
-            box-sizing: border-box;
-
-            text-align: center;
-
-            background: #ffffff;
-
-            border:
-                1px solid
-                rgba(0, 0, 0, 0.07);
-
-            border-radius: 24px;
-
-            box-shadow:
-                0 10px 30px
-                rgba(0, 0, 0, 0.07);
-        }
-
-
-        .lac-empty-icon-wrap {
-
-            width: 84px;
-            height: 84px;
-
-            margin: 0 auto 20px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            background: #f5f1e8;
-
-            border-radius: 50%;
-        }
-
-
-        .lac-empty-icon {
-
-            font-size: 38px;
-        }
-
-
-        .lac-empty-eyebrow {
-
-            margin-bottom: 8px;
-
-            color:
-                rgba(63, 67, 72, 0.52);
-
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 1.4px;
-        }
-
-
-        .lac-empty-title {
-
-            margin: 0 auto 10px;
-
-            color: #3f4348;
-
-            font-size: 21px;
-            font-weight: 850;
-        }
-
-
-        .lac-empty-message {
-
-            margin: 0 auto 23px;
-
-            color:
-                rgba(63, 67, 72, 0.70);
-
-            font-size: 13px;
-            line-height: 1.55;
-        }
-
-
-        .lac-empty-primary {
-
-            width: 100%;
-            max-width: 280px;
-            min-height: 48px;
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-
-            padding: 12px 18px;
-
-            background: #f5f1e8 !important;
-
-            border-radius: 14px;
-
-            color: #3f4348 !important;
-
-            text-decoration: none;
-
-            font-size: 12px;
-            font-weight: 800;
-        }
-
-
-        .lac-empty-contribute {
-
-            margin-top: 24px;
-            padding-top: 20px;
-
-            border-top:
-                1px solid
-                rgba(0, 0, 0, 0.07);
-
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
-        }
-
-
-        .lac-empty-contribute-text {
-
-            color:
-                rgba(63, 67, 72, 0.62);
-
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-
-        .lac-empty-secondary {
-
-            display: inline-block;
-
-            padding: 5px 8px;
-
-            color: #3f4348;
-
-            text-decoration: none;
-
-            font-size: 12px;
-            font-weight: 850;
-        }
-
-
-        .lac-empty-explore {
-
-            display: inline-block;
-
-            margin-top: 22px;
-
-            color:
-                rgba(63, 67, 72, 0.62);
-
-            text-decoration: none;
-
-            font-size: 11px;
-            font-weight: 700;
         }
 
 
         @media (max-width: 520px) {
-
             .jobs-community-submit {
-
                 align-items: stretch;
-
                 flex-direction: column;
             }
-
-
             .jobs-community-submit-button {
                 width: 100%;
-            }
-
-
-            .job-region-filter-section {
-
-                padding: 14px 13px;
             }
         }
 
@@ -1339,7 +980,7 @@
 
 
     <!-- =========================================
-         MAIN
+         MAIN CONTENT CONTAINER
     ========================================== -->
 
     <main class="access-container">
@@ -1359,7 +1000,7 @@
 
 
         <!-- =====================================
-             CATEGORY HERO
+             CATEGORY HERO SECTION
         ====================================== -->
 
         <section class="category-page-hero">
@@ -1445,7 +1086,7 @@
 
 
         <!-- =====================================
-             CATEGORY SEARCH + FILTERS
+             SEARCH + FILTERS BAR
         ====================================== -->
 
         {% if items %}
@@ -1731,7 +1372,7 @@
 
 
         <!-- =====================================
-             LISTINGS
+             LISTINGS FEED
         ====================================== -->
 
         <section class="content-list">
@@ -1873,7 +1514,7 @@
 
 
                     <!-- =================================
-                         BADGES
+                         BADGES ROW
                     ================================== -->
 
                     <div class="listing-badge-row">
@@ -1885,7 +1526,7 @@
                         %}
 
                         <span class="sponsored-badge">
-                            SPONSORED
+                            ◆ SPONSORED
                         </span>
 
                         {% endif %}
@@ -1928,7 +1569,7 @@
 
 
                     <!-- =================================
-                         TITLE / BUSINESS
+                         TITLE / BUSINESS INFO
                     ================================== -->
 
                     <div class="listing-main-info">
@@ -1961,7 +1602,7 @@
                         <div class="business-name business-name-with-status">
 
                             <span>
-                                {{ item.business_name }}
+                                📍 {{ item.business_name }}
                             </span>
 
                         </div>
@@ -2001,7 +1642,7 @@
 
 
                     <!-- =================================
-                         DATES
+                         DATE STRIP
                     ================================== -->
 
                     {% if canonical_category == "events" %}
@@ -2157,7 +1798,7 @@
 
 
                     <!-- =================================
-                         KEY DETAILS
+                         KEY DETAILS GRID
                     ================================== -->
 
                     <div class="listing-detail-grid">
@@ -2236,7 +1877,7 @@
 
 
                     <!-- =================================
-                         VIEW FULL LISTING
+                         VIEW FULL LISTING CTA
                     ================================== -->
 
                     <div class="listing-card-primary-action">
@@ -2469,11 +2110,7 @@
                 <div class="lac-empty-state">
 
                     <div class="lac-empty-icon-wrap">
-
-                        <span class="lac-empty-icon">
-                            {{ consumer_category.icon }}
-                        </span>
-
+                        {{ consumer_category.icon }}
                     </div>
 
 
@@ -2663,7 +2300,7 @@
 
 
 <!-- =====================================================
-     IMAGE MODAL
+     IMAGE MODAL OVERLAY
 ===================================================== -->
 
 <div
@@ -2695,7 +2332,7 @@
 
 
 <!-- =====================================================
-     IMAGE MODAL + SEARCH + FILTERING
+     SCRIPTS: IMAGE MODAL + SEARCH + FILTERING
 ===================================================== -->
 
 <script>
@@ -2705,550 +2342,165 @@
     // =========================================
 
     function openImageModalFromButton(button) {
-
-        const imageUrl =
-            button.dataset.imageUrl;
-
-        const altText =
-            button.dataset.imageAlt || "";
-
-        openImageModal(
-            imageUrl,
-            altText
-        );
+        const imageUrl = button.dataset.imageUrl;
+        const altText = button.dataset.imageAlt || "";
+        openImageModal(imageUrl, altText);
     }
 
+    function openImageModal(imageUrl, altText) {
+        const modal = document.getElementById("image-modal");
+        const image = document.getElementById("image-modal-content");
 
-    function openImageModal(
-        imageUrl,
-        altText
-    ) {
+        if (!modal || !image) return;
 
-        const modal =
-            document.getElementById(
-                "image-modal"
-            );
+        image.src = imageUrl;
+        image.alt = altText;
 
-        const image =
-            document.getElementById(
-                "image-modal-content"
-            );
-
-
-        if (!modal || !image) {
-            return;
-        }
-
-
-        image.src =
-            imageUrl;
-
-        image.alt =
-            altText;
-
-
-        modal.classList.add(
-            "show"
-        );
-
-        modal.setAttribute(
-            "aria-hidden",
-            "false"
-        );
-
-        document.body.style.overflow =
-            "hidden";
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
     }
-
 
     function closeImageModal() {
+        const modal = document.getElementById("image-modal");
+        const image = document.getElementById("image-modal-content");
 
-        const modal =
-            document.getElementById(
-                "image-modal"
-            );
+        if (!modal) return;
 
-        const image =
-            document.getElementById(
-                "image-modal-content"
-            );
-
-
-        if (!modal) {
-            return;
-        }
-
-
-        modal.classList.remove(
-            "show"
-        );
-
-        modal.setAttribute(
-            "aria-hidden",
-            "true"
-        );
-
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
 
         if (image) {
-
-            image.src =
-                "";
-
-            image.alt =
-                "";
+            image.src = "";
+            image.alt = "";
         }
 
-
-        document.body.style.overflow =
-            "";
+        document.body.style.overflow = "";
     }
 
-
-    document.addEventListener(
-        "keydown",
-        function(event) {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeImageModal();
-            }
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            closeImageModal();
         }
-    );
+    });
 
 
     // =========================================
     // SEARCH + JOB + RETAIL FILTERING
     // =========================================
 
-    const categorySearchInput =
-        document.getElementById(
-            "category-search-input"
-        );
+    const categorySearchInput = document.getElementById("category-search-input");
+    const categorySearchClear = document.getElementById("category-search-clear");
+    const categorySearchResultCount = document.getElementById("category-search-result-count");
+    const jobFilterEmpty = document.getElementById("job-filter-empty");
+    const retailFilterEmpty = document.getElementById("retail-filter-empty");
+    
+    const listingCards = Array.from(document.querySelectorAll(".public-listing-card"));
+    const jobRegionButtons = Array.from(document.querySelectorAll("[data-job-region-filter]"));
+    const retailerButtons = Array.from(document.querySelectorAll("[data-retailer-filter]"));
 
+    let selectedJobRegion = "all";
+    let selectedRetailer = "all";
 
-    const categorySearchClear =
-        document.getElementById(
-            "category-search-clear"
-        );
-
-
-    const categorySearchResultCount =
-        document.getElementById(
-            "category-search-result-count"
-        );
-
-
-    const jobFilterEmpty =
-        document.getElementById(
-            "job-filter-empty"
-        );
-
-
-    const retailFilterEmpty =
-        document.getElementById(
-            "retail-filter-empty"
-        );
-
-
-    const listingCards =
-        Array.from(
-            document.querySelectorAll(
-                ".public-listing-card"
-            )
-        );
-
-
-    const jobRegionButtons =
-        Array.from(
-            document.querySelectorAll(
-                "[data-job-region-filter]"
-            )
-        );
-
-
-    const retailerButtons =
-        Array.from(
-            document.querySelectorAll(
-                "[data-retailer-filter]"
-            )
-        );
-
-
-    let selectedJobRegion =
-        "all";
-
-
-    let selectedRetailer =
-        "all";
-
-
-    function normalizeFilterValue(
-        value
-    ) {
-
-        return String(
-            value || ""
-        )
-        .trim()
-        .toLowerCase();
+    function normalizeFilterValue(value) {
+        return String(value || "").trim().toLowerCase();
     }
-
 
     function filterCategoryListings() {
+        const query = categorySearchInput ? categorySearchInput.value.trim().toLowerCase() : "";
+        const selectedJobRegionValue = normalizeFilterValue(selectedJobRegion);
+        const selectedRetailerValue = normalizeFilterValue(selectedRetailer);
 
-        const query =
-            categorySearchInput
-                ? categorySearchInput.value
-                    .trim()
-                    .toLowerCase()
-                : "";
+        let visibleCount = 0;
 
+        listingCards.forEach(function(card) {
+            const title = card.dataset.title || "";
+            const business = card.dataset.business || "";
+            const venue = card.dataset.venue || "";
+            const jobRegion = normalizeFilterValue(card.dataset.jobRegion);
+            const retailer = normalizeFilterValue(card.dataset.retailer);
 
-        const selectedJobRegionValue =
-            normalizeFilterValue(
-                selectedJobRegion
-            );
+            const matchesSearch = (!query || title.includes(query) || business.includes(query) || venue.includes(query) || jobRegion.includes(query) || retailer.includes(query));
+            const matchesJobRegion = (selectedJobRegionValue === "all" || jobRegion === selectedJobRegionValue);
+            const matchesRetailer = (selectedRetailerValue === "all" || retailer === selectedRetailerValue);
 
+            const visible = (matchesSearch && matchesJobRegion && matchesRetailer);
 
-        const selectedRetailerValue =
-            normalizeFilterValue(
-                selectedRetailer
-            );
+            card.style.display = visible ? "" : "none";
 
-
-        let visibleCount =
-            0;
-
-
-        listingCards.forEach(
-            function(card) {
-
-                const title =
-                    card.dataset.title || "";
-
-
-                const business =
-                    card.dataset.business || "";
-
-
-                const venue =
-                    card.dataset.venue || "";
-
-
-                const jobRegion =
-                    normalizeFilterValue(
-                        card.dataset.jobRegion
-                    );
-
-
-                const retailer =
-                    normalizeFilterValue(
-                        card.dataset.retailer
-                    );
-
-
-                const matchesSearch =
-                    (
-                        !query
-                        ||
-                        title.includes(
-                            query
-                        )
-                        ||
-                        business.includes(
-                            query
-                        )
-                        ||
-                        venue.includes(
-                            query
-                        )
-                        ||
-                        jobRegion.includes(
-                            query
-                        )
-                        ||
-                        retailer.includes(
-                            query
-                        )
-                    );
-
-
-                const matchesJobRegion =
-                    (
-                        selectedJobRegionValue
-                        === "all"
-                        ||
-                        jobRegion
-                        === selectedJobRegionValue
-                    );
-
-
-                const matchesRetailer =
-                    (
-                        selectedRetailerValue
-                        === "all"
-                        ||
-                        retailer
-                        === selectedRetailerValue
-                    );
-
-
-                const visible =
-                    (
-                        matchesSearch
-                        &&
-                        matchesJobRegion
-                        &&
-                        matchesRetailer
-                    );
-
-
-                card.style.display =
-                    visible
-                        ? ""
-                        : "none";
-
-
-                if (visible) {
-
-                    visibleCount += 1;
-                }
-
+            if (visible) {
+                visibleCount += 1;
             }
-        );
+        });
 
+        if (categorySearchResultCount) {
+            const filtersActive = (selectedJobRegionValue !== "all" || selectedRetailerValue !== "all");
 
-        if (
-            categorySearchResultCount
-        ) {
-
-            const filtersActive =
-                (
-                    selectedJobRegionValue
-                    !== "all"
-                    ||
-                    selectedRetailerValue
-                    !== "all"
-                );
-
-
-            if (
-                !query
-                &&
-                !filtersActive
-            ) {
-
-                categorySearchResultCount.textContent =
-                    "";
-
-            }
-
-            else if (
-                visibleCount === 0
-            ) {
-
-                categorySearchResultCount.textContent =
-                    "No matching listings found.";
-
-            }
-
-            else if (
-                visibleCount === 1
-            ) {
-
-                categorySearchResultCount.textContent =
-                    "1 matching listing";
-
-            }
-
-            else {
-
-                categorySearchResultCount.textContent =
-                    visibleCount
-                    + " matching listings";
+            if (!query && !filtersActive) {
+                categorySearchResultCount.textContent = "";
+            } else if (visibleCount === 0) {
+                categorySearchResultCount.textContent = "No matching listings found.";
+            } else if (visibleCount === 1) {
+                categorySearchResultCount.textContent = "1 matching listing";
+            } else {
+                categorySearchResultCount.textContent = visibleCount + " matching listings";
             }
         }
 
-
-        if (
-            categorySearchClear
-        ) {
-
-            categorySearchClear.style.display =
-                query
-                    ? "flex"
-                    : "none";
+        if (categorySearchClear) {
+            categorySearchClear.style.display = query ? "flex" : "none";
         }
 
-
-        if (
-            jobFilterEmpty
-        ) {
-
-            jobFilterEmpty.classList.toggle(
-                "show",
-                visibleCount === 0
-            );
+        if (jobFilterEmpty) {
+            jobFilterEmpty.classList.toggle("show", visibleCount === 0);
         }
 
-
-        if (
-            retailFilterEmpty
-        ) {
-
-            retailFilterEmpty.classList.toggle(
-                "show",
-                visibleCount === 0
-            );
+        if (retailFilterEmpty) {
+            retailFilterEmpty.classList.toggle("show", visibleCount === 0);
         }
-
     }
 
-
-    // =========================================
-    // SEARCH
-    // =========================================
-
-    if (
-        categorySearchInput
-    ) {
-
-        categorySearchInput.addEventListener(
-            "input",
-            filterCategoryListings
-        );
+    if (categorySearchInput) {
+        categorySearchInput.addEventListener("input", filterCategoryListings);
     }
 
-
-    if (
-        categorySearchClear
-    ) {
-
-        categorySearchClear.addEventListener(
-            "click",
-            function() {
-
-                if (
-                    categorySearchInput
-                ) {
-
-                    categorySearchInput.value =
-                        "";
-
-                    categorySearchInput.focus();
-                }
-
-
-                filterCategoryListings();
-
+    if (categorySearchClear) {
+        categorySearchClear.addEventListener("click", function() {
+            if (categorySearchInput) {
+                categorySearchInput.value = "";
+                categorySearchInput.focus();
             }
-        );
+            filterCategoryListings();
+        });
     }
 
+    jobRegionButtons.forEach(function(button) {
+        button.addEventListener("click", function() {
+            selectedJobRegion = button.dataset.jobRegionFilter || "all";
 
-    // =========================================
-    // JOB REGIONS
-    // =========================================
+            jobRegionButtons.forEach(function(otherButton) {
+                const isActive = (otherButton === button);
+                otherButton.classList.toggle("active", isActive);
+                otherButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+            });
 
-    jobRegionButtons.forEach(
-        function(button) {
+            filterCategoryListings();
+        });
+    });
 
-            button.addEventListener(
-                "click",
-                function() {
+    retailerButtons.forEach(function(button) {
+        button.addEventListener("click", function() {
+            selectedRetailer = button.dataset.retailerFilter || "all";
 
-                    selectedJobRegion =
-                        button.dataset
-                            .jobRegionFilter
-                        || "all";
+            retailerButtons.forEach(function(otherButton) {
+                const isActive = (otherButton === button);
+                otherButton.classList.toggle("active", isActive);
+                otherButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+            });
 
-
-                    jobRegionButtons.forEach(
-                        function(otherButton) {
-
-                            const isActive =
-                                otherButton
-                                === button;
-
-
-                            otherButton.classList.toggle(
-                                "active",
-                                isActive
-                            );
-
-
-                            otherButton.setAttribute(
-                                "aria-pressed",
-                                isActive
-                                    ? "true"
-                                    : "false"
-                            );
-
-                        }
-                    );
-
-
-                    filterCategoryListings();
-
-                }
-            );
-
-        }
-    );
-
-
-    // =========================================
-    // RETAILERS
-    // =========================================
-
-    retailerButtons.forEach(
-        function(button) {
-
-            button.addEventListener(
-                "click",
-                function() {
-
-                    selectedRetailer =
-                        button.dataset
-                            .retailerFilter
-                        || "all";
-
-
-                    retailerButtons.forEach(
-                        function(otherButton) {
-
-                            const isActive =
-                                otherButton
-                                === button;
-
-
-                            otherButton.classList.toggle(
-                                "active",
-                                isActive
-                            );
-
-
-                            otherButton.setAttribute(
-                                "aria-pressed",
-                                isActive
-                                    ? "true"
-                                    : "false"
-                            );
-
-                        }
-                    );
-
-
-                    filterCategoryListings();
-
-                }
-            );
-
-        }
-    );
-
+            filterCategoryListings();
+        });
+    });
 
     filterCategoryListings();
 
@@ -3262,19 +2514,10 @@
 <script>
 
 window.LAC_ENGAGEMENT_CONFIG = {
-
-    zoneId:
-        {{ zone.id | tojson }},
-
-    accessPointId:
-        {{ access_point.id | tojson }},
-
-    contentItemId:
-        null,
-
-    category:
-        {{ canonical_category | tojson }}
-
+    zoneId: {{ zone.id | tojson }},
+    accessPointId: {{ access_point.id | tojson }},
+    contentItemId: null,
+    category: {{ canonical_category | tojson }}
 };
 
 </script>
@@ -3293,14 +2536,8 @@ window.LAC_ENGAGEMENT_CONFIG = {
 document.addEventListener(
     "DOMContentLoaded",
     function() {
-
-        if (
-            window.LaCTrack
-        ) {
-
-            window.LaCTrack(
-                "category_view"
-            );
+        if (window.LaCTrack) {
+            window.LaCTrack("category_view");
         }
     }
 );
