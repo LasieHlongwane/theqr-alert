@@ -8856,38 +8856,104 @@ CONTENT_WORKFLOWS = {
 
 
 def get_content_workflow(category, content_type):
-    raw_category = str(category or "").strip().lower()
-    content_type = str(content_type or "").strip().lower()
-    canonical_category = normalize_category(raw_category)
 
-    lookup_candidates = [raw_category]
-    if canonical_category and canonical_category not in lookup_candidates:
-        lookup_candidates.append(canonical_category)
+    # =====================================================
+    # NORMALIZE INPUT
+    # =====================================================
+
+    raw_category = (
+        str(category or "")
+        .strip()
+        .lower()
+    )
+
+    content_type = (
+        str(content_type or "")
+        .strip()
+        .lower()
+    )
+
+    canonical_category = normalize_category(
+        raw_category
+    )
+
+
+    # =====================================================
+    # FIND CONTENT WORKFLOW
+    # =====================================================
+
+    lookup_candidates = [
+        raw_category
+    ]
+
+    if (
+        canonical_category
+        and canonical_category not in lookup_candidates
+    ):
+
+        lookup_candidates.append(
+            canonical_category
+        )
+
 
     workflow = None
+
     for key in lookup_candidates:
-        category_workflows = CONTENT_WORKFLOWS.get(key, {})
-        workflow = category_workflows.get(content_type)
+
+        category_workflows = (
+            CONTENT_WORKFLOWS.get(
+                key,
+                {}
+            )
+        )
+
+        workflow = (
+            category_workflows.get(
+                content_type
+            )
+        )
+
         if workflow:
-            workflow = dict(workflow)
+
+            workflow = dict(
+                workflow
+            )
+
             break
 
+
+    # =====================================================
+    # DEFAULT WORKFLOW
+    # =====================================================
+
     if workflow is None:
+
         if canonical_category == "jobs":
+
             workflow = {
+
                 "lifetime_type": (
                     "until_unavailable"
                     if content_type == "job"
                     else "time_specific"
                 ),
+
                 "notification_eligible": True,
+
             }
+
         elif canonical_category == "events":
+
             workflow = {
+
                 "lifetime_type": "time_specific",
+
                 "notification_eligible": True,
+
             }
+
         elif canonical_category in {
+
             "restaurants",
             "beauty",
             "accommodation",
@@ -8895,33 +8961,118 @@ def get_content_workflow(category, content_type):
             "services",
             "building",
             "transport",
+
         }:
+
             workflow = {
+
                 "lifetime_type": "ongoing",
+
                 "notification_eligible": True,
-            }
-        elif canonical_category in {"rentals", "property"}:
-            workflow = {
-                "lifetime_type": "until_unavailable",
-                "notification_eligible": True,
-            }
-        else:
-            workflow = {
-                "lifetime_type": "time_specific",
-                "notification_eligible": True,
+
             }
 
-    # Jobs are a free community utility and never enter Yoco/commercial pricing.
+        elif canonical_category in {
+
+            "rentals",
+            "property",
+
+        }:
+
+            workflow = {
+
+                "lifetime_type": "until_unavailable",
+
+                "notification_eligible": True,
+
+            }
+
+        else:
+
+            workflow = {
+
+                "lifetime_type": "time_specific",
+
+                "notification_eligible": True,
+
+            }
+
+
+    # =====================================================
+    # RESOLVE PRICING CATEGORY
+    # =====================================================
+    #
+    # Workflow categories and pricing categories do not
+    # always use the same names.
+    #
+    # Translate them before calling get_pricing_model().
+    #
+    # Example:
+    #
+    # restaurants -> local-restaurants
+    # beauty      -> beauty-salon
+    #
+    # This ensures the specific pricing overrides work.
+    # =====================================================
+
+    pricing_category_aliases = {
+
+        "restaurants": "local-restaurants",
+
+        "local-restaurants": "local-restaurants",
+
+        "beauty": "beauty-salon",
+
+        "beauty-salon": "beauty-salon",
+
+        "discount_deals": "discount-deals",
+
+        "discount-deals": "discount-deals",
+
+    }
+
+    pricing_category = (
+        pricing_category_aliases.get(
+            canonical_category,
+            canonical_category,
+        )
+    )
+
+
+    # =====================================================
+    # JOBS
+    # =====================================================
+    #
+    # Jobs are a free community utility.
+    #
+    # They must never enter Yoco/commercial pricing.
+    # =====================================================
+
     if canonical_category == "jobs":
+
         workflow["pricing_model"] = None
+
+
+    # =====================================================
+    # COMMERCIAL PRICING
+    # =====================================================
+
     else:
+
         workflow["pricing_model"] = get_pricing_model(
-            raw_category,
+
+            pricing_category,
+
             content_type,
+
         )
 
-    return workflow
 
+    # =====================================================
+    # RETURN WORKFLOW
+    # =====================================================
+
+    return workflow
 
 def get_legacy_lifetime_type(item):
     lifetime_type = getattr(item, "lifetime_type", None)
