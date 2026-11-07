@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#0f1117"
+        content="#f4f6f9"
     >
 
     <title>{{ item.title }} | Kalxa</title>
@@ -52,7 +52,7 @@
 
     <meta
         name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent"
+        content="default"
     >
 
     <meta
@@ -80,23 +80,23 @@
 
 
     <!-- =========================================
-         CLEAN, SIMPLE & HIGH-CONTRAST CSS
+         CLEAN, SIMPLE & LIGHT GREY CSS
     ========================================== -->
 
     <style>
 
         /* =========================================
-           GLOBAL HIGH-CONTRAST TOKENS
+           GLOBAL LIGHT GREY TOKENS
         ========================================== */
 
         :root {
-            --kalxa-bg: #0f1117;
-            --kalxa-card: #181c24;
-            --kalxa-card-alt: #1e232d;
-            --kalxa-gold: #f3e7c4;
-            --kalxa-border: rgba(255, 255, 255, 0.12);
-            --kalxa-text: #ffffff;
-            --kalxa-muted: #a0aec0;
+            --kalxa-bg: #f4f6f9;
+            --kalxa-card: #ffffff;
+            --kalxa-card-alt: #edf2f7;
+            --kalxa-gold: #b7791f;
+            --kalxa-border: rgba(0, 0, 0, 0.1);
+            --kalxa-text: #1a202c;
+            --kalxa-muted: #4a5568;
         }
 
         body.lac-public-body {
@@ -134,6 +134,7 @@
             text-decoration: none;
             font-size: 11px;
             font-weight: 800;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease;
         }
 
@@ -158,9 +159,10 @@
             border: 1px solid var(--kalxa-border);
             border-radius: 999px;
             background: var(--kalxa-card);
-            color: var(--kalxa-gold);
+            color: var(--kalxa-text);
             font-size: 12px;
             font-weight: 800;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         .listing-local-label {
@@ -187,6 +189,7 @@
             border-radius: 20px;
             overflow: hidden;
             border: 1px solid var(--kalxa-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .listing-detail-gallery:not(.single) {
@@ -203,7 +206,7 @@
             height: 100%;
             padding: 0;
             border: none;
-            background: var(--kalxa-card);
+            background: var(--kalxa-card-alt);
             cursor: pointer;
             overflow: hidden;
         }
@@ -230,7 +233,7 @@
             border: 1px solid var(--kalxa-border);
             border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
         }
 
         .listing-badge-row {
@@ -247,9 +250,9 @@
             gap: 4px;
             padding: 5px 10px;
             border-radius: 999px;
-            background: rgba(243, 231, 196, 0.12);
+            background: rgba(183, 121, 31, 0.1);
             color: var(--kalxa-gold);
-            border: 1px solid rgba(243, 231, 196, 0.25);
+            border: 1px solid rgba(183, 121, 31, 0.25);
             font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.5px;
@@ -262,9 +265,9 @@
             gap: 4px;
             padding: 5px 10px;
             border-radius: 999px;
-            background: rgba(46, 204, 113, 0.12);
-            color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.25);
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.25);
             font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.5px;
@@ -293,7 +296,7 @@
             padding: 5px 10px;
             border-radius: 999px;
             background: var(--kalxa-card-alt);
-            color: var(--kalxa-gold);
+            color: var(--kalxa-text);
             border: 1px solid var(--kalxa-border);
             font-size: 9px;
             font-weight: 900;
@@ -303,7 +306,7 @@
 
         .listing-detail-main h1 {
             margin: 0 0 16px;
-            color: #ffffff;
+            color: #1a202c;
             font-size: clamp(24px, 5vw, 30px);
             font-weight: 900;
             letter-spacing: -0.5px;
@@ -312,7 +315,7 @@
 
         .listing-detail-description {
             margin: 18px 0 0;
-            color: #e2e8f0;
+            color: #2d3748;
             font-size: 14px;
             font-weight: 500;
             line-height: 1.7;
@@ -349,7 +352,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--kalxa-gold);
+            color: var(--kalxa-text);
             font-size: 15px;
             font-weight: 900;
         }
@@ -391,7 +394,7 @@
         }
 
         .listing-detail-info-grid strong {
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 13px;
             font-weight: 850;
         }
@@ -406,9 +409,9 @@
             overflow: hidden;
             margin: 20px 0;
             padding: 16px;
-            border: 1px solid rgba(243, 231, 196, 0.3);
+            border: 1px solid rgba(183, 121, 31, 0.3);
             border-radius: 16px;
-            background: rgba(243, 231, 196, 0.05);
+            background: rgba(183, 121, 31, 0.05);
         }
 
         .listing-special-offer::before {
@@ -432,7 +435,7 @@
 
         .listing-special-offer-text {
             margin: 0;
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 13.5px;
             font-weight: 750;
             line-height: 1.6;
@@ -465,7 +468,7 @@
 
         .business-information-title {
             margin: 0;
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 18px;
             font-weight: 900;
         }
@@ -495,7 +498,7 @@
 
         .business-info-value {
             margin: 0;
-            color: #e2e8f0;
+            color: #2d3748;
             font-size: 13.5px;
             font-weight: 650;
             line-height: 1.65;
@@ -524,7 +527,7 @@
 
         .listing-detail-contact h2 {
             margin: 0 0 6px;
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 18px;
             font-weight: 900;
         }
@@ -545,7 +548,7 @@
             border: 1px solid var(--kalxa-border);
             border-radius: 14px;
             background: var(--kalxa-card-alt);
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 13px;
             font-weight: 850;
         }
@@ -571,7 +574,7 @@
             border-radius: 12px;
             background: var(--kalxa-card-alt);
             border: 1px solid var(--kalxa-border);
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 11px;
             font-weight: 850;
             text-decoration: none;
@@ -587,9 +590,9 @@
         }
 
         .call-button {
-            background: rgba(46, 204, 113, 0.1);
-            color: #2ecc71;
-            border-color: rgba(46, 204, 113, 0.25);
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            border-color: rgba(39, 174, 96, 0.25);
         }
 
         .whatsapp-button {
@@ -599,14 +602,14 @@
         }
 
         .directions-button {
-            background: rgba(52, 152, 219, 0.1);
-            color: #3498db;
-            border-color: rgba(52, 152, 219, 0.25);
+            background: rgba(41, 128, 185, 0.1);
+            color: #2980b9;
+            border-color: rgba(41, 128, 185, 0.25);
         }
 
         .ticket-button {
             background: var(--kalxa-gold);
-            color: #0f1117;
+            color: #ffffff;
             border-color: var(--kalxa-gold);
             font-weight: 900;
         }
@@ -631,7 +634,7 @@
             border-radius: 12px;
             background: var(--kalxa-card-alt);
             border: 1px solid var(--kalxa-border);
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 11px;
             font-weight: 850;
             cursor: pointer;
@@ -666,7 +669,7 @@
 
         .claim-listing-label {
             margin-bottom: 4px;
-            color: #ffffff;
+            color: var(--kalxa-text);
             font-size: 14px;
             font-weight: 900;
         }
@@ -686,7 +689,7 @@
             width: 100%;
             padding: 12px 14px;
             background: var(--kalxa-gold);
-            color: #0f1117;
+            color: #ffffff;
             border-radius: 12px;
             text-decoration: none;
             font-size: 12px;
@@ -745,9 +748,10 @@
                 padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
                 overflow-x: auto;
                 border-top: 1px solid var(--kalxa-border);
-                background: rgba(15, 17, 23, 0.96);
+                background: rgba(244, 246, 249, 0.96);
                 backdrop-filter: blur(14px);
                 -webkit-backdrop-filter: blur(14px);
+                box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
             }
 
             .mobile-business-action {
@@ -762,7 +766,7 @@
                 border: 1px solid var(--kalxa-border);
                 border-radius: 12px;
                 background: var(--kalxa-card);
-                color: #ffffff;
+                color: var(--kalxa-text);
                 text-decoration: none;
                 font-size: 11px;
                 font-weight: 900;
@@ -770,7 +774,7 @@
 
             .mobile-business-action.primary {
                 background: var(--kalxa-gold);
-                color: #0f1117;
+                color: #ffffff;
                 border-color: var(--kalxa-gold);
             }
         }
