@@ -830,9 +830,7 @@
 
         <div class="listing-local-context">
 
-            <div class="location-label">
-                📍 {{ zone.name }}
-            </div>
+
 
             {% if item.can_use_business_features() %}
 
@@ -1100,17 +1098,7 @@
 
                 {% if item.venue %}
 
-                <div class="business-identity-location">
-                    📍 {{ item.venue }}, {{ zone.name }}
-                </div>
-
-                {% else %}
-
-                <div class="business-identity-location">
-                    📍 {{ zone.name }}
-                </div>
-
-                {% endif %}
+                
 
             </div>
 
