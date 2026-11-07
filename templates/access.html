@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#0b0c0e"
+        content="#38bdf8"
     >
 
     <title>
@@ -97,8 +97,8 @@
     <style>
 
         /* =========================================
-           PAGE
-        ========================================== */
+           PAGE & HEADER STYLING
+        ========================================== -->
 
         .access-container {
             width: 100%;
@@ -109,10 +109,70 @@
             box-sizing: border-box;
         }
 
+        /* Updated header with Sky Blue background */
+        .access-header {
+            position: relative;
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            padding: 24px 20px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.25);
+        }
+
+        .public-brand-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .access-header .lac-brand {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .access-header .lac-tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .kalxa-menu-button {
+            position: absolute;
+            top: 22px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .kalxa-menu-button span {
+            width: 18px;
+            height: 2px;
+            background: #ffffff;
+            border-radius: 2px;
+        }
+
 
         /* =========================================
            LOCATION
-        ========================================== */
+        ========================================== -->
 
         .location-label {
             display: inline-flex;
@@ -1817,50 +1877,6 @@
            KALXA APP MENU
         ========================================================= */
 
-        .access-header {
-            position: relative;
-        }
-
-
-        .kalxa-menu-button {
-            position: absolute;
-
-            top: 18px;
-            right: 18px;
-
-            width: 44px;
-            height: 44px;
-
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-
-            gap: 5px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-
-            border-radius: 14px;
-
-            background:
-                rgba(255, 255, 255, 0.05);
-
-            cursor: pointer;
-
-            z-index: 100;
-        }
-
-
-        .kalxa-menu-button span {
-            width: 18px;
-            height: 2px;
-
-            background: #ffffff;
-        }
-
-
         .kalxa-menu-overlay {
             position: fixed;
 
@@ -2467,8 +2483,8 @@
 
 
             .kalxa-menu-button {
-                top: 14px;
-                right: 14px;
+                top: 18px;
+                right: 16px;
             }
 
 
@@ -2535,7 +2551,7 @@
 
 
     <!-- =========================================
-         PUBLIC HEADER
+         PUBLIC HEADER (Sky Blue Background)
     ========================================== -->
 
     <header class="access-header">
@@ -2655,9 +2671,6 @@
 
                 <a
                     href="https://vat-paye-bot.streamlit.app/"
-                        
-                    
-                
                     class="
                         kalxa-menu-item
                         kalxa-menu-item-jobs
@@ -2676,7 +2689,6 @@
 
                         <small>
                             VAT and PAYE, handled. Built for local businesses.
-                            
                         </small>
 
                     </span>
@@ -2969,21 +2981,6 @@
             </span>
 
         </div>
-
-                    <a
-                     href="https://kalxa-stories.onrender.com/support-kwandebele"
-                    >
-
-                     <span>
-                      Support Us
-                     </span>
-
-                     <span aria-hidden="true">
-                      ♥
-                     </span>
-
-                    </a>
-
 
     </aside>
 
@@ -3869,8 +3866,6 @@
             <div class="kalxa-business-cta-job-note">
                 Ufuna umuntu ozoku Foromela or Ukwakha,Pumbling, Electrician <br>
                 Ufuna Umuntu ozokwenzela iLaudry, or clean yard <br>
-                
-                
             </div>
 
         </section>
