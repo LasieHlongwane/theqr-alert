@@ -7,7 +7,7 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1.0"
     >
 
     <meta
@@ -80,38 +80,84 @@
 
 
     <!-- =========================================
-         LISTING DETAIL ENHANCEMENTS
+         MODERN LISTING DETAIL LOCAL CSS
     ========================================== -->
 
     <style>
 
         /* =========================================
-           PAGE
+           GLOBAL RESETS & TOKENS
         ========================================== */
 
+        :root {
+            --kalxa-bg: #0b0c0e;
+            --kalxa-card-bg: #f5f1e8;
+            --kalxa-dark-card: #16181c;
+            --kalxa-accent: #fff4df;
+            --kalxa-border: rgba(255, 255, 255, 0.12);
+            --kalxa-border-light: rgba(63, 67, 72, 0.12);
+            --kalxa-text-muted: rgba(255, 255, 255, 0.60);
+        }
+
         .listing-detail-container {
-            padding-bottom: 110px;
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+            padding-left: 16px;
+            padding-right: 16px;
+            box-sizing: border-box;
+            padding-bottom: 120px;
         }
 
 
         /* =========================================
-           LOCAL CONTEXT
+           BACK LINK & LOCAL CONTEXT
         ========================================== */
+
+        .listing-detail-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 800;
+            transition: color 0.2s ease;
+        }
+
+        .listing-detail-back:hover {
+            color: var(--kalxa-accent);
+        }
 
         .listing-local-context {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin: 10px 0 16px;
+            margin-bottom: 20px;
         }
 
-        .listing-local-context .location-label {
-            margin: 0;
+        .location-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid var(--kalxa-border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 12px;
+            font-weight: 750;
+            backdrop-filter: blur(8px);
         }
 
         .listing-local-label {
-            color: #858a91;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--kalxa-border);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.8px;
@@ -120,82 +166,149 @@
 
 
         /* =========================================
-           BADGES
+           GALLERY ENHANCEMENTS
         ========================================== */
+
+        .listing-detail-gallery {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .listing-detail-gallery:not(.single) {
+            grid-template-columns: repeat(2, 1fr);
+            height: 220px;
+        }
+
+        .listing-detail-gallery.single {
+            height: 260px;
+        }
+
+        .listing-detail-gallery button {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: none;
+            background: #16181c;
+            cursor: pointer;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .listing-detail-gallery img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .listing-detail-gallery button:hover img {
+            transform: scale(1.03);
+        }
+
+
+        /* =========================================
+           MAIN LISTING CARD & TYPOGRAPHY
+        ========================================== */
+
+        .listing-detail-main {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1px solid var(--kalxa-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+        }
+
+        .listing-badge-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
 
         .verified-business-badge {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-
-            padding: 6px 9px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.16);
-
+            padding: 5px 10px;
             border-radius: 999px;
-
-            background:
-                rgba(255, 244, 223, 0.08);
-
-            color: #fff4df;
-
+            background: rgba(41, 151, 93, 0.15);
+            color: #27ae60;
+            border: 1px solid rgba(41, 151, 93, 0.3);
             font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
-
 
         .local-business-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-
-            padding: 6px 9px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
+            padding: 5px 10px;
             border-radius: 999px;
-
-            background:
-                rgba(255, 255, 255, 0.04);
-
-            color: #b9bdc3;
-
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--kalxa-border);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
+        .listing-detail-category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(255, 244, 223, 0.1);
+            color: var(--kalxa-accent);
+            border: 1px solid rgba(255, 244, 223, 0.2);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .listing-detail-main h1 {
+            margin: 0 0 16px;
+            color: #ffffff;
+            font-size: clamp(24px, 6vw, 30px);
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+
+        .listing-detail-description {
+            margin: 16px 0 0;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
 
         /* =========================================
-           BUSINESS IDENTITY
+           BUSINESS IDENTITY BOX
         ========================================== */
 
         .business-identity {
-            margin-top: 14px;
-            padding: 14px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.07);
-
-            border-radius: 15px;
-
-            background:
-                rgba(255, 255, 255, 0.025);
+            margin: 18px 0;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .business-identity-label {
-            margin-bottom: 5px;
-
-            color: #858a91;
-
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.45);
             font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.8px;
@@ -205,147 +318,82 @@
         .business-identity-name {
             display: flex;
             align-items: center;
-            gap: 7px;
-
-            color: #fff4df;
-
+            gap: 6px;
+            color: var(--kalxa-accent);
             font-size: 15px;
             font-weight: 900;
-            line-height: 1.35;
         }
 
         .business-identity-location {
-            margin-top: 5px;
-
-            color: #9fa4ab;
-
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 11px;
             font-weight: 700;
         }
 
 
         /* =========================================
-           BUSINESS INFORMATION
+           CORE DETAILS GRID
         ========================================== */
 
-        .business-information {
-            margin-top: 24px;
-        }
-
-        .business-information-header {
-            margin-bottom: 12px;
-        }
-
-        .business-information-eyebrow {
-            margin: 0 0 4px;
-
-            color: #858a91;
-
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .business-information-title {
-            margin: 0;
-
-            color: #fff4df;
-
-            font-size: 18px;
-            font-weight: 900;
-        }
-
-        .business-information-grid {
+        .listing-detail-info-grid {
             display: grid;
-
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 10px;
+            margin: 20px 0;
         }
 
-        .business-info-card {
-            padding: 14px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
+        .listing-detail-info-grid > div {
+            padding: 12px 14px;
             border-radius: 14px;
-
-            background:
-                rgba(255, 255, 255, 0.035);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .business-info-card.full {
-            grid-column: 1 / -1;
-        }
-
-        .business-info-label {
+        .listing-detail-info-grid span {
             display: block;
-            margin-bottom: 6px;
-
-            color: #858a91;
-
-            font-size: 9px;
+            margin-bottom: 3px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 8px;
             font-weight: 900;
-            letter-spacing: 0.6px;
             text-transform: uppercase;
+            letter-spacing: 0.6px;
         }
 
-        .business-info-value {
-            margin: 0;
-
-            color: #e7e8ea;
-
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1.6;
-
-            white-space: pre-line;
+        .listing-detail-info-grid strong {
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 850;
         }
 
 
         /* =========================================
-           SPECIAL OFFER
+           SPECIAL OFFER BANNER
         ========================================== */
 
         .listing-special-offer {
             position: relative;
             overflow: hidden;
-
-            margin-top: 18px;
-            padding: 17px;
-
-            border:
-                1px solid
-                rgba(255, 244, 223, 0.16);
-
+            margin: 20px 0;
+            padding: 16px;
+            border: 1px solid rgba(255, 244, 223, 0.25);
             border-radius: 16px;
-
-            background:
-                rgba(255, 244, 223, 0.065);
+            background: rgba(255, 244, 223, 0.06);
         }
 
         .listing-special-offer::before {
             content: "";
-
             position: absolute;
             top: 0;
             left: 0;
-
             width: 4px;
             height: 100%;
-
-            background: #fff4df;
+            background: var(--kalxa-accent);
         }
 
         .listing-special-offer-label {
-            margin-bottom: 7px;
-
-            color: #fff4df;
-
+            margin-bottom: 4px;
+            color: var(--kalxa-accent);
             font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.8px;
@@ -354,114 +402,246 @@
 
         .listing-special-offer-text {
             margin: 0;
-
-            color: #f0ede6;
-
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
             font-weight: 800;
-            line-height: 1.55;
-
+            line-height: 1.5;
             white-space: pre-line;
         }
 
 
         /* =========================================
-           CONTACT / ACTION SECTION
+           BUSINESS INFORMATION SECTION
         ========================================== */
+
+        .business-information {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .business-information-header {
+            margin-bottom: 12px;
+        }
+
+        .business-information-eyebrow {
+            margin: 0 0 2px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .business-information-title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .business-information-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .business-info-card {
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .business-info-label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--kalxa-accent);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .business-info-value {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+
+        /* =========================================
+           CONTACT & ACTIONS SECTION
+        ========================================== */
+
+        .listing-detail-contact {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .listing-contact-eyebrow {
+            margin: 0 0 2px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .listing-detail-contact h2 {
+            margin: 0 0 6px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 900;
+        }
 
         .listing-action-intro {
             margin: 0 0 14px;
-
-            color: #9fa4ab;
-
+            color: rgba(255, 255, 255, 0.6);
             font-size: 12px;
-            line-height: 1.55;
+            line-height: 1.5;
         }
 
         .listing-public-phone {
             display: flex;
             align-items: center;
-            gap: 8px;
-
+            gap: 10px;
             margin: 12px 0 16px;
-            padding: 11px 12px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-
-            background:
-                rgba(255, 255, 255, 0.035);
-
-            color: #f0ede6;
-
+            background: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
             font-size: 13px;
             font-weight: 800;
         }
 
         .listing-public-phone a {
-            color: #fff4df;
+            color: var(--kalxa-accent);
             text-decoration: none;
             word-break: break-word;
         }
 
+        .listing-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
 
-        /* =========================================
-           TICKET BUTTON
-        ========================================== */
+        .listing-action-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 850;
+            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
 
-        .listing-action-button.ticket-button {
-            background: #fff4df;
+        .listing-action-button:active {
+            transform: scale(0.97);
+        }
+
+        .call-button {
+            background: rgba(41, 151, 93, 0.12);
+            color: #2ecc71;
+            border-color: rgba(41, 151, 93, 0.25);
+        }
+
+        .whatsapp-button {
+            background: rgba(37, 211, 102, 0.12);
+            color: #25d366;
+            border-color: rgba(37, 211, 102, 0.25);
+        }
+
+        .directions-button {
+            background: rgba(52, 152, 219, 0.12);
+            color: #3498db;
+            border-color: rgba(52, 152, 219, 0.25);
+        }
+
+        .ticket-button {
+            background: var(--kalxa-accent);
             color: #111317;
+            border-color: rgba(255, 244, 223, 0.4);
+            font-weight: 900;
         }
 
 
         /* =========================================
-           SHARE
+           SHARE SECTION
         ========================================== */
 
         .listing-share-section {
             margin-top: 20px;
         }
 
+        .listing-share-button {
+            width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 11px;
+            font-weight: 850;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .listing-share-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .listing-share-feedback {
+            margin-top: 6px;
+            text-align: center;
+            color: var(--kalxa-accent);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
 
         /* =========================================
-           CLAIM LISTING
+           CLAIM LISTING BOX
         ========================================== */
 
         .claim-listing-box {
             margin-top: 24px;
             padding: 18px;
-
-            background:
-                rgba(255, 255, 255, 0.045);
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.09);
-
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 18px;
         }
 
         .claim-listing-label {
-            margin-bottom: 6px;
-
-            color: #fff4df;
-
-            font-size: 15px;
+            margin-bottom: 4px;
+            color: #ffffff;
+            font-size: 14px;
             font-weight: 900;
-            line-height: 1.3;
         }
 
         .claim-listing-text {
             margin: 0 0 14px;
-
-            color: #9fa4ab;
-
+            color: rgba(255, 255, 255, 0.6);
             font-size: 12px;
-            line-height: 1.55;
+            line-height: 1.5;
         }
 
         .claim-listing-button {
@@ -469,24 +649,15 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-
             width: 100%;
-
-            padding: 13px 14px;
-
-            background: #fff4df;
+            padding: 12px 14px;
+            background: var(--kalxa-accent);
             color: #111317;
-
             border-radius: 12px;
-
             text-decoration: none;
-
             font-size: 12px;
             font-weight: 900;
-
-            transition:
-                transform 0.12s ease,
-                opacity 0.12s ease;
+            transition: transform 0.12s ease;
         }
 
         .claim-listing-button:active {
@@ -495,36 +666,24 @@
 
         .claim-listing-arrow {
             flex-shrink: 0;
-
             font-size: 16px;
             line-height: 1;
         }
 
         .claim-listing-box.pending {
-            background:
-                rgba(255, 255, 255, 0.035);
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .claim-pending-status {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-
-            margin-top: 2px;
-
-            padding: 6px 9px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.09);
-
+            margin-top: 4px;
+            padding: 5px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 999px;
-
-            background:
-                rgba(255, 255, 255, 0.055);
-
-            color: #c6c9ce;
-
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.4px;
@@ -540,87 +699,46 @@
             display: none;
         }
 
-
         @media (max-width: 600px) {
-
-            .business-information-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .business-info-card.full {
-                grid-column: auto;
-            }
-
-            .listing-local-context {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
             .mobile-business-actions {
                 position: fixed;
-
                 left: 0;
                 right: 0;
                 bottom: 0;
-
                 z-index: 80;
-
                 display: flex;
                 gap: 8px;
-
-                padding:
-                    10px
-                    12px
-                    calc(10px + env(safe-area-inset-bottom));
-
+                padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
                 overflow-x: auto;
-
-                border-top:
-                    1px solid
-                    rgba(255, 255, 255, 0.08);
-
-                background:
-                    rgba(11, 12, 14, 0.96);
-
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(11, 12, 14, 0.96);
                 backdrop-filter: blur(14px);
                 -webkit-backdrop-filter: blur(14px);
             }
 
             .mobile-business-action {
                 flex: 1 0 auto;
-
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-
                 min-width: 82px;
-                min-height: 45px;
-
+                min-height: 44px;
                 padding: 10px;
-
-                border:
-                    1px solid
-                    rgba(255, 255, 255, 0.08);
-
+                border: 1px solid rgba(255, 255, 255, 0.08);
                 border-radius: 12px;
-
-                background:
-                    rgba(255, 255, 255, 0.055);
-
-                color: #f2f2f2;
-
+                background: rgba(255, 255, 255, 0.05);
+                color: #ffffff;
                 text-decoration: none;
-
                 font-size: 11px;
                 font-weight: 900;
             }
 
             .mobile-business-action.primary {
-                background: #fff4df;
+                background: var(--kalxa-accent);
                 color: #111317;
+                border-color: var(--kalxa-accent);
             }
-
         }
 
     </style>
@@ -655,6 +773,17 @@
 
 
     <main class="listing-detail-container">
+
+        <!-- =========================================
+             BACK BUTTON
+        ========================================== -->
+
+        <a
+            href="javascript:history.back()"
+            class="listing-detail-back"
+        >
+            ← Back to listings
+        </a>
 
 
         <!-- =========================================
@@ -826,7 +955,7 @@
 
 
         <!-- =========================================
-             MAIN LISTING
+             MAIN LISTING ARTICLE
         ========================================== -->
 
         <article class="listing-detail-main">
@@ -960,7 +1089,7 @@
 
 
             <!-- =====================================
-                 CORE DETAILS
+                 CORE DETAILS GRID
             ====================================== -->
 
             <div class="listing-detail-info-grid">
@@ -1242,11 +1371,6 @@
 
             <!-- =====================================
                  CONTACT + ACTIONS
-
-                 IMPORTANT:
-                 These are intentionally field-driven.
-
-                 They are NOT restricted by listing_level.
             ====================================== -->
 
             {% if
@@ -1568,8 +1692,6 @@
 
 <!-- =========================================
      MOBILE QUICK ACTION BAR
-
-     FIELD-DRIVEN — NOT LISTING-LEVEL DRIVEN
 ========================================== -->
 
 {% if
@@ -1721,153 +1843,63 @@
 </div>
 
 
+<!-- =========================================
+     SCRIPTS
+========================================== -->
+
 <script>
 
-    // =========================================
-    // IMAGE MODAL
-    // =========================================
-
     function openImageModalFromButton(button) {
+        const modal = document.getElementById("image-modal");
+        const image = document.getElementById("image-modal-content");
 
-        const modal =
-            document.getElementById(
-                "image-modal"
-            );
+        image.src = button.dataset.imageUrl;
+        image.alt = button.dataset.imageAlt || "";
 
-        const image =
-            document.getElementById(
-                "image-modal-content"
-            );
-
-        image.src =
-            button.dataset.imageUrl;
-
-        image.alt =
-            button.dataset.imageAlt || "";
-
-        modal.classList.add(
-            "show"
-        );
-
-        document.body.style.overflow =
-            "hidden";
-
+        modal.classList.add("show");
+        document.body.style.overflow = "hidden";
     }
-
 
     function closeImageModal() {
+        const modal = document.getElementById("image-modal");
+        const image = document.getElementById("image-modal-content");
 
-        const modal =
-            document.getElementById(
-                "image-modal"
-            );
-
-        const image =
-            document.getElementById(
-                "image-modal-content"
-            );
-
-        modal.classList.remove(
-            "show"
-        );
-
+        modal.classList.remove("show");
         image.src = "";
-
         document.body.style.overflow = "";
-
     }
 
-
-    document.addEventListener(
-        "keydown",
-        function(event) {
-
-            if (event.key === "Escape") {
-                closeImageModal();
-            }
-
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            closeImageModal();
         }
-    );
-
-
-    // =========================================
-    // SHARE LISTING
-    // =========================================
+    });
 
     async function shareListing() {
-
-        const feedback =
-            document.getElementById(
-                "share-feedback"
-            );
-
+        const feedback = document.getElementById("share-feedback");
         const shareData = {
-
-            title:
-                {{ item.title | tojson }},
-
-            text:
-                "Check this out on Kalxa.",
-
-            url:
-                window.location.href
-
+            title: {{ item.title | tojson }},
+            text: "Check this out on Kalxa.",
+            url: window.location.href
         };
 
-
         try {
-
             if (navigator.share) {
-
-                await navigator.share(
-                    shareData
-                );
-
+                await navigator.share(shareData);
+            } else if (navigator.clipboard) {
+                await navigator.clipboard.writeText(window.location.href);
+                feedback.textContent = "Listing link copied ✓";
+                setTimeout(function() {
+                    feedback.textContent = "";
+                }, 2500);
+            } else {
+                feedback.textContent = window.location.href;
             }
-
-            else if (navigator.clipboard) {
-
-                await navigator.clipboard.writeText(
-                    window.location.href
-                );
-
-                feedback.textContent =
-                    "Listing link copied ✓";
-
-                setTimeout(
-                    function() {
-
-                        feedback.textContent = "";
-
-                    },
-                    2500
-                );
-
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                feedback.textContent = "Unable to share this listing.";
             }
-
-            else {
-
-                feedback.textContent =
-                    window.location.href;
-
-            }
-
         }
-
-        catch (error) {
-
-            if (
-                error.name
-                !== "AbortError"
-            ) {
-
-                feedback.textContent =
-                    "Unable to share this listing.";
-
-            }
-
-        }
-
     }
 
 </script>
@@ -1880,23 +1912,10 @@
 <script>
 
 window.LAC_ENGAGEMENT_CONFIG = {
-
-    zoneId:
-        {{ item.zone_id | tojson }},
-
-    accessPointId:
-        {% if access_point %}
-            {{ access_point.id | tojson }}
-        {% else %}
-            null
-        {% endif %},
-
-    contentItemId:
-        {{ item.id | tojson }},
-
-    category:
-        {{ item.category | tojson }}
-
+    zoneId: {{ item.zone_id | tojson }},
+    accessPointId: {% if access_point %}{{ access_point.id | tojson }}{% else %}null{% endif %},
+    contentItemId: {{ item.id | tojson }},
+    category: {{ item.category | tojson }}
 };
 
 </script>
@@ -1923,15 +1942,9 @@ window.LAC_ENGAGEMENT_CONFIG = {
 document.addEventListener(
     "DOMContentLoaded",
     function () {
-
         if (window.LaCTrack) {
-
-            window.LaCTrack(
-                "listing_view"
-            );
-
+            window.LaCTrack("listing_view");
         }
-
     }
 );
 
@@ -1941,8 +1954,3 @@ document.addEventListener(
 </body>
 
 </html>
-
-
-       
-
-    
