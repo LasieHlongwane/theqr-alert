@@ -12,7 +12,7 @@
 
     <meta
         name="theme-color"
-        content="#060709"
+        content="#0f1117"
     >
 
     <title>{{ item.title }} | Kalxa</title>
@@ -80,42 +80,40 @@
 
 
     <!-- =========================================
-         LUXURY MODERN LISTING DETAIL CSS
+         CLEAN, SIMPLE & HIGH-CONTRAST CSS
     ========================================== -->
 
     <style>
 
         /* =========================================
-           GLOBAL LUXURY DESIGN TOKENS
+           GLOBAL HIGH-CONTRAST TOKENS
         ========================================== */
 
         :root {
-            --lux-bg: #060709;
-            --lux-card-surface: linear-gradient(145deg, rgba(20, 22, 28, 0.75), rgba(10, 12, 16, 0.85));
-            --lux-gold: #f3e7c4;
-            --lux-gold-muted: rgba(243, 231, 196, 0.15);
-            --lux-gold-border: rgba(243, 231, 196, 0.3);
-            --lux-border: rgba(255, 255, 255, 0.08);
-            --lux-border-hover: rgba(243, 231, 196, 0.4);
-            --lux-text-main: #f8f9fa;
-            --lux-text-muted: rgba(255, 255, 255, 0.55);
+            --kalxa-bg: #0f1117;
+            --kalxa-card: #181c24;
+            --kalxa-card-alt: #1e232d;
+            --kalxa-gold: #f3e7c4;
+            --kalxa-border: rgba(255, 255, 255, 0.12);
+            --kalxa-text: #ffffff;
+            --kalxa-muted: #a0aec0;
         }
 
         body.lac-public-body {
-            background-color: var(--lux-bg) !important;
-            color: var(--lux-text-main);
+            background-color: var(--kalxa-bg) !important;
+            color: var(--kalxa-text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
         .listing-detail-container {
             width: 100%;
-            max-width: 720px;
+            max-width: 700px;
             margin: 0 auto;
-            padding-left: 18px;
-            padding-right: 18px;
+            padding-left: 16px;
+            padding-right: 16px;
             box-sizing: border-box;
-            padding-bottom: 140px;
+            padding-bottom: 130px;
         }
 
 
@@ -126,86 +124,78 @@
         .listing-detail-back {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            margin: 8px 0 18px;
+            gap: 6px;
+            margin: 12px 0 16px;
             padding: 8px 14px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--lux-border);
-            color: var(--lux-text-muted);
+            background: var(--kalxa-card);
+            border: 1px solid var(--kalxa-border);
+            color: var(--kalxa-muted);
             text-decoration: none;
             font-size: 11px;
             font-weight: 800;
-            letter-spacing: 0.5px;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s ease;
         }
 
         .listing-detail-back:hover {
-            color: var(--lux-gold);
-            border-color: var(--lux-gold-border);
-            background: rgba(243, 231, 196, 0.04);
-            transform: translateX(-3px);
+            color: var(--kalxa-gold);
+            border-color: var(--kalxa-gold);
         }
 
         .listing-local-context {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 22px;
+            gap: 10px;
+            margin-bottom: 18px;
         }
 
         .location-label {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 9px 16px;
-            border: 1px solid var(--lux-border);
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid var(--kalxa-border);
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--lux-gold);
+            background: var(--kalxa-card);
+            color: var(--kalxa-gold);
             font-size: 12px;
             font-weight: 800;
-            letter-spacing: 0.3px;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
         .listing-local-label {
-            padding: 7px 14px;
+            padding: 6px 12px;
             border-radius: 999px;
-            background: rgba(243, 231, 196, 0.04);
-            border: 1px solid var(--lux-gold-border);
-            color: var(--lux-gold);
+            background: var(--kalxa-card);
+            border: 1px solid var(--kalxa-border);
+            color: var(--kalxa-muted);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
         }
 
 
         /* =========================================
-           GALLERY ENHANCEMENTS (LUXURY ART DIRECTION)
+           GALLERY
         ========================================== */
 
         .listing-detail-gallery {
             display: grid;
-            gap: 12px;
-            margin-bottom: 28px;
-            border-radius: 24px;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--lux-border);
+            border: 1px solid var(--kalxa-border);
         }
 
         .listing-detail-gallery:not(.single) {
             grid-template-columns: repeat(2, 1fr);
-            height: 260px;
+            height: 240px;
         }
 
         .listing-detail-gallery.single {
-            height: 320px;
+            height: 300px;
         }
 
         .listing-detail-gallery button {
@@ -213,10 +203,9 @@
             height: 100%;
             padding: 0;
             border: none;
-            background: #0d0f14;
+            background: var(--kalxa-card);
             cursor: pointer;
             overflow: hidden;
-            position: relative;
         }
 
         .listing-detail-gallery img {
@@ -224,13 +213,11 @@
             height: 100%;
             object-fit: cover;
             display: block;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
-            filter: brightness(0.95);
+            transition: transform 0.3s ease;
         }
 
         .listing-detail-gallery button:hover img {
-            transform: scale(1.04);
-            filter: brightness(1.05);
+            transform: scale(1.03);
         }
 
 
@@ -239,107 +226,101 @@
         ========================================== */
 
         .listing-detail-main {
-            background: var(--lux-card-surface);
-            border: 1px solid var(--lux-border);
-            border-radius: 28px;
-            padding: 28px;
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: var(--kalxa-card);
+            border: 1px solid var(--kalxa-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
 
         .listing-badge-row {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 16px;
         }
 
         .featured {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
+            gap: 4px;
+            padding: 5px 10px;
             border-radius: 999px;
-            background: rgba(243, 231, 196, 0.15);
-            color: var(--lux-gold);
-            border: 1px solid var(--lux-gold-border);
+            background: rgba(243, 231, 196, 0.12);
+            color: var(--kalxa-gold);
+            border: 1px solid rgba(243, 231, 196, 0.25);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .verified-business-badge {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
+            gap: 4px;
+            padding: 5px 10px;
             border-radius: 999px;
             background: rgba(46, 204, 113, 0.12);
             color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.3);
+            border: 1px solid rgba(46, 204, 113, 0.25);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .local-business-badge {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
+            gap: 4px;
+            padding: 5px 10px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--lux-border);
-            color: var(--lux-text-muted);
+            background: var(--kalxa-card-alt);
+            border: 1px solid var(--kalxa-border);
+            color: var(--kalxa-muted);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .listing-detail-category-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
+            gap: 4px;
+            padding: 5px 10px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--lux-gold);
-            border: 1px solid var(--lux-border);
+            background: var(--kalxa-card-alt);
+            color: var(--kalxa-gold);
+            border: 1px solid var(--kalxa-border);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .listing-detail-main h1 {
-            margin: 0 0 18px;
+            margin: 0 0 16px;
             color: #ffffff;
-            font-size: clamp(26px, 6vw, 34px);
+            font-size: clamp(24px, 5vw, 30px);
             font-weight: 900;
-            letter-spacing: -0.8px;
-            line-height: 1.15;
-            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
         }
 
         .listing-detail-description {
-            margin: 20px 0 0;
-            color: rgba(255, 255, 255, 0.8);
+            margin: 18px 0 0;
+            color: #e2e8f0;
             font-size: 14px;
             font-weight: 500;
-            line-height: 1.75;
+            line-height: 1.7;
             white-space: pre-line;
-            letter-spacing: 0.2px;
-            background: rgba(0, 0, 0, 0.15);
-            padding: 18px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: var(--kalxa-card-alt);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid var(--kalxa-border);
         }
 
 
@@ -348,37 +329,35 @@
         ========================================== */
 
         .business-identity {
-            margin: 22px 0;
-            padding: 18px;
-            border: 1px solid var(--lux-border);
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.02);
-            box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.03);
+            margin: 20px 0;
+            padding: 16px;
+            border: 1px solid var(--kalxa-border);
+            border-radius: 16px;
+            background: var(--kalxa-card-alt);
         }
 
         .business-identity-label {
-            margin-bottom: 6px;
-            color: var(--lux-text-muted);
+            margin-bottom: 4px;
+            color: var(--kalxa-muted);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
         }
 
         .business-identity-name {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: var(--lux-gold);
-            font-size: 16px;
+            gap: 6px;
+            color: var(--kalxa-gold);
+            font-size: 15px;
             font-weight: 900;
-            letter-spacing: -0.2px;
         }
 
         .business-identity-location {
-            margin-top: 6px;
-            color: var(--lux-text-muted);
-            font-size: 12px;
+            margin-top: 4px;
+            color: var(--kalxa-muted);
+            font-size: 11px;
             font-weight: 700;
         }
 
@@ -389,38 +368,32 @@
 
         .listing-detail-info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin: 24px 0;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
         }
 
         .listing-detail-info-grid > div {
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--lux-border);
-            transition: border-color 0.2s ease;
-        }
-
-        .listing-detail-info-grid > div:hover {
-            border-color: rgba(243, 231, 196, 0.2);
+            padding: 14px;
+            border-radius: 14px;
+            background: var(--kalxa-card-alt);
+            border: 1px solid var(--kalxa-border);
         }
 
         .listing-detail-info-grid span {
             display: block;
             margin-bottom: 4px;
-            color: var(--lux-text-muted);
+            color: var(--kalxa-muted);
             font-size: 9px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.6px;
         }
 
         .listing-detail-info-grid strong {
             color: #ffffff;
             font-size: 13px;
-            font-weight: 900;
-            letter-spacing: 0.2px;
+            font-weight: 850;
         }
 
 
@@ -431,12 +404,11 @@
         .listing-special-offer {
             position: relative;
             overflow: hidden;
-            margin: 24px 0;
-            padding: 20px;
-            border: 1px solid var(--lux-gold-border);
-            border-radius: 20px;
-            background: linear-gradient(135deg, rgba(243, 231, 196, 0.08) 0%, rgba(243, 231, 196, 0.02) 100%);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin: 20px 0;
+            padding: 16px;
+            border: 1px solid rgba(243, 231, 196, 0.3);
+            border-radius: 16px;
+            background: rgba(243, 231, 196, 0.05);
         }
 
         .listing-special-offer::before {
@@ -444,25 +416,25 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 5px;
+            width: 4px;
             height: 100%;
-            background: var(--lux-gold);
+            background: var(--kalxa-gold);
         }
 
         .listing-special-offer-label {
-            margin-bottom: 6px;
-            color: var(--lux-gold);
+            margin-bottom: 4px;
+            color: var(--kalxa-gold);
             font-size: 10px;
             font-weight: 900;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
         }
 
         .listing-special-offer-text {
             margin: 0;
             color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 13.5px;
+            font-weight: 750;
             line-height: 1.6;
             white-space: pre-line;
         }
@@ -473,61 +445,60 @@
         ========================================== */
 
         .business-information {
-            margin-top: 28px;
-            padding-top: 24px;
-            border-top: 1px solid var(--lux-border);
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--kalxa-border);
         }
 
         .business-information-header {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .business-information-eyebrow {
-            margin: 0 0 3px;
-            color: var(--lux-text-muted);
+            margin: 0 0 2px;
+            color: var(--kalxa-muted);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 1.2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
         .business-information-title {
             margin: 0;
             color: #ffffff;
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 900;
-            letter-spacing: -0.3px;
         }
 
         .business-information-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         .business-info-card {
-            padding: 18px;
-            border: 1px solid var(--lux-border);
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.025);
+            padding: 16px;
+            border: 1px solid var(--kalxa-border);
+            border-radius: 16px;
+            background: var(--kalxa-card-alt);
         }
 
         .business-info-label {
             display: block;
-            margin-bottom: 8px;
-            color: var(--lux-gold);
-            font-size: 10px;
+            margin-bottom: 6px;
+            color: var(--kalxa-gold);
+            font-size: 9px;
             font-weight: 900;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.6px;
             text-transform: uppercase;
         }
 
         .business-info-value {
             margin: 0;
-            color: rgba(255, 255, 255, 0.85);
+            color: #e2e8f0;
             font-size: 13.5px;
-            font-weight: 600;
-            line-height: 1.7;
+            font-weight: 650;
+            line-height: 1.65;
             white-space: pre-line;
         }
 
@@ -537,87 +508,78 @@
         ========================================== */
 
         .listing-detail-contact {
-            margin-top: 28px;
-            padding-top: 24px;
-            border-top: 1px solid var(--lux-border);
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--kalxa-border);
         }
 
         .listing-contact-eyebrow {
-            margin: 0 0 3px;
-            color: var(--lux-text-muted);
+            margin: 0 0 2px;
+            color: var(--kalxa-muted);
             font-size: 9px;
             font-weight: 900;
-            letter-spacing: 1.2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
         .listing-detail-contact h2 {
             margin: 0 0 6px;
             color: #ffffff;
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 900;
-            letter-spacing: -0.3px;
         }
 
         .listing-action-intro {
-            margin: 0 0 16px;
-            color: var(--lux-text-muted);
-            font-size: 12.5px;
-            line-height: 1.6;
+            margin: 0 0 14px;
+            color: var(--kalxa-muted);
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .listing-public-phone {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin: 14px 0 18px;
-            padding: 14px 16px;
-            border: 1px solid var(--lux-border);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.025);
+            gap: 10px;
+            margin: 12px 0 16px;
+            padding: 14px;
+            border: 1px solid var(--kalxa-border);
+            border-radius: 14px;
+            background: var(--kalxa-card-alt);
             color: #ffffff;
-            font-size: 14px;
-            font-weight: 900;
+            font-size: 13px;
+            font-weight: 850;
         }
 
         .listing-public-phone a {
-            color: var(--lux-gold);
+            color: var(--kalxa-gold);
             text-decoration: none;
             word-break: break-word;
-            transition: opacity 0.2s ease;
-        }
-
-        .listing-public-phone a:hover {
-            opacity: 0.8;
         }
 
         .listing-actions {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
         }
 
         .listing-action-button {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 7px;
-            padding: 13px 12px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--lux-border);
+            gap: 6px;
+            padding: 12px 10px;
+            border-radius: 12px;
+            background: var(--kalxa-card-alt);
+            border: 1px solid var(--kalxa-border);
             color: #ffffff;
-            font-size: 11.5px;
-            font-weight: 900;
+            font-size: 11px;
+            font-weight: 850;
             text-decoration: none;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s ease;
         }
 
         .listing-action-button:hover {
-            border-color: var(--lux-gold-border);
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
+            border-color: var(--kalxa-gold);
         }
 
         .listing-action-button:active {
@@ -643,11 +605,10 @@
         }
 
         .ticket-button {
-            background: var(--lux-gold);
-            color: #060709;
-            border-color: var(--lux-gold);
+            background: var(--kalxa-gold);
+            color: #0f1117;
+            border-color: var(--kalxa-gold);
             font-weight: 900;
-            box-shadow: 0 6px 20px rgba(243, 231, 196, 0.25);
         }
 
 
@@ -656,39 +617,38 @@
         ========================================== */
 
         .listing-share-section {
-            margin-top: 24px;
+            margin-top: 20px;
         }
 
         .listing-share-button {
             width: 100%;
-            min-height: 48px;
+            min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 14px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--lux-border);
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 12px;
-            font-weight: 900;
+            padding: 12px;
+            border-radius: 12px;
+            background: var(--kalxa-card-alt);
+            border: 1px solid var(--kalxa-border);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 850;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .listing-share-button:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: var(--lux-gold-border);
-            color: var(--lux-gold);
+            border-color: var(--kalxa-gold);
+            color: var(--kalxa-gold);
         }
 
         .listing-share-feedback {
-            margin-top: 8px;
+            margin-top: 6px;
             text-align: center;
-            color: var(--lux-gold);
-            font-size: 11px;
-            font-weight: 800;
+            color: var(--kalxa-gold);
+            font-size: 10px;
+            font-weight: 750;
         }
 
 
@@ -697,26 +657,25 @@
         ========================================== */
 
         .claim-listing-box {
-            margin-top: 28px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.025);
-            border: 1px solid var(--lux-border);
-            border-radius: 20px;
+            margin-top: 24px;
+            padding: 18px;
+            background: var(--kalxa-card-alt);
+            border: 1px solid var(--kalxa-border);
+            border-radius: 18px;
         }
 
         .claim-listing-label {
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             color: #ffffff;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 900;
-            letter-spacing: -0.2px;
         }
 
         .claim-listing-text {
-            margin: 0 0 16px;
-            color: var(--lux-text-muted);
-            font-size: 12.5px;
-            line-height: 1.6;
+            margin: 0 0 14px;
+            color: var(--kalxa-muted);
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .claim-listing-button {
@@ -725,23 +684,18 @@
             justify-content: space-between;
             gap: 12px;
             width: 100%;
-            padding: 14px 16px;
-            background: var(--lux-gold);
-            color: #060709;
-            border-radius: 14px;
+            padding: 12px 14px;
+            background: var(--kalxa-gold);
+            color: #0f1117;
+            border-radius: 12px;
             text-decoration: none;
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 900;
-            box-shadow: 0 6px 20px rgba(243, 231, 196, 0.2);
-            transition: transform 0.15s ease, opacity 0.15s ease;
+            transition: opacity 0.15s ease;
         }
 
         .claim-listing-button:hover {
-            opacity: 0.92;
-        }
-
-        .claim-listing-button:active {
-            transform: scale(0.985);
+            opacity: 0.9;
         }
 
         .claim-listing-arrow {
@@ -751,22 +705,22 @@
         }
 
         .claim-listing-box.pending {
-            background: rgba(255, 255, 255, 0.015);
+            background: var(--kalxa-card);
         }
 
         .claim-pending-status {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin-top: 6px;
-            padding: 6px 12px;
-            border: 1px solid var(--lux-border);
+            margin-top: 4px;
+            padding: 5px 10px;
+            border: 1px solid var(--kalxa-border);
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--lux-text-muted);
+            background: var(--kalxa-card-alt);
+            color: var(--kalxa-muted);
             font-size: 10px;
             font-weight: 900;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
         }
 
@@ -788,13 +742,12 @@
                 z-index: 80;
                 display: flex;
                 gap: 8px;
-                padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+                padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
                 overflow-x: auto;
-                border-top: 1px solid var(--lux-border);
-                background: rgba(6, 7, 9, 0.94);
-                backdrop-filter: blur(18px);
-                -webkit-backdrop-filter: blur(18px);
-                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+                border-top: 1px solid var(--kalxa-border);
+                background: rgba(15, 17, 23, 0.96);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
             }
 
             .mobile-business-action {
@@ -803,22 +756,22 @@
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-                min-width: 86px;
-                min-height: 46px;
+                min-width: 82px;
+                min-height: 44px;
                 padding: 10px;
-                border: 1px solid var(--lux-border);
-                border-radius: 14px;
-                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid var(--kalxa-border);
+                border-radius: 12px;
+                background: var(--kalxa-card);
                 color: #ffffff;
                 text-decoration: none;
-                font-size: 11.5px;
+                font-size: 11px;
                 font-weight: 900;
             }
 
             .mobile-business-action.primary {
-                background: var(--lux-gold);
-                color: #060709;
-                border-color: var(--lux-gold);
+                background: var(--kalxa-gold);
+                color: #0f1117;
+                border-color: var(--kalxa-gold);
             }
         }
 
