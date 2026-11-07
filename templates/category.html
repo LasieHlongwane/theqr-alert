@@ -542,7 +542,7 @@
 
 
         /* =========================================
-           ACTION BUTTONS
+           ACTION BUTTONS (LIGHT GREY VIEW FULL LISTING)
         ========================================== */
 
         .listing-card-primary-action {
@@ -557,13 +557,18 @@
             justify-content: center;
             padding: 12px;
             border-radius: 12px;
-            background: #292c30;
-            color: #fff4df;
+            background: #e5e7eb;
+            color: #1f2937;
             font-size: 11px;
             font-weight: 900;
             text-decoration: none;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        .listing-details-button:hover {
+            background: #d1d5db;
         }
 
         .listing-details-button:active {
@@ -2071,17 +2076,7 @@
 
                                 {% else %}
 
-                                <a
-                                    href="{{ item.ticket_url }}"
-                                    class="
-                                        listing-action-button
-                                        ticket-button
-                                    "
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    🎟 Get Tickets
-                                </a>
+                                 
 
                                 {% endif %}
 
@@ -2221,60 +2216,14 @@
              USER NOTIFICATIONS
         ========================================== -->
 
-        <section class="public-notification-link">
-
-            <p class="notification-eyebrow">
-                STAY UPDATED
-            </p>
-
-
-            <h3>
-                Get 🔔 Alerts
-            </h3>
-
-
-            <p>
-                Stay updated when new
-                {{ consumer_category.title|lower }}
-                content appears around {{ zone.name }}.
-            </p>
-
-
-            <a
-                href="{{ url_for(
-                    'qr_access',
-                    access_code=access_point.code
-                ) }}#lac-alerts"
-                class="public-notification-button"
-            >
-                Choose Notification Preferences
-            </a>
-
-        </section>
+        
 
 
         <!-- =========================================
              LAC WEBSITE
         ========================================== -->
 
-        <section class="public-website-link">
 
-            <p>
-                Learn more about LaC and the infrastructure
-                powering Kalxa.
-            </p>
-
-
-            <a
-                href="https://lac-acess-delivered.onrender.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="public-website-button"
-            >
-                Visit LaC
-            </a>
-
-        </section>
 
 
     </main>
