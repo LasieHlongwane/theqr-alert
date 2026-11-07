@@ -1548,7 +1548,17 @@
 
                     {% if item.ticket_url %}
 
-                    
+                    <a
+                        href="{{ item.ticket_url }}"
+                        class="
+                            listing-action-button
+                            ticket-button
+                        "
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        🎟 Get Tickets
+                    </a>
 
                     {% endif %}
 
@@ -1588,7 +1598,68 @@
                  CLAIM LISTING
             ====================================== -->
 
+            {% if
+                item.can_be_claimed()
+                and not item.has_pending_claim()
+            %}
 
+            <section class="claim-listing-box">
+
+                <div class="claim-listing-label">
+                    Is this your business?
+                </div>
+
+                <p class="claim-listing-text">
+                    Claim this listing to manage your
+                    business information and create a richer
+                    presence on Kalxa.
+                </p>
+
+                <a
+                    href="{{ url_for(
+                        'claim_listing',
+                        item_id=item.id
+                    ) }}"
+                    class="claim-listing-button"
+                >
+
+                    <span>
+                        Claim this listing
+                    </span>
+
+                    <span class="claim-listing-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </section>
+
+
+            {% elif
+                item.can_be_claimed()
+                and item.has_pending_claim()
+            %}
+
+            <section class="claim-listing-box pending">
+
+                <div class="claim-listing-label">
+                    ⏳ Ownership claim under review
+                </div>
+
+                <p class="claim-listing-text">
+                    A claim for this listing has already
+                    been submitted and is currently being
+                    reviewed by Kalxa.
+                </p>
+
+                <div class="claim-pending-status">
+                    ● Pending review
+                </div>
+
+            </section>
+
+            {% endif %}
 
 
         </article>
@@ -1720,6 +1791,20 @@
     <!-- =====================================
          GET TICKETS
     ====================================== -->
+
+    {% if item.ticket_url %}
+
+    <a
+        href="{{ item.ticket_url }}"
+        class="
+            mobile-business-action
+            primary
+        "
+        target="_blank"
+        rel="noopener noreferrer"
+    >
+        🎟 Tickets
+    </a>
 
     {% endif %}
 
