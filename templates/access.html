@@ -3448,153 +3448,185 @@
         <!-- =========================================
              NEW
         ========================================== -->
+        <!-- =========================================
+     NEW
+========================================== -->
 
-        {% if new_items %}
+{% if new_items %}
 
-        <section class="lac-new-nearby">
+<section class="lac-new-nearby">
 
-            <div class="lac-new-nearby-header">
+    <div class="lac-new-nearby-header">
 
-                <h2 class="lac-new-nearby-title">
-                    NEW
-                </h2>
+        <h2 class="lac-new-nearby-title">
+            NEW
+        </h2>
 
-                <div class="lac-new-nearby-hint">
-                    Swipe →
-                </div>
+        <div class="lac-new-nearby-hint">
+            Swipe →
+        </div>
 
-            </div>
-
-
-            <div class="lac-new-rail">
-
-                {% for item in new_items %}
-
-                    {% set item_category =
-                        category_lookup.get(item.category)
-                    %}
-
-                    {% set item_consumer =
-                        consumer_category_lookup.get(
-                            item.category,
-                            {}
-                        )
-                    %}
+    </div>
 
 
-                    <a
-                        href="{{ url_for(
-                            'listing_detail',
-                            item_id=item.id
-                        ) }}"
-                        class="lac-new-card"
-                    >
+    <div class="lac-new-rail">
 
-                        <div
-                            class="
-                                lac-new-card-image
-                                lac-image-loading
-                            "
+        {% for item in new_items %}
+
+            {% set item_category =
+                category_lookup.get(item.category)
+            %}
+
+            {% set item_consumer =
+                consumer_category_lookup.get(
+                    item.category,
+                    {}
+                )
+            %}
+
+            <a
+                href="{{ url_for(
+                    'listing_detail',
+                    item_id=item.id
+                ) }}"
+                class="lac-new-card"
+            >
+
+                <div
+                    class="
+                        lac-new-card-image
+                        lac-image-loading
+                    "
+                    style="position: relative;"
+                >
+
+                    {% if item.image_url %}
+
+                        <img
+                            src="{{ item.image_url }}"
+                            alt="{{ item.title }}"
+                            loading="lazy"
                         >
 
-                            {% if item.image_url %}
+                    {% else %}
 
-                                <img
-                                    src="{{ item.image_url }}"
-                                    alt="{{ item.title }}"
-                                    loading="lazy"
-                                >
+                        <div class="lac-new-card-image-fallback">
 
-                            {% else %}
-
-                                <div class="lac-new-card-image-fallback">
-
-                                    {{
-                                        item_consumer.get(
-                                            "icon",
-                                            item_category.icon
-                                            if item_category
-                                            else "📍"
-                                        )
-                                    }}
-
-                                </div>
-
-                            {% endif %}
-
-
-                            <div class="lac-new-card-badge">
-                                NEW
-                            </div>
+                            {{
+                                item_consumer.get(
+                                    "icon",
+                                    item_category.icon
+                                    if item_category
+                                    else "📍"
+                                )
+                            }}
 
                         </div>
 
+                    {% endif %}
 
-                        <div class="lac-new-card-content">
 
-                            <div class="lac-new-card-category">
+                    <!-- NEW BADGE -->
 
-                                {{
-                                    item_consumer.get(
-                                        "title",
-                                        item_category.name
-                                        if item_category
-                                        else item.category
+                    <div class="lac-new-card-badge">
+                        NEW
+                    </div>
+
+
+                    <!-- LISTING VIEW COUNT -->
+
+                    <div
+                        class="lac-new-card-views"
+                        aria-label="{{ listing_views.get(item.id, 0) }} views"
+                    >
+
+                        <span aria-hidden="true">
+                            👁
+                        </span>
+
+                        <span>
+                            {{
+                                "{:,}".format(
+                                    listing_views.get(
+                                        item.id,
+                                        0
                                     )
-                                }}
+                                )
+                            }}
+                        </span>
 
-                            </div>
+                    </div>
 
-
-                            <div class="lac-new-card-title">
-                                {{ item.title }}
-                            </div>
-
-
-                            {% if
-                                item.campaign_state
-                                and item.campaign_state.label
-                            %}
-
-                                <span
-                                    class="
-                                        lac-campaign-state
-                                        {{ item.campaign_state.css_class }}
-                                    "
-                                >
-                                    {{ item.campaign_state.label }}
-                                </span>
-
-                            {% endif %}
+                </div>
 
 
-                            {% if item.business_name %}
+                <div class="lac-new-card-content">
 
-                                <div class="lac-new-card-business">
-                                    {{ item.business_name }}
-                                </div>
+                    <div class="lac-new-card-category">
 
-                            {% elif item.venue %}
+                        {{
+                            item_consumer.get(
+                                "title",
+                                item_category.name
+                                if item_category
+                                else item.category
+                            )
+                        }}
 
-                                <div class="lac-new-card-business">
-                                    📍 {{ item.venue }}
-                                </div>
+                    </div>
 
-                            {% endif %}
 
+                    <div class="lac-new-card-title">
+                        {{ item.title }}
+                    </div>
+
+
+                    {% if
+                        item.campaign_state
+                        and item.campaign_state.label
+                    %}
+
+                        <span
+                            class="
+                                lac-campaign-state
+                                {{ item.campaign_state.css_class }}
+                            "
+                        >
+                            {{ item.campaign_state.label }}
+                        </span>
+
+                    {% endif %}
+
+
+                    {% if item.business_name %}
+
+                        <div class="lac-new-card-business">
+                            {{ item.business_name }}
                         </div>
 
-                    </a>
+                    {% elif item.venue %}
 
-                {% endfor %}
+                        <div class="lac-new-card-business">
+                            📍 {{ item.venue }}
+                        </div>
 
-            </div>
+                    {% endif %}
 
-        </section>
+                </div>
 
-        {% endif %}
+            </a>
 
+        {% endfor %}
 
+    </div>
+
+</section>
+
+{% endif %}
+
+<!-- ========================================= -->
+
+        
         <!-- =========================================
              CATEGORIES (SWIPEABLE RAIL)
         ========================================== -->
