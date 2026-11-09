@@ -148,23 +148,24 @@
             min-width: 0;
             margin-bottom: 24px;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         .listing-gallery-track {
             display: flex;
-            flex-direction: row;
+            flex-flow: row nowrap;
             align-items: stretch;
 
             width: 100%;
             min-width: 0;
 
             gap: 0;
+            padding: 0;
 
             overflow-x: auto;
             overflow-y: hidden;
 
             scroll-snap-type: x mandatory;
-            scroll-snap-align: start;
             scroll-behavior: smooth;
 
             -webkit-overflow-scrolling: touch;
@@ -185,23 +186,13 @@
             display: none;
         }
 
-        /*
-           IMPORTANT GALLERY FIX:
-
-           Every slide must occupy the complete
-           visible width of the gallery.
-
-           flex-shrink: 0 prevents slides from
-           becoming half-width or smaller.
-        */
-
         .listing-gallery-slide {
             position: relative;
 
             display: block;
+            box-sizing: border-box;
 
             flex: 0 0 100%;
-            flex-shrink: 0;
 
             width: 100%;
             min-width: 100%;
@@ -212,14 +203,12 @@
             padding: 0;
             margin: 0;
 
-            border: none;
+            border: 0;
             border-radius: 0;
 
             background: var(--kalxa-card-alt);
 
             overflow: hidden;
-
-            box-sizing: border-box;
 
             scroll-snap-align: start;
             scroll-snap-stop: always;
@@ -444,12 +433,46 @@
         }
 
         .listing-detail-main h1 {
-            margin: 0 0 16px;
+            margin: 0 0 8px;
             color: #1a202c;
             font-size: clamp(24px, 5vw, 30px);
             font-weight: 900;
             letter-spacing: -0.5px;
             line-height: 1.2;
+        }
+
+
+        /* =========================================
+           LISTING VIEW COUNT
+        ========================================= */
+
+        .listing-view-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            margin: 0 0 16px;
+            padding: 7px 11px;
+
+            border: 1px solid var(--kalxa-border);
+            border-radius: 999px;
+
+            background: var(--kalxa-card-alt);
+
+            color: var(--kalxa-muted);
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .listing-view-count-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .listing-view-count-number {
+            color: var(--kalxa-text);
+            font-weight: 900;
         }
 
         .listing-detail-description {
@@ -1346,6 +1369,27 @@
             </h1>
 
 
+            <!-- LISTING VIEW COUNT -->
+
+            <div class="listing-view-count"
+                 aria-label="{{ item.view_count or 0 }} listing views">
+
+                <span class="listing-view-count-icon"
+                      aria-hidden="true">
+                    👁
+                </span>
+
+                <span class="listing-view-count-number">
+                    {{ "{:,}".format(item.view_count or 0) }}
+                </span>
+
+                <span>
+                    views
+                </span>
+
+            </div>
+
+
             <!-- BUSINESS IDENTITY -->
 
             {% if item.business_name %}
@@ -2212,13 +2256,6 @@
 
     /* =========================================
        SCROLL TO IMAGE
-
-       Calculate the slide's actual position
-       relative to the gallery track.
-
-       This avoids relying on offsetLeft,
-       which can produce incorrect positioning
-       in certain layouts.
     ========================================= */
 
     function scrollToImage(index) {
@@ -2376,22 +2413,10 @@
     }
 
 
-    /*
-       Explicitly start at the first slide.
-
-       This prevents the gallery from loading
-       at an unintended horizontal position.
-    */
-
     track.scrollLeft = 0;
 
     updateGallery(0);
 
-
-    /*
-       Recalculate the initial position after
-       the browser has completed layout.
-    */
 
     window.addEventListener(
         "load",
