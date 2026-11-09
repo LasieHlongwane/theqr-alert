@@ -10230,6 +10230,62 @@ def qr_access(access_code):
         ]
     )
 
+   # ============================================================
+# NEW LISTING VIEW COUNTS
+#
+# Count listing_view events for the listings displayed
+# in the NEW section.
+#
+# One grouped query is used instead of querying each
+# listing separately.
+# ============================================================
+
+    listing_views = {}
+
+
+    new_item_ids = [
+        item.id
+        for item in new_items
+    ]
+
+
+    if new_item_ids:
+
+     view_results = (
+        db.session.query(
+            EngagementEvent.content_item_id,
+            db.func.count(
+                EngagementEvent.id
+            ),
+        )
+        .filter(
+            EngagementEvent.event_type == "listing_view",
+            EngagementEvent.content_item_id.in_(
+                new_item_ids
+            ),
+        )
+        .group_by(
+            EngagementEvent.content_item_id
+        )
+        .all()
+     )
+
+
+     listing_views = {
+        item_id: view_count
+        for item_id, view_count in view_results
+     }
+
+
+# Ensure every NEW listing has a count,
+# including listings that have never been viewed.
+
+    for item in new_items:
+
+     listing_views.setdefault(
+        item.id,
+        0,
+     )
 
     # ============================================================
     # FEATURED CONTENT
@@ -10488,6 +10544,8 @@ def qr_access(access_code):
             consumer_category_lookup,
 
         category_stats=category_stats,
+        
+        listing_views=listing_views,
 
         new_items=new_items,
 
