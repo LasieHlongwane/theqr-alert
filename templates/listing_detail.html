@@ -1,1140 +1,1444 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 
-<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta charset="UTF-8">
+<meta name="theme-color" content="#f4f6f9">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<title>{{ item.title }} | Kalxa</title>
 
-    <meta
-        name="theme-color"
-        content="#f4f6f9"
-    >
+<!-- PWA -->
 
-    <title>{{ item.title }} | Kalxa</title>
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
+<link rel="icon" type="image/png" sizes="192x192"
+      href="{{ url_for('static', filename='icons/lac-192.png') }}">
 
-    <!-- =========================================
-         PWA
-    ========================================== -->
+<link rel="apple-touch-icon" sizes="192x192"
+      href="{{ url_for('static', filename='icons/lac-192.png') }}">
 
-    <link
-        rel="manifest"
-        href="{{ url_for('static', filename='manifest.json') }}"
-    >
+<meta name="application-name" content="Kalxa">
 
-    <link
-        rel="icon"
-        type="image/png"
-        sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
-    >
+<meta name="apple-mobile-web-app-capable" content="yes">
 
-    <link
-        rel="apple-touch-icon"
-        sizes="192x192"
-        href="{{ url_for('static', filename='icons/lac-192.png') }}"
-    >
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    <meta
-        name="application-name"
-        content="Kalxa"
-    >
+<meta name="apple-mobile-web-app-title" content="Kalxa">
 
-    <meta
-        name="apple-mobile-web-app-capable"
-        content="yes"
-    >
-
-    <meta
-        name="apple-mobile-web-app-status-bar-style"
-        content="default"
-    >
-
-    <meta
-        name="apple-mobile-web-app-title"
-        content="Kalxa"
-    >
-
-    <meta
-        name="mobile-web-app-capable"
-        content="yes"
-    >
+<meta name="mobile-web-app-capable" content="yes">
 
 
-    <!-- =========================================
-         MAIN CSS
-    ========================================== -->
+<!-- MAIN CSS -->
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/style.css'
-        ) }}"
-    >
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}">
 
 
-    <!-- =========================================
-         CLEAN, SIMPLE & LIGHT GREY CSS
-    ========================================== -->
+<style>
 
-    <style>
+    /* =========================================
+       GLOBAL
+    ========================================= */
 
-        /* =========================================
-           GLOBAL LIGHT GREY TOKENS
-        ========================================== */
+    :root {
+        --kalxa-bg: #f4f6f9;
+        --kalxa-card: #ffffff;
+        --kalxa-card-alt: #edf2f7;
+        --kalxa-gold: #b7791f;
+        --kalxa-border: rgba(0, 0, 0, 0.1);
+        --kalxa-text: #1a202c;
+        --kalxa-muted: #4a5568;
+    }
 
-        :root {
-            --kalxa-bg: #f4f6f9;
-            --kalxa-card: #ffffff;
-            --kalxa-card-alt: #edf2f7;
-            --kalxa-gold: #b7791f;
-            --kalxa-border: rgba(0, 0, 0, 0.1);
-            --kalxa-text: #1a202c;
-            --kalxa-muted: #4a5568;
-        }
+    body.lac-public-body {
+        background-color: var(--kalxa-bg) !important;
+        color: var(--kalxa-text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
 
-        body.lac-public-body {
-            background-color: var(--kalxa-bg) !important;
-            color: var(--kalxa-text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .listing-detail-container {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
-            padding-left: 16px;
-            padding-right: 16px;
-            box-sizing: border-box;
-            padding-bottom: 130px;
-        }
+    .listing-detail-container {
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 16px 130px;
+        box-sizing: border-box;
+    }
 
 
-        /* =========================================
-           BACK LINK & LOCAL CONTEXT
-        ========================================== */
+    /* =========================================
+       BACK LINK
+    ========================================= */
 
-        .listing-detail-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin: 12px 0 16px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: var(--kalxa-card);
-            border: 1px solid var(--kalxa-border);
-            color: var(--kalxa-muted);
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 800;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            transition: all 0.2s ease;
-        }
+    .listing-detail-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 12px 0 16px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--kalxa-card);
+        border: 1px solid var(--kalxa-border);
+        color: var(--kalxa-muted);
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 800;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+    }
 
-        .listing-detail-back:hover {
-            color: var(--kalxa-gold);
-            border-color: var(--kalxa-gold);
-        }
-
-        .listing-local-context {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 18px;
-        }
-
-        .location-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 8px 14px;
-            border: 1px solid var(--kalxa-border);
-            border-radius: 999px;
-            background: var(--kalxa-card);
-            color: var(--kalxa-text);
-            font-size: 12px;
-            font-weight: 800;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-
-        .listing-local-label {
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: var(--kalxa-card);
-            border: 1px solid var(--kalxa-border);
-            color: var(--kalxa-muted);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }
+    .listing-detail-back:hover {
+        color: var(--kalxa-gold);
+        border-color: var(--kalxa-gold);
+    }
 
 
-        /* =========================================
-           GALLERY
-        ========================================== */
+    /* =========================================
+       LOCAL CONTEXT
+    ========================================= */
 
-        .listing-detail-gallery {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 24px;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--kalxa-border);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
+    .listing-local-context {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
 
-        .listing-detail-gallery:not(.single) {
-            grid-template-columns: repeat(2, 1fr);
-            height: 240px;
-        }
+    .location-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 14px;
+        border: 1px solid var(--kalxa-border);
+        border-radius: 999px;
+        background: var(--kalxa-card);
+        color: var(--kalxa-text);
+        font-size: 12px;
+        font-weight: 800;
+    }
 
-        .listing-detail-gallery.single {
-            height: 300px;
-        }
-
-        .listing-detail-gallery button {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            border: none;
-            background: var(--kalxa-card-alt);
-            cursor: pointer;
-            overflow: hidden;
-        }
-
-        .listing-detail-gallery img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.3s ease;
-        }
-
-        .listing-detail-gallery button:hover img {
-            transform: scale(1.03);
-        }
+    .listing-local-label {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--kalxa-card);
+        border: 1px solid var(--kalxa-border);
+        color: var(--kalxa-muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+    }
 
 
-        /* =========================================
-           MAIN LISTING CARD & TYPOGRAPHY
-        ========================================== */
+    /* =========================================
+       SWIPEABLE IMAGE GALLERY
+    ========================================= */
+
+    .listing-detail-gallery {
+        position: relative;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    .listing-gallery-track {
+        display: flex;
+        width: 100%;
+        gap: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+
+        -webkit-overflow-scrolling: touch;
+
+        scrollbar-width: none;
+
+        border-radius: 20px;
+        border: 1px solid var(--kalxa-border);
+
+        background: var(--kalxa-card-alt);
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .listing-gallery-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .listing-gallery-slide {
+        position: relative;
+
+        flex: 0 0 100%;
+        width: 100%;
+        height: 300px;
+
+        padding: 0;
+        margin: 0;
+
+        border: none;
+        background: var(--kalxa-card-alt);
+
+        overflow: hidden;
+
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+
+        cursor: pointer;
+    }
+
+    .listing-gallery-slide img {
+        display: block;
+
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+
+        transition: transform 0.3s ease;
+    }
+
+    .listing-gallery-slide:hover img {
+        transform: scale(1.02);
+    }
+
+
+    /* =========================================
+       GALLERY NAVIGATION
+    ========================================= */
+
+    .listing-gallery-arrow {
+        position: absolute;
+
+        top: 50%;
+        transform: translateY(-50%);
+
+        z-index: 5;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 38px;
+        height: 38px;
+
+        padding: 0;
+
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+
+        background: rgba(0, 0, 0, 0.48);
+
+        color: #ffffff;
+
+        font-size: 24px;
+        font-weight: 700;
+
+        cursor: pointer;
+
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+
+        transition: background 0.2s ease;
+    }
+
+    .listing-gallery-arrow:hover {
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    .listing-gallery-prev {
+        left: 12px;
+    }
+
+    .listing-gallery-next {
+        right: 12px;
+    }
+
+    .listing-gallery-arrow[hidden] {
+        display: none;
+    }
+
+
+    /* =========================================
+       IMAGE COUNTER
+    ========================================= */
+
+    .listing-gallery-counter {
+        position: absolute;
+
+        right: 12px;
+        bottom: 14px;
+
+        z-index: 5;
+
+        padding: 7px 12px;
+
+        border-radius: 999px;
+
+        background: rgba(0, 0, 0, 0.58);
+
+        color: #ffffff;
+
+        font-size: 11px;
+        font-weight: 850;
+
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+
+    .listing-gallery-counter[hidden] {
+        display: none;
+    }
+
+
+    /* =========================================
+       IMAGE INDICATORS
+    ========================================= */
+
+    .listing-gallery-dots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+
+        margin-top: 12px;
+    }
+
+    .listing-gallery-dot {
+        width: 7px;
+        height: 7px;
+
+        padding: 0;
+
+        border: none;
+        border-radius: 50%;
+
+        background: #cbd5e0;
+
+        cursor: pointer;
+
+        transition: all 0.2s ease;
+    }
+
+    .listing-gallery-dot.active {
+        width: 22px;
+        border-radius: 999px;
+        background: var(--kalxa-gold);
+    }
+
+    .listing-gallery-dots[hidden] {
+        display: none;
+    }
+
+    .listing-gallery-hint {
+        margin: 8px 0 0;
+        text-align: center;
+        color: var(--kalxa-muted);
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .listing-gallery-hint[hidden] {
+        display: none;
+    }
+
+
+    /* =========================================
+       MAIN LISTING CARD
+    ========================================= */
+
+    .listing-detail-main {
+        background: var(--kalxa-card);
+        border: 1px solid var(--kalxa-border);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .listing-badge-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .featured,
+    .verified-business-badge,
+    .local-business-badge,
+    .listing-detail-category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .featured {
+        background: rgba(183, 121, 31, 0.1);
+        color: var(--kalxa-gold);
+        border: 1px solid rgba(183, 121, 31, 0.25);
+    }
+
+    .verified-business-badge {
+        background: rgba(39, 174, 96, 0.1);
+        color: #27ae60;
+        border: 1px solid rgba(39, 174, 96, 0.25);
+    }
+
+    .local-business-badge,
+    .listing-detail-category-badge {
+        background: var(--kalxa-card-alt);
+        border: 1px solid var(--kalxa-border);
+        color: var(--kalxa-text);
+    }
+
+    .listing-detail-main h1 {
+        margin: 0 0 16px;
+        color: #1a202c;
+        font-size: clamp(24px, 5vw, 30px);
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+    }
+
+    .listing-detail-description {
+        margin: 18px 0 0;
+        color: #2d3748;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.7;
+        white-space: pre-line;
+        background: var(--kalxa-card-alt);
+        padding: 16px;
+        border-radius: 14px;
+        border: 1px solid var(--kalxa-border);
+    }
+
+
+    /* =========================================
+       BUSINESS IDENTITY
+    ========================================= */
+
+    .business-identity {
+        margin: 20px 0;
+        padding: 16px;
+        border: 1px solid var(--kalxa-border);
+        border-radius: 16px;
+        background: var(--kalxa-card-alt);
+    }
+
+    .business-identity-label {
+        margin-bottom: 4px;
+        color: var(--kalxa-muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+    }
+
+    .business-identity-name {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--kalxa-text);
+        font-size: 15px;
+        font-weight: 900;
+    }
+
+    .business-identity-location {
+        margin-top: 4px;
+        color: var(--kalxa-muted);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+
+    /* =========================================
+       CORE DETAILS
+    ========================================= */
+
+    .listing-detail-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .listing-detail-info-grid > div {
+        padding: 14px;
+        border-radius: 14px;
+        background: var(--kalxa-card-alt);
+        border: 1px solid var(--kalxa-border);
+    }
+
+    .listing-detail-info-grid span {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--kalxa-muted);
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .listing-detail-info-grid strong {
+        color: var(--kalxa-text);
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+
+    /* =========================================
+       SPECIAL OFFER
+    ========================================= */
+
+    .listing-special-offer {
+        position: relative;
+        overflow: hidden;
+        margin: 20px 0;
+        padding: 16px;
+        border: 1px solid rgba(183, 121, 31, 0.3);
+        border-radius: 16px;
+        background: rgba(183, 121, 31, 0.05);
+    }
+
+    .listing-special-offer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--kalxa-gold);
+    }
+
+    .listing-special-offer-label {
+        margin-bottom: 4px;
+        color: var(--kalxa-gold);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+    }
+
+    .listing-special-offer-text {
+        margin: 0;
+        color: var(--kalxa-text);
+        font-size: 13.5px;
+        font-weight: 750;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+
+
+    /* =========================================
+       BUSINESS INFORMATION
+    ========================================= */
+
+    .business-information {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--kalxa-border);
+    }
+
+    .business-information-header {
+        margin-bottom: 12px;
+    }
+
+    .business-information-eyebrow {
+        margin: 0 0 2px;
+        color: var(--kalxa-muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .business-information-title {
+        margin: 0;
+        color: var(--kalxa-text);
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .business-information-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .business-info-card {
+        padding: 16px;
+        border: 1px solid var(--kalxa-border);
+        border-radius: 16px;
+        background: var(--kalxa-card-alt);
+    }
+
+    .business-info-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--kalxa-gold);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+    }
+
+    .business-info-value {
+        margin: 0;
+        color: #2d3748;
+        font-size: 13.5px;
+        font-weight: 650;
+        line-height: 1.65;
+        white-space: pre-line;
+    }
+
+
+    /* =========================================
+       CONTACT
+    ========================================= */
+
+    .listing-detail-contact {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--kalxa-border);
+    }
+
+    .listing-contact-eyebrow {
+        margin: 0 0 2px;
+        color: var(--kalxa-muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .listing-detail-contact h2 {
+        margin: 0 0 6px;
+        color: var(--kalxa-text);
+        font-size: 18px;
+        font-weight: 900;
+    }
+
+    .listing-action-intro {
+        margin: 0 0 14px;
+        color: var(--kalxa-muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .listing-public-phone {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 0 16px;
+        padding: 14px;
+        border: 1px solid var(--kalxa-border);
+        border-radius: 14px;
+        background: var(--kalxa-card-alt);
+        color: var(--kalxa-text);
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .listing-public-phone a {
+        color: var(--kalxa-gold);
+        text-decoration: none;
+        word-break: break-word;
+    }
+
+    .listing-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
+    }
+
+    .listing-action-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 12px 10px;
+        border-radius: 12px;
+        background: var(--kalxa-card-alt);
+        border: 1px solid var(--kalxa-border);
+        color: var(--kalxa-text);
+        font-size: 11px;
+        font-weight: 850;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .listing-action-button:hover {
+        border-color: var(--kalxa-gold);
+    }
+
+    .listing-action-button:active {
+        transform: scale(0.97);
+    }
+
+    .call-button {
+        background: rgba(39, 174, 96, 0.1);
+        color: #27ae60;
+        border-color: rgba(39, 174, 96, 0.25);
+    }
+
+    .whatsapp-button {
+        background: rgba(37, 211, 102, 0.1);
+        color: #25d366;
+        border-color: rgba(37, 211, 102, 0.25);
+    }
+
+    .directions-button {
+        background: rgba(41, 128, 185, 0.1);
+        color: #2980b9;
+        border-color: rgba(41, 128, 185, 0.25);
+    }
+
+    .ticket-button {
+        background: var(--kalxa-gold);
+        color: #ffffff;
+        border-color: var(--kalxa-gold);
+        font-weight: 900;
+    }
+
+
+    /* =========================================
+       SHARE
+    ========================================= */
+
+    .listing-share-section {
+        margin-top: 20px;
+    }
+
+    .listing-share-button {
+        width: 100%;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--kalxa-card-alt);
+        border: 1px solid var(--kalxa-border);
+        color: var(--kalxa-text);
+        font-size: 11px;
+        font-weight: 850;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .listing-share-button:hover {
+        border-color: var(--kalxa-gold);
+        color: var(--kalxa-gold);
+    }
+
+    .listing-share-feedback {
+        margin-top: 6px;
+        text-align: center;
+        color: var(--kalxa-gold);
+        font-size: 10px;
+        font-weight: 750;
+    }
+
+
+    /* =========================================
+       CLAIM LISTING
+    ========================================= */
+
+    .claim-listing-box {
+        margin-top: 24px;
+        padding: 18px;
+        background: var(--kalxa-card-alt);
+        border: 1px solid var(--kalxa-border);
+        border-radius: 18px;
+    }
+
+    .claim-listing-label {
+        margin-bottom: 4px;
+        color: var(--kalxa-text);
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .claim-listing-text {
+        margin: 0 0 14px;
+        color: var(--kalxa-muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .claim-listing-button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 14px;
+        background: var(--kalxa-gold);
+        color: #ffffff;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 900;
+        transition: opacity 0.15s ease;
+    }
+
+    .claim-listing-button:hover {
+        opacity: 0.9;
+    }
+
+    .claim-listing-arrow {
+        flex-shrink: 0;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    .claim-listing-box.pending {
+        background: var(--kalxa-card);
+    }
+
+    .claim-pending-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        padding: 5px 10px;
+        border: 1px solid var(--kalxa-border);
+        border-radius: 999px;
+        background: var(--kalxa-card-alt);
+        color: var(--kalxa-muted);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+    }
+
+
+    /* =========================================
+       FULLSCREEN IMAGE MODAL
+    ========================================= */
+
+    .image-modal {
+        position: fixed;
+        inset: 0;
+
+        z-index: 9999;
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        padding: 20px;
+
+        background: rgba(0, 0, 0, 0.96);
+    }
+
+    .image-modal.show {
+        display: flex;
+    }
+
+    .image-modal-content {
+        max-width: 100%;
+        max-height: 85vh;
+
+        object-fit: contain;
+
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    .image-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+
+        z-index: 10;
+
+        width: 42px;
+        height: 42px;
+
+        border: none;
+        border-radius: 50%;
+
+        background: rgba(255, 255, 255, 0.15);
+
+        color: #ffffff;
+
+        font-size: 28px;
+        cursor: pointer;
+    }
+
+    .image-modal-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+
+        z-index: 10;
+
+        width: 42px;
+        height: 42px;
+
+        border: none;
+        border-radius: 50%;
+
+        background: rgba(255, 255, 255, 0.18);
+
+        color: #ffffff;
+        font-size: 26px;
+
+        cursor: pointer;
+    }
+
+    .image-modal-prev {
+        left: 12px;
+    }
+
+    .image-modal-next {
+        right: 12px;
+    }
+
+    .image-modal-arrow[hidden] {
+        display: none;
+    }
+
+    .image-modal-counter {
+        position: absolute;
+        bottom: 22px;
+
+        color: #ffffff;
+
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+
+    /* =========================================
+       MOBILE QUICK ACTION BAR
+    ========================================= */
+
+    .mobile-business-actions {
+        display: none;
+    }
+
+    @media (max-width: 600px) {
 
         .listing-detail-main {
-            background: var(--kalxa-card);
-            border: 1px solid var(--kalxa-border);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            padding: 20px;
         }
 
-        .listing-badge-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 16px;
+        .listing-gallery-slide {
+            height: 270px;
         }
 
-        .featured {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: rgba(183, 121, 31, 0.1);
-            color: var(--kalxa-gold);
-            border: 1px solid rgba(183, 121, 31, 0.25);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+        .listing-gallery-arrow {
+            width: 34px;
+            height: 34px;
+            font-size: 21px;
         }
-
-        .verified-business-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: rgba(39, 174, 96, 0.1);
-            color: #27ae60;
-            border: 1px solid rgba(39, 174, 96, 0.25);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .local-business-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: var(--kalxa-card-alt);
-            border: 1px solid var(--kalxa-border);
-            color: var(--kalxa-muted);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .listing-detail-category-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: var(--kalxa-card-alt);
-            color: var(--kalxa-text);
-            border: 1px solid var(--kalxa-border);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .listing-detail-main h1 {
-            margin: 0 0 16px;
-            color: #1a202c;
-            font-size: clamp(24px, 5vw, 30px);
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            line-height: 1.2;
-        }
-
-        .listing-detail-description {
-            margin: 18px 0 0;
-            color: #2d3748;
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 1.7;
-            white-space: pre-line;
-            background: var(--kalxa-card-alt);
-            padding: 16px;
-            border-radius: 14px;
-            border: 1px solid var(--kalxa-border);
-        }
-
-
-        /* =========================================
-           BUSINESS IDENTITY BOX
-        ========================================== */
-
-        .business-identity {
-            margin: 20px 0;
-            padding: 16px;
-            border: 1px solid var(--kalxa-border);
-            border-radius: 16px;
-            background: var(--kalxa-card-alt);
-        }
-
-        .business-identity-label {
-            margin-bottom: 4px;
-            color: var(--kalxa-muted);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }
-
-        .business-identity-name {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--kalxa-text);
-            font-size: 15px;
-            font-weight: 900;
-        }
-
-        .business-identity-location {
-            margin-top: 4px;
-            color: var(--kalxa-muted);
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-
-        /* =========================================
-           CORE DETAILS GRID
-        ========================================== */
-
-        .listing-detail-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .listing-detail-info-grid > div {
-            padding: 14px;
-            border-radius: 14px;
-            background: var(--kalxa-card-alt);
-            border: 1px solid var(--kalxa-border);
-        }
-
-        .listing-detail-info-grid span {
-            display: block;
-            margin-bottom: 4px;
-            color: var(--kalxa-muted);
-            font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-
-        .listing-detail-info-grid strong {
-            color: var(--kalxa-text);
-            font-size: 13px;
-            font-weight: 850;
-        }
-
-
-        /* =========================================
-           SPECIAL OFFER BANNER
-        ========================================== */
-
-        .listing-special-offer {
-            position: relative;
-            overflow: hidden;
-            margin: 20px 0;
-            padding: 16px;
-            border: 1px solid rgba(183, 121, 31, 0.3);
-            border-radius: 16px;
-            background: rgba(183, 121, 31, 0.05);
-        }
-
-        .listing-special-offer::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--kalxa-gold);
-        }
-
-        .listing-special-offer-label {
-            margin-bottom: 4px;
-            color: var(--kalxa-gold);
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-        }
-
-        .listing-special-offer-text {
-            margin: 0;
-            color: var(--kalxa-text);
-            font-size: 13.5px;
-            font-weight: 750;
-            line-height: 1.6;
-            white-space: pre-line;
-        }
-
-
-        /* =========================================
-           BUSINESS INFORMATION SECTION
-        ========================================== */
-
-        .business-information {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid var(--kalxa-border);
-        }
-
-        .business-information-header {
-            margin-bottom: 12px;
-        }
-
-        .business-information-eyebrow {
-            margin: 0 0 2px;
-            color: var(--kalxa-muted);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .business-information-title {
-            margin: 0;
-            color: var(--kalxa-text);
-            font-size: 18px;
-            font-weight: 900;
-        }
-
-        .business-information-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-
-        .business-info-card {
-            padding: 16px;
-            border: 1px solid var(--kalxa-border);
-            border-radius: 16px;
-            background: var(--kalxa-card-alt);
-        }
-
-        .business-info-label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--kalxa-gold);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.6px;
-            text-transform: uppercase;
-        }
-
-        .business-info-value {
-            margin: 0;
-            color: #2d3748;
-            font-size: 13.5px;
-            font-weight: 650;
-            line-height: 1.65;
-            white-space: pre-line;
-        }
-
-
-        /* =========================================
-           CONTACT & ACTIONS SECTION
-        ========================================== */
-
-        .listing-detail-contact {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid var(--kalxa-border);
-        }
-
-        .listing-contact-eyebrow {
-            margin: 0 0 2px;
-            color: var(--kalxa-muted);
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .listing-detail-contact h2 {
-            margin: 0 0 6px;
-            color: var(--kalxa-text);
-            font-size: 18px;
-            font-weight: 900;
-        }
-
-        .listing-action-intro {
-            margin: 0 0 14px;
-            color: var(--kalxa-muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .listing-public-phone {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 12px 0 16px;
-            padding: 14px;
-            border: 1px solid var(--kalxa-border);
-            border-radius: 14px;
-            background: var(--kalxa-card-alt);
-            color: var(--kalxa-text);
-            font-size: 13px;
-            font-weight: 850;
-        }
-
-        .listing-public-phone a {
-            color: var(--kalxa-gold);
-            text-decoration: none;
-            word-break: break-word;
-        }
-
-        .listing-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 8px;
-        }
-
-        .listing-action-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 12px 10px;
-            border-radius: 12px;
-            background: var(--kalxa-card-alt);
-            border: 1px solid var(--kalxa-border);
-            color: var(--kalxa-text);
-            font-size: 11px;
-            font-weight: 850;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .listing-action-button:hover {
-            border-color: var(--kalxa-gold);
-        }
-
-        .listing-action-button:active {
-            transform: scale(0.97);
-        }
-
-        .call-button {
-            background: rgba(39, 174, 96, 0.1);
-            color: #27ae60;
-            border-color: rgba(39, 174, 96, 0.25);
-        }
-
-        .whatsapp-button {
-            background: rgba(37, 211, 102, 0.1);
-            color: #25d366;
-            border-color: rgba(37, 211, 102, 0.25);
-        }
-
-        .directions-button {
-            background: rgba(41, 128, 185, 0.1);
-            color: #2980b9;
-            border-color: rgba(41, 128, 185, 0.25);
-        }
-
-        .ticket-button {
-            background: var(--kalxa-gold);
-            color: #ffffff;
-            border-color: var(--kalxa-gold);
-            font-weight: 900;
-        }
-
-
-        /* =========================================
-           SHARE SECTION
-        ========================================== */
-
-        .listing-share-section {
-            margin-top: 20px;
-        }
-
-        .listing-share-button {
-            width: 100%;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border-radius: 12px;
-            background: var(--kalxa-card-alt);
-            border: 1px solid var(--kalxa-border);
-            color: var(--kalxa-text);
-            font-size: 11px;
-            font-weight: 850;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .listing-share-button:hover {
-            border-color: var(--kalxa-gold);
-            color: var(--kalxa-gold);
-        }
-
-        .listing-share-feedback {
-            margin-top: 6px;
-            text-align: center;
-            color: var(--kalxa-gold);
-            font-size: 10px;
-            font-weight: 750;
-        }
-
-
-        /* =========================================
-           CLAIM LISTING BOX
-        ========================================== */
-
-        .claim-listing-box {
-            margin-top: 24px;
-            padding: 18px;
-            background: var(--kalxa-card-alt);
-            border: 1px solid var(--kalxa-border);
-            border-radius: 18px;
-        }
-
-        .claim-listing-label {
-            margin-bottom: 4px;
-            color: var(--kalxa-text);
-            font-size: 14px;
-            font-weight: 900;
-        }
-
-        .claim-listing-text {
-            margin: 0 0 14px;
-            color: var(--kalxa-muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .claim-listing-button {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            width: 100%;
-            padding: 12px 14px;
-            background: var(--kalxa-gold);
-            color: #ffffff;
-            border-radius: 12px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 900;
-            transition: opacity 0.15s ease;
-        }
-
-        .claim-listing-button:hover {
-            opacity: 0.9;
-        }
-
-        .claim-listing-arrow {
-            flex-shrink: 0;
-            font-size: 16px;
-            line-height: 1;
-        }
-
-        .claim-listing-box.pending {
-            background: var(--kalxa-card);
-        }
-
-        .claim-pending-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 4px;
-            padding: 5px 10px;
-            border: 1px solid var(--kalxa-border);
-            border-radius: 999px;
-            background: var(--kalxa-card-alt);
-            color: var(--kalxa-muted);
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-        }
-
-
-        /* =========================================
-           MOBILE QUICK ACTION BAR
-        ========================================== */
 
         .mobile-business-actions {
-            display: none;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+
+            z-index: 80;
+
+            display: flex;
+            gap: 8px;
+
+            padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+
+            overflow-x: auto;
+
+            border-top: 1px solid var(--kalxa-border);
+
+            background: rgba(244, 246, 249, 0.96);
+
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
         }
 
-        @media (max-width: 600px) {
-            .mobile-business-actions {
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 80;
-                display: flex;
-                gap: 8px;
-                padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-                overflow-x: auto;
-                border-top: 1px solid var(--kalxa-border);
-                background: rgba(244, 246, 249, 0.96);
-                backdrop-filter: blur(14px);
-                -webkit-backdrop-filter: blur(14px);
-                box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
-            }
+        .mobile-business-action {
+            flex: 1 0 auto;
 
-            .mobile-business-action {
-                flex: 1 0 auto;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                min-width: 82px;
-                min-height: 44px;
-                padding: 10px;
-                border: 1px solid var(--kalxa-border);
-                border-radius: 12px;
-                background: var(--kalxa-card);
-                color: var(--kalxa-text);
-                text-decoration: none;
-                font-size: 11px;
-                font-weight: 900;
-            }
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
 
-            .mobile-business-action.primary {
-                background: var(--kalxa-gold);
-                color: #ffffff;
-                border-color: var(--kalxa-gold);
-            }
+            min-width: 82px;
+            min-height: 44px;
+
+            padding: 10px;
+
+            border: 1px solid var(--kalxa-border);
+            border-radius: 12px;
+
+            background: var(--kalxa-card);
+
+            color: var(--kalxa-text);
+
+            text-decoration: none;
+
+            font-size: 11px;
+            font-weight: 900;
         }
 
-    </style>
+        .mobile-business-action.primary {
+            background: var(--kalxa-gold);
+            color: #ffffff;
+            border-color: var(--kalxa-gold);
+        }
+    }
 
-</head>
+</style>
+
+</head><body class="lac-public-body"><div class="lac-page"><!-- =========================================
+     HEADER
+========================================= -->
+
+<header class="access-header">
+
+    <div class="public-brand-wrap">
+
+        <div class="lac-brand">
+            Kalxa
+        </div>
+
+        <div class="lac-tagline">
+            DISCOVER YOUR LOCAL CULTURE.
+        </div>
+
+    </div>
+
+</header>
 
 
-<body class="lac-public-body">
+<main class="listing-detail-container">
 
-<div class="lac-page">
+
+    <!-- BACK BUTTON -->
+
+    <a href="javascript:history.back()"
+       class="listing-detail-back">
+
+        ← Back to listings
+
+    </a>
+
+
+    <!-- LOCAL CONTEXT -->
+
+    <div class="listing-local-context">
+
+        {% if item.can_use_business_features() %}
+
+        <div class="listing-local-label">
+            LOCAL BUSINESS
+        </div>
+
+        {% endif %}
+
+    </div>
 
 
     <!-- =========================================
-         HEADER
-    ========================================== -->
+         IMAGE GALLERY
 
-    <header class="access-header">
+         Supports:
+         - item.images
+         - image_url
+         - image_url_2
+         - image_url_3
+    ========================================= -->
 
-        <div class="public-brand-wrap">
+    {% set gallery_urls = [] %}
 
-            <div class="lac-brand">
-                Kalxa
-            </div>
 
-            <div class="lac-tagline">
-                DISCOVER YOUR LOCAL CULTURE.
-            </div>
+    {% if item.images %}
+
+        {% for image in item.images[:3] %}
+
+            {% if image.image_url %}
+
+                {% set ignored = gallery_urls.append(image.image_url) %}
+
+            {% endif %}
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    {% if not gallery_urls %}
+
+        {% if item.image_url %}
+
+            {% set ignored = gallery_urls.append(item.image_url) %}
+
+        {% endif %}
+
+        {% if item.image_url_2 %}
+
+            {% set ignored = gallery_urls.append(item.image_url_2) %}
+
+        {% endif %}
+
+        {% if item.image_url_3 %}
+
+            {% set ignored = gallery_urls.append(item.image_url_3) %}
+
+        {% endif %}
+
+    {% endif %}
+
+
+    {% if gallery_urls %}
+
+    <section class="listing-detail-gallery"
+             id="listing-gallery"
+             aria-label="Listing photos">
+
+
+        <!-- IMAGE TRACK -->
+
+        <div class="listing-gallery-track"
+             id="listing-gallery-track">
+
+
+            {% for image_url in gallery_urls[:3] %}
+
+            <button
+                type="button"
+                class="listing-gallery-slide"
+
+                data-image-url="{{ image_url }}"
+                data-image-alt="{{ item.title }}"
+
+                data-image-index="{{ loop.index0 }}"
+
+                aria-label="View image {{ loop.index }} of {{ gallery_urls[:3]|length }}"
+
+                onclick="openImageModalFromButton(this)"
+            >
+
+                <img
+                    src="{{ image_url }}"
+                    alt="{{ item.title }} - Image {{ loop.index }}"
+                    loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
+                >
+
+            </button>
+
+            {% endfor %}
+
 
         </div>
 
-    </header>
 
+        <!-- PREVIOUS BUTTON -->
 
-    <main class="listing-detail-container">
+        <button
+            type="button"
+            class="listing-gallery-arrow listing-gallery-prev"
 
-        <!-- =========================================
-             BACK BUTTON
-        ========================================== -->
+            id="gallery-prev"
 
-        <a
-            href="javascript:history.back()"
-            class="listing-detail-back"
+            aria-label="Previous image"
+
+            onclick="moveGallery(-1)"
         >
-            ← Back to listings
-        </a>
+            ‹
+        </button>
 
 
-        <!-- =========================================
-             LOCAL CONTEXT
-        ========================================== -->
+        <!-- NEXT BUTTON -->
 
-        <div class="listing-local-context">
+        <button
+            type="button"
+            class="listing-gallery-arrow listing-gallery-next"
 
+            id="gallery-next"
+
+            aria-label="Next image"
+
+            onclick="moveGallery(1)"
+        >
+            ›
+        </button>
+
+
+        <!-- IMAGE COUNTER -->
+
+        <div class="listing-gallery-counter"
+             id="gallery-counter">
+
+            1 / {{ gallery_urls[:3]|length }}
+
+        </div>
+
+
+        <!-- IMAGE INDICATORS -->
+
+        <div class="listing-gallery-dots"
+             id="gallery-dots">
+
+            {% for image_url in gallery_urls[:3] %}
+
+            <button
+                type="button"
+
+                class="listing-gallery-dot {% if loop.first %}active{% endif %}"
+
+                aria-label="Go to image {{ loop.index }}"
+
+                onclick="goToGalleryImage({{ loop.index0 }})"
+            ></button>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- SWIPE HINT -->
+
+        <p class="listing-gallery-hint"
+           id="gallery-hint">
+
+            ← Swipe to see more photos →
+
+        </p>
+
+
+    </section>
+
+    {% endif %}
+
+
+
+    <!-- =========================================
+         MAIN LISTING ARTICLE
+    ========================================= -->
+
+    <article class="listing-detail-main">
+
+
+        <!-- BADGES -->
+
+        <div class="listing-badge-row">
+
+
+            {% if item.featured %}
+
+            <span class="featured">
+                ⭐ FEATURED
+            </span>
+
+            {% endif %}
+
+
+            {% if item.can_use_business_features() and item.is_verified %}
+
+            <span class="verified-business-badge">
+                ✓ VERIFIED
+            </span>
+
+            {% endif %}
 
 
             {% if item.can_use_business_features() %}
 
-            <div class="listing-local-label">
-                LOCAL BUSINESS
+            <span class="local-business-badge">
+                📍 LOCAL
+            </span>
+
+            {% endif %}
+
+
+            <span class="listing-detail-category-badge">
+
+                {% if category %}
+
+                    {% if category.icon %}
+                        {{ category.icon }}
+                    {% endif %}
+
+                    {{ category.name }}
+
+                {% else %}
+
+                    {{ item.category | replace("_", " ") | title }}
+
+                {% endif %}
+
+            </span>
+
+
+        </div>
+
+
+        <!-- TITLE -->
+
+        <h1>
+            {{ item.title }}
+        </h1>
+
+
+        <!-- BUSINESS IDENTITY -->
+
+        {% if item.business_name %}
+
+        <div class="business-identity">
+
+            <div class="business-identity-label">
+                Listed by
+            </div>
+
+            <div class="business-identity-name">
+
+                {{ item.business_name }}
+
+                {% if item.can_use_business_features() and item.is_verified %}
+
+                <span title="Verified by Kalxa"
+                      aria-label="Verified by Kalxa">
+                    ✓
+                </span>
+
+                {% endif %}
+
+            </div>
+
+
+            {% if item.venue %}
+
+            <div class="business-identity-location">
+                📍 {{ item.venue }}
             </div>
 
             {% endif %}
 
         </div>
-
-
-        <!-- =========================================
-             GALLERY
-        ========================================== -->
-
-        {% if item.can_use_business_features() %}
-
-
-            {% if item.images %}
-
-            <div
-                class="
-                    listing-detail-gallery
-                    {% if item.images|length == 1 %}
-                        single
-                    {% endif %}
-                "
-            >
-
-                {% for image in item.images[:3] %}
-
-                <button
-                    type="button"
-                    data-image-url="{{ image.image_url }}"
-                    data-image-alt="{{ item.title }}"
-                    onclick="openImageModalFromButton(this)"
-                >
-
-                    <img
-                        src="{{ image.image_url }}"
-                        alt="{{ item.title }}"
-                        loading="eager"
-                    >
-
-                </button>
-
-                {% endfor %}
-
-            </div>
-
-
-            {% elif
-                item.image_url
-                or item.image_url_2
-                or item.image_url_3
-            %}
-
-            {% set business_gallery = [
-                item.image_url,
-                item.image_url_2,
-                item.image_url_3
-            ] %}
-
-            <div
-                class="
-                    listing-detail-gallery
-                    {% if business_gallery|select|list|length == 1 %}
-                        single
-                    {% endif %}
-                "
-            >
-
-                {% for image_url in business_gallery %}
-
-                    {% if image_url %}
-
-                    <button
-                        type="button"
-                        data-image-url="{{ image_url }}"
-                        data-image-alt="{{ item.title }}"
-                        onclick="openImageModalFromButton(this)"
-                    >
-
-                        <img
-                            src="{{ image_url }}"
-                            alt="{{ item.title }}"
-                            loading="eager"
-                        >
-
-                    </button>
-
-                    {% endif %}
-
-                {% endfor %}
-
-            </div>
-
-            {% endif %}
-
-
-        {% else %}
-
-
-            {% if item.image_url %}
-
-            <div class="listing-detail-gallery single">
-
-                <button
-                    type="button"
-                    data-image-url="{{ item.image_url }}"
-                    data-image-alt="{{ item.title }}"
-                    onclick="openImageModalFromButton(this)"
-                >
-
-                    <img
-                        src="{{ item.image_url }}"
-                        alt="{{ item.title }}"
-                        loading="eager"
-                    >
-
-                </button>
-
-            </div>
-
-
-            {% elif item.images %}
-
-                {% set discovery_image = item.images|first %}
-
-                {% if discovery_image %}
-
-                <div class="listing-detail-gallery single">
-
-                    <button
-                        type="button"
-                        data-image-url="{{ discovery_image.image_url }}"
-                        data-image-alt="{{ item.title }}"
-                        onclick="openImageModalFromButton(this)"
-                    >
-
-                        <img
-                            src="{{ discovery_image.image_url }}"
-                            alt="{{ item.title }}"
-                            loading="eager"
-                        >
-
-                    </button>
-
-                </div>
-
-                {% endif %}
-
-            {% endif %}
-
 
         {% endif %}
 
 
-        <!-- =========================================
-             MAIN LISTING ARTICLE
-        ========================================== -->
+        <!-- DESCRIPTION -->
 
-        <article class="listing-detail-main">
+        {% if item.description %}
 
+        <p class="listing-detail-description">
+            {{ item.description }}
+        </p>
 
-            <!-- =====================================
-                 BADGES
-            ====================================== -->
-
-            <div class="listing-badge-row">
+        {% endif %}
 
 
-                {% if item.featured %}
 
-                <span class="featured">
-                    ⭐ FEATURED
+        <!-- =====================================
+             CORE DETAILS GRID
+        ====================================== -->
+
+        <div class="listing-detail-info-grid">
+
+
+            {% if item.venue %}
+
+            <div>
+
+                <span>
+                    📍 Location
                 </span>
 
-                {% endif %}
+                <strong>
+                    {{ item.venue }}
+                </strong>
+
+            </div>
+
+            {% endif %}
 
 
-                {% if
-                    item.can_use_business_features()
-                    and item.is_verified
-                %}
+            {% if item.price %}
 
-                <span class="verified-business-badge">
-                    ✓ VERIFIED
-                </span>
+            <div>
 
-                {% endif %}
+                <span>
 
+                    {% if category and category.slug == "property" %}
 
-                {% if item.can_use_business_features() %}
+                        🏠 Rent
 
-                <span class="local-business-badge">
-                    📍 LOCAL
-                </span>
+                    {% elif category and category.slug in [
+                        "events",
+                        "upcoming-event-🥹🔥"
+                    ] %}
 
-                {% endif %}
-
-
-                <span class="listing-detail-category-badge">
-
-                    {% if category %}
-
-                        {% if category.icon %}
-                            {{ category.icon }}
-                        {% endif %}
-
-                        {{ category.name }}
+                        🎟️ Entry
 
                     {% else %}
 
-                        {{ item.category | replace("_", " ") | title }}
+                        💰 Price / Deal
 
                     {% endif %}
 
                 </span>
 
-            </div>
-
-
-            <!-- =====================================
-                 TITLE
-            ====================================== -->
-
-            <h1>
-                {{ item.title }}
-            </h1>
-
-
-            <!-- =====================================
-                 BUSINESS IDENTITY
-            ====================================== -->
-
-            {% if item.business_name %}
-
-            <div class="business-identity">
-
-                <div class="business-identity-label">
-                    Listed by
-                </div>
-
-                <div class="business-identity-name">
-
-                    {{ item.business_name }}
-
-                    {% if
-                        item.can_use_business_features()
-                        and item.is_verified
-                    %}
-
-                    <span
-                        title="Verified by Kalxa"
-                        aria-label="Verified by Kalxa"
-                    >
-                        ✓
-                    </span>
-
-                    {% endif %}
-
-                </div>
-
-                {% if item.venue %}
-
-                <div class="business-identity-location">
-                    📍 {{ item.venue }}
-                </div>
-
-                {% endif %}
+                <strong>
+                    {{ item.price }}
+                </strong>
 
             </div>
 
             {% endif %}
 
 
-            {% if item.description %}
+            {% if item.can_use_business_features() and item.opening_hours %}
 
-            <p class="listing-detail-description">
-                {{ item.description }}
-            </p>
+            <div>
+
+                <span>
+                    🕒 Opening Hours
+                </span>
+
+                <strong>
+                    {{ item.opening_hours }}
+                </strong>
+
+            </div>
 
             {% endif %}
 
 
-            <!-- =====================================
-                 CORE DETAILS GRID
-            ====================================== -->
 
-            <div class="listing-detail-info-grid">
+            <!-- DATES -->
+
+            {% if category and category.slug in [
+                "events",
+                "upcoming-event-🥹🔥"
+            ] %}
 
 
-                {% if item.venue %}
+                {% if item.event_date %}
 
                 <div>
 
                     <span>
-                        📍 Location
+                        📅 Event Date
                     </span>
 
                     <strong>
-                        {{ item.venue }}
+                        {{ item.event_date.strftime("%d %b %Y") }}
                     </strong>
 
                 </div>
@@ -1142,815 +1446,1140 @@
                 {% endif %}
 
 
-                {% if item.price %}
+                {% if item.event_end_date %}
 
                 <div>
 
                     <span>
+                        🕒 Ends
+                    </span>
 
-                        {% if
-                            category
-                            and category.slug == "property"
-                        %}
+                    <strong>
+                        {{ item.event_end_date.strftime("%d %b %Y") }}
+                    </strong>
 
-                            🏠 Rent
+                </div>
 
-                        {% elif
-                            category
-                            and category.slug in [
-                                "events",
-                                "upcoming-event-🥹🔥"
-                            ]
-                        %}
+                {% endif %}
 
-                            🎟️ Entry
+
+            {% else %}
+
+
+                {% if item.start_date %}
+
+                <div>
+
+                    <span>
+                        📅 Starts
+                    </span>
+
+                    <strong>
+                        {{ item.start_date.strftime("%d %b %Y") }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if item.end_date %}
+
+                <div>
+
+                    <span>
+                        ⏳ Available Until
+                    </span>
+
+                    <strong>
+                        {{ item.end_date.strftime("%d %b %Y") }}
+                    </strong>
+
+                </div>
+
+                {% endif %}
+
+
+            {% endif %}
+
+
+        </div>
+
+
+
+        <!-- =====================================
+             SPECIAL OFFER
+        ====================================== -->
+
+        {% if item.can_use_business_features() and item.special_offer %}
+
+        <div class="listing-special-offer">
+
+            <div class="listing-special-offer-label">
+                🔥 CURRENT OFFER
+            </div>
+
+            <p class="listing-special-offer-text">
+                {{ item.special_offer }}
+            </p>
+
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =====================================
+             BUSINESS INFORMATION
+        ====================================== -->
+
+        {% if item.can_use_business_features() and item.menu_highlights %}
+
+        <section class="business-information">
+
+            <div class="business-information-header">
+
+                <p class="business-information-eyebrow">
+                    BUSINESS DETAILS
+                </p>
+
+                <h2 class="business-information-title">
+                    What you should know
+                </h2>
+
+            </div>
+
+
+            <div class="business-information-grid">
+
+                <div class="business-info-card full">
+
+                    <span class="business-info-label">
+
+                        {% if category and category.slug in [
+                            "food",
+                            "foods",
+                            "check-out-our-specials"
+                        ] %}
+
+                            🍽️ Menu Highlights
+
+                        {% elif category and category.slug == "services" %}
+
+                            🛠️ Services
+
+                        {% elif category and category.slug == "property" %}
+
+                            🏠 Highlights
+
+                        {% elif category and category.slug == "beauty-salon" %}
+
+                            ✂️ Services
 
                         {% else %}
 
-                            💰 Price / Deal
+                            ✦ Highlights
 
                         {% endif %}
 
                     </span>
 
-                    <strong>
-                        {{ item.price }}
-                    </strong>
+                    <p class="business-info-value">
+                        {{ item.menu_highlights }}
+                    </p>
 
                 </div>
 
-                {% endif %}
+            </div>
+
+        </section>
+
+        {% endif %}
 
 
-                {% if
-                    item.can_use_business_features()
-                    and item.opening_hours
-                %}
 
-                <div>
+        <!-- =====================================
+             CONTACT + ACTIONS
+        ====================================== -->
 
-                    <span>
-                        🕒 Opening Hours
-                    </span>
+        {% if item.contact or item.whatsapp_number or item.directions_url or item.venue or item.ticket_url %}
 
-                    <strong>
-                        {{ item.opening_hours }}
-                    </strong>
+        <section class="listing-detail-contact">
 
-                </div>
+            <p class="listing-contact-eyebrow">
+                INTERESTED?
+            </p>
 
-                {% endif %}
+            <h2>
+                Connect directly
+            </h2>
 
+            <p class="listing-action-intro">
 
-                <!-- =================================
-                     DATES
-                ================================== -->
+                {% if item.ticket_url %}
 
-                {% if
-                    category
-                    and category.slug in [
-                        "events",
-                        "upcoming-event-🥹🔥"
-                    ]
-                %}
-
-
-                    {% if item.event_date %}
-
-                    <div>
-
-                        <span>
-                            📅 Event Date
-                        </span>
-
-                        <strong>
-                            {{ item.event_date.strftime("%d %b %Y") }}
-                        </strong>
-
-                    </div>
-
-                    {% endif %}
-
-
-                    {% if item.event_end_date %}
-
-                    <div>
-
-                        <span>
-                            🕒 Ends
-                        </span>
-
-                        <strong>
-                            {{ item.event_end_date.strftime("%d %b %Y") }}
-                        </strong>
-
-                    </div>
-
-                    {% endif %}
-
+                    Contact, visit or get tickets directly.
 
                 {% else %}
 
-
-                    {% if item.start_date %}
-
-                    <div>
-
-                        <span>
-                            📅 Starts
-                        </span>
-
-                        <strong>
-                            {{ item.start_date.strftime("%d %b %Y") }}
-                        </strong>
-
-                    </div>
-
-                    {% endif %}
-
-
-                    {% if item.end_date %}
-
-                    <div>
-
-                        <span>
-                            ⏳ Available Until
-                        </span>
-
-                        <strong>
-                            {{ item.end_date.strftime("%d %b %Y") }}
-                        </strong>
-
-                    </div>
-
-                    {% endif %}
-
+                    Contact directly or get directions.
 
                 {% endif %}
 
+            </p>
+
+
+            <!-- PUBLIC PHONE NUMBER -->
+
+            {% if item.contact %}
+
+            <div class="listing-public-phone">
+
+                <span>
+                    📞
+                </span>
+
+                <a
+                    href="{{ item.contact|phone_link }}"
+                    data-lac-event="call_click"
+                >
+                    {{ item.contact }}
+                </a>
 
             </div>
 
+            {% elif item.whatsapp_number %}
 
-            <!-- =====================================
-                 SPECIAL OFFER
-            ====================================== -->
+            <div class="listing-public-phone">
 
-            {% if
-                item.can_use_business_features()
-                and item.special_offer
-            %}
+                <span>
+                    💬
+                </span>
 
-            <div class="listing-special-offer">
-
-                <div class="listing-special-offer-label">
-                    🔥 CURRENT OFFER
-                </div>
-
-                <p class="listing-special-offer-text">
-                    {{ item.special_offer }}
-                </p>
+                <a
+                    href="{{ item.whatsapp_number|whatsapp_link }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-lac-event="whatsapp_click"
+                >
+                    {{ item.whatsapp_number }}
+                </a>
 
             </div>
 
             {% endif %}
 
 
-            <!-- =====================================
-                 BUSINESS INFORMATION
-            ====================================== -->
-
-            {% if
-                item.can_use_business_features()
-                and item.menu_highlights
-            %}
-
-            <section class="business-information">
-
-                <div class="business-information-header">
-
-                    <p class="business-information-eyebrow">
-                        BUSINESS DETAILS
-                    </p>
-
-                    <h2 class="business-information-title">
-                        What you should know
-                    </h2>
-
-                </div>
+            <div class="listing-actions">
 
 
-                <div class="business-information-grid">
-
-                    <div class="business-info-card full">
-
-                        <span class="business-info-label">
-
-                            {% if
-                                category
-                                and category.slug in [
-                                    "food",
-                                    "foods",
-                                    "check-out-our-specials"
-                                ]
-                            %}
-
-                                🍽️ Menu Highlights
-
-                            {% elif
-                                category
-                                and category.slug == "services"
-                            %}
-
-                                🛠️ Services
-
-                            {% elif
-                                category
-                                and category.slug == "property"
-                            %}
-
-                                🏠 Highlights
-
-                            {% elif
-                                category
-                                and category.slug == "beauty-salon"
-                            %}
-
-                                ✂️ Services
-
-                            {% else %}
-
-                                ✦ Highlights
-
-                            {% endif %}
-
-                        </span>
-
-                        <p class="business-info-value">
-                            {{ item.menu_highlights }}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            {% endif %}
-
-
-            <!-- =====================================
-                 CONTACT + ACTIONS
-            ====================================== -->
-
-            {% if
-                item.contact
-                or item.whatsapp_number
-                or item.directions_url
-                or item.venue
-                or item.ticket_url
-            %}
-
-            <section class="listing-detail-contact">
-
-                <p class="listing-contact-eyebrow">
-                    INTERESTED?
-                </p>
-
-                <h2>
-                    Connect directly
-                </h2>
-
-                <p class="listing-action-intro">
-
-                    {% if item.ticket_url %}
-
-                        Contact, visit or get tickets directly.
-
-                    {% else %}
-
-                        Contact directly or get directions.
-
-                    {% endif %}
-
-                </p>
-
-
-                <!-- =================================
-                     PUBLIC PHONE NUMBER
-                ================================== -->
+                <!-- CALL -->
 
                 {% if item.contact %}
 
-                <div class="listing-public-phone">
-
-                    <span>
-                        📞
-                    </span>
-
-                    <a
-                        href="{{ item.contact|phone_link }}"
-                        data-lac-event="call_click"
-                    >
-                        {{ item.contact }}
-                    </a>
-
-                </div>
-
-                {% elif item.whatsapp_number %}
-
-                <div class="listing-public-phone">
-
-                    <span>
-                        💬
-                    </span>
-
-                    <a
-                        href="{{ item.whatsapp_number|whatsapp_link }}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-lac-event="whatsapp_click"
-                    >
-                        {{ item.whatsapp_number }}
-                    </a>
-
-                </div>
+                <a
+                    href="{{ item.contact|phone_link }}"
+                    class="listing-action-button call-button"
+                    data-lac-event="call_click"
+                >
+                    📞 Call
+                </a>
 
                 {% endif %}
 
 
-                <div class="listing-actions">
+                <!-- WHATSAPP -->
 
-
-                    <!-- =============================
-                         CALL
-                    ============================== -->
-
-                    {% if item.contact %}
-
-                    <a
-                        href="{{ item.contact|phone_link }}"
-                        class="
-                            listing-action-button
-                            call-button
-                        "
-                        data-lac-event="call_click"
-                    >
-                        📞 Call
-                    </a>
-
-                    {% endif %}
-
-
-                    <!-- =============================
-                         WHATSAPP
-                    ============================== -->
-
-                    {% if
-                        item.whatsapp_number
-                        or item.contact
-                    %}
-
-                    <a
-                        href="{{
-                            (
-                                item.whatsapp_number
-                                if item.whatsapp_number
-                                else item.contact
-                            )
-                            | whatsapp_link
-                        }}"
-                        class="
-                            listing-action-button
-                            whatsapp-button
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-lac-event="whatsapp_click"
-                    >
-                        💬 WhatsApp
-                    </a>
-
-                    {% endif %}
-
-
-                    <!-- =============================
-                         DIRECTIONS
-                    ============================== -->
-
-                    {% if item.directions_url %}
-
-                    <a
-                        href="{{ item.directions_url }}"
-                        class="
-                            listing-action-button
-                            directions-button
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-lac-event="directions_click"
-                    >
-                        📍 Directions
-                    </a>
-
-
-                    {% elif item.venue %}
-
-                    <a
-                        href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
-                        class="
-                            listing-action-button
-                            directions-button
-                        "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-lac-event="directions_click"
-                    >
-                        📍 Directions
-                    </a>
-
-                    {% endif %}
-
-
-                    <!-- =============================
-                         TICKETS
-                    ============================== -->
-
-
-
-
-                </div>
-
-            </section>
-
-            {% endif %}
-
-
-            <!-- =====================================
-                 SHARE
-            ====================================== -->
-
-            <section class="listing-share-section">
-
-                <button
-                    type="button"
-                    id="share-listing"
-                    class="listing-share-button"
-                    data-lac-event="share_click"
-                    onclick="shareListing()"
-                >
-                    ↗ Share Listing
-                </button>
-
-                <div
-                    id="share-feedback"
-                    class="listing-share-feedback"
-                ></div>
-
-            </section>
-
-
-            <!-- =====================================
-                 CLAIM LISTING
-            ====================================== -->
-
-            {% if
-                item.can_be_claimed()
-                and not item.has_pending_claim()
-            %}
-
-            <section class="claim-listing-box">
-
-                <div class="claim-listing-label">
-                    Is this your business?
-                </div>
-
-                <p class="claim-listing-text">
-                    Claim this listing to manage your
-                    business information and create a richer
-                    presence on Kalxa.
-                </p>
+                {% if item.whatsapp_number or item.contact %}
 
                 <a
-                    href="{{ url_for(
-                        'claim_listing',
-                        item_id=item.id
-                    ) }}"
-                    class="claim-listing-button"
+                    href="{{
+                        (
+                            item.whatsapp_number
+                            if item.whatsapp_number
+                            else item.contact
+                        ) | whatsapp_link
+                    }}"
+                    class="listing-action-button whatsapp-button"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-lac-event="whatsapp_click"
                 >
-
-                    <span>
-                        Claim this listing
-                    </span>
-
-                    <span class="claim-listing-arrow">
-                        →
-                    </span>
-
+                    💬 WhatsApp
                 </a>
 
-            </section>
+                {% endif %}
 
 
-            {% elif
-                item.can_be_claimed()
-                and item.has_pending_claim()
-            %}
+                <!-- DIRECTIONS -->
 
-            <section class="claim-listing-box pending">
+                {% if item.directions_url %}
 
-                <div class="claim-listing-label">
-                    ⏳ Ownership claim under review
-                </div>
-
-                <p class="claim-listing-text">
-                    A claim for this listing has already
-                    been submitted and is currently being
-                    reviewed by Kalxa.
-                </p>
-
-                <div class="claim-pending-status">
-                    ● Pending review
-                </div>
-
-            </section>
-
-            {% endif %}
+                <a
+                    href="{{ item.directions_url }}"
+                    class="listing-action-button directions-button"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-lac-event="directions_click"
+                >
+                    📍 Directions
+                </a>
 
 
-        </article>
+                {% elif item.venue %}
 
-    </main>
+                <a
+                    href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
+                    class="listing-action-button directions-button"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-lac-event="directions_click"
+                >
+                    📍 Directions
+                </a>
+
+                {% endif %}
 
 
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
+            </div>
 
-    <footer class="public-footer">
+        </section>
 
-        <div class="footer-brand">
-            Kalxa
-        </div>
+        {% endif %}
 
-        <div class="footer-tagline">
-            POWERED BY Kalxa
-        </div>
 
-        <div class="footer-zone">
-            📍 {{ zone.name }}
-        </div>
 
-    </footer>
+        <!-- =====================================
+             SHARE
+        ====================================== -->
 
-</div>
+        <section class="listing-share-section">
+
+            <button
+                type="button"
+                id="share-listing"
+                class="listing-share-button"
+                data-lac-event="share_click"
+                onclick="shareListing()"
+            >
+                ↗ Share Listing
+            </button>
+
+            <div id="share-feedback"
+                 class="listing-share-feedback">
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             CLAIM LISTING
+        ====================================== -->
+
+        {% if item.can_be_claimed() and not item.has_pending_claim() %}
+
+        <section class="claim-listing-box">
+
+            <div class="claim-listing-label">
+                Is this your business?
+            </div>
+
+            <p class="claim-listing-text">
+                Claim this listing to manage your
+                business information and create a richer
+                presence on Kalxa.
+            </p>
+
+            <a
+                href="{{ url_for('claim_listing', item_id=item.id) }}"
+                class="claim-listing-button"
+            >
+
+                <span>
+                    Claim this listing
+                </span>
+
+                <span class="claim-listing-arrow">
+                    →
+                </span>
+
+            </a>
+
+        </section>
+
+
+        {% elif item.can_be_claimed() and item.has_pending_claim() %}
+
+        <section class="claim-listing-box pending">
+
+            <div class="claim-listing-label">
+                ⏳ Ownership claim under review
+            </div>
+
+            <p class="claim-listing-text">
+                A claim for this listing has already
+                been submitted and is currently being
+                reviewed by Kalxa.
+            </p>
+
+            <div class="claim-pending-status">
+                ● Pending review
+            </div>
+
+        </section>
+
+        {% endif %}
+
+
+    </article>
+
+</main>
+
 
 
 <!-- =========================================
+     FOOTER
+========================================= -->
+
+<footer class="public-footer">
+
+    <div class="footer-brand">
+        Kalxa
+    </div>
+
+    <div class="footer-tagline">
+        POWERED BY Kalxa
+    </div>
+
+    <div class="footer-zone">
+        📍 {{ zone.name }}
+    </div>
+
+</footer>
+
+</div><!-- =========================================
      MOBILE QUICK ACTION BAR
-========================================== -->
+========================================== -->{% if item.whatsapp_number or item.contact or item.directions_url or item.venue or item.ticket_url %}
 
-{% if
-    item.whatsapp_number
-    or item.contact
-    or item.directions_url
-    or item.venue
-    or item.ticket_url
-%}
+<div class="mobile-business-actions"><!-- WHATSAPP -->
 
-<div class="mobile-business-actions">
+{% if item.whatsapp_number or item.contact %}
 
-
-    <!-- =====================================
-         WHATSAPP
-    ====================================== -->
-
-    {% if
-        item.whatsapp_number
-        or item.contact
-    %}
-
-    <a
-        href="{{
-            (
-                item.whatsapp_number
-                if item.whatsapp_number
-                else item.contact
-            )
-            | whatsapp_link
-        }}"
-        class="
-            mobile-business-action
-            {% if not item.ticket_url %}
-                primary
-            {% endif %}
-        "
-        target="_blank"
-        rel="noopener noreferrer"
-        data-lac-event="whatsapp_click"
-    >
-        💬 WhatsApp
-    </a>
-
-    {% endif %}
-
-
-    <!-- =====================================
-         CALL
-    ====================================== -->
-
-    {% if item.contact %}
-
-    <a
-        href="{{ item.contact|phone_link }}"
-        class="mobile-business-action"
-        data-lac-event="call_click"
-    >
-        📞 Call
-    </a>
-
-    {% endif %}
-
-
-    <!-- =====================================
-         DIRECTIONS
-    ====================================== -->
-
-    {% if item.directions_url %}
-
-    <a
-        href="{{ item.directions_url }}"
-        class="mobile-business-action"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-lac-event="directions_click"
-    >
-        📍 Go
-    </a>
-
-
-    {% elif item.venue %}
-
-    <a
-        href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
-        class="mobile-business-action"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-lac-event="directions_click"
-    >
-        📍 Go
-    </a>
-
-    {% endif %}
-
-
-    <!-- =====================================
-         GET TICKETS
-    ====================================== -->
-
-
-</div>
+<a
+    href="{{
+        (
+            item.whatsapp_number
+            if item.whatsapp_number
+            else item.contact
+        ) | whatsapp_link
+    }}"
+    class="
+        mobile-business-action
+        {% if not item.ticket_url %}
+            primary
+        {% endif %}
+    "
+    target="_blank"
+    rel="noopener noreferrer"
+    data-lac-event="whatsapp_click"
+>
+    💬 WhatsApp
+</a>
 
 {% endif %}
 
 
-<!-- =========================================
-     IMAGE MODAL
-========================================== -->
+<!-- CALL -->
 
-<div
-    id="image-modal"
-    class="image-modal"
+{% if item.contact %}
+
+<a
+    href="{{ item.contact|phone_link }}"
+    class="mobile-business-action"
+    data-lac-event="call_click"
+>
+    📞 Call
+</a>
+
+{% endif %}
+
+
+<!-- DIRECTIONS -->
+
+{% if item.directions_url %}
+
+<a
+    href="{{ item.directions_url }}"
+    class="mobile-business-action"
+    target="_blank"
+    rel="noopener noreferrer"
+    data-lac-event="directions_click"
+>
+    📍 Go
+</a>
+
+
+{% elif item.venue %}
+
+<a
+    href="https://www.google.com/maps/search/?api=1&query={{ (item.venue ~ ', ' ~ zone.name)|urlencode }}"
+    class="mobile-business-action"
+    target="_blank"
+    rel="noopener noreferrer"
+    data-lac-event="directions_click"
+>
+    📍 Go
+</a>
+
+{% endif %}
+
+</div>{% endif %}
+
+<!-- =========================================
+     FULLSCREEN IMAGE MODAL
+========================================== --><div id="image-modal"
+     class="image-modal"
+     onclick="closeImageModal()"><button
+    type="button"
+    class="image-modal-close"
     onclick="closeImageModal()"
+    aria-label="Close image"
+>
+    ×
+</button>
+
+
+<button
+    type="button"
+    class="image-modal-arrow image-modal-prev"
+    id="modal-prev"
+    onclick="event.stopPropagation(); moveModalImage(-1)"
+    aria-label="Previous image"
+>
+    ‹
+</button>
+
+
+<img
+    id="image-modal-content"
+    class="image-modal-content"
+    src=""
+    alt=""
+    onclick="event.stopPropagation()"
 >
 
-    <button
-        type="button"
-        class="image-modal-close"
-        onclick="closeImageModal()"
-        aria-label="Close image"
-    >
-        ×
-    </button>
 
-    <img
-        id="image-modal-content"
-        src=""
-        alt=""
-        onclick="event.stopPropagation()"
-    >
+<button
+    type="button"
+    class="image-modal-arrow image-modal-next"
+    id="modal-next"
+    onclick="event.stopPropagation(); moveModalImage(1)"
+    aria-label="Next image"
+>
+    ›
+</button>
 
+
+<div class="image-modal-counter"
+     id="modal-counter"
+     onclick="event.stopPropagation()">
 </div>
 
+</div><!-- =========================================
+     GALLERY + MODAL JAVASCRIPT
+========================================== --><script>
 
-<!-- =========================================
-     SCRIPTS
-========================================== -->
+(function () {
 
-<script>
+    "use strict";
 
-    function openImageModalFromButton(button) {
-        const modal = document.getElementById("image-modal");
-        const image = document.getElementById("image-modal-content");
 
-        image.src = button.dataset.imageUrl;
-        image.alt = button.dataset.imageAlt || "";
+    const track = document.getElementById(
+        "listing-gallery-track"
+    );
+
+    const gallery = document.getElementById(
+        "listing-gallery"
+    );
+
+    const counter = document.getElementById(
+        "gallery-counter"
+    );
+
+    const dotsContainer = document.getElementById(
+        "gallery-dots"
+    );
+
+    const prevButton = document.getElementById(
+        "gallery-prev"
+    );
+
+    const nextButton = document.getElementById(
+        "gallery-next"
+    );
+
+    const hint = document.getElementById(
+        "gallery-hint"
+    );
+
+
+    const modal = document.getElementById(
+        "image-modal"
+    );
+
+    const modalImage = document.getElementById(
+        "image-modal-content"
+    );
+
+    const modalCounter = document.getElementById(
+        "modal-counter"
+    );
+
+    const modalPrev = document.getElementById(
+        "modal-prev"
+    );
+
+    const modalNext = document.getElementById(
+        "modal-next"
+    );
+
+
+    let slides = [];
+
+    let dots = [];
+
+    let currentIndex = 0;
+
+    let modalIndex = 0;
+
+    let touchStartX = 0;
+
+    let touchStartY = 0;
+
+
+    if (!track) {
+        return;
+    }
+
+
+    slides = Array.from(
+        track.querySelectorAll(
+            ".listing-gallery-slide"
+        )
+    );
+
+
+    const totalImages = slides.length;
+
+
+    if (!totalImages) {
+        return;
+    }
+
+
+    /* =========================================
+       UPDATE GALLERY CONTROLS
+    ========================================= */
+
+    function updateGallery(index) {
+
+        currentIndex = Math.max(
+            0,
+            Math.min(index, totalImages - 1)
+        );
+
+
+        if (counter) {
+
+            counter.textContent =
+                (currentIndex + 1) +
+                " / " +
+                totalImages;
+
+        }
+
+
+        dots.forEach(function (dot, index) {
+
+            dot.classList.toggle(
+                "active",
+                index === currentIndex
+            );
+
+        });
+
+
+        if (prevButton) {
+
+            prevButton.hidden =
+                currentIndex === 0;
+
+        }
+
+
+        if (nextButton) {
+
+            nextButton.hidden =
+                currentIndex === totalImages - 1;
+
+        }
+
+
+        if (hint) {
+
+            hint.hidden =
+                totalImages <= 1;
+
+        }
+
+    }
+
+
+    /* =========================================
+       SCROLL TO IMAGE
+    ========================================= */
+
+    function scrollToImage(index) {
+
+        index = Math.max(
+            0,
+            Math.min(index, totalImages - 1)
+        );
+
+
+        track.scrollTo({
+
+            left: slides[index].offsetLeft,
+
+            behavior: "smooth"
+
+        });
+
+
+        updateGallery(index);
+
+    }
+
+
+    window.goToGalleryImage = function (index) {
+
+        scrollToImage(index);
+
+    };
+
+
+    window.moveGallery = function (direction) {
+
+        scrollToImage(
+            currentIndex + direction
+        );
+
+    };
+
+
+    /* =========================================
+       DETECT MANUAL SWIPING
+    ========================================= */
+
+    let scrollTimeout = null;
+
+
+    track.addEventListener(
+        "scroll",
+        function () {
+
+            if (scrollTimeout) {
+
+                clearTimeout(scrollTimeout);
+
+            }
+
+
+            scrollTimeout = setTimeout(
+                function () {
+
+                    const slideWidth =
+                        track.clientWidth;
+
+
+                    if (!slideWidth) {
+                        return;
+                    }
+
+
+                    const index = Math.round(
+                        track.scrollLeft / slideWidth
+                    );
+
+
+                    updateGallery(index);
+
+                },
+                80
+            );
+
+        },
+        { passive: true }
+    );
+
+
+    /* =========================================
+       INITIALISE DOTS
+    ========================================= */
+
+    dots = Array.from(
+        dotsContainer.querySelectorAll(
+            ".listing-gallery-dot"
+        )
+    );
+
+
+    /* =========================================
+       INITIAL STATE
+    ========================================= */
+
+    if (totalImages <= 1) {
+
+        if (prevButton) {
+            prevButton.hidden = true;
+        }
+
+        if (nextButton) {
+            nextButton.hidden = true;
+        }
+
+        if (counter) {
+            counter.hidden = true;
+        }
+
+        if (dotsContainer) {
+            dotsContainer.hidden = true;
+        }
+
+        if (hint) {
+            hint.hidden = true;
+        }
+
+    }
+
+
+    updateGallery(0);
+
+
+
+    /* =========================================
+       FULLSCREEN IMAGE MODAL
+    ========================================= */
+
+    function updateModal() {
+
+        modalIndex = Math.max(
+            0,
+            Math.min(modalIndex, totalImages - 1)
+        );
+
+
+        const slide = slides[modalIndex];
+
+        const image = slide.querySelector("img");
+
+
+        modalImage.src = slide.dataset.imageUrl;
+
+        modalImage.alt =
+            slide.dataset.imageAlt ||
+            (image ? image.alt : "");
+
+
+        modalCounter.textContent =
+            (modalIndex + 1) +
+            " / " +
+            totalImages;
+
+
+        modalPrev.hidden =
+            modalIndex === 0;
+
+        modalNext.hidden =
+            modalIndex === totalImages - 1;
+
+    }
+
+
+    window.openImageModalFromButton = function (button) {
+
+        modalIndex = parseInt(
+            button.dataset.imageIndex,
+            10
+        );
+
+
+        if (Number.isNaN(modalIndex)) {
+            modalIndex = 0;
+        }
+
+
+        updateModal();
+
 
         modal.classList.add("show");
-        document.body.style.overflow = "hidden";
-    }
 
-    function closeImageModal() {
-        const modal = document.getElementById("image-modal");
-        const image = document.getElementById("image-modal-content");
+        document.body.style.overflow = "hidden";
+
+    };
+
+
+    window.closeImageModal = function () {
 
         modal.classList.remove("show");
-        image.src = "";
+
+        modalImage.src = "";
+
         document.body.style.overflow = "";
+
+    };
+
+
+    window.moveModalImage = function (direction) {
+
+        const nextIndex =
+            modalIndex + direction;
+
+
+        if (
+            nextIndex < 0 ||
+            nextIndex >= totalImages
+        ) {
+            return;
+        }
+
+
+        modalIndex = nextIndex;
+
+        updateModal();
+
+    };
+
+
+
+    /* =========================================
+       KEYBOARD NAVIGATION
+    ========================================= */
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (!modal.classList.contains("show")) {
+                return;
+            }
+
+
+            if (event.key === "Escape") {
+
+                window.closeImageModal();
+
+            }
+
+
+            if (event.key === "ArrowLeft") {
+
+                window.moveModalImage(-1);
+
+            }
+
+
+            if (event.key === "ArrowRight") {
+
+                window.moveModalImage(1);
+
+            }
+
+        }
+    );
+
+
+
+    /* =========================================
+       MOBILE SWIPE IN FULLSCREEN MODAL
+    ========================================= */
+
+    modal.addEventListener(
+        "touchstart",
+        function (event) {
+
+            if (!modal.classList.contains("show")) {
+                return;
+            }
+
+
+            touchStartX =
+                event.changedTouches[0].clientX;
+
+            touchStartY =
+                event.changedTouches[0].clientY;
+
+        },
+        { passive: true }
+    );
+
+
+    modal.addEventListener(
+        "touchend",
+        function (event) {
+
+            if (!modal.classList.contains("show")) {
+                return;
+            }
+
+
+            const endX =
+                event.changedTouches[0].clientX;
+
+            const endY =
+                event.changedTouches[0].clientY;
+
+
+            const differenceX =
+                endX - touchStartX;
+
+            const differenceY =
+                endY - touchStartY;
+
+
+            if (
+                Math.abs(differenceX) > 45 &&
+                Math.abs(differenceX) >
+                Math.abs(differenceY)
+            ) {
+
+                if (differenceX < 0) {
+
+                    window.moveModalImage(1);
+
+                } else {
+
+                    window.moveModalImage(-1);
+
+                }
+
+            }
+
+        },
+        { passive: true }
+    );
+
+
+})();
+
+</script><!-- =========================================
+     SHARE LISTING
+========================================== --><script>
+
+async function shareListing() {
+
+    const feedback = document.getElementById(
+        "share-feedback"
+    );
+
+
+    const shareData = {
+
+        title: {{ item.title | tojson }},
+
+        text: "Check this out on Kalxa.",
+
+        url: window.location.href
+
+    };
+
+
+    try {
+
+        if (navigator.share) {
+
+            await navigator.share(shareData);
+
+        } else if (navigator.clipboard) {
+
+            await navigator.clipboard.writeText(
+                window.location.href
+            );
+
+            feedback.textContent =
+                "Listing link copied ✓";
+
+
+            setTimeout(function () {
+
+                feedback.textContent = "";
+
+            }, 2500);
+
+        } else {
+
+            feedback.textContent =
+                window.location.href;
+
+        }
+
+    } catch (error) {
+
+        if (error.name !== "AbortError") {
+
+            feedback.textContent =
+                "Unable to share this listing.";
+
+        }
+
     }
 
-    document.addEventListener("keydown", function(event) {
-        if (event.key === "Escape") {
-            closeImageModal();
-        }
-    });
+}
 
-    async function shareListing() {
-        const feedback = document.getElementById("share-feedback");
-        const shareData = {
-            title: {{ item.title | tojson }},
-            text: "Check this out on Kalxa.",
-            url: window.location.href
-        };
-
-        try {
-            if (navigator.share) {
-                await navigator.share(shareData);
-            } else if (navigator.clipboard) {
-                await navigator.clipboard.writeText(window.location.href);
-                feedback.textContent = "Listing link copied ✓";
-                setTimeout(function() {
-                    feedback.textContent = "";
-                }, 2500);
-            } else {
-                feedback.textContent = window.location.href;
-            }
-        } catch (error) {
-            if (error.name !== "AbortError") {
-                feedback.textContent = "Unable to share this listing.";
-            }
-        }
-    }
-
-</script>
-
-
-<!-- =========================================
+</script><!-- =========================================
      ENGAGEMENT TRACKING CONFIGURATION
-========================================== -->
-
-<script>
+========================================== --><script>
 
 window.LAC_ENGAGEMENT_CONFIG = {
+
     zoneId: {{ item.zone_id | tojson }},
-    accessPointId: {% if access_point %}{{ access_point.id | tojson }}{% else %}null{% endif %},
+
+    accessPointId:
+        {% if access_point %}
+            {{ access_point.id | tojson }}
+        {% else %}
+            null
+        {% endif %},
+
     contentItemId: {{ item.id | tojson }},
+
     category: {{ item.category | tojson }}
+
 };
 
-</script>
-
-
-<!-- =========================================
+</script><!-- =========================================
      ENGAGEMENT TRACKING ENGINE
-========================================== -->
-
-<script
+========================================== --><script
     src="{{ url_for(
         'static',
         filename='js/engagement.js'
     ) }}"
-></script>
-
-
-<!-- =========================================
+></script><!-- =========================================
      RECORD LISTING VIEW
-========================================== -->
-
-<script>
+========================================== --><script>
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
+
         if (window.LaCTrack) {
+
             window.LaCTrack("listing_view");
+
         }
+
     }
 );
 
-</script>
-
-
-</body>
-
-</html>
+</script></body></html>
