@@ -10796,14 +10796,23 @@ def push_unsubscribe():
 
 @app.route("/listing/<int:item_id>")
 def listing_detail(item_id):
+
     item = (
         ContentItem.query
-        .filter_by(id=item_id, active=True, archived=False)
+        .filter_by(
+            id=item_id,
+            active=True,
+            archived=False,
+        )
         .first_or_404()
     )
 
     zone = item.zone
-    category = get_category_by_slug(item.category, active_only=False)
+
+    category = get_category_by_slug(
+        item.category,
+        active_only=False,
+    )
 
     if category is None:
         current_app.logger.warning(
@@ -10812,10 +10821,19 @@ def listing_detail(item_id):
             item.category,
         )
 
+    # ========================================================
+    # ACCESS POINT
+    # ========================================================
+
     access_point = None
-    access_point_id = request.args.get("ap", type=int)
+
+    access_point_id = request.args.get(
+        "ap",
+        type=int,
+    )
 
     if access_point_id:
+
         access_point = (
             AccessPoint.query
             .filter_by(
@@ -10825,8 +10843,33 @@ def listing_detail(item_id):
             .first()
         )
 
+    # ========================================================
+    # EXISTING LISTING STATE
+    # ========================================================
+
     attach_campaign_state(item)
+
     attach_sponsorship_state(item)
+
+    # ========================================================
+    # LISTING VIEW COUNT
+    # ========================================================
+
+    existing_views = (
+        EngagementEvent.query
+        .filter_by(
+            event_type="listing_view",
+            content_item_id=item.id,
+        )
+        .count()
+    )
+
+    # Include the current page visit.
+    views_count = existing_views + 1
+
+    # ========================================================
+    # RENDER LISTING
+    # ========================================================
 
     return render_template(
         "listing_detail.html",
@@ -10834,8 +10877,8 @@ def listing_detail(item_id):
         zone=zone,
         category=category,
         access_point=access_point,
+        views_count=views_count,
     )
-
 
 # ============================================================
 # FIND LIVE ACCESS POINT
