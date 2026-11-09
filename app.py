@@ -10852,94 +10852,93 @@ def push_unsubscribe():
 # PUBLIC LISTING DETAIL
 # ============================================================
 
-@app.route("/listing/"int:item_id" (int:item_id)")
+@app.route("/listing/<int:item_id>")
 def listing_detail(item_id):
-
-item = (
-    ContentItem.query
-    .filter_by(
-        id=item_id,
-        active=True,
-        archived=False,
-    )
-    .first_or_404()
-)
-
-zone = item.zone
-
-category = get_category_by_slug(
-    item.category,
-    active_only=False,
-)
-
-if category is None:
-    current_app.logger.warning(
-        "[Kalxa Listing] Category not found listing_id=%s category=%s",
-        item.id,
-        item.category,
-    )
-
-# ========================================================
-# ACCESS POINT
-# ========================================================
-
-access_point = None
-
-access_point_id = request.args.get(
-    "ap",
-    type=int,
-)
-
-if access_point_id:
-
-    access_point = (
-        AccessPoint.query
+    item = (
+        ContentItem.query
         .filter_by(
-            id=access_point_id,
-            zone_id=item.zone_id,
+            id=item_id,
+            active=True,
+            archived=False,
         )
-        .first()
+        .first_or_404()
     )
 
-# ========================================================
-# EXISTING LISTING STATE
-# ========================================================
+    zone = item.zone
 
-attach_campaign_state(item)
-
-attach_sponsorship_state(item)
-
-# ========================================================
-# LISTING VIEW COUNT
-# ========================================================
-
-existing_views = (
-    EngagementEvent.query
-    .filter_by(
-        event_type="listing_view",
-        content_item_id=item.id,
+    category = get_category_by_slug(
+        item.category,
+        active_only=False,
     )
-    .count()
-)
 
-# Include the current page visit.
-actual_views = existing_views + 1
+    if category is None:
+        current_app.logger.warning(
+            "[Kalxa Listing] Category not found listing_id=%s category=%s",
+            item.id,
+            item.category,
+        )
 
-# Each recorded view displays as 7 views.
-views_count = actual_views * 7
+    # ========================================================
+    # ACCESS POINT
+    # ========================================================
 
-# ========================================================
-# RENDER LISTING
-# ========================================================
+    access_point = None
 
-return render_template(
-    "listing_detail.html",
-    item=item,
-    zone=zone,
-    category=category,
-    access_point=access_point,
-    views_count=views_count,
-)
+    access_point_id = request.args.get(
+        "ap",
+        type=int,
+    )
+
+    if access_point_id:
+        access_point = (
+            AccessPoint.query
+            .filter_by(
+                id=access_point_id,
+                zone_id=item.zone_id,
+            )
+            .first()
+        )
+
+    # ========================================================
+    # EXISTING LISTING STATE
+    # ========================================================
+
+    attach_campaign_state(item)
+
+    attach_sponsorship_state(item)
+
+    # ========================================================
+    # LISTING VIEW COUNT
+    # ========================================================
+
+    existing_views = (
+        EngagementEvent.query
+        .filter_by(
+            event_type="listing_view",
+            content_item_id=item.id,
+        )
+        .count()
+    )
+
+    # Include the current page visit.
+    actual_views = existing_views + 1
+
+    # Each recorded view displays as 7 views.
+    views_count = actual_views * 7
+
+    # ========================================================
+    # RENDER LISTING
+    # ========================================================
+
+    return render_template(
+        "listing_detail.html",
+        item=item,
+        zone=zone,
+        category=category,
+        access_point=access_point,
+        views_count=views_count,
+    )
+
 # ============================================================
 # FIND LIVE ACCESS POINT
 # ============================================================
