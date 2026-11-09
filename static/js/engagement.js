@@ -18,6 +18,46 @@
 
 
     // =========================================
+    // GET ACCESS POINT ID
+    // =========================================
+
+    function getStoredAccessPointId() {
+
+        try {
+
+            const storedId =
+                localStorage.getItem(
+                    "lac_access_point_id"
+                );
+
+            if (!storedId) {
+                return null;
+            }
+
+            const parsedId =
+                Number(storedId);
+
+            return Number.isFinite(parsedId)
+                && parsedId > 0
+                ? parsedId
+                : null;
+
+        } catch (error) {
+
+            console.debug(
+                "[LaC Engagement] "
+                + "Could not read localStorage:",
+                error
+            );
+
+            return null;
+
+        }
+
+    }
+
+
+    // =========================================
     // SEND ENGAGEMENT EVENT
     // =========================================
 
@@ -26,10 +66,12 @@
         extraData = {}
     ) {
 
+        // =====================================
+        // VALIDATE EVENT
+        // =====================================
+
         if (
-            !ALLOWED_EVENTS.has(
-                eventType
-            )
+            !ALLOWED_EVENTS.has(eventType)
         ) {
 
             console.debug(
@@ -38,20 +80,29 @@
             );
 
             return;
+
         }
 
+
+        // =====================================
+        // READ PAGE CONFIGURATION
+        // =====================================
 
         const config =
             window.LAC_ENGAGEMENT_CONFIG || {};
 
 
-        const storedAccessPointId =
-            Number(
-                localStorage.getItem(
-                    "lac_access_point_id"
-                )
-            );
+        const accessPointId =
+            config.accessPointId
+            ||
+            getStoredAccessPointId()
+            ||
+            null;
 
+
+        // =====================================
+        // BUILD PAYLOAD
+        // =====================================
 
         const payload = {
 
@@ -59,20 +110,16 @@
                 eventType,
 
             zone_id:
-                config.zoneId || null,
+                config.zoneId ?? null,
 
             access_point_id:
-                config.accessPointId
-                ||
-                storedAccessPointId
-                ||
-                null,
+                accessPointId,
 
             content_item_id:
-                config.contentItemId || null,
+                config.contentItemId ?? null,
 
             category:
-                config.category || null,
+                config.category ?? null,
 
             ...extraData
 
@@ -83,11 +130,94 @@
             JSON.stringify(payload);
 
 
+        console.debug(
+            "[LaC Engagement] Sending event:",
+            payload
+        );
+
+
         // =====================================
-        // SEND BEACON
+        // LISTING AND CATEGORY VIEWS
         //
-        // Best for links such as WhatsApp,
-        // Call and Maps because the browser
+        // Use fetch so the browser sends the
+        // request while the page is open.
+        // =====================================
+
+        if (
+            eventType === "listing_view"
+            ||
+            eventType === "category_view"
+        ) {
+
+            fetch(
+                "/api/engagement",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: body,
+
+                    credentials: "same-origin",
+
+                    cache: "no-store",
+
+                    keepalive: true
+
+                }
+            )
+            .then(
+                async function (response) {
+
+                    if (!response.ok) {
+
+                        console.error(
+                            "[LaC Engagement] "
+                            + "Server rejected event:",
+                            response.status,
+                            await response.text()
+                        );
+
+                        return;
+
+                    }
+
+
+                    console.debug(
+                        "[LaC Engagement] "
+                        + "Event recorded successfully:",
+                        eventType
+                    );
+
+                }
+            )
+            .catch(
+                function (error) {
+
+                    console.error(
+                        "[LaC Engagement] "
+                        + "Request failed:",
+                        error
+                    );
+
+                }
+            );
+
+            return;
+
+        }
+
+
+        // =====================================
+        // CLICK EVENTS
+        //
+        // Use sendBeacon because the browser
         // may immediately leave the page.
         // =====================================
 
@@ -116,6 +246,12 @@
 
                 if (sent) {
 
+                    console.debug(
+                        "[LaC Engagement] "
+                        + "Event queued:",
+                        eventType
+                    );
+
                     return;
 
                 }
@@ -141,8 +277,7 @@
             "/api/engagement",
             {
 
-                method:
-                    "POST",
+                method: "POST",
 
                 headers: {
 
@@ -151,20 +286,20 @@
 
                 },
 
-                body:
-                    body,
+                body: body,
 
-                keepalive:
-                    true
+                credentials: "same-origin",
+
+                keepalive: true
 
             }
         )
         .catch(
             function (error) {
 
-                console.debug(
+                console.error(
                     "[LaC Engagement] "
-                    + "fetch error:",
+                    + "Fetch fallback failed:",
                     error
                 );
 
@@ -174,7 +309,9 @@
     }
 
 
-    // Make tracker available globally.
+    // =========================================
+    // MAKE TRACKER AVAILABLE GLOBALLY
+    // =========================================
 
     window.LaCTrack =
         sendEngagement;
@@ -188,8 +325,23 @@
         "click",
         function (event) {
 
+            const target =
+                event.target;
+
+
+            if (
+                !target
+                ||
+                typeof target.closest !== "function"
+            ) {
+
+                return;
+
+            }
+
+
             const element =
-                event.target.closest(
+                target.closest(
                     "[data-lac-event]"
                 );
 
