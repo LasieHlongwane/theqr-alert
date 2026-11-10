@@ -56,17 +56,17 @@ from decimal import Decimal
 
 KALXA_PRESENCE_PRICING = {
 
+    7:
+        Decimal("30.00"),
+
+    14:
+        Decimal("50.00"),
+
     30:
-        Decimal("60.00"),
+        Decimal("100.00"),
 
-    90:
-        Decimal("120.00"),
-
-    180:
-        Decimal("180.00"),
-
-    365:
-        Decimal("600.00"),
+    60:
+        Decimal("200.00"),
 
 }
 
