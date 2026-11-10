@@ -57,16 +57,16 @@ from decimal import Decimal
 KALXA_PRESENCE_PRICING = {
 
     30:
-        Decimal("30.00"),
-
-    90:
         Decimal("60.00"),
 
+    90:
+        Decimal("120.00"),
+
     180:
-        Decimal("100.00"),
+        Decimal("180.00"),
 
     365:
-        Decimal("150.00"),
+        Decimal("600.00"),
 
 }
 
@@ -116,7 +116,7 @@ KALXA_CAMPAIGN_PRICING = {
     7: {
 
         1:
-            Decimal("10.00"),
+            Decimal("20.00"),
 
         2:
             Decimal("30.00"),
@@ -129,26 +129,26 @@ KALXA_CAMPAIGN_PRICING = {
     14: {
 
         1:
-            Decimal("20.00"),
-
-        2:
             Decimal("40.00"),
-
-        3:
-            Decimal("60.00"),
-
-    },
-
-    30: {
-
-        1:
-            Decimal("30.00"),
 
         2:
             Decimal("50.00"),
 
         3:
             Decimal("70.00"),
+
+    },
+
+    30: {
+
+        1:
+            Decimal("60.00"),
+
+        2:
+            Decimal("75.00"),
+
+        3:
+            Decimal("85.00"),
 
     },
 
