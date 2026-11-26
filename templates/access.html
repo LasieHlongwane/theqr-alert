@@ -103,19 +103,15 @@
         }
 
         /* =========================================
-           TRANSPARENT HEADER (INITIAL + SCROLL STATES)
+           TRANSPARENT HEADER
+           (Switch 'transparent' to '#ffffff' if you want a solid white header)
         ========================================== */
 
         header.access-header,
-        header.access-header *,
         .access-header,
-        .access-header::before,
-        .access-header::after,
-        .public-brand-wrap,
-        .public-brand-wrap::before,
-        .public-brand-wrap::after,
-        .lac-brand,
-        .lac-tagline {
+        .access-header .public-brand-wrap,
+        .access-header .lac-brand,
+        .access-header .lac-tagline {
             background: transparent !important;
             background-color: transparent !important;
             background-image: none !important;
@@ -1905,7 +1901,6 @@
            KALXA APP MENU
         ========================================================= */
 
-        header.access-header button.kalxa-menu-button,
         button.kalxa-menu-button,
         .kalxa-menu-button {
             position: absolute;
@@ -1932,9 +1927,6 @@
             background:
                 var(--kalxa-white-btn) !important;
 
-            background-color:
-                var(--kalxa-white-btn) !important;
-
             box-shadow:
                 0 4px 14px
                 rgba(0, 0, 0, 0.18);
@@ -1944,21 +1936,17 @@
             z-index: 100;
         }
 
-        header.access-header button.kalxa-menu-button:hover,
         button.kalxa-menu-button:hover,
         .kalxa-menu-button:hover {
             background: var(--kalxa-white-btn-hover) !important;
-            background-color: var(--kalxa-white-btn-hover) !important;
         }
 
 
-        header.access-header .kalxa-menu-button span,
         .kalxa-menu-button span {
             width: 18px;
             height: 2px;
 
             background: var(--kalxa-white-btn-ink) !important;
-            background-color: var(--kalxa-white-btn-ink) !important;
         }
 
 
@@ -2073,9 +2061,6 @@
             background:
                 var(--kalxa-white-btn) !important;
 
-            background-color:
-                var(--kalxa-white-btn) !important;
-
             color: var(--kalxa-white-btn-ink) !important;
 
             font-size: 25px;
@@ -2086,7 +2071,6 @@
         button.kalxa-menu-close:hover,
         .kalxa-menu-close:hover {
             background: var(--kalxa-white-btn-hover) !important;
-            background-color: var(--kalxa-white-btn-hover) !important;
         }
 
 
@@ -2547,7 +2531,6 @@
         button.public-notification-button,
         .public-notification-button {
             background: var(--kalxa-white-btn) !important;
-            background-color: var(--kalxa-white-btn) !important;
             color: var(--kalxa-white-btn-ink) !important;
             border: 1px solid rgba(41, 44, 48, 0.16);
             border-radius: 12px;
@@ -2560,7 +2543,6 @@
         button.public-notification-button:hover,
         .public-notification-button:hover {
             background: var(--kalxa-white-btn-hover) !important;
-            background-color: var(--kalxa-white-btn-hover) !important;
         }
 
 
@@ -2804,6 +2786,9 @@
 
                 <a
                     href="https://vat-paye-bot.streamlit.app/"
+                        
+                    
+                
                     class="
                         kalxa-menu-item
                         kalxa-menu-item-jobs
@@ -2822,6 +2807,7 @@
 
                         <small>
                             VAT and PAYE, handled. Built for local businesses.
+                            
                         </small>
 
                     </span>
@@ -3185,6 +3171,12 @@
 
                     </div>
 
+
+
+
+
+
+
                 </div>
 
 
@@ -3357,6 +3349,8 @@
                 >
 
                     <span class="kalxa-stories-swipe-line"></span>
+
+                
 
                 </div>
 
@@ -3963,6 +3957,8 @@
             <div class="kalxa-business-cta-job-note">
                 Ufuna umuntu ozoku Foromela or Ukwakha,Pumbling, Electrician <br>
                 Laudry, or clean yard, etc <br>
+                
+                
             </div>
             
 
@@ -4074,21 +4070,7 @@
          FOOTER
     ========================================== -->
 
-    <footer class="public-footer">
 
-        <div class="footer-brand">
-            KALXA · Powered by LaC
-        </div>
-
-        <div class="footer-tagline">
-            LOCAL DIGITAL INFRASTRUCTURE
-        </div>
-
-        <div class="footer-zone">
-            📍 {{ zone.name }}
-        </div>
-
-    </footer>
 
 
 </div>
@@ -4626,48 +4608,6 @@ document.addEventListener(
 
     }
 );
-
-</script>
-
-
-<!-- =========================================
-     HEADER TRANSPARENCY GUARD (INITIAL + SCROLL)
-========================================== -->
-
-<script>
-
-(function () {
-    function enforceTransparentHeader() {
-        const header = document.querySelector(".access-header");
-        if (!header) {
-            return;
-        }
-
-        header.style.setProperty("background", "transparent", "important");
-        header.style.setProperty("background-color", "transparent", "important");
-        header.style.setProperty("background-image", "none", "important");
-
-        const brandWrap = header.querySelector(".public-brand-wrap");
-        if (brandWrap) {
-            brandWrap.style.setProperty("background", "transparent", "important");
-            brandWrap.style.setProperty("background-color", "transparent", "important");
-            brandWrap.style.setProperty("background-image", "none", "important");
-        }
-    }
-
-    enforceTransparentHeader();
-    document.addEventListener("DOMContentLoaded", enforceTransparentHeader);
-    window.addEventListener("scroll", enforceTransparentHeader, { passive: true });
-
-    const headerTarget = document.querySelector(".access-header");
-    if (headerTarget && "MutationObserver" in window) {
-        const observer = new MutationObserver(enforceTransparentHeader);
-        observer.observe(headerTarget, {
-            attributes: true,
-            attributeFilter: ["style", "class"]
-        });
-    }
-})();
 
 </script>
 
