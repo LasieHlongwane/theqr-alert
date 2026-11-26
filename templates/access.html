@@ -78,8 +78,24 @@
 
 
     <!-- =========================================
-         MAIN CSS
+         MODERN FONT & MAIN CSS
     ========================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
     <link
         rel="stylesheet"
@@ -91,27 +107,47 @@
 
 
     <!-- =========================================
-         ACCESS PAGE STYLES
+         MODERN ACCESS PAGE STYLES
     ========================================== -->
 
     <style>
 
         :root {
+            --kalxa-bg: #0b0d10;
+            --kalxa-surface: #f7f4ed;
+            --kalxa-surface-card: #ffffff;
+            --kalxa-ink: #14171c;
+            --kalxa-ink-muted: #5c6370;
             --kalxa-white-btn: #ffffff;
-            --kalxa-white-btn-hover: #f2f3f5;
-            --kalxa-white-btn-ink: #292c30;
+            --kalxa-white-btn-hover: #f3f5f8;
+            --kalxa-white-btn-ink: #16191e;
+            --kalxa-radius-xl: 24px;
+            --kalxa-radius-lg: 18px;
+            --kalxa-radius-md: 14px;
+            --kalxa-ease: cubic-bezier(0.22, 1, 0.36, 1);
+            --kalxa-shadow-btn:
+                0 6px 18px rgba(0, 0, 0, 0.14),
+                0 1px 3px rgba(0, 0, 0, 0.08);
+            --kalxa-shadow-btn-hover:
+                0 10px 24px rgba(0, 0, 0, 0.20),
+                0 2px 6px rgba(0, 0, 0, 0.10);
         }
 
+
         /* =========================================
-           TRANSPARENT HEADER
-           (Switch 'transparent' to '#ffffff' if you want a solid white header)
+           TRANSPARENT HEADER (INITIAL + SCROLL)
         ========================================== */
 
         header.access-header,
+        header.access-header *,
         .access-header,
-        .access-header .public-brand-wrap,
-        .access-header .lac-brand,
-        .access-header .lac-tagline {
+        .access-header::before,
+        .access-header::after,
+        .public-brand-wrap,
+        .public-brand-wrap::before,
+        .public-brand-wrap::after,
+        .lac-brand,
+        .lac-tagline {
             background: transparent !important;
             background-color: transparent !important;
             background-image: none !important;
@@ -121,8 +157,30 @@
 
 
         /* =========================================
-           PAGE
+           BASE & MODERN PAGE POLISH
         ========================================== */
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body,
+        body.lac-public-body {
+            font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-bottom: calc(112px + env(safe-area-inset-bottom));
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        .lac-page {
+            position: relative;
+            background:
+                radial-gradient(
+                    circle at 50% 0%,
+                    rgba(255, 255, 255, 0.06) 0%,
+                    rgba(255, 255, 255, 0) 48%
+                );
+        }
 
         .access-container {
             width: 100%;
@@ -135,32 +193,29 @@
 
 
         /* =========================================
-           LOCATION
+           LOCATION PILL
         ========================================== */
 
         .location-label {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            margin-bottom: 20px;
-            padding: 8px 12px;
+            gap: 8px;
+            margin-bottom: 22px;
+            padding: 9px 14px;
 
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
+            border: 1px solid rgba(255, 255, 255, 0.14);
             border-radius: 999px;
 
-            background:
-                rgba(255, 255, 255, 0.035);
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
 
-            color:
-                rgba(255, 255, 255, 0.82);
-
+            color: rgba(255, 255, 255, 0.90);
             font-size: 12px;
             font-weight: 700;
+            letter-spacing: 0.2px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
         }
-
 
         .location-icon {
             font-size: 13px;
@@ -173,750 +228,315 @@
 
         .kalxa-stories-section {
             width: 100%;
-            margin:
-                0
-                0
-                34px;
+            margin: 0 0 36px;
         }
-
 
         .kalxa-stories-header {
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
             gap: 18px;
-
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
-
 
         .kalxa-stories-header-copy {
             min-width: 0;
             flex: 1;
         }
 
-
         .kalxa-stories-eyebrow {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 7px;
-
-            margin-bottom: 6px;
-
-            color:
-                rgba(255, 244, 223, 0.62);
-
-            font-size: 9px;
-            font-weight: 900;
-
-            letter-spacing: 1.25px;
-
+            gap: 8px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.1px;
             text-transform: uppercase;
         }
-
 
         .kalxa-stories-eyebrow-dot {
             width: 6px;
             height: 6px;
-
             flex: 0 0 6px;
-
             border-radius: 50%;
-
             background: #ffffff;
-
-            box-shadow:
-                0 0 0 4px
-                rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
         }
-
-
-        .kalxa-stories-title {
-            margin: 0;
-
-            color: #ffffff;
-
-            font-size:
-                clamp(
-                    23px,
-                    6vw,
-                    29px
-                );
-
-            font-weight: 900;
-
-            line-height: 1.05;
-
-            letter-spacing: -0.55px;
-        }
-
-
-        .kalxa-stories-subtitle {
-            margin:
-                7px
-                0
-                0;
-
-            max-width: 430px;
-
-            color:
-                rgba(255, 255, 255, 0.52);
-
-            font-size: 10px;
-            font-weight: 600;
-
-            line-height: 1.45;
-        }
-
 
         .kalxa-stories-all {
             flex: 0 0 auto;
-
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-
-            padding:
-                8px
-                10px;
-
-            border:
-                1px solid
-                rgba(41, 44, 48, 0.14);
-
+            gap: 6px;
+            padding: 10px 15px;
+            border: 1px solid rgba(22, 25, 30, 0.10);
             border-radius: 999px;
-
             background: var(--kalxa-white-btn) !important;
-
             color: var(--kalxa-white-btn-ink) !important;
-
             text-decoration: none;
-
-            font-size: 9px;
-            font-weight: 850;
-
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.2px;
             white-space: nowrap;
+            box-shadow: var(--kalxa-shadow-btn);
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease), box-shadow 0.2s var(--kalxa-ease);
         }
-
 
         .kalxa-stories-all:hover {
+            transform: translateY(-2px);
             background: var(--kalxa-white-btn-hover) !important;
+            box-shadow: var(--kalxa-shadow-btn-hover);
         }
-
 
         .kalxa-stories-all:active {
-            transform: scale(0.97);
+            transform: scale(0.96);
         }
-
 
         .kalxa-stories-rail-wrap {
             position: relative;
         }
 
-
         .kalxa-stories-rail {
-            width:
-                calc(
-                    100%
-                    +
-                    16px
-                );
-
+            width: calc(100% + 16px);
             display: flex;
-
-            gap: 13px;
-
+            gap: 14px;
             overflow-x: auto;
             overflow-y: hidden;
-
             margin-right: -16px;
-
-            padding:
-                2px
-                16px
-                14px
-                0;
-
-            scroll-snap-type:
-                x mandatory;
-
+            padding: 4px 16px 14px 0;
+            scroll-snap-type: x mandatory;
             scroll-padding-left: 0;
-
-            overscroll-behavior-x:
-                contain;
-
+            overscroll-behavior-x: contain;
             scrollbar-width: none;
-
-            -webkit-overflow-scrolling:
-                touch;
+            -webkit-overflow-scrolling: touch;
         }
-
 
         .kalxa-stories-rail::-webkit-scrollbar {
             display: none;
         }
 
-
         .kalxa-story-card {
             position: relative;
-
-            flex:
-                0
-                0
-                82%;
-
+            flex: 0 0 82%;
             width: 82%;
             max-width: 360px;
-            min-height: 330px;
-
+            min-height: 334px;
             display: block;
-
             overflow: hidden;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-
-            border-radius: 22px;
-
-            background: #f5f1e8;
-
-            color: #222326;
-
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--kalxa-radius-xl);
+            background: var(--kalxa-surface);
+            color: var(--kalxa-ink);
             text-decoration: none;
-
             scroll-snap-align: start;
             scroll-snap-stop: always;
-
-            box-shadow:
-                0 10px 30px
-                rgba(0, 0, 0, 0.24);
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                transform 0.18s ease,
-                box-shadow 0.18s ease;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.22s var(--kalxa-ease), box-shadow 0.22s var(--kalxa-ease);
         }
 
+        .kalxa-story-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
+        }
 
         .kalxa-story-card:active {
             transform: scale(0.985);
         }
 
-
         .kalxa-story-image {
             position: relative;
-
             width: 100%;
             height: 205px;
-
             overflow: hidden;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    #292a2d,
-                    #121315
-                );
+            background: linear-gradient(145deg, #292a2d, #121315);
         }
-
 
         .kalxa-story-image img {
             width: 100%;
             height: 100%;
-
             display: block;
-
             object-fit: cover;
-
-            transition:
-                transform
-                0.4s
-                ease;
+            transition: transform 0.45s var(--kalxa-ease);
         }
 
-
-        .kalxa-story-card:hover
-        .kalxa-story-image img {
-            transform: scale(1.025);
+        .kalxa-story-card:hover .kalxa-story-image img {
+            transform: scale(1.04);
         }
-
 
         .kalxa-story-image-fallback {
             width: 100%;
             height: 100%;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    #d8d0c2,
-                    #b7aa96
-                );
-
+            background: linear-gradient(145deg, #d8d0c2, #b7aa96);
             color: #ffffff;
-
             font-size: 54px;
         }
 
-
         .kalxa-story-image-shade {
             position: absolute;
-
             inset: 0;
-
             pointer-events: none;
-
-            background:
-                linear-gradient(
-                    to top,
-                    rgba(0, 0, 0, 0.30),
-                    rgba(0, 0, 0, 0.00) 55%
-                );
+            background: linear-gradient(
+                to top,
+                rgba(0, 0, 0, 0.36),
+                rgba(0, 0, 0, 0.00) 58%
+            );
         }
-
 
         .kalxa-story-top-badges {
             position: absolute;
-
             z-index: 3;
-
-            top: 11px;
-            left: 11px;
-            right: 11px;
-
+            top: 12px;
+            left: 12px;
+            right: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-
             gap: 8px;
-
             pointer-events: none;
         }
 
-
         .kalxa-story-type {
             max-width: 70%;
-
             overflow: hidden;
-
-            padding:
-                7px
-                9px;
-
+            padding: 7px 11px;
             border-radius: 999px;
-
-            background: transparent !important;
-
+            background: rgba(18, 20, 24, 0.56) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: #ffffff;
-
-            font-size: 8px;
-            font-weight: 900;
-
-            letter-spacing: 0.65px;
-
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.7px;
             text-overflow: ellipsis;
             text-transform: uppercase;
             white-space: nowrap;
-
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
         }
-
 
         .kalxa-story-sponsored {
             flex: 0 0 auto;
-
-            padding:
-                7px
-                9px;
-
+            padding: 7px 11px;
             border-radius: 999px;
-
             background: var(--kalxa-white-btn);
-
             color: var(--kalxa-white-btn-ink);
-
-            font-size: 8px;
-            font-weight: 900;
-
+            font-size: 9px;
+            font-weight: 800;
             letter-spacing: 0.4px;
-
             text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
         }
-
 
         .kalxa-story-content {
             position: relative;
-
-            min-height: 125px;
-
+            min-height: 129px;
             display: flex;
             flex-direction: column;
-
-            padding:
-                16px
-                17px
-                17px;
+            padding: 16px 18px 18px;
         }
 
-
         .kalxa-story-brand {
-            margin-bottom: 7px;
-
-            color:
-                rgba(63, 67, 72, 0.52);
-
-            font-size: 8px;
-            font-weight: 900;
-
-            letter-spacing: 1.05px;
-
+            margin-bottom: 6px;
+            color: var(--kalxa-ink-muted);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-
         .kalxa-story-title {
             margin: 0;
-
-            color: #292c30;
-
+            color: var(--kalxa-ink);
             font-size: 18px;
-            font-weight: 900;
-
-            line-height: 1.18;
-
-            letter-spacing: -0.3px;
-
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.35px;
             display: -webkit-box;
-
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
-
             overflow: hidden;
         }
-
 
         .kalxa-story-excerpt {
-            margin:
-                8px
-                0
-                0;
-
-            color:
-                rgba(63, 67, 72, 0.68);
-
-            font-size: 10px;
-            font-weight: 600;
-
+            margin: 8px 0 0;
+            color: var(--kalxa-ink-muted);
+            font-size: 11px;
+            font-weight: 500;
             line-height: 1.45;
-
             display: -webkit-box;
-
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
-
             overflow: hidden;
         }
-
 
         .kalxa-story-footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
             gap: 12px;
-
             margin-top: auto;
             padding-top: 14px;
         }
 
-
         .kalxa-story-read {
-            color:
-                rgba(63, 67, 72, 0.58);
-
-            font-size: 9px;
-            font-weight: 800;
+            color: var(--kalxa-ink-muted);
+            font-size: 10px;
+            font-weight: 700;
         }
 
-
         .kalxa-story-arrow {
-            width: 30px;
-            height: 30px;
-
-            flex: 0 0 30px;
-
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-
+            border: 1px solid rgba(22, 25, 30, 0.08);
             border-radius: 50%;
-
             background: var(--kalxa-white-btn) !important;
-
             color: var(--kalxa-white-btn-ink) !important;
-
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
-
+            box-shadow: var(--kalxa-shadow-btn);
             font-size: 15px;
+            font-weight: 700;
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease);
         }
 
+        .kalxa-story-card:hover .kalxa-story-arrow {
+            transform: translate(2px, -2px);
+            background: var(--kalxa-white-btn-hover) !important;
+        }
 
         .kalxa-stories-swipe-hint {
             display: flex;
             align-items: center;
             gap: 7px;
-
-            margin-top: 2px;
-
-            color:
-                rgba(255, 255, 255, 0.36);
-
-            font-size: 9px;
-            font-weight: 750;
+            margin-top: 4px;
+            color: rgba(255, 255, 255, 0.42);
+            font-size: 10px;
+            font-weight: 700;
         }
-
 
         .kalxa-stories-swipe-line {
-            width: 22px;
+            width: 24px;
             height: 1px;
-
-            background:
-                rgba(255, 255, 255, 0.20);
-        }
-
-
-        /* =========================================================
-           KALXA TICKETING - TOP EXPERIENCE CTA
-        ========================================================= */
-
-        .kalxa-ticketing-top {
-            width: 100%;
-
-            margin:
-                6px
-                0
-                22px;
-
-            padding: 0;
-        }
-
-
-        .kalxa-ticketing-top-link {
-            position: relative;
-
-            width: 100%;
-            min-height: 112px;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 18px;
-
-            padding: 20px;
-
-            overflow: hidden;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.16);
-
-            border-radius: 20px;
-
-            background: #45484d;
-
-            color: #ffffff;
-
-            text-decoration: none;
-
-            box-shadow:
-                0 10px 32px
-                rgba(0, 0, 0, 0.28);
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                transform 0.18s ease,
-                box-shadow 0.18s ease,
-                border-color 0.18s ease;
-        }
-
-
-        .kalxa-ticketing-top-link::before {
-            content: "";
-
-            position: absolute;
-
-            width: 180px;
-            height: 180px;
-
-            top: -110px;
-            right: -60px;
-
-            border-radius: 50%;
-
-            background:
-                rgba(255, 255, 255, 0.08);
-
-            pointer-events: none;
-        }
-
-
-        .kalxa-ticketing-top-link::after {
-            content: "";
-
-            position: absolute;
-
-            width: 110px;
-            height: 110px;
-
-            right: 48px;
-            bottom: -82px;
-
-            border-radius: 50%;
-
-            background:
-                rgba(255, 255, 255, 0.04);
-
-            pointer-events: none;
-        }
-
-
-        .kalxa-ticketing-top-copy {
-            position: relative;
-
-            z-index: 2;
-
-            min-width: 0;
-
-            flex: 1;
-        }
-
-
-        .kalxa-ticketing-top-title {
-            display: block;
-
-            margin: 0;
-
-            color: #ffffff;
-
-            font-size:
-                clamp(
-                    18px,
-                    5vw,
-                    24px
-                );
-
-            font-weight: 900;
-
-            line-height: 1.12;
-
-            letter-spacing: -0.4px;
-        }
-
-
-        .kalxa-ticketing-top-description {
-            display: block;
-
-            margin-top: 7px;
-
-            color:
-                rgba(255, 255, 255, 0.82);
-
-            font-size: 10px;
-            font-weight: 600;
-
-            line-height: 1.45;
-
-            opacity: 0.86;
-        }
-
-
-        .kalxa-ticketing-top-action {
-            position: relative;
-
-            z-index: 2;
-
-            width: 46px;
-            height: 46px;
-
-            flex: 0 0 46px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            border:
-                1px solid
-                rgba(41, 44, 48, 0.14);
-
-            border-radius: 50%;
-
-            background: var(--kalxa-white-btn) !important;
-
-            color: var(--kalxa-white-btn-ink) !important;
-
-            font-size: 22px;
-            font-weight: 500;
-
-            box-shadow:
-                0 5px 16px
-                rgba(0, 0, 0, 0.24);
-
-            transition:
-                transform 0.18s ease;
-        }
-
-
-        .kalxa-ticketing-top-link:active {
-            transform: scale(0.985);
-        }
-
-
-        .kalxa-ticketing-top-link:active
-        .kalxa-ticketing-top-action {
-            transform: translateX(3px);
-        }
-
-
-        .kalxa-ticketing-top-link,
-        .kalxa-ticketing-top-link:link,
-        .kalxa-ticketing-top-link:visited,
-        .kalxa-ticketing-top-link:hover,
-        .kalxa-ticketing-top-link:active {
-            color: #ffffff !important;
-        }
-
-
-        .kalxa-ticketing-top-link span,
-        .kalxa-ticketing-top-copy,
-        .kalxa-ticketing-top-title,
-        .kalxa-ticketing-top-description {
-            color: #ffffff !important;
-        }
-
-
-        .kalxa-ticketing-top-link
-        .kalxa-ticketing-top-action {
-            color: var(--kalxa-white-btn-ink) !important;
+            background: rgba(255, 255, 255, 0.22);
         }
 
 
         /* =========================================
-           CATEGORY SECTION
+           CATEGORY & SECTION HEADINGS
         ========================================== */
 
         .category-section {
-            margin-bottom: 34px;
+            margin-bottom: 36px;
         }
-
 
         .category-section-heading {
             display: flex;
@@ -926,28 +546,16 @@
             margin-bottom: 16px;
         }
 
-
-        .category-section-heading h2 {
+        .category-section-heading h4 {
             margin: 0;
-
             color: #ffffff;
-
-            font-size:
-                clamp(
-                    22px,
-                    6vw,
-                    30px
-                );
-
+            font-size: 17px;
             font-weight: 800;
-
-            line-height: 1.1;
-
-            letter-spacing: -0.5px;
+            letter-spacing: -0.2px;
         }
 
         .category-section-hint {
-            color: rgba(255, 255, 255, 0.52);
+            color: rgba(255, 255, 255, 0.56);
             font-size: 11px;
             font-weight: 700;
         }
@@ -961,37 +569,22 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-
             width: fit-content;
-
             margin-top: 8px;
-
             padding: 6px 10px;
-
             border-radius: 999px;
-
             font-size: 10px;
-            font-weight: 900;
-
+            font-weight: 800;
             line-height: 1;
-
             letter-spacing: 0.5px;
-
             text-transform: uppercase;
-
             white-space: nowrap;
         }
-
 
         .campaign-countdown,
         .campaign-tomorrow,
         .campaign-today,
-        .campaign-active {
-            background: var(--kalxa-white-btn);
-            color: var(--kalxa-white-btn-ink);
-        }
-
-
+        .campaign-active,
         .campaign-tonight,
         .campaign-ending,
         .campaign-ending-soon {
@@ -999,18 +592,15 @@
             color: var(--kalxa-white-btn-ink);
         }
 
-
         .campaign-live {
             background: #d92d20;
             color: #ffffff;
         }
 
-
         .campaign-ended {
             background: #e8e8e8;
             color: #666666;
         }
-
 
         .campaign-undated {
             display: none;
@@ -1018,7 +608,7 @@
 
 
         /* =========================================
-           CATEGORY DIRECTORY (SWIPEABLE HORIZONTAL RAIL)
+           CATEGORY DIRECTORY (SWIPEABLE RAIL)
         ========================================== */
 
         .lac-category-list {
@@ -1028,7 +618,7 @@
             overflow-x: auto;
             overflow-y: hidden;
             margin-right: -16px;
-            padding: 2px 16px 14px 0;
+            padding: 4px 16px 14px 0;
             scroll-snap-type: x mandatory;
             scroll-padding-left: 0;
             overscroll-behavior-x: contain;
@@ -1036,382 +626,204 @@
             -webkit-overflow-scrolling: touch;
         }
 
-
         .lac-category-list::-webkit-scrollbar {
             display: none;
         }
 
-
         .lac-category-row {
             position: relative;
-
             flex: 0 0 82%;
             width: 82%;
             max-width: 340px;
-            min-height: 220px;
-
+            min-height: 224px;
             display: flex;
             align-items: flex-end;
-
             gap: 15px;
-
             padding: 22px;
-
             box-sizing: border-box;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.18);
-
-            border-radius: 22px;
-
-            background-color: #f5f1e8;
-
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: var(--kalxa-radius-xl);
+            background-color: var(--kalxa-surface);
             color: #ffffff;
-
             text-decoration: none;
-
             overflow: hidden;
-
             isolation: isolate;
-
             scroll-snap-align: start;
             scroll-snap-stop: always;
-
-            box-shadow:
-                0 6px 22px
-                rgba(0, 0, 0, 0.18);
-
-            -webkit-tap-highlight-color:
-                transparent;
-
-            transition:
-                transform 0.18s ease,
-                box-shadow 0.18s ease,
-                border-color 0.18s ease;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.22s var(--kalxa-ease), box-shadow 0.22s var(--kalxa-ease), border-color 0.22s var(--kalxa-ease);
         }
-
 
         .lac-category-row:hover {
-            transform: translateY(-3px);
-
-            border-color:
-                rgba(255, 255, 255, 0.30);
-
-            box-shadow:
-                0 10px 28px
-                rgba(0, 0, 0, 0.23);
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.34);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.30);
         }
-
 
         .lac-category-row:active {
             transform: scale(0.985);
         }
 
-
         .lac-category-background {
             position: absolute;
-
             z-index: 0;
-
             inset: 0;
-
             width: 100%;
             height: 100%;
-
             border-radius: inherit;
-
             background-position: center;
             background-repeat: no-repeat;
             background-size: cover;
-
             opacity: 0;
-
-            transition:
-                opacity 0.9s ease-in-out;
-
+            transition: opacity 0.9s ease-in-out;
             pointer-events: none;
-
             will-change: opacity;
         }
-
 
         .lac-category-background.is-visible {
             opacity: 1;
         }
 
-
         .lac-category-light-overlay {
             position: absolute;
-
             z-index: 1;
-
             inset: 0;
-
             border-radius: inherit;
-
             pointer-events: none;
-
-            background:
-                linear-gradient(
-                    to top,
-                    rgba(255, 255, 255, 0.42) 0%,
-                    rgba(255, 255, 255, 0.17) 34%,
-                    rgba(255, 255, 255, 0.04) 58%,
-                    rgba(255, 255, 255, 0.00) 76%
-                );
+            background: linear-gradient(
+                to top,
+                rgba(11, 13, 16, 0.68) 0%,
+                rgba(11, 13, 16, 0.24) 45%,
+                rgba(11, 13, 16, 0.04) 76%
+            );
         }
-
 
         .lac-category-row.no-category-image {
-            background:
-                linear-gradient(
-                    145deg,
-                    #f5f1e9,
-                    #ddd7ce
-                );
+            background: linear-gradient(145deg, #f5f1e9, #ddd7ce);
         }
-
 
         .lac-category-fallback-large {
             position: absolute;
-
             z-index: 1;
-
             top: 50%;
             left: 50%;
-
-            transform:
-                translate(
-                    -50%,
-                    -50%
-                );
-
+            transform: translate(-50%, -50%);
             font-size: 58px;
-
-            opacity: 0.32;
-
+            opacity: 0.35;
             pointer-events: none;
         }
-
 
         .lac-category-info {
             position: static;
-
             z-index: 2;
-
             min-width: 0;
-
             flex: 1;
         }
 
-
         .lac-category-title {
             position: absolute;
-
             left: 50%;
-            bottom: 4px;
-
+            bottom: 8px;
             transform: translateX(-50%);
-
             z-index: 8;
-
             width: calc(100% - 20px);
-
             margin: 0;
             padding: 0;
-
             text-align: center;
-
             color: #ffffff !important;
-
             font-size: 21px;
-            font-weight: 900;
-
+            font-weight: 800;
             line-height: 1.15;
-
-            letter-spacing: 0.5px;
-
-            text-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.95),
-                0 4px 10px rgba(0, 0, 0, 0.65);
-
+            letter-spacing: -0.25px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
             pointer-events: none;
-        }
-
-        /* =========================================
-           NEW LISTING VIEW COUNTER
-        ========================================= */
-
-        .lac-new-card-views {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 5;
-
-            display: flex;
-            align-items: center;
-            gap: 5px;
-
-            padding: 6px 10px;
-
-            background: var(--kalxa-white-btn);
-            color: #222222;
-
-            border-radius: 20px;
-
-            font-size: 12px;
-            font-weight: 700;
-
-            line-height: 1;
-            white-space: nowrap;
-
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .lac-category-subtitle {
             position: absolute;
-
             left: 50%;
-            bottom: 32px;
-
+            bottom: 36px;
             transform: translateX(-50%);
-
             z-index: 8;
-
             width: calc(100% - 32px);
-
             margin: 0;
-
-            color: #ffffff !important;
-
-            font-size: 10px;
-            font-weight: 700;
-
+            color: rgba(255, 255, 255, 0.88) !important;
+            font-size: 11px;
+            font-weight: 600;
             line-height: 1.3;
-
             text-align: center;
-
-            text-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.90),
-                0 3px 8px rgba(0, 0, 0, 0.55);
-
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
             pointer-events: none;
         }
 
-
         .lac-category-status {
             position: absolute !important;
-
-            top: 6px !important;
-            right: 6px !important;
-
+            top: 10px !important;
+            right: 10px !important;
             bottom: auto !important;
             left: auto !important;
-
             transform: none !important;
-
             z-index: 25;
-
             width: auto;
-
             display: flex;
             align-items: center;
             justify-content: flex-end;
             flex-wrap: wrap;
-
-            gap: 5px;
-
+            gap: 6px;
             margin: 0;
             padding: 0;
-
             pointer-events: none;
         }
 
-
         .lac-status-badge {
             position: relative !important;
-
             display: inline-flex;
             align-items: center;
             justify-content: center;
-
             gap: 5px;
-
             margin: 0;
-
-            padding: 6px 9px;
-
+            padding: 6px 10px;
             border-radius: 999px;
-
             background: var(--kalxa-white-btn) !important;
-
-            border:
-                1px solid
-                rgba(0, 0, 0, 0.08) !important;
-
-            color: #3f4348 !important;
-
+            border: 1px solid rgba(22, 25, 30, 0.08) !important;
+            color: var(--kalxa-white-btn-ink) !important;
             font-size: 10px;
             font-weight: 800;
-
             line-height: 1;
-
             letter-spacing: 0.25px;
-
             white-space: nowrap;
-
-            box-shadow:
-                0 2px 8px
-                rgba(0, 0, 0, 0.12);
-
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
         }
-
 
         .lac-status-badge-new {
             background: var(--kalxa-white-btn) !important;
-            color: #3f4348 !important;
+            color: var(--kalxa-white-btn-ink) !important;
         }
-
 
         .lac-category-chevron {
             position: relative;
-
             z-index: 2;
-
             width: 40px;
             height: 40px;
-
             flex: 0 0 40px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            border:
-                1px solid
-                rgba(41, 44, 48, 0.14);
-
+            border: 1px solid rgba(22, 25, 30, 0.10);
             border-radius: 50%;
-
             background: var(--kalxa-white-btn) !important;
-
             color: var(--kalxa-white-btn-ink) !important;
-
-            font-size: 25px;
-            font-weight: 400;
-
+            font-size: 22px;
+            font-weight: 600;
             line-height: 1;
+            box-shadow: var(--kalxa-shadow-btn);
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease);
+        }
 
-            box-shadow:
-                0 3px 10px
-                rgba(0, 0, 0, 0.14);
-
-            transition:
-                transform 0.16s ease,
-                background 0.16s ease;
+        .lac-category-row:hover .lac-category-chevron {
+            transform: translateX(3px);
+            background: var(--kalxa-white-btn-hover) !important;
         }
 
 
@@ -1420,184 +832,146 @@
         ========================================== */
 
         .lac-new-nearby {
-            margin-bottom: 34px;
+            margin-bottom: 36px;
         }
-
 
         .lac-new-nearby-header {
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
-
             gap: 16px;
-
             margin-bottom: 14px;
         }
 
-
         .lac-new-nearby-title {
             margin: 0;
-
             color: #ffffff;
-
             font-size: 21px;
             font-weight: 800;
         }
 
-
         .lac-new-nearby-hint {
-            color:
-                rgba(255, 255, 255, 0.52);
-
-            font-size: 10px;
+            color: rgba(255, 255, 255, 0.56);
+            font-size: 11px;
             font-weight: 700;
         }
 
-
         .lac-new-rail {
             width: calc(100% + 16px);
-
             display: flex;
-
-            gap: 12px;
-
+            gap: 13px;
             overflow-x: auto;
             overflow-y: hidden;
-
             margin-right: -16px;
-
-            padding:
-                2px
-                16px
-                12px
-                0;
-
+            padding: 4px 16px 12px 0;
             scrollbar-width: none;
-
             -webkit-overflow-scrolling: touch;
         }
-
 
         .lac-new-rail::-webkit-scrollbar {
             display: none;
         }
 
-
         .lac-new-card {
             position: relative;
-
-            width: 210px;
-            min-width: 210px;
-
-            border-radius: 18px;
-
-            background: #f5f1e8;
-
-            color: #3f4348;
-
+            width: 216px;
+            min-width: 216px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: var(--kalxa-radius-lg);
+            background: var(--kalxa-surface);
+            color: var(--kalxa-ink);
             text-decoration: none;
-
             overflow: hidden;
-
-            box-shadow:
-                0 5px 18px
-                rgba(0, 0, 0, 0.20);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+            transition: transform 0.2s var(--kalxa-ease), box-shadow 0.2s var(--kalxa-ease);
         }
 
+        .lac-new-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+        }
 
         .lac-new-card-image {
             position: relative;
-
             width: 100%;
-            height: 125px;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    #282b30,
-                    #15171a
-                );
-
+            height: 128px;
+            background: linear-gradient(145deg, #282b30, #15171a);
             overflow: hidden;
         }
-
 
         .lac-new-card-image img {
             width: 100%;
             height: 100%;
-
             display: block;
-
             object-fit: cover;
         }
-
 
         .lac-new-card-image-fallback {
             width: 100%;
             height: 100%;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             font-size: 38px;
         }
 
-
         .lac-new-card-badge {
             position: absolute;
-
             top: 10px;
-            right: 10px;
-
-            padding: 6px 9px;
-
+            left: 10px;
+            padding: 6px 10px;
             border-radius: 999px;
-
             background: var(--kalxa-white-btn) !important;
-
-            color: #3f4348 !important;
-
+            color: var(--kalxa-white-btn-ink) !important;
             font-size: 9px;
             font-weight: 800;
+            letter-spacing: 0.4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
         }
 
+        .lac-new-card-views {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 10px;
+            background: var(--kalxa-white-btn);
+            color: var(--kalxa-white-btn-ink);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+        }
 
         .lac-new-card-content {
-            padding: 13px;
+            padding: 14px;
         }
-
 
         .lac-new-card-category {
             margin-bottom: 5px;
-
-            color:
-                rgba(63, 67, 72, 0.62);
-
+            color: var(--kalxa-ink-muted);
             font-size: 9px;
             font-weight: 800;
-
+            letter-spacing: 0.6px;
             text-transform: uppercase;
         }
 
-
         .lac-new-card-title {
-            color: #3f4348;
-
+            color: var(--kalxa-ink);
             font-size: 14px;
             font-weight: 800;
-
             line-height: 1.3;
         }
 
-
         .lac-new-card-business {
             margin-top: 7px;
-
-            color:
-                rgba(63, 67, 72, 0.72);
-
-            font-size: 10px;
+            color: var(--kalxa-ink-muted);
+            font-size: 11px;
             font-weight: 600;
         }
 
@@ -1608,193 +982,154 @@
 
         .lac-featured-section {
             margin-top: 28px;
-            margin-bottom: 30px;
+            margin-bottom: 34px;
         }
-
 
         .lac-featured-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-
             margin-bottom: 14px;
         }
 
-
         .lac-featured-eyebrow {
             margin-bottom: 5px;
-
-            color:
-                rgba(63, 67, 72, 0.68);
-
+            color: rgba(255, 255, 255, 0.66);
             font-size: 10px;
-            font-weight: 900;
+            font-weight: 800;
+            letter-spacing: 0.9px;
         }
-
 
         .lac-featured-title {
             margin: 0;
-
-            color: #3f4348;
-
+            color: #ffffff;
             font-size: 22px;
             font-weight: 800;
+            letter-spacing: -0.3px;
         }
 
-
         .lac-featured-hint {
-            color:
-                rgba(63, 67, 72, 0.58);
-
+            color: rgba(255, 255, 255, 0.56);
             font-size: 11px;
             font-weight: 700;
         }
 
-
         .lac-featured-rail {
             display: flex;
-
             gap: 14px;
-
             overflow-x: auto;
-
-            padding-bottom: 12px;
-
+            padding: 4px 0 12px;
             scrollbar-width: none;
         }
-
 
         .lac-featured-rail::-webkit-scrollbar {
             display: none;
         }
 
-
         .lac-featured-card {
             flex: 0 0 88%;
-
             max-width: 390px;
-
             overflow: hidden;
-
-            border-radius: 20px;
-
-            background: #ffffff;
-
-            color: #3f4348;
-
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: var(--kalxa-radius-lg);
+            background: var(--kalxa-surface-card);
+            color: var(--kalxa-ink);
             text-decoration: none;
-
-            box-shadow:
-                0 8px 24px
-                rgba(0, 0, 0, 0.10);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.20);
+            transition: transform 0.22s var(--kalxa-ease), box-shadow 0.22s var(--kalxa-ease);
         }
 
+        .lac-featured-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+        }
 
         .lac-featured-image {
             position: relative;
-
             width: 100%;
             height: 210px;
-
             overflow: hidden;
-
             background: #ece8df;
         }
-
 
         .lac-featured-image img {
             width: 100%;
             height: 100%;
-
             object-fit: cover;
         }
-
 
         .lac-featured-image-fallback {
             width: 100%;
             height: 100%;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             font-size: 64px;
         }
 
-
         .lac-featured-badge {
             position: absolute;
-
             top: 12px;
             right: 12px;
-
-            padding: 7px 10px;
-
-            border-radius: 999px;
-
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
             background: var(--kalxa-white-btn);
-
-            color: #3f4348;
+            color: var(--kalxa-white-btn-ink);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
         }
-
 
         .lac-featured-content {
-            padding: 17px;
+            padding: 18px;
         }
-
 
         .lac-featured-category {
             margin-bottom: 6px;
-
+            color: var(--kalxa-ink-muted);
             font-size: 10px;
-            font-weight: 900;
-
+            font-weight: 800;
+            letter-spacing: 0.7px;
             text-transform: uppercase;
         }
 
-
         .lac-featured-item-title {
             margin-bottom: 8px;
-
+            color: var(--kalxa-ink);
             font-size: 19px;
-            font-weight: 850;
+            font-weight: 800;
+            letter-spacing: -0.25px;
         }
-
 
         .lac-featured-meta {
-            margin-top: 5px;
-
+            margin-top: 6px;
+            color: var(--kalxa-ink-muted);
             font-size: 12px;
+            font-weight: 600;
         }
-
 
         .lac-featured-price {
             display: inline-block;
-
             margin-top: 10px;
-
-            padding: 6px 9px;
-
-            border-radius: 8px;
-
-            background: #f5f1e8;
-
+            padding: 6px 10px;
+            border-radius: 9px;
+            background: var(--kalxa-surface);
+            color: var(--kalxa-ink);
+            font-size: 12px;
             font-weight: 800;
         }
-
 
         .lac-featured-view {
             display: flex;
             justify-content: space-between;
-
-            margin-top: 15px;
+            align-items: center;
+            margin-top: 16px;
             padding-top: 13px;
-
-            border-top:
-                1px solid
-                rgba(0, 0, 0, 0.07);
-
-            font-size: 11px;
+            border-top: 1px solid rgba(22, 25, 30, 0.08);
+            color: var(--kalxa-ink);
+            font-size: 12px;
             font-weight: 800;
         }
 
@@ -1805,10 +1140,8 @@
 
         .lac-image-loading img {
             opacity: 0;
-
             transition: opacity 0.35s ease;
         }
-
 
         .lac-image-loaded img {
             opacity: 1;
@@ -1816,733 +1149,551 @@
 
 
         /* =========================================================
-           MOBILE ACTION BAR
+           MODERN FLOATING MOBILE ACTION BAR
         ========================================================= */
 
         .lac-mobile-action-bar {
             position: fixed;
-
             left: 50%;
-            bottom: 12px;
-
+            bottom: calc(14px + env(safe-area-inset-bottom));
             transform: translateX(-50%);
-
-            width: calc(100% - 24px);
+            width: calc(100% - 28px);
             max-width: 520px;
-
-            height: 66px;
-
+            height: 62px;
             display: flex;
             align-items: center;
             justify-content: space-around;
-
-            background: var(--kalxa-white-btn) !important;
-            border: 1px solid rgba(41, 44, 48, 0.14);
-            border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-
+            padding: 6px;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.96) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(22, 25, 30, 0.10);
+            border-radius: 999px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
             z-index: 1000;
         }
 
-
         .lac-mobile-action {
             flex: 1;
-
+            height: 100%;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
-
-            gap: 3px;
-
-            background: var(--kalxa-white-btn) !important;
+            gap: 8px;
+            border-radius: 999px;
+            background: transparent !important;
             color: var(--kalxa-white-btn-ink) !important;
-
             text-decoration: none;
+            transition: background 0.2s var(--kalxa-ease), transform 0.18s var(--kalxa-ease);
         }
 
+        .lac-mobile-action:hover {
+            background: var(--kalxa-white-btn-hover) !important;
+        }
+
+        .lac-mobile-action:active {
+            transform: scale(0.97);
+        }
 
         .lac-mobile-action-icon {
-            font-size: 21px;
+            font-size: 18px;
         }
-
 
         .lac-mobile-action-label {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 800;
+            letter-spacing: 0.1px;
         }
-
 
         .lac-mobile-action-divider {
             width: 1px;
-            height: 30px;
-
-            background:
-                rgba(63, 67, 72, 0.12);
-        }
-
-
-        body {
-            padding-bottom:
-                calc(
-                    105px
-                    +
-                    env(safe-area-inset-bottom)
-                );
-        }
-
-
-        html {
-            scroll-behavior: smooth;
+            height: 24px;
+            background: rgba(22, 25, 30, 0.12);
         }
 
 
         /* =========================================================
-           KALXA APP MENU
+           KALXA APP MENU & WHITE SIDEBAR
         ========================================================= */
 
+        header.access-header button.kalxa-menu-button,
         button.kalxa-menu-button,
         .kalxa-menu-button {
             position: absolute;
-
             top: 18px;
             right: 18px;
-
             width: 44px;
             height: 44px;
-
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-
             gap: 5px;
-
-            border:
-                1px solid
-                rgba(41, 44, 48, 0.16) !important;
-
+            border: 1px solid rgba(22, 25, 30, 0.10) !important;
             border-radius: 14px;
-
-            background:
-                var(--kalxa-white-btn) !important;
-
-            box-shadow:
-                0 4px 14px
-                rgba(0, 0, 0, 0.18);
-
+            background: var(--kalxa-white-btn) !important;
+            background-color: var(--kalxa-white-btn) !important;
+            box-shadow: var(--kalxa-shadow-btn);
             cursor: pointer;
-
             z-index: 100;
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease), box-shadow 0.2s var(--kalxa-ease);
         }
 
+        header.access-header button.kalxa-menu-button:hover,
         button.kalxa-menu-button:hover,
         .kalxa-menu-button:hover {
+            transform: translateY(-2px);
             background: var(--kalxa-white-btn-hover) !important;
+            background-color: var(--kalxa-white-btn-hover) !important;
+            box-shadow: var(--kalxa-shadow-btn-hover);
         }
 
+        button.kalxa-menu-button:active,
+        .kalxa-menu-button:active {
+            transform: scale(0.95);
+        }
 
+        header.access-header .kalxa-menu-button span,
         .kalxa-menu-button span {
             width: 18px;
             height: 2px;
-
+            border-radius: 2px;
             background: var(--kalxa-white-btn-ink) !important;
+            background-color: var(--kalxa-white-btn-ink) !important;
         }
-
 
         .kalxa-menu-overlay {
             position: fixed;
-
             inset: 0;
-
-            background:
-                rgba(0, 0, 0, 0.62);
-
+            background: rgba(11, 13, 16, 0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 1998;
         }
-
 
         .kalxa-menu-overlay[hidden] {
             display: none !important;
         }
 
-
+        /* WHITE SIDEBAR */
         .kalxa-side-menu {
             position: fixed;
-
             top: 0;
             right: 0;
-
-            width:
-                min(
-                    88vw,
-                    380px
-                );
-
+            width: min(88vw, 380px);
             height: 100dvh;
-
             display: flex;
             flex-direction: column;
-
-            background: #101114;
-
-            border-left:
-                1px solid
-                rgba(255, 255, 255, 0.08);
-
-            transform:
-                translateX(105%);
-
-            transition:
-                transform
-                0.25s
-                ease;
-
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: var(--kalxa-ink) !important;
+            border-left: 1px solid rgba(22, 25, 30, 0.08);
+            box-shadow: -16px 0 42px rgba(0, 0, 0, 0.18);
+            transform: translateX(105%);
+            transition: transform 0.28s var(--kalxa-ease);
             z-index: 1999;
         }
 
-
         .kalxa-side-menu.is-open {
-            transform:
-                translateX(0);
+            transform: translateX(0);
         }
-
 
         .kalxa-side-menu-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
-            padding:
-                calc(
-                    22px
-                    +
-                    env(safe-area-inset-top)
-                )
-                20px
-                20px;
-
-            border-bottom:
-                1px solid
-                rgba(255, 255, 255, 0.07);
+            padding: calc(22px + env(safe-area-inset-top)) 20px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid rgba(22, 25, 30, 0.08);
         }
-
 
         .kalxa-side-menu-brand {
-            color: #ffffff;
-
-            font-size: 24px;
-            font-weight: 900;
+            color: var(--kalxa-ink);
+            font-size: 23px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
-
         .kalxa-side-menu-zone {
-            margin-top: 5px;
-
-            color:
-                rgba(255, 255, 255, 0.50);
-
+            margin-top: 4px;
+            color: var(--kalxa-ink-muted);
             font-size: 11px;
             font-weight: 700;
         }
-
 
         button.kalxa-menu-close,
         .kalxa-menu-close {
             width: 40px;
             height: 40px;
-
-            border:
-                1px solid
-                rgba(41, 44, 48, 0.16) !important;
-
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(22, 25, 30, 0.10) !important;
             border-radius: 50%;
-
-            background:
-                var(--kalxa-white-btn) !important;
-
+            background: var(--kalxa-white-btn) !important;
+            background-color: var(--kalxa-white-btn) !important;
             color: var(--kalxa-white-btn-ink) !important;
-
-            font-size: 25px;
-
+            font-size: 22px;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
             cursor: pointer;
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease);
         }
 
         button.kalxa-menu-close:hover,
         .kalxa-menu-close:hover {
+            transform: rotate(90deg);
             background: var(--kalxa-white-btn-hover) !important;
+            background-color: var(--kalxa-white-btn-hover) !important;
         }
-
 
         .kalxa-side-menu-content {
             flex: 1;
-
             overflow-y: auto;
-
-            padding: 12px 14px 24px;
+            padding: 14px 16px 24px;
+            background: #ffffff;
         }
-
 
         .kalxa-menu-section {
-            padding: 16px 0;
+            padding: 14px 0;
         }
 
-
-        .kalxa-menu-section +
-        .kalxa-menu-section {
-            border-top:
-                1px solid
-                rgba(255, 255, 255, 0.06);
+        .kalxa-menu-section + .kalxa-menu-section {
+            border-top: 1px solid rgba(22, 25, 30, 0.08);
         }
-
 
         .kalxa-menu-section-label {
-            margin:
-                0
-                8px
-                10px;
-
-            color:
-                rgba(255, 255, 255, 0.34);
-
-            font-size: 9px;
-            font-weight: 900;
-
-            letter-spacing: 0.8px;
+            margin: 0 6px 10px;
+            color: var(--kalxa-ink-muted);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
         }
-
 
         .kalxa-menu-item {
             width: 100%;
-
             display: flex;
             align-items: center;
-
-            gap: 13px;
-
-            margin-bottom: 5px;
-
-            padding: 13px 12px;
-
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 12px 14px;
             box-sizing: border-box;
-
-            border-radius: 14px;
-
-            color: #ffffff;
-
+            border: 1px solid rgba(22, 25, 30, 0.08);
+            border-radius: var(--kalxa-radius-md);
+            background: #f8f9fb;
+            color: var(--kalxa-ink);
             text-decoration: none;
+            transition: transform 0.18s var(--kalxa-ease), background 0.18s var(--kalxa-ease), border-color 0.18s var(--kalxa-ease), box-shadow 0.18s var(--kalxa-ease);
         }
 
+        .kalxa-menu-item:hover {
+            transform: translateY(-1px);
+            background: #ffffff;
+            border-color: rgba(22, 25, 30, 0.16);
+            box-shadow: 0 6px 16px rgba(22, 25, 30, 0.07);
+        }
+
+        .kalxa-menu-item:active {
+            transform: scale(0.985);
+        }
 
         .kalxa-menu-item-primary {
             background: var(--kalxa-white-btn) !important;
-
             color: var(--kalxa-white-btn-ink) !important;
+            border-color: rgba(22, 25, 30, 0.14) !important;
+            box-shadow: 0 6px 16px rgba(22, 25, 30, 0.08);
         }
 
+        .kalxa-menu-item-primary:hover {
+            background: var(--kalxa-white-btn-hover) !important;
+        }
 
         .kalxa-menu-item-jobs {
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.16);
-
-            background:
-                rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(22, 25, 30, 0.10);
+            background: #ffffff;
         }
-
 
         .kalxa-menu-item-location {
             margin-top: 8px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-
-            background:
-                rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(22, 25, 30, 0.10);
+            background: #f3f5f8;
         }
 
-
         .kalxa-menu-item-icon {
-            width: 37px;
-            height: 37px;
-
-            flex: 0 0 37px;
-
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-
-            border-radius: 11px;
-
-            background:
-                rgba(255, 255, 255, 0.06);
-
-            font-size: 17px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid rgba(22, 25, 30, 0.08);
+            font-size: 16px;
+            box-shadow: 0 2px 6px rgba(22, 25, 30, 0.04);
         }
-
 
         .kalxa-menu-item > span:nth-child(2) {
             min-width: 0;
             flex: 1;
         }
 
-
         .kalxa-menu-item strong {
             display: block;
-
+            color: var(--kalxa-ink);
             font-size: 13px;
             font-weight: 800;
         }
 
-
         .kalxa-menu-item small {
             display: block;
-
-            margin-top: 3px;
-
-            color:
-                rgba(255, 255, 255, 0.43);
-
-            font-size: 10px;
-
+            margin-top: 2px;
+            color: var(--kalxa-ink-muted);
+            font-size: 11px;
+            font-weight: 500;
             line-height: 1.35;
         }
 
-
-        .kalxa-menu-item-primary small {
-            color:
-                rgba(41, 44, 48, 0.58);
-        }
-
-
         .kalxa-menu-arrow {
             margin-left: auto;
+            color: var(--kalxa-ink);
+            font-size: 16px;
+            font-weight: 700;
+            opacity: 0.65;
+            transition: transform 0.18s var(--kalxa-ease);
+        }
 
-            font-size: 17px;
-
-            opacity: 0.55;
+        .kalxa-menu-item:hover .kalxa-menu-arrow {
+            transform: translateX(3px);
+            opacity: 1;
         }
 
 
         /* =========================================================
-           LAC WEBSITE / APP SERVICES
+           LAC WEBSITE / APP SERVICES (IN WHITE SIDEBAR)
         ========================================================= */
 
         .kalxa-lac-services {
-            margin:
-                5px
-                0
-                0;
-
+            margin: 6px 0 0;
             padding: 16px;
-
-            border:
-                1px solid
-                rgba(255, 255, 255, 0.22);
-
-            border-radius: 17px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #dce4e8 0%,
-                    #aebbc2 48%,
-                    #7f8d95 100%
-                );
-
-            box-shadow:
-                0 10px 28px
-                rgba(72, 86, 94, 0.22);
+            border: 1px solid rgba(22, 25, 30, 0.10);
+            border-radius: var(--kalxa-radius-lg);
+            background: linear-gradient(145deg, #f5f7fa 0%, #e9edf2 100%);
+            box-shadow: 0 6px 18px rgba(22, 25, 30, 0.05);
         }
 
-
         .kalxa-lac-services h3 {
-            margin:
-                0
-                0
-                7px;
-
-            color: #20262a;
-
-            font-size: 16px;
-            font-weight: 900;
-
+            margin: 0 0 6px;
+            color: var(--kalxa-ink);
+            font-size: 15px;
+            font-weight: 800;
             line-height: 1.25;
         }
 
-
         .kalxa-lac-services p {
-            margin:
-                0
-                0
-                14px;
-
-            color:
-                rgba(32, 38, 42, 0.76);
-
-            font-size: 10px;
-
+            margin: 0 0 14px;
+            color: var(--kalxa-ink-muted);
+            font-size: 11px;
+            font-weight: 500;
             line-height: 1.5;
         }
 
-
         .kalxa-lac-services-actions {
             display: grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(0, 1fr)
-                );
-
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px;
         }
 
-
         .kalxa-lac-contact-button {
             min-width: 0;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            gap: 7px;
-
-            padding: 11px 8px;
-
-            border-radius: 11px;
-
+            gap: 6px;
+            padding: 11px 10px;
+            border-radius: 12px;
             text-decoration: none;
-
-            font-size: 10px;
-            font-weight: 850;
-
+            font-size: 11px;
+            font-weight: 800;
             line-height: 1.2;
-
             text-align: center;
-
-            -webkit-tap-highlight-color:
-                transparent;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.18s var(--kalxa-ease), background 0.18s var(--kalxa-ease), box-shadow 0.18s var(--kalxa-ease);
         }
 
-
-        .kalxa-lac-contact-whatsapp {
-            background: var(--kalxa-white-btn) !important;
-
-            color: var(--kalxa-white-btn-ink) !important;
-
-            box-shadow:
-                0 3px 10px
-                rgba(55, 67, 74, 0.10);
-        }
-
-
+        .kalxa-lac-contact-whatsapp,
         .kalxa-lac-contact-email {
-            border:
-                1px solid
-                rgba(32, 38, 42, 0.16);
-
+            border: 1px solid rgba(22, 25, 30, 0.12);
             background: var(--kalxa-white-btn) !important;
-
             color: var(--kalxa-white-btn-ink) !important;
+            box-shadow: 0 3px 10px rgba(22, 25, 30, 0.08);
         }
 
+        .kalxa-lac-contact-button:hover {
+            transform: translateY(-1px);
+            background: var(--kalxa-white-btn-hover) !important;
+        }
 
         .kalxa-lac-contact-button:active {
             transform: scale(0.97);
         }
 
-
         .kalxa-side-menu-footer {
-            padding:
-                17px
-                20px
-                calc(
-                    20px
-                    +
-                    env(safe-area-inset-bottom)
-                );
-
-            border-top:
-                1px solid
-                rgba(255, 255, 255, 0.07);
+            padding: 16px 20px;
+            background: #ffffff;
+            border-top: 1px solid rgba(22, 25, 30, 0.08);
         }
-
 
         .kalxa-side-menu-footer strong {
             display: block;
-
-            color:
-                rgba(255, 255, 255, 0.65);
-
-            font-size: 10px;
-        }
-
-
-        .kalxa-side-menu-footer span {
-            display: block;
-
-            margin-top: 4px;
-
-            color:
-                rgba(255, 255, 255, 0.30);
-
-            font-size: 9px;
-        }
-
-
-        /* =========================================================
-           BUSINESS CTA
-        ========================================================= */
-
-        .kalxa-business-cta {
-            margin:
-                10px
-                0
-                34px;
-
-            padding:
-                27px
-                22px;
-
-            border-radius: 22px;
-
-            background: #f5f1e8;
-
-            color: #3f4348;
-        }
-
-
-        .kalxa-business-cta-eyebrow {
-            margin-bottom: 9px;
-
-            font-size: 9px;
-            font-weight: 900;
-        }
-
-
-        .kalxa-business-cta h2 {
-            margin: 0;
-
-            font-size: 23px;
-            font-weight: 900;
-        }
-
-
-        .kalxa-business-cta > p {
-            margin:
-                11px
-                0
-                19px;
-
-            font-size: 13px;
-
-            line-height: 1.55;
-        }
-
-
-        .kalxa-business-cta-primary,
-        .kalxa-business-cta-jobs {
-            width: 100%;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            padding: 15px 16px;
-
-            box-sizing: border-box;
-
-            border-radius: 14px;
-
-            border: 1px solid rgba(41, 44, 48, 0.14);
-
-            background: var(--kalxa-white-btn) !important;
-
-            color: var(--kalxa-white-btn-ink) !important;
-
-            font-weight: 800;
-
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-
-            text-decoration: none;
-        }
-
-        .kalxa-business-cta-primary:hover,
-        .kalxa-business-cta-jobs:hover {
-            background: var(--kalxa-white-btn-hover) !important;
-        }
-
-
-        .kalxa-business-cta-divider {
-            position: relative;
-
-            margin: 18px 0;
-
-            text-align: center;
-        }
-
-
-        .kalxa-business-cta-divider span {
-            position: relative;
-
-            font-size: 8px;
-            font-weight: 900;
-        }
-
-
-        .kalxa-business-cta-secondary {
-            display: inline-flex;
-
-            padding: 11px 13px;
-
-            border:
-                1px solid
-                rgba(63, 67, 72, 0.14);
-
-            border-radius: 12px;
-
-            background: var(--kalxa-white-btn) !important;
-
-            color: var(--kalxa-white-btn-ink) !important;
-
-            text-decoration: none;
-
+            color: var(--kalxa-ink);
             font-size: 11px;
             font-weight: 800;
         }
 
+        .kalxa-side-menu-footer span {
+            display: block;
+            margin-top: 3px;
+            color: var(--kalxa-ink-muted);
+            font-size: 10px;
+            font-weight: 600;
+        }
 
-        .kalxa-business-cta-note,
-        .kalxa-business-cta-job-note {
-            margin-top: 10px;
+        .kalxa-side-menu-support {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 16px calc(16px + env(safe-area-inset-bottom));
+            padding: 12px 16px;
+            border-radius: var(--kalxa-radius-md);
+            background: #f5f7fa;
+            border: 1px solid rgba(22, 25, 30, 0.09);
+            color: var(--kalxa-ink);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            transition: background 0.18s var(--kalxa-ease), transform 0.18s var(--kalxa-ease);
+        }
 
-            font-size: 9px;
-
-            line-height: 1.45;
+        .kalxa-side-menu-support:hover {
+            background: #ebeff5;
+            transform: translateY(-1px);
         }
 
 
         /* =========================================================
-           NOTIFICATION BUTTON
+           MODERN BUSINESS CTA & BUTTONS
         ========================================================= */
+
+        .kalxa-business-cta {
+            margin: 12px 0 36px;
+            padding: 24px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--kalxa-radius-xl);
+            background: linear-gradient(160deg, #faf8f3 0%, #f1ece1 100%);
+            color: var(--kalxa-ink);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+        }
+
+        .kalxa-business-cta-primary,
+        .kalxa-business-cta-jobs {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 18px;
+            box-sizing: border-box;
+            border-radius: var(--kalxa-radius-md);
+            border: 1px solid rgba(22, 25, 30, 0.12);
+            background: var(--kalxa-white-btn) !important;
+            color: var(--kalxa-white-btn-ink) !important;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: -0.1px;
+            box-shadow: var(--kalxa-shadow-btn);
+            text-decoration: none;
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease), box-shadow 0.2s var(--kalxa-ease);
+        }
+
+        .kalxa-business-cta-primary:hover,
+        .kalxa-business-cta-jobs:hover {
+            transform: translateY(-2px);
+            background: var(--kalxa-white-btn-hover) !important;
+            box-shadow: var(--kalxa-shadow-btn-hover);
+        }
+
+        .kalxa-business-cta-primary:active,
+        .kalxa-business-cta-jobs:active {
+            transform: scale(0.985);
+        }
+
+        .kalxa-business-cta-divider {
+            position: relative;
+            margin: 18px 0;
+            text-align: center;
+        }
+
+        .kalxa-business-cta-divider span {
+            position: relative;
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(22, 25, 30, 0.06);
+            color: var(--kalxa-ink-muted);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+        }
+
+        .kalxa-business-cta-job-note {
+            margin-top: 10px;
+            padding: 0 4px;
+            color: var(--kalxa-ink-muted);
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+
+        /* =========================================================
+           MODERN NOTIFICATION BUTTON
+        ========================================================= */
+
+        .public-notification-link {
+            margin-bottom: 24px;
+        }
 
         button.public-notification-button,
         .public-notification-button {
             background: var(--kalxa-white-btn) !important;
+            background-color: var(--kalxa-white-btn) !important;
             color: var(--kalxa-white-btn-ink) !important;
-            border: 1px solid rgba(41, 44, 48, 0.16);
-            border-radius: 12px;
-            padding: 12px 16px;
+            border: 1px solid rgba(22, 25, 30, 0.12);
+            border-radius: var(--kalxa-radius-md);
+            padding: 13px 18px;
+            font-size: 13px;
             font-weight: 800;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+            letter-spacing: -0.1px;
+            box-shadow: var(--kalxa-shadow-btn);
             cursor: pointer;
+            transition: transform 0.2s var(--kalxa-ease), background 0.2s var(--kalxa-ease), box-shadow 0.2s var(--kalxa-ease);
         }
 
         button.public-notification-button:hover,
         .public-notification-button:hover {
+            transform: translateY(-2px);
             background: var(--kalxa-white-btn-hover) !important;
+            background-color: var(--kalxa-white-btn-hover) !important;
+            box-shadow: var(--kalxa-shadow-btn-hover);
+        }
+
+        button.public-notification-button:active,
+        .public-notification-button:active {
+            transform: scale(0.97);
         }
 
 
@@ -2558,59 +1709,34 @@
                 min-height: 320px;
             }
 
-
             .kalxa-story-image {
                 height: 195px;
             }
 
-
-            .kalxa-stories-title {
-                font-size: 24px;
-            }
-
-
             .kalxa-stories-all {
-                padding:
-                    7px
-                    9px;
-
-                font-size: 8px;
+                padding: 9px 13px;
+                font-size: 10px;
             }
-
-
-            .kalxa-ticketing-top-link {
-                min-height: 104px;
-
-                padding: 17px;
-            }
-
 
             .lac-category-row {
-                min-height: 195px;
-
+                min-height: 200px;
                 padding: 19px;
             }
-
 
             .lac-category-title {
                 font-size: 19px;
             }
-
 
             .kalxa-menu-button {
                 top: 14px;
                 right: 14px;
             }
 
-
             .kalxa-business-cta {
-                padding:
-                    23px
-                    18px;
+                padding: 20px 16px;
             }
 
         }
-
 
         @media (min-width: 700px) {
 
@@ -2619,15 +1745,12 @@
                 width: 56%;
             }
 
-
             .lac-category-row {
                 min-height: 250px;
-
                 padding: 26px;
             }
 
         }
-
 
         .lac-category-row .lac-category-title,
         .lac-category-row .lac-category-subtitle {
@@ -2701,7 +1824,7 @@
 
 
     <!-- =========================================
-         KALXA SIDE MENU
+         KALXA SIDE MENU (WHITE)
     ========================================== -->
 
     <div
@@ -2783,12 +1906,8 @@
                 </a>
 
 
-
                 <a
                     href="https://vat-paye-bot.streamlit.app/"
-                        
-                    
-                
                     class="
                         kalxa-menu-item
                         kalxa-menu-item-jobs
@@ -2807,7 +1926,6 @@
 
                         <small>
                             VAT and PAYE, handled. Built for local businesses.
-                            
                         </small>
 
                     </span>
@@ -2817,7 +1935,6 @@
                     </span>
 
                 </a>
-
 
 
                 <a
@@ -3101,19 +2218,21 @@
 
         </div>
 
-                    <a
-                     href="https://kalxa-stories.onrender.com/support-kwandebele"
-                    >
 
-                     <span>
-                      Support Us
-                     </span>
+        <a
+            href="https://kalxa-stories.onrender.com/support-kwandebele"
+            class="kalxa-side-menu-support"
+        >
 
-                     <span aria-hidden="true">
-                      ♥
-                     </span>
+            <span>
+                Support Us
+            </span>
 
-                    </a>
+            <span aria-hidden="true">
+                ♥
+            </span>
+
+        </a>
 
 
     </aside>
@@ -3170,12 +2289,6 @@
                         </span>
 
                     </div>
-
-
-
-
-
-
 
                 </div>
 
@@ -3349,8 +2462,6 @@
                 >
 
                     <span class="kalxa-stories-swipe-line"></span>
-
-                
 
                 </div>
 
@@ -3717,9 +2828,7 @@
 
 {% endif %}
 
-<!-- ========================================= -->
 
-        
         <!-- =========================================
              CATEGORIES (SWIPEABLE RAIL)
         ========================================== -->
@@ -3933,7 +3042,8 @@
                 ) }}"
                 class="kalxa-business-cta-primary"
             >
-                ＋ Add your business to Kalxa →
+                <span>＋ Add your business to Kalxa</span>
+                <span>→</span>
             </a>
 
 
@@ -3951,16 +3061,15 @@
                 ) }}"
                 class="kalxa-business-cta-jobs"
             >
-                💼 Post a Job for Free
+                <span>💼 Post a Job for Free</span>
+                <span>→</span>
             </a>
 
             <div class="kalxa-business-cta-job-note">
                 Ufuna umuntu ozoku Foromela or Ukwakha,Pumbling, Electrician <br>
                 Laudry, or clean yard, etc <br>
-                
-                
             </div>
-            
+
 
             <div class="kalxa-business-cta-divider">
                 <span>
@@ -3972,11 +3081,9 @@
                 href="https://tickets.kalxa.co.za"
                 class="kalxa-business-cta-jobs"
             >
-                Events & Restaurants
+                <span>Events &amp; Restaurants</span>
+                <span>↗</span>
             </a>
-
-
-
 
         </section>
 
@@ -3995,7 +3102,7 @@
                 id="lac-enable-notifications"
                 class="public-notification-button"
             >
-                Get Notifications🔔
+                Get Notifications 🔔
             </button>
 
 
@@ -4064,13 +3171,6 @@
 
 
     </main>
-
-
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
-
 
 
 </div>
@@ -4608,6 +3708,48 @@ document.addEventListener(
 
     }
 );
+
+</script>
+
+
+<!-- =========================================
+     HEADER TRANSPARENCY GUARD (INITIAL + SCROLL)
+========================================== -->
+
+<script>
+
+(function () {
+    function enforceTransparentHeader() {
+        const header = document.querySelector(".access-header");
+        if (!header) {
+            return;
+        }
+
+        header.style.setProperty("background", "transparent", "important");
+        header.style.setProperty("background-color", "transparent", "important");
+        header.style.setProperty("background-image", "none", "important");
+
+        const brandWrap = header.querySelector(".public-brand-wrap");
+        if (brandWrap) {
+            brandWrap.style.setProperty("background", "transparent", "important");
+            brandWrap.style.setProperty("background-color", "transparent", "important");
+            brandWrap.style.setProperty("background-image", "none", "important");
+        }
+    }
+
+    enforceTransparentHeader();
+    document.addEventListener("DOMContentLoaded", enforceTransparentHeader);
+    window.addEventListener("scroll", enforceTransparentHeader, { passive: true });
+
+    const headerTarget = document.querySelector(".access-header");
+    if (headerTarget && "MutationObserver" in window) {
+        const observer = new MutationObserver(enforceTransparentHeader);
+        observer.observe(headerTarget, {
+            attributes: true,
+            attributeFilter: ["style", "class"]
+        });
+    }
+})();
 
 </script>
 
