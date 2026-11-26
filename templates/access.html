@@ -97,19 +97,9 @@
     <style>
 
         :root {
-            --kalxa-grey-btn-gradient: linear-gradient(
-                135deg,
-                #52565e 0%,
-                #34373d 52%,
-                #222428 100%
-            );
-
-            --kalxa-grey-btn-hover: linear-gradient(
-                135deg,
-                #626770 0%,
-                #41454c 52%,
-                #2b2e33 100%
-            );
+            --kalxa-cream-btn: #fff4df;
+            --kalxa-cream-btn-hover: #f5ead4;
+            --kalxa-cream-btn-ink: #292c30;
         }
 
         /* =========================================
@@ -667,9 +657,9 @@
 
             border-radius: 50%;
 
-            background: var(--kalxa-grey-btn-gradient) !important;
+            background: var(--kalxa-cream-btn) !important;
 
-            color: #fff4df !important;
+            color: var(--kalxa-cream-btn-ink) !important;
 
             font-size: 15px;
         }
@@ -867,9 +857,9 @@
 
             border-radius: 50%;
 
-            background: #ffffff;
+            background: var(--kalxa-cream-btn);
 
-            color: #45484d !important;
+            color: var(--kalxa-cream-btn-ink) !important;
 
             font-size: 22px;
             font-weight: 500;
@@ -913,7 +903,7 @@
 
         .kalxa-ticketing-top-link
         .kalxa-ticketing-top-action {
-            color: #45484d !important;
+            color: var(--kalxa-cream-btn-ink) !important;
         }
 
 
@@ -1003,8 +993,8 @@
         .campaign-tonight,
         .campaign-ending,
         .campaign-ending-soon {
-            background: var(--kalxa-grey-btn-gradient);
-            color: #fff4df;
+            background: #fff4df;
+            color: #292c30;
         }
 
 
@@ -1930,12 +1920,16 @@
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.18) !important;
+                rgba(41, 44, 48, 0.16) !important;
 
             border-radius: 14px;
 
             background:
-                var(--kalxa-grey-btn-gradient) !important;
+                var(--kalxa-cream-btn) !important;
+
+            box-shadow:
+                0 4px 14px
+                rgba(0, 0, 0, 0.18);
 
             cursor: pointer;
 
@@ -1943,7 +1937,7 @@
         }
 
         .kalxa-menu-button:hover {
-            background: var(--kalxa-grey-btn-hover) !important;
+            background: var(--kalxa-cream-btn-hover) !important;
         }
 
 
@@ -1951,7 +1945,7 @@
             width: 18px;
             height: 2px;
 
-            background: #ffffff;
+            background: var(--kalxa-cream-btn-ink);
         }
 
 
@@ -2058,20 +2052,22 @@
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.18) !important;
+                rgba(41, 44, 48, 0.16) !important;
 
             border-radius: 50%;
 
             background:
-                var(--kalxa-grey-btn-gradient) !important;
+                var(--kalxa-cream-btn) !important;
 
-            color: #ffffff;
+            color: var(--kalxa-cream-btn-ink) !important;
 
             font-size: 25px;
+
+            cursor: pointer;
         }
 
         .kalxa-menu-close:hover {
-            background: var(--kalxa-grey-btn-hover) !important;
+            background: var(--kalxa-cream-btn-hover) !important;
         }
 
 
@@ -2136,7 +2132,7 @@
 
 
         .kalxa-menu-item-primary {
-            background: #f5f1e8;
+            background: #fff4df;
 
             color: #292c30;
         }
@@ -2329,9 +2325,9 @@
 
 
         .kalxa-lac-contact-whatsapp {
-            background: #ffffff;
+            background: var(--kalxa-cream-btn);
 
-            color: #292c30;
+            color: var(--kalxa-cream-btn-ink);
 
             box-shadow:
                 0 3px 10px
@@ -2344,10 +2340,9 @@
                 1px solid
                 rgba(32, 38, 42, 0.16);
 
-            background:
-                rgba(255, 255, 255, 0.34);
+            background: var(--kalxa-cream-btn);
 
-            color: #20262a;
+            color: var(--kalxa-cream-btn-ink);
         }
 
 
@@ -2458,20 +2453,22 @@
 
             border-radius: 14px;
 
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(41, 44, 48, 0.14);
 
-            background: var(--kalxa-grey-btn-gradient) !important;
+            background: var(--kalxa-cream-btn) !important;
 
-            color: #ffffff !important;
+            color: var(--kalxa-cream-btn-ink) !important;
 
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+            font-weight: 800;
+
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 
             text-decoration: none;
         }
 
         .kalxa-business-cta-primary:hover,
         .kalxa-business-cta-jobs:hover {
-            background: var(--kalxa-grey-btn-hover) !important;
+            background: var(--kalxa-cream-btn-hover) !important;
         }
 
 
@@ -2503,7 +2500,9 @@
 
             border-radius: 12px;
 
-            color: #3f4348;
+            background: var(--kalxa-cream-btn);
+
+            color: var(--kalxa-cream-btn-ink);
 
             text-decoration: none;
 
@@ -2527,17 +2526,18 @@
         ========================================================= */
 
         .public-notification-button {
-            background: var(--kalxa-grey-btn-gradient) !important;
-            color: #ffffff !important;
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: var(--kalxa-cream-btn) !important;
+            color: var(--kalxa-cream-btn-ink) !important;
+            border: 1px solid rgba(41, 44, 48, 0.16);
             border-radius: 12px;
             padding: 12px 16px;
             font-weight: 800;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
             cursor: pointer;
         }
 
         .public-notification-button:hover {
-            background: var(--kalxa-grey-btn-hover) !important;
+            background: var(--kalxa-cream-btn-hover) !important;
         }
 
 
