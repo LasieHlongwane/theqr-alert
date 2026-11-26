@@ -96,9 +96,44 @@
 
     <style>
 
+        :root {
+            --kalxa-grey-btn-gradient: linear-gradient(
+                135deg,
+                #52565e 0%,
+                #34373d 52%,
+                #222428 100%
+            );
+
+            --kalxa-grey-btn-hover: linear-gradient(
+                135deg,
+                #626770 0%,
+                #41454c 52%,
+                #2b2e33 100%
+            );
+        }
+
+        /* =========================================
+           TRANSPARENT HEADER
+        ========================================== */
+
+        .access-header {
+            position: relative;
+            background: transparent !important;
+            background-color: transparent !important;
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        .public-brand-wrap,
+        .lac-brand,
+        .lac-tagline {
+            background: transparent !important;
+        }
+
+
         /* =========================================
            PAGE
-        ========================================== -->
+        ========================================== */
 
         .access-container {
             width: 100%;
@@ -112,7 +147,7 @@
 
         /* =========================================
            LOCATION
-        ========================================== -->
+        ========================================== */
 
         .location-label {
             display: inline-flex;
@@ -632,9 +667,9 @@
 
             border-radius: 50%;
 
-            background: #292c30;
+            background: var(--kalxa-grey-btn-gradient) !important;
 
-            color: #fff4df;
+            color: #fff4df !important;
 
             font-size: 15px;
         }
@@ -968,7 +1003,7 @@
         .campaign-tonight,
         .campaign-ending,
         .campaign-ending-soon {
-            background: #111316;
+            background: var(--kalxa-grey-btn-gradient);
             color: #fff4df;
         }
 
@@ -1213,10 +1248,6 @@
         }
 
         /* =========================================
-   NEW LISTING VIEW COUNTER
-========================================= */
-
-/* =========================================
    NEW LISTING VIEW COUNTER
 ========================================= */
 
@@ -1899,16 +1930,20 @@
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.10);
+                rgba(255, 255, 255, 0.18) !important;
 
             border-radius: 14px;
 
             background:
-                rgba(255, 255, 255, 0.05);
+                var(--kalxa-grey-btn-gradient) !important;
 
             cursor: pointer;
 
             z-index: 100;
+        }
+
+        .kalxa-menu-button:hover {
+            background: var(--kalxa-grey-btn-hover) !important;
         }
 
 
@@ -2023,16 +2058,20 @@
 
             border:
                 1px solid
-                rgba(255, 255, 255, 0.08);
+                rgba(255, 255, 255, 0.18) !important;
 
             border-radius: 50%;
 
             background:
-                rgba(255, 255, 255, 0.05);
+                var(--kalxa-grey-btn-gradient) !important;
 
             color: #ffffff;
 
             font-size: 25px;
+        }
+
+        .kalxa-menu-close:hover {
+            background: var(--kalxa-grey-btn-hover) !important;
         }
 
 
@@ -2419,11 +2458,20 @@
 
             border-radius: 14px;
 
-            background: #fff4df;
+            border: 1px solid rgba(255, 255, 255, 0.14);
 
-            color: #3f4348;
+            background: var(--kalxa-grey-btn-gradient) !important;
+
+            color: #ffffff !important;
+
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
 
             text-decoration: none;
+        }
+
+        .kalxa-business-cta-primary:hover,
+        .kalxa-business-cta-jobs:hover {
+            background: var(--kalxa-grey-btn-hover) !important;
         }
 
 
@@ -2471,6 +2519,25 @@
             font-size: 9px;
 
             line-height: 1.45;
+        }
+
+
+        /* =========================================================
+           NOTIFICATION BUTTON
+        ========================================================= */
+
+        .public-notification-button {
+            background: var(--kalxa-grey-btn-gradient) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .public-notification-button:hover {
+            background: var(--kalxa-grey-btn-hover) !important;
         }
 
 
@@ -3472,9 +3539,6 @@
         <!-- =========================================
              NEW
         ========================================== -->
-        <!-- =========================================
-     NEW
-========================================== -->
 
 {% if new_items %}
 
@@ -3852,18 +3916,6 @@
 
 
         <!-- =========================================
-             KALXA TICKETING CTA
-        ========================================== -->
-
-
-
-
-        <!-- =========================================
-             KALXA STORIES CTA
-        ========================================== -->
-
-
-        <!-- =========================================
              BUSINESS / JOB SUBMISSION
         ========================================== -->
 
@@ -4004,13 +4056,6 @@
             </div>
 
         </section>
-
-        
-        <!-- =========================================
-             LAC WEBSITE
-        ========================================== -->
-
-        
 
 
     </main>
